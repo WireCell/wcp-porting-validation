@@ -45,6 +45,13 @@
   - Both purities fail: `is_stm` −0.022 (one false positive over the limit), Michel −0.044. Both efficiencies rise.
   - The readout-window-edge rubric gap (37 items) does not carry the purity cost.
   - The owner's adjudication `own103v` (40 items) is in progress.
+* **Round 4 (sec 12, same day).** The owner adjudicated the 40 PDVD items.
+  - **PDVD reads D1** on all four metrics: `is_stm` purity +0.002, efficiency +0.066; Michel purity +0.016,
+    efficiency +0.054.
+  - Controls: 0 of 8 changed. Tier 1: 29 of 32 labels changed, including all 17 carried-record labels.
+  - Undoing D1 takes 6 relabels, but the review could only clear false positives. A symmetric check on the stoppers
+    only one arm tags is recommended before a flip.
+  - **PDHD** still fails Michel purity (−0.051, owner-backed). No Michel energy floor fixes it.
 
 ## 0. Repro
 
@@ -837,3 +844,133 @@ from the record and 190 from `smx11`.
 * **Record:** `pdvd/docs/scan/pdvd_stm_michel_smx11_verdicts.json`, 239 items, sha256 `5302d87c`.
 * **Figures:** `103_scan_smx11_pdvd.txt`, `103_scan_reports_pdvd_prod.md`, `103_union_grade_pdvd_prod.txt`,
   `103_fp_classes_pdvd_prod.txt`, `103_window_edge_pdvd_prod.txt`.
+
+## 12. Round 4 (2026-09-15): the owner's PDVD adjudication `own103v`
+
+### 12.0 Repro
+
+```bash
+# names from 10.0 and 11.0 (the D103_PDVD_* export of 11.0 still set)
+OWN=$IMG/pdvd/docs/scan/pdvd_stm_michel_own103v_verdicts.json; OWNH=$IMG/pdhd/docs/scan/pdhd_stm_michel_own103h_verdicts.json
+python3 $S/d103_owner_scan_score.py --det pdvd --set $O/set_pdvd_prod --labels $IMG/pdvd/work/stm_michel_labels/own103v/labels.json \
+    --shown-arm "d103v1 (A0-only items on d103v0)" --record-out $OWN > $F/103_own103v_pdvd.txt
+python3 $S/d103_union_grade.py --det pdvd --new-record $N11 --owner-record $OWN > $F/103_union_grade_pdvd_own103v.txt
+python3 $S/d103_fp_classes.py  --det pdvd --new-record $N11 --owner-record $OWN > $F/103_fp_classes_pdvd_own103v.txt
+{ python3 $S/d103_d1_margin.py --det pdvd --new-record $N11 --owner-record $OWN; echo
+  D103_PDHD_RECORD=$R27 python3 $S/d103_d1_margin.py --det pdhd --new-record $N28 --owner-record $OWNH --stm-only-unset-negative; } \
+    > $F/103_d1_margin.txt
+python3 $S/d103_michel_floor_sizing.py > $F/103_michel_floor_sizing.txt      # sets its own D103_* environment
+```
+
+### 12.1 The session
+
+* **Labelled:** 40 / 40. Not blind: every item was revealed before it was labelled, as with `own103h`.
+  - Labels sha256 `621511c3`; record sha256 `5d1d5858`.
+  - No other label tag changed: all 23 files in `label_shas_before_own103v.txt` match.
+  - The :5017 server is stopped.
+* **Verdicts:** STM_MICHEL 14, STM_ONLY 10, MESSY 6, UNCLEAR 6, THRU 4. On every stopper the Michel kind agrees with
+  the verdict.
+* **Controls: 0 of 8 changed**, on stopper class and on the Michel call.
+* **Tier 1: 29 of 32 labels changed.**
+
+  | Prior label (count) | To a stopper | To MESSY / UNCLEAR | Michel call changed | To a non-stopper | Unchanged |
+  |---|---|---|---|---|---|
+  | carried record (17) | 8 | 5 | 4 | 0 | 0 |
+  | `smx11` agents (15) | 3 | 7 | 1 | 1 | 3 |
+
+  - Every carried-record label on this set changed, 8 of them of confidence high.
+  - The set is chosen where the two arms disagree; the controls, where they agree, did not move. So the carried
+    record is weakest exactly on the items that decide A1 − A0.
+* **What each charged false positive became:**
+  - `is_stm`: 9 now TP, 1 confirmed, 6 leave the population;
+  - Michel: 8 now TP, 4 confirmed (3 of them on non-stoppers), 10 leave.
+* **Window-edge items** (sec 11.3), one owner call each, not a ruling: 039349_53/28 STM_ONLY, 039349_76/32 UNCLEAR,
+  039349_4/76 MESSY.
+
+### 12.2 PDVD re-grade
+
+`103_union_grade_pdvd_own103v.txt`. Truth: `own103v` first, then the carried record, then `smx11`. The population is
+606: 28 owner, 403 carried, 175 `smx11`.
+
+| A0 → A1 | Value | Change | Limit −0.02 |
+|---|---|---|---|
+| `is_stm` purity | 0.980 → 0.982 | +0.002 | pass |
+| `is_stm` efficiency | 0.612 → 0.679 | +0.066 | pass |
+| Michel purity | 0.924 → 0.940 | +0.016 | pass |
+| Michel efficiency | 0.661 → 0.715 | +0.054 | pass |
+
+* **Reading (a): D1 on all four metrics.** The purity cost of sec 11.2 was label error on the disputed items.
+* **Remaining false positives** (`103_fp_classes_pdvd_own103v.txt`):
+  - `is_stm`: A0 5, A1 5. The 2 A1-only ones are both owner THRU.
+  - Michel: A0 13, A1 11. The 6 A1-only ones are 4 stoppers with no Michel and 2 THRU.
+* **Splits.**
+  - (b) untouched: `is_stm` purity +0.006, Michel purity +0.003.
+    - This is not independent evidence. Tier 1 took every one-sided false positive on a non-owner label, so the
+      untouched items can only hold shared ones.
+  - (c) A1-only tags: `is_stm` 78 (FP 2), Michel 59 (FP 6).
+* **Margin** (`103_d1_margin.txt`): the fewest relabels that turn D1 into D2.
+  - `is_stm` purity: 6. That is 4 of A1's one-arm stopper tags read as non-stoppers, plus 2 of A0's own false
+    positives read as stoppers.
+  - Michel purity: 7.
+  - Either efficiency: more than 12.
+  - Amendment 4's one-sidedness clause (2 or fewer) is not triggered.
+* **What the margin does not cover.**
+  - The review could only clear false positives.
+  - The stoppers tagged by one arm only (`is_stm`: 76 in A1, 50 in A0) keep the labels whose reliability sec 12.1
+    questions, and A1 holds more of them.
+  - A relabel rate near tier 1's on those would decide the reading.
+
+### 12.3 PDHD after both adjudications
+
+* **Unchanged from sec 10.3:** `is_stm` passes (purity −0.017, efficiency −0.015). Michel purity fails (−0.051).
+* **Margin.**
+  - Each `is_stm` pass hinges on one label.
+  - Michel purity would pass if 3 of A1's one-arm Michel false positives were Michels. All 6 of those are owner
+    labels (sec 10.4), so the cost is owner-backed, not a relabel target.
+
+### 12.4 A Michel energy floor is not the PDHD lever
+
+`103_michel_floor_sizing.txt`. This is an offline predicate: `michel_found` is zeroed when `michel_ke_best` < E, and
+`is_stm` is untouched. Floor 0 reproduces both headline grades.
+
+* **PDHD, the floor on both arms.** Michel purity A1 − A0 stays between −0.028 and −0.053 for every floor from 0 to
+  15 MeV.
+* **PDHD, the floor on A1 only**, against production A0 as it runs:
+  - purity reaches −0.004 at 8 MeV;
+  - efficiency falls to −0.043 there, which fails.
+* **Why.** Energy does not separate them:
+  - A1's Michel false positives carry 1.1, 2.4, 6.2, 7.7, 7.7, 11.3, 18.8, 37.1 and 64.1 MeV;
+  - 13 of A1's true Michels are below 10 MeV, the lowest at 1.9 MeV.
+* **PDVD** keeps D1 under any floor up to 12 MeV on both arms. A floor would not hurt PDVD; it just does not help
+  PDHD.
+* **An admission lever for PDHD** needs another discriminator. Sec 10.4's items differ in length (0.2–19.4 cm) and
+  connection (attached, bridged, charge-only), and 9 items are too few to fit a cut on.
+
+### 12.5 What a flip takes now
+
+1. **PDVD passes the tagger grade.** Before a production flip:
+   - **Recommended:** the symmetric check. A seeded 20-item sample of the one-arm stopper tags (A1-only and
+     A0-only), owner-labelled on :5017 under a new amendment frozen before it is served.
+   - **The flip unit:**
+     - the sampler: `figs/102r2_flip.patch`;
+     - the fit-knob keys in `pdvd_track_fitting.json`.
+
+     It is proved on an arm identical to `d103v1` (compiled-config proof). Completeness: `d103v0` / `d103v1` have
+     120 / 120 events.
+   - The owner's go.
+2. **PDHD fails Michel purity**, owner-backed, and no energy floor fixes it. The owner's choice:
+   - hold PDHD at production and flip PDVD alone;
+   - accept the trade: Michel purity 0.946 → 0.895 for efficiency 0.603 → 0.664. Both STM passes hinge on one label;
+   - or a longer study of a geometric admission rule.
+
+### 12.6 Files (round 4)
+
+* **Scripts:**
+  - new: `d103_d1_margin.py`, `d103_michel_floor_sizing.py`;
+  - extended: `d103_owner_scan_score.py` (tag taken from the labels file; PDVD controls also report Michel changes
+    within stoppers), `d103_fp_classes.py` (`--owner-record`).
+  - With the new options unset, `103_fp_classes_{pdhd,pdvd,pdhd_smx27}` and `103_own103h_pdhd` reproduce byte for
+    byte, apart from the output-path line.
+* **Record:** `pdvd/docs/scan/pdvd_stm_michel_own103v_verdicts.json` (owner, 40 items).
+* **Figures:** `103_own103v_pdvd.txt`, `103_union_grade_pdvd_own103v.txt`, `103_fp_classes_pdvd_own103v.txt`,
+  `103_d1_margin.txt`, `103_michel_floor_sizing.txt`.

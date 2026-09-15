@@ -19,8 +19,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--det", required=True, choices=["pdhd", "pdvd"])
     ap.add_argument("--new-record", required=True)
+    ap.add_argument("--owner-record", default=None)    # sec 11: an owner adjudication record first in precedence
     a = ap.parse_args()
-    T, _ = U.load_truth(a.det, a.new_record)
+    T, _ = U.load_truth(a.det, a.new_record, a.owner_record)
     R = {lab: U.cell_rows(a.det, arm) for lab, arm in U.CELLS[a.det]}
     conf = {}
     base = (U.PDHD_RECORD if a.det == "pdhd" else

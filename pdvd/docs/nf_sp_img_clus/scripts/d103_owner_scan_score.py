@@ -84,7 +84,9 @@ def main():
     if extra:
         sys.exit(f"labels name keys outside the set: {sorted(extra)}")
     nrev = sum(1 for x in L.values() if x.get("revealed_before_label"))
-    print(f"# doc pdvd/103 own103h (owner, 2026-09-15): {len(L)} of {len(rows)} items labelled; tag {J.get('tag')}; "
+    tag = J.get("tag") or "own103h"                    # own103h (PDHD, amendment 2) / own103v (PDVD, amendment 4 sec 6)
+    rule = ("figs/103_pred_amend4.txt sec 6" if DET == "pdvd" else "figs/103_pred_amend2.txt")
+    print(f"# doc pdvd/103 {tag} (owner, 2026-09-15): {len(L)} of {len(rows)} items labelled; tag {J.get('tag')}; "
           f"labels sha256 {sha[:12]}; revealed the chain answer before labelling: {nrev} of {len(L)} (NOT blind)")
     print(f"# set {a.set}; shown on {a.shown_arm}\n")
 
@@ -133,6 +135,9 @@ def main():
     print(f"  stopper class changed: {sc} of {len(ctl)} -> {'NOT SETTLED' if sc >= 3 else 'controls hold on the stopper call'}")
     print(f"  Michel class changed (incl. kind set/unset): {sum(1 for k in ctl if ch(k)[1])} of {len(ctl)}: "
           f"{[k for k in ctl if ch(k)[1]]}")
+    if DET == "pdvd":                                  # PDVD Michel truth is the verdict: a class change moves both axes
+        within = [k for k in ctl if not ch(k)[0] and ch(k)[1]]
+        print(f"  Michel call changed with the stopper class held (STM_MICHEL <-> STM_ONLY): {len(within)} of {len(ctl)}: {within}")
     print(f"  null controls {len(nulls)}; shared-FP control(s) reported apart: "
           f"{[(k, rows[k]['fp_in'], rows[k]['label_verdict'] + '/' + rows[k]['label_michel_kind'], L[k]['label'] + '/' + str(L[k].get('michel_kind'))) for k in shared]}")
 
@@ -141,9 +146,9 @@ def main():
         r = rows[k]
         omk = None if x.get("michel_kind") in UNSET else x.get("michel_kind")
         rec.append(dict(
-            key=k, verdict=x["label"], michel_kind=omk, confidence="owner", source="own103h (owner, 2026-09-15)",
+            key=k, verdict=x["label"], michel_kind=omk, confidence="owner", source=f"{tag} (owner, 2026-09-15)",
             owner_review=dict(verdict=x["label"], michel_kind=omk, notes=x.get("notes") or "", date="2026-09-15",
-                              tag="own103h", question="doc pdvd/103 figs/103_pred_amend2.txt: owner adjudication"),
+                              tag=tag, question=f"doc pdvd/103 {rule}: owner adjudication"),
             evidence=x.get("notes") or "", scan_id=int(r["scan_id"]), role=r["role"], fp_in=r["fp_in"],
             shown_arm=a.shown_arm, pin=x.get("pin") if (x.get("pin") or {}).get("placed") else None,
             revealed_before_label=bool(x.get("revealed_before_label")), pf_segments=x.get("pf_segments"),

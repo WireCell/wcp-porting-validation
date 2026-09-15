@@ -1,0 +1,93 @@
+# doc pdvd/103 own103v (owner, 2026-09-15): 40 of 40 items labelled; tag own103v; labels sha256 621511c36c65; revealed the chain answer before labelling: 40 of 40 (NOT blind)
+# set /home/xqian/tmp/d103/own/set_pdvd_prod; shown on d103v1 (A0-only items on d103v0)
+
+== 1. each item
+   1 039349_51/23   tier1   A0 [is_stm 1 michel_found 0] A1 [is_stm 1 michel_found 1] | label STM_ONLY/detached dots (record, high) -> OWNER STM_MICHEL/attached | michel no michel -> michel
+   2 039349_77/66   tier1   A0 [is_stm 0 michel_found 1] A1 [is_stm 1 michel_found 0] | label STM_ONLY/none (new_agent, high) -> OWNER STM_MICHEL/attached | michel no michel -> michel
+   3 039349_49/70   tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 0 michel_found 1] | label THRU/none (record, medium) -> OWNER MESSY/None | class non-stopper -> unjudged
+   4 039349_28/19   tier1   A0 [not a candidate] A1 [is_stm 1 michel_found 0] | label THRU/none (new_agent, medium) -> OWNER STM_ONLY/detached dots | class non-stopper -> stopper
+   5 039253_12/87   tier1   A0 [is_stm 1 michel_found 0] A1 [not a candidate] | label THRU/none (record, medium) -> OWNER STM_ONLY/None | class non-stopper -> stopper
+   6 039253_11/118  control A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (record, high) -> OWNER STM_MICHEL/attached | same
+   7 039253_16/107  tier1   A0 [is_stm 1 michel_found 0] A1 [is_stm 1 michel_found 1] | label STM_ONLY/detached dots (record, high) -> OWNER STM_MICHEL/attached | michel no michel -> michel
+   8 039349_33/15   tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 0 michel_found 1] | label THRU/none (record, high) -> OWNER STM_MICHEL/attached | class non-stopper -> stopper
+   9 039253_6/44    control A0 [is_stm 1 michel_found 0] A1 [is_stm 1 michel_found 0] | label STM_ONLY/detached dots (record, medium) -> OWNER STM_ONLY/None | same
+  10 039349_23/58   tier1   A0 [is_stm 1 michel_found 1] A1 [is_stm 0 michel_found 1] | label THRU/none (record, medium) -> OWNER MESSY/None | class non-stopper -> unjudged
+  11 039349_13/26   tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 1 michel_found 0] | label THRU/none (record, high) -> OWNER STM_ONLY/detached dots | class non-stopper -> stopper
+  12 039349_57/25   tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 1 michel_found 0] | label THRU/none (record, high) -> OWNER STM_MICHEL/attached | class non-stopper -> stopper pin moved 7.7 cm
+  13 039253_8/83    tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 1 michel_found 0] | label THRU/none (new_agent, medium) -> OWNER THRU/None | same
+  14 039349_13/57   tier1   A0 [not a candidate] A1 [is_stm 1 michel_found 0] | label THRU/none (record, medium) -> OWNER STM_MICHEL/attached | class non-stopper -> stopper pin moved 0.0 cm
+  15 039349_48/54   tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 0 michel_found 1] | label THRU/none (new_agent, medium) -> OWNER MESSY/None | class non-stopper -> unjudged
+  16 039349_4/76    tier1   A0 [not a candidate] A1 [is_stm 0 michel_found 1] | label THRU/none (new_agent, medium) -> OWNER MESSY/None | class non-stopper -> unjudged
+  17 039349_61/44   control A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (record, high) -> OWNER STM_MICHEL/attached | same
+  18 039252_8/93    tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 1 michel_found 1] | label THRU/none (record, medium) -> OWNER STM_MICHEL/attached | class non-stopper -> stopper pin moved 6.2 cm
+  19 039253_6/46    tier1   A0 [is_stm 1 michel_found 1] A1 [not a candidate] | label THRU/none (record, medium) -> OWNER STM_ONLY/None | class non-stopper -> stopper
+  20 039349_28/50   tier1   A0 [not a candidate] A1 [is_stm 0 michel_found 1] | label THRU/none (new_agent, medium) -> OWNER THRU/None | same
+  21 039349_37/56   tier1   A0 [not a candidate] A1 [is_stm 0 michel_found 1] | label THRU/none (record, medium) -> OWNER MESSY/None | class non-stopper -> unjudged
+  22 039253_12/35   control A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (record, high) -> OWNER STM_MICHEL/attached | same
+  23 039252_6/94    tier1   A0 [is_stm 1 michel_found 0] A1 [is_stm 1 michel_found 1] | label STM_ONLY/detached dots (record, medium) -> OWNER STM_MICHEL/both | michel no michel -> michel
+  24 039349_64/55   tier1   A0 [not a candidate] A1 [is_stm 1 michel_found 1] | label STM_ONLY/detached dots (record, medium) -> OWNER STM_MICHEL/attached | michel no michel -> michel
+  25 039252_4/55    tier1   A0 [not a candidate] A1 [is_stm 1 michel_found 0] | label THRU/none (record, high) -> OWNER UNCLEAR/None | class non-stopper -> unjudged
+  26 039252_1/36    tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 0 michel_found 1] | label THRU/none (record, high) -> OWNER STM_MICHEL/attached | class non-stopper -> stopper
+  27 039349_53/28   tier1   A0 [not a candidate] A1 [is_stm 1 michel_found 0] | label THRU/none (new_agent, medium) -> OWNER STM_ONLY/None | class non-stopper -> stopper
+  28 039349_33/54   tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 1 michel_found 0] | label THRU/none (new_agent, medium) -> OWNER STM_ONLY/None | class non-stopper -> stopper
+  29 039252_3/77    control A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/attached (record, high) -> OWNER STM_MICHEL/both | same
+  30 039349_39/46   control A0 [is_stm 1 michel_found 0] A1 [is_stm 1 michel_found 0] | label STM_ONLY/none (record, high) -> OWNER STM_ONLY/None | same
+  31 039252_5/121   tier1   A0 [is_stm 0 michel_found 1] A1 [is_stm 0 michel_found 0] | label THRU/none (new_agent, medium) -> OWNER UNCLEAR/None | class non-stopper -> unjudged
+  32 039349_81/52   tier1   A0 [is_stm 0 michel_found 1] A1 [is_stm 0 michel_found 0] | label STM_ONLY/none (new_agent, medium) -> OWNER THRU/None | class stopper -> non-stopper
+  33 039349_32/68   control A0 [is_stm 1 michel_found 0] A1 [is_stm 1 michel_found 0] | label STM_ONLY/detached dots (record, high) -> OWNER STM_ONLY/detached dots | same
+  34 039349_48/16   tier1   A0 [not a candidate] A1 [is_stm 0 michel_found 1] | label THRU/none (new_agent, medium) -> OWNER MESSY/None | class non-stopper -> unjudged
+  35 039349_63/54   control A0 [is_stm 1 michel_found 0] A1 [is_stm 1 michel_found 0] | label STM_ONLY/none (record, high) -> OWNER STM_ONLY/detached dots | same
+  36 039349_50/44   tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 1 michel_found 1] | label THRU/none (new_agent, medium) -> OWNER UNCLEAR/None | class non-stopper -> unjudged
+  37 039253_13/69   tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 1 michel_found 1] | label THRU/none (new_agent, medium) -> OWNER UNCLEAR/None | class non-stopper -> unjudged
+  38 039252_6/96    tier1   A0 [is_stm 0 michel_found 1] A1 [not a candidate] | label THRU/none (new_agent, high) -> OWNER THRU/None | same
+  39 039349_19/27   tier1   A0 [is_stm 1 michel_found 0] A1 [not a candidate] | label THRU/none (record, high) -> OWNER UNCLEAR/None | class non-stopper -> unjudged
+  40 039349_76/32   tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 1 michel_found 0] | label THRU/none (new_agent, medium) -> OWNER UNCLEAR/attached | class non-stopper -> unjudged pin moved 4.3 cm
+
+== 2. tier 1: what each charged false positive becomes (descriptive; NOT a purity)
+  039349_51/23   A1:michel: now a TP
+  039349_77/66   A0:michel: now a TP
+  039349_49/70   A1:michel: leaves the population
+  039349_28/19   A1:is_stm: now a TP
+  039253_12/87   A0:is_stm: now a TP
+  039253_16/107  A1:michel: now a TP
+  039349_33/15   A1:michel: now a TP
+  039349_23/58   A0:is_stm: leaves the population; A0:michel: leaves the population; A1:michel: leaves the population
+  039349_13/26   A1:is_stm: now a TP
+  039349_57/25   A1:is_stm: now a TP
+  039253_8/83    A1:is_stm: FP confirmed
+  039349_13/57   A1:is_stm: now a TP
+  039349_48/54   A1:michel: leaves the population
+  039349_4/76    A1:michel: leaves the population
+  039252_8/93    A1:is_stm: now a TP; A1:michel: now a TP
+  039253_6/46    A0:is_stm: now a TP; A0:michel: FP confirmed
+  039349_28/50   A1:michel: FP confirmed (not a stopper)
+  039349_37/56   A1:michel: leaves the population
+  039252_6/94    A1:michel: now a TP
+  039349_64/55   A1:michel: now a TP
+  039252_4/55    A1:is_stm: leaves the population
+  039252_1/36    A1:michel: now a TP
+  039349_53/28   A1:is_stm: now a TP
+  039349_33/54   A1:is_stm: now a TP
+  039252_5/121   A0:michel: leaves the population
+  039349_81/52   A0:michel: FP confirmed (not a stopper)
+  039349_48/16   A1:michel: leaves the population
+  039349_50/44   A1:is_stm: leaves the population; A1:michel: leaves the population
+  039253_13/69   A1:is_stm: leaves the population; A1:michel: leaves the population
+  039252_6/96    A0:michel: FP confirmed (not a stopper)
+  039349_19/27   A0:is_stm: leaves the population
+  039349_76/32   A1:is_stm: leaves the population
+    is_stm  FP confirmed: 1
+    is_stm  leaves the population: 6
+    is_stm  now a TP: 9
+    michel  FP confirmed: 1
+    michel  FP confirmed (not a stopper): 3
+    michel  leaves the population: 10
+    michel  now a TP: 8
+
+== 3. controls (figs/103_pred_amend2.txt sec 4: >= 3 of 8 stopper-class changes -> not settled)
+  stopper class changed: 0 of 8 -> controls hold on the stopper call
+  Michel class changed (incl. kind set/unset): 0 of 8: []
+  Michel call changed with the stopper class held (STM_MICHEL <-> STM_ONLY): 0 of 8: []
+  null controls 8; shared-FP control(s) reported apart: []
+
+== 4. wrote /home/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/scan/pdvd_stm_michel_own103v_verdicts.json: 40 items

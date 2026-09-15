@@ -1,0 +1,11 @@
+# doc pdvd/103 D1/D2 label margin (pdvd; cells d103v0 / d103v1; owner record pdvd_stm_michel_own103v_verdicts.json); limit A1 - A0 >= -0.02
+  is_stm       purity     A1 - A0 +0.002 (pass); fewest relabels that fail it: 6 -> -0.021 [2 x neg->pos (A0 1, A1 0), 4 x pos->neg (A0 0, A1 1)]
+  is_stm       efficiency A1 - A0 +0.066 (pass); more than 12 relabels needed
+  michel_found purity     A1 - A0 +0.016 (pass); fewest relabels that fail it: 7 -> -0.025 [7 x neg->pos (A0 1, A1 0)]
+  michel_found efficiency A1 - A0 +0.054 (pass); more than 12 relabels needed
+
+# doc pdvd/103 D1/D2 label margin (pdhd; cells d101hnew / d102hcs; owner record pdhd_stm_michel_own103h_verdicts.json); limit A1 - A0 >= -0.02
+  is_stm       purity     A1 - A0 -0.017 (pass); fewest relabels that fail it: 1 -> -0.025 [1 x neg->pos (A0 1, A1 0)]
+  is_stm       efficiency A1 - A0 -0.015 (pass); fewest relabels that fail it: 1 -> -0.020 [1 x neg->pos (A0 1, A1 0)]
+  michel_found purity     A1 - A0 -0.051 (fail); fewest relabels that pass it: 3 -> -0.016 [3 x neg->pos (A0 0, A1 1)]
+  michel_found efficiency A1 - A0 +0.060 (pass); fewest relabels that fail it: 10 -> -0.028 [1 x neg->pos (A0 1, A1 0), 9 x pos->neg (A0 0, A1 1)]

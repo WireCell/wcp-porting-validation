@@ -1,0 +1,38 @@
+# doc pdvd/103 union grade (pdvd); truth sources (items taken from each, in precedence order): [('pdvd_stm_michel_own103v_verdicts.json', 40), ('pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json', 610), ('pdvd_stm_michel_smx11_verdicts.json', 204)]
+population fixed + judged candidates of any cell: 606 (fixed 366); candidates of any cell with no label anywhere: 11; unjudged (MESSY/UNCLEAR) candidates: 64
+population by label source: {'record': 403, 'new_agent': 175, 'owner_review': 28}
+
+== is_stm (population 606)
+  A0 d103v0      TP 240 FP   5 FN 152 TN 209 | purity 0.980 [0.971, 0.988] efficiency 0.612 [0.588, 0.637]
+  A1 d103v1      TP 266 FP   5 FN 126 TN 209 | purity 0.982 [0.974, 0.989] efficiency 0.679 [0.654, 0.700]
+
+== michel_found (population 606)
+  A0 d103v0      TP 158 FP  13 FN  81 TN 354 | purity 0.924 [0.903, 0.944] efficiency 0.661 [0.632, 0.692]
+  A1 d103v1      TP 171 FP  11 FN  68 TN 356 | purity 0.940 [0.922, 0.957] efficiency 0.715 [0.685, 0.745]
+
+== A1 vs A0: candidates on one side only, by hand class (judged; unlabelled shown separately)
+  A1 only: 141 candidates {'stopper': 60, 'non-stopper': 64, 'unjudged': 14, 'unlabelled': 3}; of them is_stm 1 on that side: {'stopper': 44, 'non-stopper': 0}
+  A0 only: 118 candidates {'stopper': 51, 'non-stopper': 47, 'unjudged': 18, 'unlabelled': 2}; of them is_stm 1 on that side: {'stopper': 29, 'non-stopper': 1}
+
+== decision (figs/103_pred.txt): every metric of A1 >= A0 - 0.02 -> D1, else D2
+  is_stm purity: A1 - A0 = +0.002
+  is_stm efficiency: A1 - A0 = +0.066
+  michel_found purity: A1 - A0 = +0.016
+  michel_found efficiency: A1 - A0 = +0.054
+  -> D1 (record conditioning)
+
+== amendment 2 splits (owner record pdvd_stm_michel_own103v_verdicts.json, 40 keys); (a) is above
+  (b) is_stm, untouched population 578 of 606
+      A0 TP 227 FP   5 FN 141 TN 205 | purity 0.978 [0.969, 0.987] efficiency 0.617 [0.592, 0.642]
+      A1 TP 246 FP   4 FN 122 TN 206 | purity 0.984 [0.975, 0.992] efficiency 0.668 [0.643, 0.693]
+      A1 - A0: purity +0.006, efficiency +0.052
+  (c) is_stm common tags (A0 and A1): n 193, TP 190, FP 3 (owner-judged 11)
+  (c) is_stm A0-only tags: n 52, TP 50, FP 2 (owner-judged 2)
+  (c) is_stm A1-only tags: n 78, TP 76, FP 2 (owner-judged 10)
+  (b) michel_found, untouched population 578 of 606
+      A0 TP 153 FP  10 FN  72 TN 343 | purity 0.939 [0.921, 0.957] efficiency 0.680 [0.652, 0.712]
+      A1 TP 160 FP  10 FN  65 TN 343 | purity 0.941 [0.924, 0.958] efficiency 0.711 [0.681, 0.741]
+      A1 - A0: purity +0.003, efficiency +0.031
+  (c) michel_found common tags (A0 and A1): n 123, TP 118, FP 5 (owner-judged 4)
+  (c) michel_found A0-only tags: n 48, TP 40, FP 8 (owner-judged 4)
+  (c) michel_found A1-only tags: n 59, TP 53, FP 6 (owner-judged 8)
