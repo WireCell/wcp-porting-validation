@@ -210,8 +210,15 @@ process_event() {
     local SUBRUN=${SUBRUN_ARG:-$(awk -F= '$1=="subrun"{print $2}' "$TLAS")}
     SUBRUN=${SUBRUN:-0}
     if [ "$QL" != 1 ]; then
+        # doc pdvd/101: a light-less SIMULATION has no Q/L match by construction;
+        # PDVD_ALLOW_NO_QLMATCH=1 runs it anyway (pair it with
+        # PDVD_PR_TLA="-S flag_mains_unmatched=true" or nothing gets a main).
+        if [ "${PDVD_ALLOW_NO_QLMATCH:-0}" = 1 ]; then
+            echo "WARNING: run=$RUN evt=$EVT: pctree written WITHOUT Q/L matching (qlmatch=$QL); running PR anyway (PDVD_ALLOW_NO_QLMATCH=1)" >&2
+        else
         echo "[skip] run=$RUN evt=$EVT: the pctree was written WITHOUT Q/L matching (qlmatch=$QL); no matched bundles to tag" >&2
         return 2
+        fi
     fi
     local TAG_SUFFIX=""
     local LOG="$WORKDIR/wct_pr_${RUN_PADDED}_${EVT}.log"

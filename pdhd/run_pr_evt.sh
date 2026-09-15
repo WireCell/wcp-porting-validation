@@ -194,8 +194,15 @@ process_event() {
     local SUBRUN=${SUBRUN_ARG:-$(awk -F= '$1=="subrun"{print $2}' "$TLAS")}
     SUBRUN=${SUBRUN:-0}
     if [ "$QL" != 1 ]; then
+        # doc pdvd/101: a light-less SIMULATION has no Q/L match by construction;
+        # PDHD_ALLOW_NO_QLMATCH=1 runs it anyway (pair it with
+        # PDHD_PR_TLA="-S flag_mains_unmatched=true" or nothing gets a main).
+        if [ "${PDHD_ALLOW_NO_QLMATCH:-0}" = 1 ]; then
+            echo "WARNING: run=$RUN evt=$EVT: pctree written WITHOUT Q/L matching (qlmatch=$QL); running PR anyway (PDHD_ALLOW_NO_QLMATCH=1)" >&2
+        else
         echo "[skip] run=$RUN evt=$EVT: the pctree was written WITHOUT Q/L matching (qlmatch=$QL); no matched bundles to tag" >&2
         return 2
+        fi
     fi
     # doc pdhd/06: unmerge_assoc reads the assoc_cluster_id/assoc_cluster_main
     # perblob arrays.  On a pctree written without -save-assoc they are absent

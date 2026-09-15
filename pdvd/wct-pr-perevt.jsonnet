@@ -164,6 +164,15 @@ function(
     readout_window_ticks = 10000,
     // Minimum cluster length (cm) for flag_mains to make a matched cluster a main; 0 = all.
     flag_mains_min_cm = 0,
+    // doc pdvd/101: light-less SIMULATION only -- let flag_mains admit clusters
+    // with no Q/L match (C++ default false; false => key omitted => byte-identical).
+    flag_mains_unmatched = false,
+    // doc pdvd/101: the PR RETILE samplers' stepped grid (Steiner cloud only):
+    // half-pitch crossings (C++ default false) and the step in wires (C++ default 3).
+    // false / null => keys omitted => byte-identical.  Set as code, e.g.
+    // PDVD_PR_TLA="-S retile_sampler_half_pitch=true -S retile_sampler_min_step=1".
+    retile_sampler_half_pitch = false,
+    retile_sampler_min_step = null,
     // PR visitors to run, by name (see clus_pr's cm_by_name in
     // cfg/pgrapher/experiment/sbnd/clus.jsonnet).  The default IS the SBND
     // production tagger chain (run_full1k_nusel.sh with -unmerge-assoc), so a
@@ -4479,6 +4488,9 @@ function(
     local pr = clus_maker.pr(anodes, dump=true,
                              nticks=readout_window_ticks,
                              flag_mains_min_length=flag_mains_min_cm * wc.cm,
+                             flag_mains_unmatched=flag_mains_unmatched,   // doc pdvd/101
+                             retile_sampler_half_pitch=retile_sampler_half_pitch,   // doc pdvd/101
+                             retile_sampler_min_step=retile_sampler_min_step,
                              mip_dqdx_median=mip_dqdx_median,
                              pipeline_names=pipeline_names,
                              stm_michel_knobs=stm_michel_knobs + stm_michel_extra,   // doc pdvd/48; + doc pdvd/51 override bag
