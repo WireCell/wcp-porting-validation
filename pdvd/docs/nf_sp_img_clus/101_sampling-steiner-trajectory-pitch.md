@@ -657,6 +657,9 @@ instrument is valid.
 | `d101vnew` (knobs off) | 242 / 8 / 34 / 262 | 0.968 | 0.877 | 143 / 12 / 21 / 370 | 0.923 | 0.872 | 0 / 0 |
 | `d101vkf` (fit knobs on) | 204 / 16 / 72 / 254 | **0.927** | **0.739** | 117 / 24 / 47 / 358 | **0.830** | **0.713** | **35 / 21** (+ 62 non-stoppers) |
 
+* Do not compare the Michel rows across detectors: they are different populations.  PDVD's
+  `census_score.py` grades michel_found over all 546 judged items; PDHD's `d21_michel_census.py`
+  grades it over the 86 hand stoppers that carry a `michel_kind`.
 * The unforked scorer on `d101vkf` gives is_stm 0.920 / 0.845 and Michel 0.831 / 0.814 over 460
   items.
 * On its unenriched tranche 2 alone, Michel purity is 0.921 → 0.798.
