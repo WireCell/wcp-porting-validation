@@ -612,12 +612,13 @@ The setting is cs1: prototype defaults, the only one measured on data.
 |---|---|---|
 | g1 every event that completes in the baseline completes | **PASS** (61 / 61) | **FAIL**: 039349_78 loses its only candidate (sec 13.2.3); 039252_11 is the reverse (0 in baseline, 2 in the arm) |
 | g2 resources (median wall ≤ ×1.50, RSS ≤ ×1.25) | **PASS**: wall ×1.00 (p90 1.25), RSS ×1.009 (max 1.44); Steiner stage ×1.58, load control ×0.92 | **PASS**: wall ×0.76 (p90 1.00), RSS ×0.993 (max 1.65); Steiner ×1.06, control ×0.87 |
-| g3 tags no worse than round 1's change | **FAIL**: STM efficiency −0.184 (limit 0.010); Michel purity −0.038 (limit 0.080, passes) | **FAIL**: STM efficiency −0.123 (limit 0.017); Michel efficiency −0.177 (limit 0.034); Michel purity −0.131 (not bounded by g3) |
+| g3 tags no worse than round 1's change (each limit is a round-1 delta measured on the knobs-on pair `d101hkf → d102hcs`; here it is applied to the production pair `d101hnew → d102hocs`, which `pred2.txt` does not spell out) | **FAIL**: STM efficiency −0.184 (limit 0.010). Michel purity 0.971 → 0.933 = −0.038 is inside its limit of 0.080; the verdict does not depend on this cell | **FAIL**: STM efficiency −0.123 (limit 0.017); Michel efficiency −0.177 (limit 0.034); Michel purity −0.131 (not bounded by g3) |
 | g4 compile proof (scratch cfg tree) | **PASS**: flipped default ≡ `on1` 87a86589c767; flipped + `'stepped'` ≡ pre-flip 434208b1d840; 8 retile BlobSamplers differ, nothing else | **PASS**: ≡ 211a49a48229 / ≡ 920ecb4312ab; 16 BlobSamplers |
 
 The pre-registered consequence is **stop and report before pushing**. The flip is not committed.
 
 It is ready to apply: `figs/102r2_flip.patch`, one line per detector in `pr.jsonnet`, `null → 'charge_stepped'`.
+From the toolkit root, `git apply --check` passes on it at 1b62d1da.
 Explicit `'stepped'` stays the byte-identical escape hatch.
 
 #### 13.2.1 The tags on all four cells (fixed denominator)
@@ -775,7 +776,11 @@ checked.
 Same picture as round 1:
 * `reg_flag` falls by 12–18 % up to 85°;
 * the most isochronous bin does not improve;
-* chords stay: they are Steiner-graph bridges (sec 5.3).
+* chords stay, because they are Steiner-graph bridges (sec 5.3). But the direction differs by detector:
+  * PDHD total chord length falls 7 % (9477 → 8785 cm);
+  * **PDVD's rises 5 % (6482 → 6802 cm)**, with its off-image share at 85–90° up 0.142 → 0.156.
+
+  On PDVD the knobs-off sampler slightly worsens the near-isochronous off-image stretches.
 
 ### 13.7 What a flip would need
 

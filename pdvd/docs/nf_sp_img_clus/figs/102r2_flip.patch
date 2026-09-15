@@ -1,5 +1,5 @@
---- toolkit/cfg/pgrapher/experiment/pdhd/pr.jsonnet	2026-09-15 05:50:39.784482230 -0700
-+++ toolkit/cfg(flipped)/pgrapher/experiment/pdhd/pr.jsonnet	2026-09-15 07:54:24.996915272 -0700
+--- a/cfg/pgrapher/experiment/pdhd/pr.jsonnet
++++ b/cfg/pgrapher/experiment/pdhd/pr.jsonnet
 @@ -123,11 +123,12 @@
                // stepped spacing.  false / null => keys omitted => byte-identical.
                retile_sampler_half_pitch=false,
@@ -27,8 +27,8 @@
                                                             wire_product=retile_sampler_wire_product,   // doc pdvd/102
                                                             charge_threshold=retile_sampler_charge_threshold),
                                     apa=a.data.ident, face=f)
---- toolkit/cfg/pgrapher/experiment/protodunevd/pr.jsonnet	2026-09-15 05:50:46.668579970 -0700
-+++ toolkit/cfg(flipped)/pgrapher/experiment/protodunevd/pr.jsonnet	2026-09-15 07:54:25.000915330 -0700
+--- a/cfg/pgrapher/experiment/protodunevd/pr.jsonnet
++++ b/cfg/pgrapher/experiment/protodunevd/pr.jsonnet
 @@ -113,11 +113,12 @@
                // stepped spacing.  false / null => keys omitted => byte-identical.
                retile_sampler_half_pitch=false,
