@@ -1,0 +1,12 @@
+# doc pdvd/103 blind scan record (pdvd, tag smx10); round /home/xqian/tmp/d103/round_pdvd
+items 224; records 214; missing 10 ['039252_0/74', '039349_0/63', '039349_15/44', '039349_21/27', '039349_37/42', '039349_37/7', '039349_38/31', '039349_52/18', '039349_64/45', '039349_64/73']; not in the item list []
+double scans 0: 
+rubric sha on the records: {'d760e223bfa1770a17df1ae18aa5869e3d849c310b980d17e001d71e93c2cdf8': 214}
+verdicts (new items): {'THRU': 81, 'STM_ONLY': 49, 'FRAG_THRU': 3, 'STM_MICHEL': 48, 'FRAG_STM_MICHEL': 1, 'MESSY': 9, 'UNCLEAR': 3}
+confidence (new items): {'medium': 108, 'high': 78, 'low': 8}
+
+V2 calibration: 20 scanned, 20 judged on both sides; stopper-or-not disagreements 2 (10%) -> PASS
+   039252_17/90: existing THRU (medium) vs blind STM_MICHEL (medium)
+   039349_50/46: existing STM_MICHEL (owner) vs blind THRU (medium)
+
+wrote /home/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/scan/pdvd_stm_michel_smx10_verdicts.json (214 records)

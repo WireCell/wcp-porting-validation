@@ -1,0 +1,24 @@
+[pdvd] d101vnew -> d102vcsall: clusters with a recorded pass 1778 / 1775
+validation over 14664 calls: predicted accept & recorded accept 1926, predicted reject & recorded reject 12352, predicted accept & recorded reject 386 (R3 straightness, not recorded), predicted reject & recorded accept 0 (must be 0)
+
+status 0<->3 flips: 178; |change in left_L| median 0.0 mm
+  0->3: no rejecting-arm call accepted: 94
+  3->0: no rejecting-arm call accepted: 84
+rejecting clause on the accepting call's rung:
+  0->3: R1 ks1-ks2>=0: 57
+  0->3: R2 near-flat: 2
+  0->3: R5 no accept clause: 12
+  0->3: accept (predicted): 15
+  0->3: accepting call's rung not reached in the rejecting arm: 8
+  3->0: R1 ks1-ks2>=0: 43
+  3->0: R2 near-flat: 8
+  3->0: R5 no accept clause: 18
+  3->0: accept (predicted): 3
+  3->0: accepting call's rung not reached in the rejecting arm: 12
+  D on that call: accepting arm median -0.006, rejecting arm median +0.058
+
+base population, lowest pass, best (most muon-like) value over its eval calls:
+  status 0: n 582; best D median -0.025, share |D| < 0.06 0.57; best (ks1-ks2) median -0.054, share |.| < 0.06 0.57
+  status 3: n 690; best D median +0.033, share |D| < 0.06 0.73; best (ks1-ks2) median -0.013, share |.| < 0.06 0.91
+
+refit noise: clusters with the same status 0/3 in both arms n 974; change of best (ks1-ks2) median +0.000, p68 |.| 0.020, p90 |.| 0.043

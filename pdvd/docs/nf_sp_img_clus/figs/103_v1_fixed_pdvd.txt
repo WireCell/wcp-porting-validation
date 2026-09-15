@@ -1,0 +1,26 @@
+# doc pdvd/103 union grade (pdvd); truth sources (items taken from each, in precedence order): [('pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json', 601)]
+population fixed only: 546 (fixed 546); candidates of any cell with no label anywhere: 204; unjudged (MESSY/UNCLEAR) candidates: 25
+population by label source: {'record': 546}
+
+== is_stm (population 546)
+  A0 d101vnew    TP 242 FP   8 FN  34 TN 262 | purity 0.968 [0.956, 0.979] efficiency 0.877 [0.857, 0.896]
+  K  d101vkf     TP 204 FP  16 FN  72 TN 254 | purity 0.927 [0.909, 0.945] efficiency 0.739 [0.714, 0.765]
+  S  d102vocs    TP 208 FP  17 FN  68 TN 253 | purity 0.924 [0.907, 0.941] efficiency 0.754 [0.728, 0.778]
+  A1 d102vcsall  TP 202 FP  17 FN  74 TN 253 | purity 0.922 [0.904, 0.940] efficiency 0.732 [0.705, 0.758]
+
+== michel_found (population 546)
+  A0 d101vnew    TP 143 FP  12 FN  21 TN 370 | purity 0.923 [0.901, 0.944] efficiency 0.872 [0.845, 0.898]
+  K  d101vkf     TP 117 FP  24 FN  47 TN 358 | purity 0.830 [0.796, 0.862] efficiency 0.713 [0.681, 0.748]
+  S  d102vocs    TP 114 FP  30 FN  50 TN 352 | purity 0.792 [0.759, 0.821] efficiency 0.695 [0.662, 0.730]
+  A1 d102vcsall  TP 113 FP  22 FN  51 TN 360 | purity 0.837 [0.803, 0.866] efficiency 0.689 [0.653, 0.724]
+
+== A1 vs A0: candidates on one side only, by hand class (judged; unlabelled shown separately)
+  A1 only: 124 candidates {'stopper': 5, 'non-stopper': 9, 'unjudged': 1, 'unlabelled': 109}; of them is_stm 1 on that side: {'stopper': 3, 'non-stopper': 0}
+  A0 only: 134 candidates {'stopper': 35, 'non-stopper': 86, 'unjudged': 6, 'unlabelled': 7}; of them is_stm 1 on that side: {'stopper': 28, 'non-stopper': 2}
+
+== decision (figs/103_pred.txt): every metric of A1 >= A0 - 0.02 -> D1, else D2
+  is_stm purity: A1 - A0 = -0.046
+  is_stm efficiency: A1 - A0 = -0.145
+  michel_found purity: A1 - A0 = -0.086
+  michel_found efficiency: A1 - A0 = -0.183
+  -> D2 (real cost)  [fixed-only / old records: NOT the pre-registered reading]

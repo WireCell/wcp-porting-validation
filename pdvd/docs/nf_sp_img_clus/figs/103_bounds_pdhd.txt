@@ -1,0 +1,8 @@
+[pdhd] d101hnew vs d102hcs; graded population 257; keys labelled in any record 317
+  fixed denominator  d101hnew    TP 114 FP   3 FN  33 TN 107  purity 0.974 efficiency 0.776
+  fixed denominator  d102hcs     TP  89 FP   6 FN  58 TN 104  purity 0.937 efficiency 0.605
+  unlabelled candidates of d102hcs only or shared: 86 (is_stm 1: 27, is_stm 0: 59); of them candidates in d101hnew: 14
+  unlabelled candidates of d101hnew only or shared: 24 (is_stm 1: 0, is_stm 0: 24); of them candidates in d102hcs: 14
+  union of unlabelled candidates 96
+  best for the arm  : d101hnew purity 0.974 eff 0.655 | d102hcs purity 0.951 eff 0.667 | efficiency change +0.011, purity change -0.024
+  worst for the arm : d101hnew purity 0.974 eff 0.528 | d102hcs purity 0.730 eff 0.412 | efficiency change -0.116, purity change -0.245

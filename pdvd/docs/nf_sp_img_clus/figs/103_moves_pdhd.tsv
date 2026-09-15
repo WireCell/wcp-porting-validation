@@ -1,0 +1,89 @@
+# doc pdvd/103: tag moves on already-labelled items, d101hnew -> d102hcs (pdhd)
+chain	move	key	label_source	confidence	arm_candidate	arm_tagger_status	arm_reject_bits_new
+is_stm	LOST_TP	028084_10/108	owner	medium	no	3	
+is_stm	LOST_TP	028084_10/46	agent	medium	no	3	
+is_stm	LOST_TP	028084_12/36	owner	high	no	3	
+is_stm	NEW_FP	028084_17/35	owner	medium	yes	0	
+is_stm	NEW_FP	028084_18/122	agent	medium	yes	0	
+is_stm	LOST_TP	028084_2/116	agent	low	yes	0	no_bragg
+is_stm	LOST_TP	028084_2/49	agent	medium	yes	0	no_bragg
+is_stm	LOST_TP	028084_21/26	agent	high	no	4	
+is_stm	NEW_TP	028084_24/49	agent	high	yes	0	
+is_stm	LOST_TP	028084_29/53	agent	medium	no	5	
+is_stm	NEW_TP	028084_3/23	agent	low	yes	0	
+is_stm	GONE_FP	028084_3/72	agent	medium	yes	0	no_bragg,plateau_off_mip,stop_near_boundary
+is_stm	LOST_TP	028084_30/111	owner	high	no	5	
+is_stm	LOST_TP	028084_30/26	agent	medium	yes	0	no_bragg
+is_stm	NEW_TP	028084_30/33	agent	medium	yes	0	
+is_stm	LOST_TP	028084_30/34	agent	medium	yes	0	no_bragg
+is_stm	LOST_TP	028084_4/29	agent	medium	no	2	
+is_stm	LOST_TP	028084_6/42	agent	high	no	7	
+is_stm	LOST_TP	028084_8/110	agent	medium	yes	0	no_bragg
+is_stm	NEW_TP	028084_8/120	agent	medium	yes	0	
+is_stm	LOST_TP	028084_8/37	agent	high	yes	0	profile_sparse
+is_stm	GONE_FP	029107_10/44	agent	high	yes	0	no_bragg,shape_flat,stop_near_boundary
+is_stm	LOST_TP	029107_11/18	agent	medium	yes	0	not_muon_pid
+is_stm	LOST_TP	029107_12/118	agent	medium	no	3	
+is_stm	LOST_TP	029107_13/114	agent	high	yes	0	no_bragg
+is_stm	NEW_FP	029107_16/46	agent	high	yes	0	
+is_stm	LOST_TP	029107_18/44	agent	medium	yes	0	plateau_off_mip
+is_stm	LOST_TP	029107_19/106	agent	medium	yes	0	continuation
+is_stm	LOST_TP	029107_19/111	agent	high	yes	0	no_bragg,shape_flat
+is_stm	NEW_TP	029107_19/120	agent	medium	yes	0	
+is_stm	LOST_TP	029107_2/108	agent	high	no	4	
+is_stm	NEW_FP	029107_2/64	agent	medium	yes	0	
+is_stm	LOST_TP	029107_20/108	agent	medium	yes	0	no_bragg
+is_stm	LOST_TP	029107_20/139	agent	medium	yes	0	continuation
+is_stm	LOST_TP	029107_25/89	agent	high	no	3	
+is_stm	LOST_TP	029107_26/43	agent	high	no	2	
+is_stm	LOST_TP	029107_27/64	agent	medium	no	3	
+is_stm	NEW_TP	029107_28/30	agent	low	yes	0	
+is_stm	LOST_TP	029107_3/23	agent	medium	yes	0	no_bragg
+is_stm	NEW_FP	029107_3/86	agent	medium	yes	0	
+is_stm	LOST_TP	029107_4/56	owner_review	medium	no	2	
+is_stm	LOST_TP	029107_4/72	owner_review	medium	yes	0	not_muon_pid
+is_stm	LOST_TP	029107_5/32	agent	medium	no	2	
+is_stm	LOST_TP	029107_6/122	agent	high	yes	0	no_bragg
+michel_found	LOST_TP	028084_1/142	owner	high	yes	0	
+michel_found	LOST_TP	028084_10/108	owner	medium	no	3	
+michel_found	NEW_FP	028084_10/109	agent	medium	yes	0	
+michel_found	LOST_TP	028084_12/36	owner	high	no	3	
+michel_found	LOST_TP	028084_2/116	agent	low	yes	0	no_bragg
+michel_found	NEW_TP	028084_20/107	agent	high	yes	0	
+michel_found	LOST_TP	028084_20/65	agent	medium	yes	0	
+michel_found	NEW_TP	028084_21/132	agent	high	yes	0	
+michel_found	LOST_TP	028084_21/17	agent	medium	yes	0	
+michel_found	LOST_TP	028084_21/26	agent	high	no	4	
+michel_found	LOST_TP	028084_30/26	agent	medium	yes	0	no_bragg
+michel_found	LOST_TP	028084_4/20	agent	medium	no	5	
+michel_found	LOST_TP	028084_6/42	agent	high	no	7	
+michel_found	NEW_FP	028084_8/120	agent	medium	yes	0	
+michel_found	NEW_TP	028084_8/37	agent	high	yes	0	profile_sparse
+michel_found	LOST_TP	029107_1/85	agent	medium	yes	0	
+michel_found	NEW_FP	029107_12/33	agent	medium	yes	0	
+michel_found	NEW_TP	029107_12/95	agent	medium	yes	0	
+michel_found	LOST_TP	029107_18/24	agent	medium	yes	0	plateau_off_mip,stop_near_boundary
+michel_found	LOST_TP	029107_19/106	agent	medium	yes	0	continuation
+michel_found	NEW_FP	029107_19/111	agent	high	yes	0	no_bragg,shape_flat
+michel_found	LOST_TP	029107_2/108	agent	high	no	4	
+michel_found	LOST_TP	029107_20/108	agent	medium	yes	0	no_bragg
+michel_found	LOST_TP	029107_21/65	agent	medium	yes	0	
+michel_found	NEW_FP	029107_23/116	agent	medium	yes	0	
+michel_found	LOST_TP	029107_25/123	agent	medium	yes	0	
+michel_found	LOST_TP	029107_25/89	agent	high	no	3	
+michel_found	NEW_FP	029107_27/39	agent	medium	yes	0	
+michel_found	LOST_TP	029107_27/64	agent	medium	no	3	
+michel_found	NEW_TP	029107_28/109	agent	medium	yes	0	
+michel_found	NEW_TP	029107_28/30	agent	low	yes	0	
+michel_found	LOST_TP	029107_3/23	agent	medium	yes	0	no_bragg
+michel_found	LOST_TP	029107_5/32	agent	medium	no	2	
+michel_found	NEW_FP	029107_6/122	agent	high	yes	0	no_bragg
+michel_found	NEW_FP	029107_7/34	agent	medium	yes	0	profile_sparse
+michel_found	LOST_TP	029107_9/109	agent	medium	yes	0	
+# is_stm GONE_FP: 2
+# is_stm LOST_TP: 31
+# is_stm NEW_FP: 5
+# is_stm NEW_TP: 6
+# michel_found LOST_TP: 22
+# michel_found NEW_FP: 8
+# michel_found NEW_TP: 6

@@ -1,0 +1,26 @@
+# doc pdvd/103 union grade (pdhd); truth sources (items taken from each, in precedence order): [('pdhd_stm_michel_smx22_verdicts.json', 317)]
+population fixed only: 257 (fixed 257); candidates of any cell with no label anywhere: 136; unjudged (MESSY/UNCLEAR) candidates: 47
+population by label source: {'smx22': 220, 'owner': 25, 'owner_review': 12}
+
+== is_stm (population 257)
+  A0 d101hnew    TP 114 FP   3 FN  33 TN 107 | purity 0.974 [0.959, 0.991] efficiency 0.776 [0.740, 0.810]
+  K  d101hkf     TP  89 FP   5 FN  58 TN 105 | purity 0.947 [0.922, 0.969] efficiency 0.605 [0.564, 0.644]
+  S  d102hocs    TP  87 FP   5 FN  60 TN 105 | purity 0.946 [0.922, 0.969] efficiency 0.592 [0.552, 0.633]
+  A1 d102hcs     TP  89 FP   6 FN  58 TN 104 | purity 0.937 [0.911, 0.962] efficiency 0.605 [0.564, 0.649]
+
+== michel_found (population 144, excluded 3)
+  A0 d101hnew    TP  68 FP   2 FN  18 TN  56 | purity 0.971 [0.953, 0.987] efficiency 0.791 [0.747, 0.833]
+  K  d101hkf     TP  57 FP   5 FN  29 TN  53 | purity 0.919 [0.883, 0.953] efficiency 0.663 [0.614, 0.713]
+  S  d102hocs    TP  56 FP   4 FN  30 TN  54 | purity 0.933 [0.900, 0.967] efficiency 0.651 [0.605, 0.702]
+  A1 d102hcs     TP  52 FP  10 FN  34 TN  48 | purity 0.839 [0.790, 0.881] efficiency 0.605 [0.552, 0.658]
+
+== A1 vs A0: candidates on one side only, by hand class (judged; unlabelled shown separately)
+  A1 only: 72 candidates {'stopper': 0, 'non-stopper': 0, 'unjudged': 0, 'unlabelled': 72}; of them is_stm 1 on that side: {'stopper': 0, 'non-stopper': 0}
+  A0 only: 80 candidates {'stopper': 22, 'non-stopper': 39, 'unjudged': 9, 'unlabelled': 10}; of them is_stm 1 on that side: {'stopper': 16, 'non-stopper': 0}
+
+== decision (figs/103_pred.txt): every metric of A1 >= A0 - 0.02 -> D1, else D2
+  is_stm purity: A1 - A0 = -0.038
+  is_stm efficiency: A1 - A0 = -0.170
+  michel_found purity: A1 - A0 = -0.133
+  michel_found efficiency: A1 - A0 = -0.186
+  -> D2 (real cost)  [fixed-only / old records: NOT the pre-registered reading]

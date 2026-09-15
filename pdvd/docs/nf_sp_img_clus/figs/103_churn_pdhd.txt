@@ -1,0 +1,76 @@
+[pdhd] base d101hnew; events with T_stm_michel readable in every arm: 61
+
+A. record-free totals
+  d101hnew    candidates   341  is_stm  129  michel_found  133
+  d101hkf     candidates   320  is_stm  120  michel_found  118
+  d102hocs    candidates   328  is_stm  124  michel_found  131
+  d102hcs     candidates   333  is_stm  129  michel_found  131
+
+==== d101hnew -> d101hkf
+B. candidate swap
+  lost (base only)     70 (is_stm 1 on its own side: 22); nearest other-arm candidate: {'20-60 cm': 2, '>60 cm / none': 68}; identical T_cluster row in both arms: 67
+  gained (arm only)    49 (is_stm 1 on its own side: 14); nearest other-arm candidate: {'20-60 cm': 1, '>60 cm / none': 48}; identical T_cluster row in both arms: 47
+C. TaggerCheckSTM verdicts (job log)
+  evaluated 4041; STM=1 base 341 arm 320; flips {'STM 1->0': 70, 'STM 0->1': 49}
+    STM 1->0: lowest-pass status 0 -> 3: 38
+    STM 0->1: lowest-pass status 3 -> 0: 28
+    STM 1->0: lowest-pass status 0 -> 5: 15
+    STM 0->1: lowest-pass status 2 -> 0: 10
+    STM 1->0: lowest-pass status 0 -> None: 8
+    STM 1->0: lowest-pass status 0 -> 2: 5
+    STM 0->1: lowest-pass status 5 -> 0: 5
+    STM 0->1: lowest-pass status None -> 0: 4
+    STM 1->0: lowest-pass status 0 -> 4: 3
+    STM 1->0: lowest-pass status 3 -> 3: 1
+    STM 0->1: lowest-pass status None -> 3: 1
+    STM 0->1: lowest-pass status 3 -> 3: 1
+D. kept candidates
+  kept 271: is_stm {'0->0': 149, '0->1': 15, '1->0': 16, '1->1': 91}
+    1->0 bits that appear: {'no_bragg': 12, 'plateau_off_mip': 3, 'shape_flat': 2, 'stop_unmatched': 1, 'profile_sparse': 1}
+    0->1 bits that clear:  {'no_bragg': 9, 'plateau_off_mip': 3, 'stop_near_boundary': 2, 'stop_unmatched': 2, 'profile_sparse': 1}
+
+==== d101hnew -> d102hocs
+B. candidate swap
+  lost (base only)     89 (is_stm 1 on its own side: 22); nearest other-arm candidate: {'20-60 cm': 2, '>60 cm / none': 87}; identical T_cluster row in both arms: 85
+  gained (arm only)    76 (is_stm 1 on its own side: 25); nearest other-arm candidate: {'>60 cm / none': 76}; identical T_cluster row in both arms: 71
+C. TaggerCheckSTM verdicts (job log)
+  evaluated 4041; STM=1 base 341 arm 328; flips {'STM 1->0': 89, 'STM 0->1': 76}
+    STM 1->0: lowest-pass status 0 -> 3: 54
+    STM 0->1: lowest-pass status 3 -> 0: 47
+    STM 0->1: lowest-pass status 2 -> 0: 15
+    STM 1->0: lowest-pass status 0 -> 2: 9
+    STM 1->0: lowest-pass status 0 -> 4: 9
+    STM 1->0: lowest-pass status 0 -> None: 7
+    STM 1->0: lowest-pass status 0 -> 5: 6
+    STM 0->1: lowest-pass status 5 -> 0: 5
+    STM 1->0: lowest-pass status 0 -> 7: 4
+    STM 0->1: lowest-pass status 4 -> 0: 4
+    STM 0->1: lowest-pass status 7 -> 0: 3
+    STM 0->1: lowest-pass status None -> 0: 1
+D. kept candidates
+  kept 252: is_stm {'0->0': 134, '0->1': 11, '1->0': 19, '1->1': 88}
+    1->0 bits that appear: {'no_bragg': 12, 'plateau_off_mip': 4, 'stop_near_boundary': 3, 'shape_flat': 2, 'profile_sparse': 1, 'not_muon_pid': 1}
+    0->1 bits that clear:  {'plateau_off_mip': 5, 'no_bragg': 5, 'stop_near_boundary': 2, 'profile_sparse': 1, 'stop_unmatched': 1, 'shape_flat': 1}
+
+==== d101hnew -> d102hcs
+B. candidate swap
+  lost (base only)     80 (is_stm 1 on its own side: 20); nearest other-arm candidate: {'20-60 cm': 2, '>60 cm / none': 78}; identical T_cluster row in both arms: 79
+  gained (arm only)    72 (is_stm 1 on its own side: 27); nearest other-arm candidate: {'20-60 cm': 1, '>60 cm / none': 71}; identical T_cluster row in both arms: 67
+C. TaggerCheckSTM verdicts (job log)
+  evaluated 4041; STM=1 base 341 arm 333; flips {'STM 0->1': 72, 'STM 1->0': 80}
+    STM 0->1: lowest-pass status 3 -> 0: 47
+    STM 1->0: lowest-pass status 0 -> 3: 45
+    STM 0->1: lowest-pass status 2 -> 0: 16
+    STM 1->0: lowest-pass status 0 -> None: 8
+    STM 1->0: lowest-pass status 0 -> 4: 7
+    STM 1->0: lowest-pass status 0 -> 2: 7
+    STM 1->0: lowest-pass status 0 -> 5: 5
+    STM 1->0: lowest-pass status 0 -> 7: 4
+    STM 1->0: lowest-pass status 3 -> 3: 3
+    STM 0->1: lowest-pass status 4 -> 0: 3
+    STM 0->1: lowest-pass status None -> 0: 2
+    STM 0->1: lowest-pass status 5 -> 0: 2
+D. kept candidates
+  kept 261: is_stm {'0->0': 140, '0->1': 12, '1->0': 19, '1->1': 90}
+    1->0 bits that appear: {'no_bragg': 13, 'not_muon_pid': 2, 'continuation': 2, 'plateau_off_mip': 2, 'stop_near_boundary': 2, 'shape_flat': 2, 'profile_sparse': 1}
+    0->1 bits that clear:  {'plateau_off_mip': 7, 'no_bragg': 4, 'profile_sparse': 2, 'stop_near_boundary': 2, 'shape_flat': 1, 'stop_unmatched': 1}

@@ -1,0 +1,15 @@
+# doc pdvd/103: the path of A1's new false positives (pdhd; A0 d101hnew, A1 d102hcs)
+
+== is_stm: A1-only false positives 8
+  A0 candidate, CheckSTM_Michel rejected: 5
+  not an A0 candidate (A0 TaggerCheckSTM status 3): 3
+  A0 reject bits of the rejected ones: {'plateau_off_mip': 3, 'stop_near_boundary': 2, 'no_bragg': 1, 'shape_flat': 1}
+  keys: 028084_17/35, 028084_18/122, 029107_14/106, 029107_16/46, 029107_17/49, 029107_2/64, 029107_22/22, 029107_3/86
+
+== michel_found: A1-only false positives 12
+  A0 candidate, michel_found 0 (A0 is_stm 1): 5
+  A0 candidate, michel_found 0 (A0 is_stm 0): 4
+  not an A0 candidate (A0 TaggerCheckSTM status 3): 2
+  not an A0 candidate (A0 TaggerCheckSTM status 2): 1
+  A1 michel_conn_type (1 attached, 2 bridged, 3 charge-only): {1: 7, 2: 4, 3: 1}; michel_len median 1.9 cm
+  keys: 028084_10/109, 028084_8/120, 028084_9/27, 029107_11/86, 029107_12/33, 029107_19/111, 029107_23/116, 029107_23/41, 029107_26/111, 029107_27/39, 029107_6/122, 029107_7/34

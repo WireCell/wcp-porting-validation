@@ -1,0 +1,14 @@
+# doc pdvd/103 blind scan record (pdhd, tag smx28); round /home/xqian/tmp/d103/round_pdhd
+items 156; records 123; missing 33 ['028084_1/31', '028084_12/1', '028084_12/3', '028084_17/4', '028084_19/31', '028084_21/20', '028084_22/2', '028084_3/49', '028084_30/107', '028084_7/109', '028084_7/15', '028084_7/21', '028084_7/8', '028084_8/109', '028084_8/39', '028084_9/120', '029107_0/1', '029107_0/17', '029107_11/15', '029107_11/34', '029107_12/19', '029107_13/32', '029107_16/1', '029107_16/15', '029107_16/31', '029107_18/77', '029107_2/11', '029107_2/117', '029107_25/9', '029107_26/6', '029107_5/107', '029107_8/22', '029107_9/16']; not in the item list []
+double scans 0: 
+rubric sha on the records: {'750751ea2dbf042f80f3147384033840a5b783ea52565615de4e883d2ea1db1d': 123}
+verdicts (new items): {'THRU': 49, 'FRAG_THRU': 3, 'STM_ONLY': 16, 'STM_MICHEL': 27, 'UNCLEAR': 7, 'MESSY': 1}
+confidence (new items): {'high': 57, 'medium': 39, 'low': 7}
+
+V2 calibration: 20 scanned, 18 judged on both sides; stopper-or-not disagreements 2 (11%) -> PASS
+   028084_16/110: existing THRU (medium) vs blind STM_MICHEL (medium)
+   029107_3/23: existing STM_MICHEL (medium) vs blind THRU (medium)
+   029107_28/30: not judged on one side: existing STM_MICHEL vs blind UNCLEAR
+   028084_18/17: not judged on one side: existing THRU vs blind MESSY
+
+wrote /home/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/scan/pdhd_stm_michel_smx28_verdicts.json (123 records)

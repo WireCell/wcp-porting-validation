@@ -1,0 +1,56 @@
+doc pdvd/103 round 1 -- pre-registered grading rule
+Written 2026-09-15 before any new (smx28 / smx10) label exists and before any grade reads one.
+
+QUESTION
+With both trajectory levers on (fit_weight_pow 1.5 + assoc_cont_center 1, and retile charge_stepped), are the
+STM / Michel tags truly worse than production once the candidates the old records lack are labelled?
+
+CELLS (existing arms, same pctrees)
+  A0 production     PDHD d101hnew   PDVD d101vnew
+  K  fit knobs only PDHD d101hkf    PDVD d101vkf
+  S  sampler only   PDHD d102hocs   PDVD d102vocs
+  A1 both on        PDHD d102hcs    PDVD d102vcsall
+
+LABELS (union record)
+  An item's truth, first source that has it:
+    PDHD: smx22 (owner_review > owner_smx1 > agent)  >  new smx28 (owner review > agent)
+    PDVD: merged smx1a..smx9 record  >  owner records own100, own100m, own100x  >  new smx10 (owner review > agent)
+  Carried-over records (pdvd_stm_michel_*carried*, sw99) are NOT used as truth; any union candidate they alone cover
+  is labelled blind in smx10.
+  New labels: verdict-blind (no is_stm, reject bits, michel_found, arm or earlier verdict visible), same rubric
+  vocabulary; MESSY / UNCLEAR are unjudged and leave the population.
+
+POPULATION
+  Every judged item that is a CheckSTM_Michel candidate (a T_stm_michel row) in ANY of the four cells, plus the
+  graders' existing fixed populations (PDHD smx18 p82bhoff key items; PDVD judged items with a d101vnew payload).
+  A hand positive that is not a candidate in a cell is a miss in that cell; a hand negative absent is a true negative.
+  is_stm truth: verdict STM_MICHEL or STM_ONLY (FRAG_ stripped).
+  michel_found truth: PDHD -- hand stoppers with michel_kind in (attached, both) = positive, other hand stoppers
+  negative (d21_michel_census precedence); PDVD -- verdict STM_MICHEL positive, every other judged item negative
+  (census_lib.is_michel).
+
+METRICS
+  per cell and detector: is_stm purity, is_stm efficiency, michel_found purity, michel_found efficiency;
+  bootstrap 68 % intervals (1000 resamples of the population, seed 103) reported, the decision uses the point values.
+
+DECISION (per detector, A1 vs A0)
+  D1  "record conditioning": every one of the four metrics of A1 is >= the A0 value - 0.02
+      -> propose the combined flip (fit knobs + charge_stepped) to the owner as is; the tagger lever is optional.
+  D2  "real cost": any metric of A1 is < A0 - 0.02
+      -> name the losing class from the labels (lost stoppers by CheckSTM_Michel reject reason / TaggerCheckSTM status,
+         new false positives by kind) and propose round 2 (the refit-stable KS lever) aimed at that class.
+  The per-lever cells K and S are reported with the same metrics; they do not enter the decision.
+
+VALIDITY CHECKS (a failure stops the grade)
+  V1  given only the old records, the union grader reproduces the fixed-denominator numbers:
+      PDHD is_stm A0 TP 114 FP 3 FN 33 TN 107, A1 TP 89 FP 6 FN 58 TN 104;
+      PDVD is_stm A0 TP 242 FP 8 FN 34 TN 262, A1 TP 202 FP 17 FN 74 TN 253.
+  V2  calibration: 20 already-labelled items per detector, drawn with random.Random(103), labelled blind among the new
+      items; if the new label disagrees with the existing record on the stopper/non-stopper call for > 25 % of the
+      judged calibration items, the labels are not used to grade.
+  V3  the union grade of A1 - A0 efficiency lies inside the bound printed by d103_bounds.py (else a join bug).
+
+RESTATEMENT
+  The grade is reported first with agent labels ("provisional"), and restated after the owner reviews the queue
+  (new labels on items tagged in any cell, medium/low confidence, the false-positive adjudication list, calibration
+  disagreements). The decision is re-read on the restated grade.

@@ -1,0 +1,66 @@
+[pdhd] d101hnew -> d101hkf; judged labelled clusters with a TaggerCheckSTM eval in both arms: 266 (156 stoppers / 110 non-stoppers)
+  d101hnew    TaggerCheckSTM best D AUC 0.837; best (ks1-ks2) AUC 0.468; accepted (status 0): stoppers 1.000, non-stoppers 0.945
+  d101hkf     TaggerCheckSTM best D AUC 0.832; best (ks1-ks2) AUC 0.480; accepted (status 0): stoppers 0.853, non-stoppers 0.718
+  CheckSTM_Michel candidates in both arms with a shape test: 218 (134 / 84)
+  d101hnew    ks_flat - ks_mu AUC 0.703; contrast / expected AUC 0.755
+  d101hkf     ks_flat - ks_mu AUC 0.683; contrast / expected AUC 0.772
+  selection by production's TaggerCheckSTM:
+    stoppers     accepted in d101hnew  156 -> still accepted in d101hkf  133; not accepted in d101hnew    0 -> accepted in d101hkf    0
+    non-stoppers accepted in d101hnew  104 -> still accepted in d101hkf   79; not accepted in d101hnew    6 -> accepted in d101hkf    0
+rc=0
+
+[pdhd] d101hnew -> d102hocs; judged labelled clusters with a TaggerCheckSTM eval in both arms: 265 (154 stoppers / 111 non-stoppers)
+  d101hnew    TaggerCheckSTM best D AUC 0.834; best (ks1-ks2) AUC 0.462; accepted (status 0): stoppers 1.000, non-stoppers 0.946
+  d102hocs    TaggerCheckSTM best D AUC 0.847; best (ks1-ks2) AUC 0.547; accepted (status 0): stoppers 0.844, non-stoppers 0.595
+  CheckSTM_Michel candidates in both arms with a shape test: 203 (131 / 72)
+  d101hnew    ks_flat - ks_mu AUC 0.680; contrast / expected AUC 0.725
+  d102hocs    ks_flat - ks_mu AUC 0.733; contrast / expected AUC 0.732
+  selection by production's TaggerCheckSTM:
+    stoppers     accepted in d101hnew  154 -> still accepted in d102hocs  130; not accepted in d101hnew    0 -> accepted in d102hocs    0
+    non-stoppers accepted in d101hnew  105 -> still accepted in d102hocs   63; not accepted in d101hnew    6 -> accepted in d102hocs    3
+rc=0
+
+[pdhd] d101hnew -> d102hcs; judged labelled clusters with a TaggerCheckSTM eval in both arms: 264 (152 stoppers / 112 non-stoppers)
+  d101hnew    TaggerCheckSTM best D AUC 0.837; best (ks1-ks2) AUC 0.456; accepted (status 0): stoppers 1.000, non-stoppers 0.946
+  d102hcs     TaggerCheckSTM best D AUC 0.843; best (ks1-ks2) AUC 0.578; accepted (status 0): stoppers 0.888, non-stoppers 0.634
+  CheckSTM_Michel candidates in both arms with a shape test: 207 (135 / 72)
+  d101hnew    ks_flat - ks_mu AUC 0.686; contrast / expected AUC 0.730
+  d102hcs     ks_flat - ks_mu AUC 0.743; contrast / expected AUC 0.748
+  selection by production's TaggerCheckSTM:
+    stoppers     accepted in d101hnew  152 -> still accepted in d102hcs  135; not accepted in d101hnew    0 -> accepted in d102hcs    0
+    non-stoppers accepted in d101hnew  106 -> still accepted in d102hcs   69; not accepted in d101hnew    6 -> accepted in d102hcs    2
+rc=0
+
+[pdvd] d101vnew -> d101vkf; judged labelled clusters with a TaggerCheckSTM eval in both arms: 566 (280 stoppers / 286 non-stoppers)
+  d101vnew    TaggerCheckSTM best D AUC 0.862; best (ks1-ks2) AUC 0.521; accepted (status 0): stoppers 0.964, non-stoppers 0.899
+  d101vkf     TaggerCheckSTM best D AUC 0.836; best (ks1-ks2) AUC 0.545; accepted (status 0): stoppers 0.875, non-stoppers 0.720
+  CheckSTM_Michel candidates in both arms with a shape test: 450 (242 / 208)
+  d101vnew    ks_flat - ks_mu AUC 0.880; contrast / expected AUC 0.882
+  d101vkf     ks_flat - ks_mu AUC 0.841; contrast / expected AUC 0.823
+  selection by production's TaggerCheckSTM:
+    stoppers     accepted in d101vnew  270 -> still accepted in d101vkf  241; not accepted in d101vnew   10 -> accepted in d101vkf    4
+    non-stoppers accepted in d101vnew  257 -> still accepted in d101vkf  198; not accepted in d101vnew   29 -> accepted in d101vkf    8
+rc=0
+
+[pdvd] d101vnew -> d102vocs; judged labelled clusters with a TaggerCheckSTM eval in both arms: 565 (282 stoppers / 283 non-stoppers)
+  d101vnew    TaggerCheckSTM best D AUC 0.859; best (ks1-ks2) AUC 0.518; accepted (status 0): stoppers 0.968, non-stoppers 0.898
+  d102vocs    TaggerCheckSTM best D AUC 0.852; best (ks1-ks2) AUC 0.567; accepted (status 0): stoppers 0.890, non-stoppers 0.668
+  CheckSTM_Michel candidates in both arms with a shape test: 435 (247 / 188)
+  d101vnew    ks_flat - ks_mu AUC 0.870; contrast / expected AUC 0.885
+  d102vocs    ks_flat - ks_mu AUC 0.843; contrast / expected AUC 0.847
+  selection by production's TaggerCheckSTM:
+    stoppers     accepted in d101vnew  273 -> still accepted in d102vocs  246; not accepted in d101vnew    9 -> accepted in d102vocs    5
+    non-stoppers accepted in d101vnew  254 -> still accepted in d102vocs  178; not accepted in d101vnew   29 -> accepted in d102vocs   11
+rc=0
+
+[pdvd] d101vnew -> d102vcsall; judged labelled clusters with a TaggerCheckSTM eval in both arms: 568 (283 stoppers / 285 non-stoppers)
+  d101vnew    TaggerCheckSTM best D AUC 0.859; best (ks1-ks2) AUC 0.519; accepted (status 0): stoppers 0.965, non-stoppers 0.898
+  d102vcsall  TaggerCheckSTM best D AUC 0.838; best (ks1-ks2) AUC 0.568; accepted (status 0): stoppers 0.859, non-stoppers 0.639
+  CheckSTM_Michel candidates in both arms with a shape test: 425 (241 / 184)
+  d101vnew    ks_flat - ks_mu AUC 0.882; contrast / expected AUC 0.893
+  d102vcsall  ks_flat - ks_mu AUC 0.838; contrast / expected AUC 0.842
+  selection by production's TaggerCheckSTM:
+    stoppers     accepted in d101vnew  273 -> still accepted in d102vcsall  239; not accepted in d101vnew   10 -> accepted in d102vcsall    4
+    non-stoppers accepted in d101vnew  256 -> still accepted in d102vcsall  172; not accepted in d101vnew   29 -> accepted in d102vcsall   10
+rc=0
+

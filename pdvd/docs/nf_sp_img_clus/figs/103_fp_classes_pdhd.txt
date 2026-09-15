@@ -1,0 +1,11 @@
+# doc pdvd/103 false-positive classes (pdhd); union record, cells A0 d101hnew and A1 d102hcs
+
+== is_stm: FP A0 3, A1 9 (shared 1, A1 only 8, A0 only 2)
+  A1 only  n   8 | source {'new blind agent': 3, 'owner': 1, 'existing agent': 4} | confidence {'low': 1, 'medium': 4, 'high': 3} | hand class {'THRU': 8}
+  shared   n   1 | source {'existing agent': 1} | confidence {'medium': 1} | hand class {'THRU': 1}
+  A0 only  n   2 | source {'existing agent': 2} | confidence {'medium': 1, 'high': 1} | hand class {'THRU': 2}
+
+== michel_found: FP A0 2, A1 14 (shared 2, A1 only 12, A0 only 0)
+  A1 only  n  12 | source {'existing agent': 9, 'new blind agent': 3} | confidence {'high': 3, 'medium': 9} | hand class {'STM_ONLY/detached dots': 7, 'STM_ONLY/none': 5}
+  shared   n   2 | source {'existing agent': 1, 'owner': 1} | confidence {'medium': 2} | hand class {'STM_ONLY/detached dots': 2}
+  A0 only  n   0 | source {} | confidence {} | hand class {}

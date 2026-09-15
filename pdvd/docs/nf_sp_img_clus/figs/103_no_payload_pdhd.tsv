@@ -1,0 +1,36 @@
+# doc pdvd/103: union candidates with no scan payload (prep_stm_michel_scan.py keeps has_pass, n_profile_pts >= 20, muon_len >= 10 cm); they stay unlabelled and outside the union population
+key	display_arm	role	reason
+029107_18/77	d101hkf	new	not in sheet
+029107_0/1	d101hkf	new	not in sheet
+029107_9/16	d101hnew	new	not in sheet
+028084_1/31	d101hnew	new	not in sheet
+029107_16/31	d101hnew	new	not in sheet
+029107_11/15	d101hnew	new	not in sheet
+028084_19/31	d101hnew	new	not in sheet
+028084_22/2	d101hnew	new	not in sheet
+029107_26/6	d101hnew	new	not in sheet
+029107_8/22	d102hcs	new	not in sheet
+028084_8/109	d102hcs	new	not in sheet
+028084_8/39	d102hcs	new	not in sheet
+029107_5/107	d102hcs	new	not in sheet
+028084_7/109	d102hcs	new	not in sheet
+028084_12/1	d102hcs	new	not in sheet
+029107_13/32	d102hcs	new	not in sheet
+029107_16/1	d102hcs	new	not in sheet
+028084_3/49	d102hcs	new	not in sheet
+028084_30/107	d102hcs	new	not in sheet
+029107_2/11	d102hcs	new	not in sheet
+029107_16/15	d102hcs	new	not in sheet
+028084_7/21	d102hcs	new	not in sheet
+028084_7/8	d102hcs	new	not in sheet
+028084_21/20	d102hcs	new	not in sheet
+029107_2/117	d102hcs	new	not in sheet
+029107_0/17	d102hcs	new	not in sheet
+029107_12/19	d102hcs	new	not in sheet
+028084_2/66	d102hcs	new	not in sheet
+029107_25/9	d102hcs	new	not in sheet
+028084_9/120	d102hcs	new	not in sheet
+028084_12/3	d102hocs	new	not in sheet
+028084_17/4	d102hocs	new	not in sheet
+028084_7/15	d102hocs	new	not in sheet
+029107_11/34	d102hocs	new	not in sheet

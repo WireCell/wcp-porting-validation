@@ -1,0 +1,11 @@
+# doc pdvd/103 false-positive classes (pdvd); union record, cells A0 d101vnew and A1 d102vcsall
+
+== is_stm: FP A0 9, A1 23 (shared 6, A1 only 17, A0 only 3)
+  A1 only  n  17 | source {'new blind agent': 5, 'owner': 4, 'existing agent': 8} | confidence {'high': 3, 'medium': 10, 'owner': 4} | hand class {'THRU': 17}
+  shared   n   6 | source {'existing agent': 2, 'new blind agent': 1, 'owner': 3} | confidence {'medium': 2, 'low': 1, 'owner': 3} | hand class {'THRU': 6}
+  A0 only  n   3 | source {'owner': 2, 'existing agent': 1} | confidence {'owner': 2, 'medium': 1} | hand class {'THRU': 3}
+
+== michel_found: FP A0 12, A1 30 (shared 7, A1 only 23, A0 only 5)
+  A1 only  n  23 | source {'existing agent': 9, 'new blind agent': 8, 'owner': 6} | confidence {'medium': 7, 'high': 9, 'owner': 6, 'low': 1} | hand class {'THRU/none': 11, 'THRU/— not set —': 6, 'STM_ONLY/detached dots': 3, 'STM_ONLY/none': 3}
+  shared   n   7 | source {'owner': 5, 'existing agent': 2} | confidence {'owner': 5, 'high': 1, 'medium': 1} | hand class {'STM_ONLY/detached dots': 3, 'STM_ONLY/none': 2, 'STM_ONLY/— not set —': 1, 'THRU/— not set —': 1}
+  A0 only  n   5 | source {'owner': 5} | confidence {'owner': 5} | hand class {'THRU/— not set —': 5}

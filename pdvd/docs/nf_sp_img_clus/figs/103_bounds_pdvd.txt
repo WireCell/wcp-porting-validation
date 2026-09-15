@@ -1,0 +1,8 @@
+[pdvd] d101vnew vs d102vcsall; graded population 546; keys labelled in any record 679
+  fixed denominator  d101vnew    TP 242 FP   8 FN  34 TN 262  purity 0.968 efficiency 0.877
+  fixed denominator  d102vcsall  TP 202 FP  17 FN  74 TN 253  purity 0.922 efficiency 0.732
+  unlabelled candidates of d102vcsall only or shared: 123 (is_stm 1: 49, is_stm 0: 74); of them candidates in d101vnew: 17
+  unlabelled candidates of d101vnew only or shared: 23 (is_stm 1: 8, is_stm 0: 15); of them candidates in d102vcsall: 17
+  union of unlabelled candidates 129
+  best for the arm  : d101vnew purity 0.965 eff 0.766 | d102vcsall purity 0.937 eff 0.772 | efficiency change +0.006, purity change -0.029
+  worst for the arm : d101vnew purity 0.942 eff 0.683 | d102vcsall purity 0.754 eff 0.567 | efficiency change -0.115, purity change -0.188

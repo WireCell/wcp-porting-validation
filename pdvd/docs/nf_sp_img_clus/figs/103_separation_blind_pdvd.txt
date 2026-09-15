@@ -1,0 +1,9 @@
+[pdvd] d101vnew -> d102vcsall; judged labelled clusters with a TaggerCheckSTM eval in both arms: 176 (93 stoppers / 83 non-stoppers) [extra records only]
+  d101vnew    TaggerCheckSTM best D AUC 0.688; best (ks1-ks2) AUC 0.543; accepted (status 0): stoppers 0.129, non-stoppers 0.060
+  d102vcsall  TaggerCheckSTM best D AUC 0.774; best (ks1-ks2) AUC 0.621; accepted (status 0): stoppers 0.742, non-stoppers 0.554
+  CheckSTM_Michel candidates in both arms with a shape test: 14 (9 / 5)
+  d101vnew    ks_flat - ks_mu AUC 0.356; contrast / expected AUC 0.589
+  d102vcsall  ks_flat - ks_mu AUC 0.756; contrast / expected AUC 0.711
+  selection by production's TaggerCheckSTM:
+    stoppers     accepted in d101vnew   12 -> still accepted in d102vcsall   10; not accepted in d101vnew   81 -> accepted in d102vcsall   59
+    non-stoppers accepted in d101vnew    5 -> still accepted in d102vcsall    5; not accepted in d101vnew   78 -> accepted in d102vcsall   41

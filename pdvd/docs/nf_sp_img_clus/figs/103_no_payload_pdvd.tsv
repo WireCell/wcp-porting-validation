@@ -1,0 +1,13 @@
+# doc pdvd/103: union candidates with no scan payload (prep_stm_michel_scan.py keeps has_pass, n_profile_pts >= 20, muon_len >= 10 cm); they stay unlabelled and outside the union population
+key	display_arm	role	reason
+039349_15/44	d101vkf	new	not in sheet
+039349_21/27	d101vnew	new	not in sheet
+039349_64/45	d101vnew	new	not in sheet
+039349_64/73	d102vcsall	new	not in sheet
+039349_37/42	d102vcsall	new	not in sheet
+039349_37/7	d102vcsall	new	not in sheet
+039349_38/31	d102vcsall	new	not in sheet
+039349_0/63	d102vcsall	new	not in sheet
+039252_0/74	d102vocs	new	not in sheet
+039349_52/18	d102vocs	new	not in sheet
+# is_stm 1 in some cell among them: PDHD 0; PDVD 2 (039349_37/42 and 039349_52/18, both only in the sampler-only cell d102vocs). 028084_2/66 (PDHD) has a payload in d101hkf and is shot from there.

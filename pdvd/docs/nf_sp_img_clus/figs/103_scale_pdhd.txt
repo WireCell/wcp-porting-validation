@@ -1,0 +1,29 @@
+[pdhd] references: TaggerCheckSTM mip_dqdx 56000, CheckSTM_Michel mip_dqdx_median 48000 (e/cm)
+  d101hnew    all-candidate plateau_med median 50946
+  d101hkf     all-candidate plateau_med median 53898
+    paired candidates n 250
+      plateau_med ratio   median 1.026 (p25 0.963, p75 1.105)
+      tail_med ratio      median 1.018 (p25 0.843, p75 1.183)
+      muon_len ratio      median 0.990 (p25 0.969, p75 1.005)
+      n_profile_pts ratio median 0.988 (p25 0.962, p75 1.006)
+      summed profile q ratio median 1.001 (p25 0.981, p75 1.030); median q ratio median 1.010 (p25 0.977, p75 1.038)
+      corr(log plateau ratio, -log muon_len ratio) -0.04
+      same-verdict candidates n 240: stop shift along track (cm) median -0.008 (p25 -0.266, p75 0.384); entry shift median 0.027 (p25 -0.065, p75 0.172)
+  d102hocs    all-candidate plateau_med median 53762
+    paired candidates n 230
+      plateau_med ratio   median 1.032 (p25 0.958, p75 1.147)
+      tail_med ratio      median 1.034 (p25 0.836, p75 1.340)
+      muon_len ratio      median 0.989 (p25 0.965, p75 1.007)
+      n_profile_pts ratio median 0.988 (p25 0.956, p75 1.012)
+      summed profile q ratio median 1.021 (p25 0.996, p75 1.067); median q ratio median 1.027 (p25 1.000, p75 1.089)
+      corr(log plateau ratio, -log muon_len ratio) -0.05
+      same-verdict candidates n 221: stop shift along track (cm) median 0.000 (p25 -0.598, p75 0.602); entry shift median 0.000 (p25 -0.175, p75 0.198)
+  d102hcs     all-candidate plateau_med median 55595
+    paired candidates n 236
+      plateau_med ratio   median 1.036 (p25 0.956, p75 1.195)
+      tail_med ratio      median 1.020 (p25 0.859, p75 1.277)
+      muon_len ratio      median 0.978 (p25 0.948, p75 0.998)
+      n_profile_pts ratio median 0.978 (p25 0.942, p75 1.000)
+      summed profile q ratio median 1.025 (p25 0.979, p75 1.079); median q ratio median 1.037 (p25 1.006, p75 1.093)
+      corr(log plateau ratio, -log muon_len ratio) +0.02
+      same-verdict candidates n 230: stop shift along track (cm) median 0.007 (p25 -0.663, p75 0.710); entry shift median -0.002 (p25 -0.287, p75 0.196)

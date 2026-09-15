@@ -1,0 +1,143 @@
+# doc pdvd/103: tag moves on already-labelled items, d101vnew -> d102vcsall (pdvd)
+chain	move	key	label_source	confidence	arm_candidate	arm_tagger_status	arm_reject_bits_new
+is_stm	LOST_TP	039252_0/76	record	high	no	7	
+is_stm	NEW_TP	039252_12/123	record	owner	yes	0	
+is_stm	LOST_TP	039252_15/81	record	high	yes	0	no_bragg,shape_flat
+is_stm	NEW_TP	039252_16/108	record	high	yes	0	
+is_stm	NEW_FP	039252_17/80	record	medium	yes	0	
+is_stm	NEW_FP	039252_17/90	record	medium	yes	0	
+is_stm	LOST_TP	039252_2/39	record	high	yes	0	no_bragg,shape_flat
+is_stm	LOST_TP	039252_2/79	record	owner	yes	0	continuation
+is_stm	NEW_TP	039252_8/102	record	owner	yes	0	
+is_stm	NEW_FP	039252_8/82	record	owner	yes	0	
+is_stm	NEW_FP	039252_8/93	record	medium	yes	0	
+is_stm	LOST_TP	039253_0/110	record	medium	yes	0	stop_near_boundary
+is_stm	LOST_TP	039253_1/98	record	medium	yes	0	not_muon_pid
+is_stm	LOST_TP	039253_12/41	record	medium	no	4	
+is_stm	LOST_TP	039253_13/39	record	owner	no	3	
+is_stm	LOST_TP	039253_13/73	record	owner	yes	0	no_bragg,shape_flat
+is_stm	LOST_TP	039253_16/109	record	medium	no	3	
+is_stm	LOST_TP	039253_17/127	record	high	no	5	
+is_stm	LOST_TP	039253_17/77	record	medium	yes	0	no_bragg,shape_flat
+is_stm	LOST_TP	039253_2/34	record	high	yes	0	no_bragg,shape_flat
+is_stm	LOST_TP	039253_2/77	record	owner	yes	0	no_bragg,shape_flat
+is_stm	LOST_TP	039253_3/66	record	owner	no	5	
+is_stm	NEW_FP	039253_5/121	record	medium	yes	0	
+is_stm	LOST_TP	039253_6/85	record	owner	no	3	
+is_stm	NEW_TP	039253_8/27	record	owner	yes	0	
+is_stm	LOST_TP	039253_8/65	record	owner	no	5	
+is_stm	LOST_TP	039253_9/108	record	medium	no	5	
+is_stm	LOST_TP	039253_9/42	record	medium	yes	0	shape_flat
+is_stm	NEW_TP	039349_0/28	record	owner	yes	0	
+is_stm	LOST_TP	039349_1/52	record	medium	yes	0	no_bragg
+is_stm	LOST_TP	039349_10/58	record	medium	no	3	
+is_stm	LOST_TP	039349_12/51	record	medium	no	3	
+is_stm	NEW_FP	039349_13/28	record	high	yes	0	
+is_stm	GONE_FP	039349_13/56	record	medium	no	3	
+is_stm	LOST_TP	039349_15/23	record	owner	yes	0	shape_flat
+is_stm	NEW_FP	039349_18/10	record	medium	yes	0	
+is_stm	LOST_TP	039349_18/33	record	high	yes	0	no_bragg,shape_flat
+is_stm	LOST_TP	039349_19/52	record	owner	no	5	
+is_stm	LOST_TP	039349_2/56	record	owner	no	5	
+is_stm	LOST_TP	039349_20/32	record	medium	yes	0	shape_flat
+is_stm	NEW_TP	039349_22/56	record	owner	yes	0	
+is_stm	GONE_FP	039349_24/23	record	owner	no	3	
+is_stm	LOST_TP	039349_24/35	record	low	no	5	
+is_stm	LOST_TP	039349_28/60	record	owner	no	5	
+is_stm	GONE_FP	039349_30/21	record	owner	yes	0	no_bragg,shape_flat
+is_stm	LOST_TP	039349_31/39	record	medium	yes	0	shape_flat
+is_stm	NEW_FP	039349_32/63	record	owner	yes	0	
+is_stm	LOST_TP	039349_39/56	record	owner	no	3	
+is_stm	LOST_TP	039349_48/54	record	owner	no	3	
+is_stm	LOST_TP	039349_5/54	record	owner	no	5	
+is_stm	LOST_TP	039349_5/64	record	high	yes	0	no_bragg,shape_flat
+is_stm	LOST_TP	039349_51/29	record	owner	no	4	
+is_stm	NEW_FP	039349_54/18	record	medium	yes	0	
+is_stm	NEW_TP	039349_55/24	record	high	yes	0	
+is_stm	LOST_TP	039349_58/21	record	medium	yes	0	shape_flat
+is_stm	NEW_FP	039349_62/35	record	medium	yes	0	
+is_stm	NEW_TP	039349_64/52	record	owner	yes	0	
+is_stm	LOST_TP	039349_64/61	record	medium	no	5	
+is_stm	LOST_TP	039349_64/65	record	low	no	3	
+is_stm	LOST_TP	039349_68/65	record	medium	yes	0	plateau_off_mip
+is_stm	LOST_TP	039349_7/4	record	medium	yes	0	no_bragg,shape_flat
+is_stm	NEW_FP	039349_7/57	record	owner	yes	0	
+is_stm	LOST_TP	039349_7/67	record	medium	no	2	
+is_stm	LOST_TP	039349_70/61	record	owner	no	3	
+is_stm	LOST_TP	039349_72/11	record	owner	yes	0	shape_flat
+is_stm	LOST_TP	039349_72/65	record	high	no	4	
+is_stm	NEW_TP	039349_76/23	record	owner	yes	0	
+is_stm	LOST_TP	039349_81/41	record	medium	no	3	
+is_stm	NEW_FP	039349_82/25	record	owner	yes	0	
+is_stm	LOST_TP	039349_82/41	record	high	no	5	
+is_stm	LOST_TP	039349_82/52	record	high	no	5	
+is_stm	LOST_TP	039349_82/54	record	owner	yes	0	profile_sparse
+is_stm	LOST_TP	039349_9/20	record	medium	no	3	
+michel_found	NEW_TP	039252_14/37	record	high	yes	0	
+michel_found	LOST_TP	039252_15/81	record	high	yes	0	no_bragg,shape_flat
+michel_found	NEW_FP	039252_16/110	record	high	yes	0	
+michel_found	NEW_FP	039252_17/90	record	medium	yes	0	
+michel_found	LOST_TP	039252_2/39	record	high	yes	0	no_bragg,shape_flat
+michel_found	LOST_TP	039252_2/79	record	owner	yes	0	continuation
+michel_found	LOST_TP	039252_3/45	record	owner	yes	0	
+michel_found	GONE_FP	039252_6/114	record	owner	yes	0	
+michel_found	NEW_TP	039252_8/102	record	owner	yes	0	
+michel_found	NEW_TP	039252_9/101	record	owner	yes	0	
+michel_found	LOST_TP	039253_1/36	record	medium	yes	0	
+michel_found	NEW_FP	039253_11/106	record	high	yes	0	
+michel_found	LOST_TP	039253_13/39	record	owner	no	3	
+michel_found	LOST_TP	039253_13/73	record	owner	yes	0	no_bragg,shape_flat
+michel_found	LOST_TP	039253_17/77	record	medium	yes	0	no_bragg,shape_flat
+michel_found	LOST_TP	039253_2/77	record	owner	yes	0	no_bragg,shape_flat
+michel_found	NEW_TP	039253_3/61	record	medium	yes	0	
+michel_found	LOST_TP	039253_3/66	record	owner	no	5	
+michel_found	NEW_FP	039253_7/64	record	owner	yes	0	
+michel_found	GONE_FP	039253_8/31	record	owner	no	3	
+michel_found	LOST_TP	039253_8/64	record	owner	no	3	
+michel_found	LOST_TP	039253_8/65	record	owner	no	5	
+michel_found	GONE_FP	039349_0/68	record	owner	yes	0	
+michel_found	GONE_FP	039349_10/27	record	owner	yes	0	
+michel_found	LOST_TP	039349_10/58	record	medium	no	3	
+michel_found	LOST_TP	039349_11/19	record	high	yes	0	
+michel_found	NEW_FP	039349_12/44	record	high	yes	0	
+michel_found	NEW_FP	039349_18/18	record	high	yes	0	
+michel_found	LOST_TP	039349_18/36	record	high	yes	0	
+michel_found	LOST_TP	039349_19/52	record	owner	no	5	
+michel_found	LOST_TP	039349_2/56	record	owner	no	5	
+michel_found	LOST_TP	039349_22/41	record	owner	yes	0	
+michel_found	LOST_TP	039349_28/60	record	owner	no	5	
+michel_found	NEW_FP	039349_29/49	record	high	yes	0	
+michel_found	NEW_FP	039349_32/63	record	owner	yes	0	
+michel_found	NEW_FP	039349_33/58	record	medium	yes	0	
+michel_found	NEW_FP	039349_33/66	record	high	yes	2	
+michel_found	LOST_TP	039349_35/62	record	high	yes	0	
+michel_found	LOST_TP	039349_36/46	record	owner	yes	0	
+michel_found	LOST_TP	039349_39/56	record	owner	no	3	
+michel_found	NEW_FP	039349_45/16	record	owner	yes	0	
+michel_found	LOST_TP	039349_48/21	record	owner	yes	0	
+michel_found	LOST_TP	039349_48/54	record	owner	no	3	
+michel_found	LOST_TP	039349_5/54	record	owner	no	5	
+michel_found	LOST_TP	039349_5/64	record	high	yes	0	no_bragg,shape_flat
+michel_found	LOST_TP	039349_56/36	record	owner	yes	0	
+michel_found	NEW_FP	039349_63/47	record	owner	yes	0	
+michel_found	LOST_TP	039349_63/55	record	owner	yes	0	
+michel_found	NEW_TP	039349_64/52	record	owner	yes	0	
+michel_found	LOST_TP	039349_67/78	record	medium	yes	0	
+michel_found	LOST_TP	039349_68/63	record	owner	yes	0	
+michel_found	NEW_FP	039349_7/57	record	owner	yes	0	
+michel_found	LOST_TP	039349_7/67	record	medium	no	2	
+michel_found	LOST_TP	039349_70/61	record	owner	no	3	
+michel_found	NEW_FP	039349_71/51	record	low	yes	0	
+michel_found	LOST_TP	039349_72/65	record	high	no	4	
+michel_found	LOST_TP	039349_81/41	record	medium	no	3	
+michel_found	NEW_FP	039349_82/25	record	owner	yes	0	
+michel_found	LOST_TP	039349_82/54	record	owner	yes	0	profile_sparse
+michel_found	GONE_FP	039349_83/23	record	owner	yes	0	
+# is_stm GONE_FP: 3
+# is_stm LOST_TP: 49
+# is_stm NEW_FP: 12
+# is_stm NEW_TP: 9
+# michel_found GONE_FP: 5
+# michel_found LOST_TP: 35
+# michel_found NEW_FP: 15
+# michel_found NEW_TP: 5

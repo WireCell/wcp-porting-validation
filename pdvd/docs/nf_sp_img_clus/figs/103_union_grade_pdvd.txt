@@ -1,0 +1,26 @@
+# doc pdvd/103 union grade (pdvd); truth sources (items taken from each, in precedence order): [('pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json', 601), ('pdvd_stm_michel_smx10_verdicts.json', 194)]
+population fixed + judged candidates of any cell: 751 (fixed 546); candidates of any cell with no label anywhere: 10; unjudged (MESSY/UNCLEAR) candidates: 37
+population by label source: {'record': 569, 'new_agent': 182}
+
+== is_stm (population 751)
+  A0 d101vnew    TP 251 FP   9 FN 131 TN 360 | purity 0.965 [0.954, 0.977] efficiency 0.657 [0.635, 0.683]
+  K  d101vkf     TP 240 FP  19 FN 142 TN 350 | purity 0.927 [0.912, 0.942] efficiency 0.628 [0.603, 0.653]
+  S  d102vocs    TP 257 FP  25 FN 125 TN 344 | purity 0.911 [0.895, 0.929] efficiency 0.673 [0.649, 0.697]
+  A1 d102vcsall  TP 251 FP  23 FN 131 TN 346 | purity 0.916 [0.899, 0.933] efficiency 0.657 [0.633, 0.683]
+
+== michel_found (population 751)
+  A0 d101vnew    TP 146 FP  12 FN  70 TN 523 | purity 0.924 [0.904, 0.944] efficiency 0.676 [0.649, 0.709]
+  K  d101vkf     TP 135 FP  30 FN  81 TN 505 | purity 0.818 [0.788, 0.848] efficiency 0.625 [0.593, 0.661]
+  S  d102vocs    TP 143 FP  36 FN  73 TN 499 | purity 0.799 [0.768, 0.829] efficiency 0.662 [0.634, 0.697]
+  A1 d102vcsall  TP 143 FP  30 FN  73 TN 505 | purity 0.827 [0.800, 0.856] efficiency 0.662 [0.631, 0.695]
+
+== A1 vs A0: candidates on one side only, by hand class (judged; unlabelled shown separately)
+  A1 only: 124 candidates {'stopper': 67, 'non-stopper': 50, 'unjudged': 5, 'unlabelled': 2}; of them is_stm 1 on that side: {'stopper': 40, 'non-stopper': 5}
+  A0 only: 134 candidates {'stopper': 37, 'non-stopper': 87, 'unjudged': 6, 'unlabelled': 4}; of them is_stm 1 on that side: {'stopper': 28, 'non-stopper': 2}
+
+== decision (figs/103_pred.txt): every metric of A1 >= A0 - 0.02 -> D1, else D2
+  is_stm purity: A1 - A0 = -0.049
+  is_stm efficiency: A1 - A0 = +0.000
+  michel_found purity: A1 - A0 = -0.097
+  michel_found efficiency: A1 - A0 = -0.014
+  -> D2 (real cost)

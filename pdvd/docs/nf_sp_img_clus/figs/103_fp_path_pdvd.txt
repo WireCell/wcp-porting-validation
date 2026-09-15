@@ -1,0 +1,14 @@
+# doc pdvd/103: the path of A1's new false positives (pdvd; A0 d101vnew, A1 d102vcsall)
+
+== is_stm: A1-only false positives 17
+  A0 candidate, CheckSTM_Michel rejected: 12
+  not an A0 candidate (A0 TaggerCheckSTM status 3): 5
+  A0 reject bits of the rejected ones: {'no_bragg': 11, 'shape_flat': 6}
+  keys: 039252_17/80, 039252_17/90, 039252_8/82, 039252_8/93, 039253_10/89, 039253_5/121, 039349_13/28, 039349_14/24, 039349_18/10, 039349_21/65, 039349_32/49, 039349_32/63, 039349_53/42, 039349_54/18, 039349_62/35, 039349_7/57, 039349_82/25
+
+== michel_found: A1-only false positives 23
+  A0 candidate, michel_found 0 (A0 is_stm 0): 11
+  not an A0 candidate (A0 TaggerCheckSTM status 3): 7
+  A0 candidate, michel_found 0 (A0 is_stm 1): 5
+  A1 michel_conn_type (1 attached, 2 bridged, 3 charge-only): {1: 18, 2: 5}; michel_len median 3.5 cm
+  keys: 039252_16/110, 039252_17/90, 039253_10/89, 039253_11/106, 039253_7/64, 039349_12/44, 039349_14/24, 039349_18/18, 039349_21/65, 039349_29/49, 039349_32/49, 039349_32/63, 039349_33/58, 039349_33/66, 039349_38/34, 039349_43/21, 039349_45/16, 039349_63/47, 039349_65/41, 039349_7/57, 039349_71/51, 039349_79/54, 039349_82/25
