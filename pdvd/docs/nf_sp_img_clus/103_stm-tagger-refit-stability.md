@@ -1078,6 +1078,9 @@ python3 $S/d103_flip_gate.py --a d103v1 --b d103vflip > $F/103_flip_gate_pdvd.tx
 * **`figs/103_flip_pdvd.patch`**: `protodunevd/pr.jsonnet`, the retile sampler default `stepped` → `charge_stepped`.
   - This is doc 102's `102r2_flip.patch` **with its PDHD hunk dropped**. That patch flips both detectors; PDHD is not
     approved (sec 12.3), so applying it as it stands would flip PDHD silently.
+  - The comment it installs is **reworded**. Doc 102's text says the default was flipped "in doc 102 round 2, owner's
+    go" — that go belonged to a flip which then failed its own production-configuration gate and was never applied.
+    Shipping it here would assert an approval that does not exist for this flip.
   - `retile_sampler_strategy='stepped'` still compiles to the pre-flip sampler, so the old behaviour stays reachable.
 * **`figs/103_flip_pdvd_fit.patch`**: `protodunevd/pdvd_track_fitting.json` gains `fit_weight_pow` 1.5 and
   `assoc_cont_center` 1, with a provenance comment.
@@ -1104,6 +1107,11 @@ proof is in two pieces.
   - Against `d103v1`: **identical**, on every one of the 198 branches of `T_stm_michel`, for all 563 clusters.
   - The gate script is checked both ways: it reports identical for an arm against itself, and diverges on
     production vs both-on (row counts and `bragg_anchor_shift_cm`).
+* **The one link not exercised.** The arm read the patched fit json from its scratch path, because `run_pr_evt.sh`
+  hard-codes `WCT_BASE` and production was not to be touched. So "patched content ≡ graded content" and "patched
+  `pr.jsonnet` default ≡ the strategy TLA" are both measured, but *the production path resolving to the patched
+  file* is inferred, not run. It is the same `WIRECELL_PATH` resolution production performs today. The first run
+  after the flip is applied should re-run one event and re-check the gate.
 
 ### 14.3 Resources
 
@@ -1116,8 +1124,10 @@ Like for like, both arms at 3 jobs, production `d103v0` → both-on `d103v1` ove
 
 Doc 102's pre-registered data-resource rule is median RSS ≤ +25 % and wall ≤ +50 %: **pass**.
 
-`d103vflip` itself is not a resource measurement. It was run at 32 jobs on the owner's licence, so its per-event wall
-is inflated ×2.5 by contention; its peak RSS (3.50 GB) matches `d103v1`'s 3.49 GB.
+These are the TLA arm's costs, not the flipped config's: `d103vflip` was run at 32 jobs on the owner's licence, so
+its per-event wall is inflated ×2.5 by contention and is not a measurement. The numbers transfer because the two
+arms' tagger output is byte-identical — the same work was done — and `d103vflip`'s peak RSS (3.50 GB), which
+contention does not inflate, matches `d103v1`'s 3.49 GB.
 
 ### 14.4 What is left
 
