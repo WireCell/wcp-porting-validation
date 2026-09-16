@@ -1,0 +1,200 @@
+# A0 = d101hnew   candidates  341   with a profile  341   muon_len>0  341
+# K  = d101hkf    candidates  320   with a profile  320   muon_len>0  320
+# S  = d102hocs   candidates  328   with a profile  328   muon_len>0  328
+# A1 = d102hcs    candidates  333   with a profile  333   muon_len>0  333
+# V1 ok: doc 104 sec 3.1 lengths reproduce for 3 cases from these arms
+
+
+=== 1. candidate churn: each lever against A0, pairwise (never a four-way intersection) ===
+lever   |A0|   |L|  shared   lost  (is_stm)  (michel)  gained  (is_stm)  lost muon_len p50/p90
+K        341   320     271     70        22        28      49        14      94.3   401.6
+S        341   328     252     89        22        34      76        25     157.6   477.3
+A1       341   333     261     80        20        34      72        27     145.5   494.9
+  A cluster that VANISHES is a worse end defect than one that shortens: doc 101 sec 6.5 checked that no
+  lost id is fitted anywhere in the knob-on file, so these are gone, not renumbered.
+
+
+=== 2. paired length change, on each lever's own intersection with A0, muon_len>0 in both ===
+lever   pairs  drop0  dropL | ratio L/A0  p10     p25     p50     p75     p90 | sum ratio  d<-20cm  d<-5cm  d>+5cm
+K         271      0      0 |               0.92    0.97    0.99    1.00    1.04 |     0.993       13      75      27
+S         252      0      0 |               0.91    0.96    0.99    1.01    1.05 |     0.983       16      71      25
+A1        261      0      0 |               0.90    0.95    0.98    1.00    1.07 |     0.982       23     107      21
+  drop0/dropL = shared ids whose muon_len is 0 in A0 / in the lever (early reject before :3085).
+
+
+=== 3. where the move is: displacement of each end (cm), paired, p50 / p90 ===
+lever  |          |d stop| |   |d tagger_stop| |         |d entry| |  stop_dis A0  stop_dis L
+K      |    0.62      5.20 |    0.42      3.32 |    0.19      1.70 |         0.62        0.58
+S      |    0.96     10.29 |    0.76      5.71 |    0.37      3.00 |         0.60        0.59
+A1     |    0.98      8.89 |    0.69      4.79 |    0.39      2.31 |         0.63        0.54
+# V3 ok: every muon_len>0 pair has a role-1 chain in both arms, so all sections share one denominator
+# V2 ok: outside the swap class no pair fires both end tests, so the cascade order is not a hidden choice
+
+
+=== 4. DIRECTED: which end moved, and did it move ALONG the old track? (the headline) ===
+  perpendicular offset of the lever's stop from A0's own chain, all pairs (cm): p25/p50/p75/p90
+    K   n= 271     0.14    0.34    1.06    2.88   <0.6 cm: 179 (0.66)
+    S   n= 252     0.24    0.56    1.46    3.17   <0.6 cm: 133 (0.53)
+    A1  n= 261     0.24    0.52    1.53    3.62   <0.6 cm: 141 (0.54)
+
+  classes (one per pair, priority: swap > truncated > advanced > same end > off-trajectory)
+lever   pairs |     swap   truncated   advanced   same end   off-traj | trunc depth p50/p90/max | adv p50/p90
+K         271 |    1 0.00     18 0.07    20 0.07   216 0.80    16 0.06 |    6.28   32.34   36.67 |   6.54  83.62
+S         252 |    7 0.03      9 0.04    22 0.09   186 0.74    28 0.11 |   11.25   16.21   18.66 |   5.35  17.45
+A1        261 |    5 0.02     16 0.06    19 0.07   187 0.72    34 0.13 |    8.75   22.12   23.99 |   5.96  22.07
+  'off-trajectory' is NOT necessarily a worse fit: these levers move the fit everywhere, so a stop that
+  sits >1 wire pitch off A0's polyline may simply be the same end on a slightly different curve.
+
+
+=== 4c. reconciling sec 2 with sec 4: WHERE the net shortening lives ===
+  Sec 2 says A1 shortens 5:1 (107 pairs below -5 cm vs 21 above +5).  Sec 4 says truncation and advance
+  are nearly balanced.  Both are true only if the net loss sits OUTSIDE the two end classes -- so here is
+  the signed length change per class, which is instrument-free (no projection enters it).
+lever       class     n  d muon_len p50      p10      p90   sum d (cm)  share of net
+K            swap     1            6.93     6.93     6.93          6.9         -0.02
+K           trunc    18          -12.95   -27.76    -3.32       -230.3          0.60
+K             adv    20            4.56   -16.74    40.29        432.8         -1.13
+K            same   216           -1.27    -9.47     3.01       -456.3          1.19
+K             off    16           -4.73   -23.64     9.74       -135.6          0.35
+K             ALL   271                                         -382.4          1.00
+S            swap     7           -2.72   -23.51     4.07        -48.1          0.06
+S           trunc     9          -14.88   -29.62    -7.03       -137.8          0.17
+S             adv    22            2.23   -13.62    16.45         41.1         -0.05
+S            same   186           -1.08    -9.77     4.14       -410.0          0.52
+S             off    28          -11.40   -43.41    12.67       -235.0          0.30
+S             ALL   252                                         -789.8          1.00
+A1           swap     5          -11.97   -23.94    -2.05        -62.9          0.07
+A1          trunc    16          -14.57   -22.64    -4.05       -227.4          0.26
+A1            adv    19            3.27   -13.25    21.76         80.1         -0.09
+A1           same   187           -2.82   -14.03     1.85       -757.6          0.88
+A1            off    34           -5.27   -18.66    12.35        102.4         -0.12
+A1            ALL   261                                         -865.4          1.00
+
+
+=== 4d. is the 'same end' shortening zig-zag removal?  (local arc/chord over a 6 cm window) ===
+  A chain that loses length while BOTH ends stay put has to be getting straighter.  Local arc/chord is
+  the wiggle: over a window of WIN points it is (arc along the chain) / (straight distance end to end),
+  so 1.000 is a straight segment and larger is zig-zag.  Whole-track tortuosity is dominated by real
+  multiple scattering, so it is reported beside the local number, not instead of it.
+lever       class     n  short | local arc/chord A0    lever  delta p50  paired d p50 | tortuosity A0    lever     delta
+K            same   204     12 |             1.0549   1.0434    -0.0115       -0.0064 |        1.0996   1.0855   -0.0122
+K           trunc    18      0 |             1.0608   1.0690     0.0082       -0.0059 |        1.1157   1.1149   -0.0095
+K             adv    20      0 |             1.0800   1.0649    -0.0150       -0.0130 |        1.1475   1.1220   -0.0137
+K             off    16      0 |             1.0915   1.0862    -0.0053       -0.0022 |        1.2054   1.1745   -0.0248
+K            swap     1      0 |             1.0880   1.2169     0.1289        0.1289 |        1.1391   1.2774    0.1384
+S            same   175     11 |             1.0541   1.0435    -0.0106       -0.0050 |        1.0972   1.0852   -0.0095
+S           trunc     9      0 |             1.0630   1.0577    -0.0053       -0.0079 |        1.1457   1.1247   -0.0437
+S             adv    21      1 |             1.0594   1.0405    -0.0189       -0.0148 |        1.1176   1.0858   -0.0049
+S             off    28      0 |             1.0869   1.0633    -0.0236       -0.0167 |        1.1951   1.1266   -0.0553
+S            swap     7      0 |             1.0880   1.0522    -0.0358       -0.0358 |        1.1391   1.1164   -0.0533
+A1           same   174     13 |             1.0547   1.0398    -0.0148       -0.0108 |        1.1007   1.0737   -0.0231
+A1          trunc    16      0 |             1.0668   1.0512    -0.0156       -0.0131 |        1.1445   1.0836   -0.0446
+A1            adv    19      0 |             1.0448   1.0365    -0.0084       -0.0145 |        1.1176   1.0810   -0.0122
+A1            off    34      0 |             1.0811   1.0583    -0.0228       -0.0216 |        1.1495   1.1242   -0.0397
+A1           swap     5      0 |             1.1762   1.0970    -0.0792       -0.0177 |        1.2958   1.1470   -0.1488
+  'short' = tracks excluded because one arm's chain is under 12 points; they are counted, never dropped.
+  'paired d p50' is the median of the PER-TRACK difference, which is the one to read: a difference of
+  medians can hide a shift that every track shares.
+
+  CLOSURE: if straightening is the WHOLE story for the 'same end' class, then per track
+  d(muon_len) should equal d(tortuosity) x (end-to-end distance).  Predicted vs observed, p50:
+    K   n= 204  predicted   -1.65 cm   observed   -1.53 cm   unexplained residual p50    0.09 cm  (p10  -0.99, p90   2.00)
+    S   n= 175  predicted   -1.26 cm   observed   -1.28 cm   unexplained residual p50    0.16 cm  (p10  -1.19, p90   1.89)
+    A1  n= 174  predicted   -3.18 cm   observed   -3.03 cm   unexplained residual p50    0.19 cm  (p10  -1.84, p90   2.31)
+
+
+=== 4b. the end swaps: the same track read backwards (worst class, Bragg peak at the wrong end) ===
+  K  : 1 -> 029107_10/80
+  S  : 7 -> 028084_22/103, 029107_10/80, 029107_11/74, 029107_16/46, 029107_2/39, 029107_21/51, 029107_6/53
+  A1 : 5 -> 029107_11/74, 029107_16/46, 029107_2/39, 029107_20/17, 029107_20/24
+
+  STABILITY of the attribution against SWAP_CM (the class is defined by a constant, so it must be
+  shown that S > K is not an artifact of choosing 10 cm).  Reversal count per lever:
+     SWAP_CM     K     S    A1
+           3     0     3     2
+           5     1     5     4
+          10     1     7     5   <- used
+          15     2     7     5
+          25     2     7     5
+               key   len A0   len A1   arc_f  perp_f  |s1-e0|  |e1-s0|  mich A0  mich A1  stm A0  stm A1
+      029107_11/74     26.1     16.7    9.00    2.35     4.65     0.18        0        0       0       0
+      029107_16/46    266.2    235.3    1.41    0.16     1.78     1.16        1        1       0       1
+       029107_2/39     41.2     29.2    0.00    1.53     1.17     4.10        0        0       0       0
+      029107_20/17     32.1     18.6    6.76    0.32     2.54     5.63        0        0       0       0
+      029107_20/24     58.3     61.1    0.00    3.02     1.55     2.10        0        0       0       0
+
+
+=== 5. the code's own retreat bookkeeping (CheckSTM_Michel.cxx:2975, doc pdvd/57) ===
+lever   pairs | n_retreat>0 A0 n_retreat>0 L newly retreating | retreat_len L-A0 p50/p90 | n_split>0 A0 n_split>0 L
+K         271 |              5             3                2 |        0.00     0.00 |            5           8
+S         252 |              5             6                5 |        0.00     0.00 |            5           6
+A1        261 |              5             2                2 |        0.00     0.00 |            5          13
+  If retreat_len barely moves, the doc-57 retreat step is NOT the site that shortens these muons, and a
+  fix aimed at it would miss.  The shortening happens upstream, in the fit and the chain it builds.
+
+
+=== 6. does the end move corrupt the stopping dQ/dx?  (contrast = tail_med/plateau_med) ===
+lever  both valid | bragg lost  gained | short_track flips | d(contrast) p50 | d(contrast-exp) p50/p90 | plateau_med rel p50/p90
+K             221 |         13       8                 9 |          0.0139 |      0.0111      0.5879 |      0.0255      0.2939
+S             207 |          9       7                 7 |          0.0383 |      0.0353      0.7385 |      0.0345      0.3784
+A1            213 |         10      10                 6 |         -0.0008 |      0.0085      0.5910 |      0.0377      0.4715
+  contrast is the Bragg SHAPE (a ratio, self-normalising); plateau_med rel is the absolute dQ/dx SCALE.
+  They answer different questions -- docs pdhd/16, 17, 29, 50 calibrate on the scale.
+
+
+=== 7. split by whether the lever tagged a Michel (reco flag, no hand label involved) ===
+lever             stratum     n |    swap      trunc       adv | trunc depth p50/p90 | d muon_len p50/p10
+K             michel in L    97 |   0 0.00    10 0.10    5 0.05 |     4.85    11.13  |    -2.77   -13.33
+K          no michel in L   174 |   1 0.01     8 0.05   15 0.09 |    15.60    34.10  |    -0.96   -12.26
+K            is_stm in A0   107 |   0 0.00     3 0.03    7 0.07 |     4.16     5.65  |    -1.93    -9.70
+S             michel in L    94 |   4 0.04     3 0.03   12 0.13 |    12.08    14.02  |    -1.65   -15.93
+S          no michel in L   158 |   3 0.02     6 0.04   10 0.06 |    11.12    17.13  |    -1.25   -14.21
+S            is_stm in A0   107 |   0 0.00     2 0.02   12 0.11 |    11.11    11.89  |    -1.96   -11.90
+A1            michel in L    95 |   1 0.01     9 0.09    8 0.08 |    12.68    23.62  |    -4.28   -21.76
+A1         no michel in L   166 |   4 0.02     7 0.04   11 0.07 |     4.73     9.72  |    -2.95   -14.22
+A1           is_stm in A0   109 |   0 0.00     6 0.06   10 0.09 |     6.47    16.70  |    -3.65   -15.36
+
+
+=== 8. every A1 pair that truncated, swapped or advanced (the tail doc 104 sec 3 sampled by hand) ===
+ class     move              key   len A0   len A1  perp_f  |dstop|  mich A0  mich A1  stm A0  stm A1
+  swap   204.46     029107_16/46    266.2    235.3    0.16   204.46        1        1       0       1
+  swap    52.15     029107_20/24     58.3     61.1    3.02    52.15        0        0       0       0
+  swap    37.93      029107_2/39     41.2     29.2    1.53    37.93        0        0       0       0
+   adv    37.80     028084_17/38    128.1    160.0   36.68    36.68        0        0       0       0
+   adv    24.59    029107_20/108    109.6    132.6   18.60    18.60        1        0       1       0
+ trunc    23.99    028084_26/118     39.4     16.2    0.24    23.64        1        1       0       0
+ trunc    23.52     028084_29/38     39.6     17.5    0.25    12.29        0        1       0       0
+  swap    21.67     029107_20/17     32.1     18.6    0.32    21.67        0        0       0       0
+   adv    21.44      028084_3/72    230.5    243.7   19.77    20.08        1        1       1       0
+ trunc    20.71     029107_27/39     62.1     40.2    0.41     9.89        0        1       1       1
+ trunc    19.20     028084_8/120    345.7    324.5    0.51    17.89        0        1       0       1
+  swap    15.30     029107_11/74     26.1     16.7    2.35    15.30        0        0       0       0
+   adv    13.83    029107_19/111    108.6    121.8   13.88    13.88        0        1       1       0
+ trunc    12.68     028084_7/124    474.7    453.1    0.30    11.45        1        1       1       1
+ trunc    10.80      029107_5/39     37.8     34.2    0.22     8.60        0        0       0       0
+ trunc     9.00     029107_10/37    189.9    166.3    0.35     6.65        0        0       0       0
+ trunc     8.85      028084_1/28     30.4     21.2    0.19     7.08        0        0       0       0
+   adv     8.82      029107_6/53     29.6     36.0    7.63     7.63        0        0       0       0
+ trunc     8.64    028084_21/132    206.4    191.1    0.41     5.03        0        1       1       1
+   adv     7.21      029107_5/28     32.4     43.8    7.41     7.41        1        0       0       0
+   adv     6.78      029107_2/64    399.2    384.2    6.09     6.09        0        1       0       1
+   adv     6.00    029107_19/106    246.9    268.3    4.70     4.70        1        0       1       0
+   adv     6.00    029107_23/128     45.4     50.8    5.34     5.34        1        1       1       1
+   adv     5.96     028084_4/119    259.4    261.5    5.19     5.19        1        1       1       1
+   adv     4.99      029107_9/63     77.7     72.7    1.21     2.40        0        0       0       0
+ trunc     4.73     028084_27/93    236.8    222.5    0.34     4.20        0        0       0       0
+   adv     4.43      028084_6/97    243.0    230.2    4.31     4.31        1        1       1       1
+ trunc     4.29    028084_12/101    449.6    437.6    0.34     3.44        1        1       1       1
+   adv     4.13     028084_20/39    241.4    229.9    3.21     3.21        0        0       0       0
+   adv     3.90    028084_18/104    351.1    352.6    3.68     3.68        0        0       1       1
+   adv     3.74      029107_4/69     68.9     72.1    3.62     3.62        1        1       1       1
+ trunc     3.68      029107_1/32    158.3    143.5    0.40     2.45        1        1       0       0
+ trunc     3.60     028084_14/29    156.3    151.9    0.46     3.80        0        0       0       0
+   adv     3.39     029107_11/22     80.4     80.9    0.72     2.42        0        0       0       0
+   adv     3.25     029107_23/55     31.2     33.9    3.17     3.17        1        1       1       1
+ trunc     3.19     028084_17/55    367.2    361.8    0.38     3.18        1        1       1       1
+ trunc     3.19     029107_26/88     86.2     82.5    0.22     2.47        0        0       1       1
+   adv     3.01    028084_27/111     53.9     59.4    3.22     3.22        0        0       0       0
+ trunc     3.00     028084_12/76    300.7    289.4    0.28     0.87        0        0       0       0
+   adv     3.00     029107_15/17    219.3    202.6    2.89     2.89        0        0       0       0
+  (40 of 261 A1 pairs; doc 104 sec 3.1's five cases were hand-picked from this set)

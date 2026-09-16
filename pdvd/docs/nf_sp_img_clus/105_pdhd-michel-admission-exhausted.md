@@ -209,6 +209,14 @@ its own doc because it is not primarily a Michel problem:
 * PDVD runs both levers in production since `8fc6070e`, so any trajectory-end change needs a PDVD re-grade against
   the same A0 baseline its D1 was stated against.
 
+> **Correction (round 9, doc 106).** Round 9 ran that measurement over all 261 paired candidates in the 61 events
+> and the first bullet above does **not** survive it: the Bragg *shape* is unchanged (median Δcontrast −0.0008),
+> though the absolute dQ/dx *scale* does move (`plateau_med` +3.8 % p50). The premise of this section — that the
+> fitted trajectory ends short — is also resized: truncation is 6 % of paired candidates and is balanced by a 7 %
+> *advance*, 72 % of stops move under 3 cm, and 88 % of the net length loss is the fit getting **straighter**, not
+> shorter-than-the-charge. The levers' dominant effect on PDHD is candidate churn (80 lost / 72 gained of 341).
+> Doc 106 sec 6.1 and sec 8; the two later bullets stand.
+
 **Round 9 should start by measuring the defect's size, not by fixing it:** across the 61 PDHD events, the
 distribution of `muon_len` A0 → A1 and of the stop-point displacement, split by whether a Michel was tagged, with
 the sec 3 caveat that the diagnostic arm is not the graded one. Doc 104 sec 3.1's five cases are the seed, not the

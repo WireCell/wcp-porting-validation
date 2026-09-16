@@ -208,6 +208,19 @@ dQ/dx those four docs rest on, and moves PDVD production, which shipped on 2026-
 its own gate, and scoping it inside a round whose stated goal was an admission knob would be dishonest about the
 blast radius. Sec 7 names the cheap first step.
 
+> **Correction (round 9, doc 106 sec 6.1).** The sentence above — *"this matters beyond the Michel grade … the
+> same end region the stopping-muon dQ/dx of docs pdhd/16, 17, 29 and 50 is measured in"* — was an inference from
+> the five cases of sec 3.1, and doc 106 measured it over all 261 paired candidates in the 61 events. **At
+> aggregate level it is not supported:** the Bragg *shape* is unchanged (A1 median Δcontrast −0.0008,
+> Δ(contrast − expected) **+0.0085**, `bragg_valid` lost 10 / gained 10). What is real is narrower: the absolute
+> dQ/dx **scale** moves (`plateau_med` +3.8 % at p50, +47 % at p90), which is what those four docs calibrate on.
+>
+> Doc 106 also resizes sec 3.1's mechanism rather than withdrawing it. End truncation is **6 %** of A1's paired
+> candidates and is nearly balanced by a 7 % *advance*; 72 % of stops move under 3 cm; and 88 % of the net length
+> loss comes from tracks whose ends did not move, fully accounted for by the fit getting **straighter** (doc 106
+> sec 4.3, closure to within 0.2 cm). The dominant effect the levers have on PDHD is **candidate churn** — 80 of
+> 341 lost, 72 gained — which is five times the end effect and is round 10's question.
+
 ---
 
 ## 4. Why the admission layer cannot fix this
