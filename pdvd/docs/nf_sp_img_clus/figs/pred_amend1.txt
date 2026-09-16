@@ -1,0 +1,9 @@
+doc pdvd/103 round 1 -- amendment 1 to pred.txt (sha256 8e832396...), written before any new label exists.
+
+LABELS, PDVD: the owner records own100, own100m, own100x are REMOVED from the truth precedence.
+Reason: their keys are cluster ids on other arms' pctree lineages (fields `arms` / `shown_arm`: p96vprod+p99wflip,
+p98vonq+p99rwon, p99rwon+p100c, p99wflip, p100bx, p100bxp), while every doc-103 cell reads the d51vclus pctrees.
+A key join across lineages is not an object join (feedback_join_scan_tags_at_cluster_level), so using them could
+attach an owner verdict to a different cluster. The union candidates they alone covered are added to the blind
+smx10 item list instead.
+Unchanged: everything else in pred.txt (population, metrics, D1/D2 thresholds, V1-V3).
