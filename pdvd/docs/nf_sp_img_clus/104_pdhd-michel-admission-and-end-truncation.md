@@ -34,6 +34,9 @@
     the projection onto the unreviewed movers reads −0.036. Controls held, **0 of 4** stopper-class changes.
   - Both `is_stm` metrics still pass (−0.016, −0.011) and Michel efficiency rises to **+0.085**.
 * **Not flipped. No production change, no toolkit change in this round.** PDHD keeps production's trajectory.
+* **Round 8 (doc 105) ran the sec 7 proposal and it also failed:** the Bragg-position discriminator's AUCs are
+  consistent with 0.5, and `far_full` — the direct test of sec 3's truncation — is 0.0 for all six false
+  positives, because nothing is reachable beyond the arm in A1's own graph. The admission layer is exhausted.
 * **Scope.** No C++, no config, no new reconstruction arm. Every number comes from the doc 101/102 arms
   `d101hnew` / `d102hcs` (PDHD, 61 events) and `d103v0` / `d103v1` (PDVD, 120 events), pin
   `/home/xqian/tmp/d102/libpin_d102`, `libWireCellClus` md5 `091e142b9481`.
@@ -333,9 +336,16 @@ is the muon's Bragg rise — at the claimed stop, or beyond the far end of the c
 it is beyond; for a real stopper with a Michel it is at the stop. L4 is the degenerate version of this (contrast at
 the stop only), and its failure does not refute the comparison.
 
-That comparison is not persisted today, and the cheap first step needs no C++: **`survey_enable` and
-`publish_other_arms` are pure-writer knobs** — they add `rej` / `d_stop` / `d_body` columns to
-`T_stm_michel_pts` and role-7 rows for the rejected arms without changing a verdict. One PDHD arm with both on
+That comparison is not persisted today, and the cheap first step needs no C++: `survey_enable` and
+`publish_other_arms` add `rej` / `d_stop` / `d_body` columns to `T_stm_michel_pts` and role-7 rows for the
+rejected arms.
+
+> **Correction (doc 105 sec 3, same day).** This paragraph originally called them "pure-writer knobs, no verdict
+> change by construction". That is **wrong** — `pdhd/pr.jsonnet` carries an owner ruling of 2026-09-08 saying the
+> survey moves the muon's own profile branches through `preload_clusters`. Measured on the `d105hdiag` arm: the
+> candidate set and `michel_found` are unchanged on all 333 clusters, but `is_stm` moves on 1, `reject_bits` on 3,
+> `michel_conn_type` on 2 and the muon profile branches on ~2 %. The arm characterises the population; a cut sized
+> on it must be re-run in the graded configuration. One PDHD arm with both on
 yields the rejected-arm population and the per-piece distances, and the `stop-arm:` DEBUG line
 (`CheckSTM_Michel.cxx:3492-3501`) additionally carries `shower`, `terminal`, `kink5` and `far_full`, which are the
 four gate inputs that exist nowhere in the output. Only after that is there a basis for a discriminator.

@@ -1,0 +1,100 @@
+# doc pdvd/105 sec 4: companion-piece geometry from the diagnostic arm d105hdiag (pdhd)
+# truth and population are the graded cells' (d101hnew / d102hcs); see sec 3 for whether
+# this arm reconstructs the same.  Michel TP 77 of 77, FP 9 of 9 matched.
+# d_body = 1e+07 is the sentinel for a chain shorter than dot_body_exclusion_cm (5 cm).
+
+== TRUE Michels: 77  by conn_type {1: 58, 2: 19}
+   key              conn  dis_cm nAdm nSurv nOther | nearest SURVEYED piece: d_stop / d_body / rej
+   028084_0/36         1    0.00    3     5      0 |    28.10     -1.00    5
+   028084_0/97         1    0.00    2     1      0 |    40.71     -1.00    9
+   028084_12/101       1    0.00    1     2      0 |    20.90     10.06    6
+   028084_12/117       1    0.00    1     0      0 |    (no surveyed piece with a distance)
+   028084_12/132       1    0.00    1     0      1 |    (no surveyed piece with a distance)
+   028084_16/47        1    0.00    1     2      0 |     8.68      5.31    4
+   028084_17/55        1    0.00    1     0      4 |    (no surveyed piece with a distance)
+   028084_17/97        1    0.00    1     2      0 |    34.62     29.95    6
+   028084_18/108       1    0.00    3     1      0 |    38.84     -1.00    9
+   028084_19/59        1    0.00    1     1      0 |    56.86     -1.00    9
+   028084_2/20         1    0.00    2     1      2 |    45.70     -1.00    9
+   028084_20/107       1    0.00    2     0      0 |    (no surveyed piece with a distance)
+   028084_20/116       1    0.00    3     1      1 |    58.80     -1.00    9
+   028084_21/132       1    0.00    1     0      0 |    (no surveyed piece with a distance)
+   028084_21/27        2    1.66    4     3      1 |    20.14     -1.00    5
+   028084_22/3         1    0.00    1     0      1 |    (no surveyed piece with a distance)
+   028084_23/51        1    0.00    1     2      0 |    42.50     -1.00    9
+   028084_24/111       1    0.00    1     0      0 |    (no surveyed piece with a distance)
+   028084_24/49        1    0.00    2     1      0 |    55.72     -1.00    9
+   028084_25/36        1    0.00    1     2      0 |    44.73     -1.00    9
+   028084_26/109       2    3.31    0     4      0 |    25.45     24.67    6
+   028084_26/41        1    0.00    3     4      1 |    45.75     -1.00    9
+   028084_27/27        2    2.73    6     1      4 |    45.21     -1.00   11
+   028084_27/33        1    0.00    2     3      0 |    34.15     -1.00    5
+   028084_28/110       1    0.00    2     1      0 |    36.81     -1.00    9
+   028084_3/23         1    0.00    1     0      1 |    (no surveyed piece with a distance)
+   028084_3/72         1    0.00    2     1      3 |    53.87     -1.00    9
+   028084_3/90         1    0.00    1     0      2 |    (no surveyed piece with a distance)
+   028084_4/114        1    0.00    2     2      0 |    15.33     10.38    6
+   028084_4/119        1    0.00    2     3      0 |    32.00     13.50    6
+   028084_6/97         1    0.00    4     1      2 |    38.51     -1.00    9
+   028084_7/124        1    0.00    2     1      0 |    50.97     -1.00    9
+   028084_7/61         2    3.34    0     3      1 |    26.29     25.85    6
+   028084_8/110        2    3.39    0     1      0 |    10.64      4.91    4
+   028084_8/120        1    0.00    1     0      0 |    (no surveyed piece with a distance)
+   028084_8/37         1    0.00    1     0      1 |    (no surveyed piece with a distance)
+   029107_0/127        1    0.00    1     4      0 |    21.16     18.46    6
+   029107_0/50         1    0.00    2     0      0 |    (no surveyed piece with a distance)
+   029107_1/32         2    0.95    0     1      0 |    25.74      3.22    6
+   029107_10/80        2    3.93    0     0      1 |    (no surveyed piece with a distance)
+   029107_11/26        1    0.00    1     0      2 |    (no surveyed piece with a distance)
+   029107_11/86        2    9.57    0     1      1 |    15.51     10.91    6
+   029107_11/90        1    0.00    1     0      0 |    (no surveyed piece with a distance)
+   029107_12/108       2    3.70    0     0      0 |    (no surveyed piece with a distance)
+   029107_14/23        2    1.87    4     0      3 |    (no surveyed piece with a distance)
+   029107_15/118       1    0.00    2     5      1 |    26.68     23.93    6
+   029107_15/142       1    0.00    3     1      0 |    59.29     -1.00    9
+   029107_16/106       2    2.32    1     3      3 |    19.98     -1.00    5
+   029107_18/130       2    2.59    0     2      0 |    12.56     11.97    4
+   029107_18/146       1    0.00    1     0      0 |    (no surveyed piece with a distance)
+   029107_19/120       1    0.00    1     0      0 |    (no surveyed piece with a distance)
+   029107_19/30        2    4.88    4     3      1 |    23.13     -1.00   11
+   029107_19/95        1    0.00    1     0      0 |    (no surveyed piece with a distance)
+   029107_20/139       1    4.10    1     0      0 |    (no surveyed piece with a distance)
+   029107_20/151       1    0.00    1     0      0 |    (no surveyed piece with a distance)
+   029107_20/57        1    0.00    1     3      0 |    36.51     -1.00    9
+   029107_21/41        1    0.00    1     1      1 |    41.57     -1.00    9
+   029107_22/108       2    3.98    1     3      2 |    42.19     -1.00    9
+   029107_22/40        1    0.00    1     0      0 |    (no surveyed piece with a distance)
+   029107_23/128       1    0.00    2     0      0 |    (no surveyed piece with a distance)
+   029107_23/55        1    0.00    1     1      0 |    55.57     -1.00    9
+   029107_24/111       2   11.23    1     2      5 |    46.72     -1.00    9
+   029107_24/19        1    0.00    1     0      1 |    (no surveyed piece with a distance)
+   029107_25/110       2    7.69    3     0      2 |    (no surveyed piece with a distance)
+   029107_26/111       1    0.00    1     0      0 |    (no surveyed piece with a distance)
+   029107_28/30        1    0.00    1     1      0 |     9.33      8.03    4
+   029107_3/107        1    0.00    3     1      0 |    24.47     10.83    6
+   029107_3/111        1    0.00    1     0      0 |    (no surveyed piece with a distance)
+   029107_3/51         2    4.43    3     2      3 |    26.37     13.40    6
+   029107_3/92         1    0.00    1     2      0 |    35.62     -1.00    9
+   029107_3/99         2    4.68    1     1      1 |    52.51     -1.00    9
+   029107_4/58         1    0.00    2     4      1 |    23.23     10.75    6
+   029107_4/69         1    0.00    2     0      0 |    (no surveyed piece with a distance)
+   029107_5/34         1    0.00    1     5      0 |    18.82     -1.00    5
+   029107_6/122        1    0.00    1     2      0 |    32.22     21.36    6
+   029107_7/47         2    8.06    0     0      1 |    (no surveyed piece with a distance)
+   029107_9/115        1    0.00    2     0      1 |    (no surveyed piece with a distance)
+
+== FALSE positives: 9  by conn_type {1: 6, 2: 2, 3: 1}
+   key              conn  dis_cm nAdm nSurv nOther | nearest SURVEYED piece: d_stop / d_body / rej
+   028084_10/109       1    0.00    1     3      1 |    40.82     -1.00    9
+   028084_2/49         1    0.00    1     6      0 |    25.00     -1.00   16
+   028084_23/114       1    0.00    1     1      0 |    59.13     -1.00    9
+   029107_12/95        1    0.00    3     0      0 |    (no surveyed piece with a distance)
+   029107_19/111       1    0.00    1     4      0 |    20.37     -1.00   16
+   029107_23/41        3    0.79    0     0      0 |    (no surveyed piece with a distance)
+   029107_27/39        2    5.18    1     4      1 |    40.23     -1.00    9
+   029107_28/109       1    0.00    1     1      4 |    39.35     -1.00    9
+   029107_7/85         2    6.16    0     0      0 |    (no surveyed piece with a distance)
+
+== surveyed pieces by gate code (role 6), summed over the class (doc pdvd/53 table)
+   TRUE Michels       97 rejected pieces  {4: 4, 5: 13, 6: 19, 9: 58, 11: 3}
+   FALSE positives    19 rejected pieces  {6: 1, 9: 15, 16: 3}

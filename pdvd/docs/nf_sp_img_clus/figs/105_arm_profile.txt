@@ -1,0 +1,28 @@
+# doc pdvd/105 sec 2: the Bragg-position discriminator -- is the rise at the claimed stop or along the arm?
+# Arm profile rebuilt geometrically from role-3 points (rr/L are -1 there); q normalised to the muon's
+# OWN plateau_med.  conn_type 1 only, at least 6 live Michel points.
+# AUC > 0.5 means the feature is LARGER on true Michels; a discriminator needs |AUC - 0.5| >> its spread.
+
+===== pdhd: A1 d102hcs | attached Michels with a usable profile: TP 54 of 77, FP 3 of 9 =====
+   q_near    TP q1/med/q3   0.66   0.86   1.07 | FP  0.60  1.08  1.18 | AUC 0.401 [0.210, 0.586]
+   q_far     TP q1/med/q3   0.50   0.83   1.07 | FP  0.59  0.79  0.82 | AUC 0.586 [0.519, 0.667]
+   slope     TP q1/med/q3   0.55   0.83   1.18 | FP  0.50  0.73  1.35 | AUC 0.519 [0.369, 0.680]
+   contrast  TP q1/med/q3   0.65   0.81   0.94 | FP  0.73  0.77  0.98 | AUC 0.481 [0.364, 0.605]
+   qsup      TP q1/med/q3   0.62   0.86   1.06 | FP  0.52  0.63  1.00 | AUC 0.636 [0.463, 0.802]
+   false positives in detail:
+     028084_23/114    n   6 len   3.0 q_near  1.18 q_far  0.59 slope  0.50 contrast  0.98
+     029107_12/95     n  28 len   6.5 q_near  0.60 q_far  0.82 slope  1.35 contrast  0.73
+     029107_28/109    n  33 len  19.4 q_near  1.08 q_far  0.79 slope  0.73 contrast  0.77
+
+===== pdvd: A1 d103v1 | attached Michels with a usable profile: TP 133 of 171, FP 5 of 11 =====
+   q_near    TP q1/med/q3   0.62   0.88   1.03 | FP  0.19  0.43  0.63  0.94  1.26 | AUC 0.624 [0.482, 0.770]
+   q_far     TP q1/med/q3   0.49   0.74   0.95 | FP  0.16  0.25  0.57  1.67  1.99 | AUC 0.519 [0.334, 0.710]
+   slope     TP q1/med/q3   0.63   0.90   1.24 | FP  0.36  0.40  1.59  1.77  2.99 | AUC 0.414 [0.242, 0.582]
+   contrast  TP q1/med/q3   0.71   0.82   0.92 | FP -1.00  0.33  0.70  0.77  1.14 | AUC 0.671 [0.509, 0.844]
+   qsup      TP q1/med/q3   0.60   0.79   0.93 | FP  0.34  0.35  0.46  1.22  1.34 | AUC 0.570 [0.386, 0.758]
+   false positives in detail:
+     039252_16/104    n  47 len  15.6 q_near  0.43 q_far  0.16 slope  0.36 contrast  0.70
+     039253_1/101     n  30 len   9.0 q_near  0.19 q_far  0.57 slope  2.99 contrast  0.77
+     039349_28/50     n  38 len  10.0 q_near  0.94 q_far  1.67 slope  1.77 contrast -1.00
+     039349_29/48     n   9 len   4.7 q_near  1.26 q_far  1.99 slope  1.59 contrast  1.14
+     039349_82/25     n   8 len   4.2 q_near  0.63 q_far  0.25 slope  0.40 contrast  0.33

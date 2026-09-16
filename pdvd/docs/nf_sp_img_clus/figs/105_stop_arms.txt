@@ -1,0 +1,27 @@
+# doc pdvd/105 sec 5: stop-arm DEBUG records from d105hdiag (pdhd)
+# clusters with at least one logged stop arm: 155; total arms 171
+# truth/population are the graded cells'; see sec 3 for whether this arm reconstructs the same.
+# matched to an ADMITTED arm: TP 57 of 77, FP 6 of 9
+
+== separation on the admitted arm (AUC > 0.5 => larger on TRUE Michels)
+   kink               TP q1/med/q3   52.50   80.80  116.90 | FP   31.3   34.0   44.3   64.0   97.0  155.9 | AUC 0.613 [0.488, 0.753]
+   kink5              TP q1/med/q3   52.60   76.50  116.50 | FP   28.0   28.2   62.2   64.3  109.6  170.0 | AUC 0.550 [0.418, 0.696]
+   kink5 - kink       TP q1/med/q3   -8.20   -4.00    0.60 | FP  -16.3   -5.8    0.3   12.6   14.1   30.9 | AUC 0.316 [0.175, 0.471]
+   far_full           TP q1/med/q3    0.00    0.00    4.62 | FP    0.0    0.0    0.0    0.0    0.0    3.8 | AUC 0.595 [0.538, 0.667]
+   far_full - far_len TP q1/med/q3    0.00    0.00    0.00 | FP    0.0    0.0    0.0    0.0    0.0    0.0 | AUC 0.500 [0.500, 0.500]
+   shower             TP q1/med/q3    1.00    1.00    1.00 | FP    0.0    0.0    0.0    1.0    1.0    1.0 | AUC 0.654 [0.553, 0.763]
+   terminal           TP q1/med/q3    0.00    1.00    1.00 | FP    0.0    1.0    1.0    1.0    1.0    1.0 | AUC 0.425 [0.333, 0.501]
+   mip                TP q1/med/q3    0.74    1.07    1.20 | FP    0.4    0.7    0.7    0.7    1.1    1.3 | AUC 0.633 [0.504, 0.764]
+   len                TP q1/med/q3    4.71    7.77   11.58 | FP    0.2    1.1    1.3    3.0    6.5   19.4 | AUC 0.743 [0.596, 0.901]
+
+== the false positives' admitted arms in full
+   028084_10/109    seg 109017 kind 1 len 1.13 far_len 0.0 mip 0.65 kink 155.9 shower 1 terminal 1 kink5 170.0 far_full 0.0 kink_w -1.0
+   028084_2/49      seg 49001 kind 1 len 1.32 far_len 0.0 mip 0.68 kink 44.3 shower 0 terminal 1 kink5 28.0 far_full 0.0 kink_w -1.0
+   028084_23/114    seg 114002 kind 1 len 2.95 far_len 0.0 mip 0.65 kink 34.0 shower 1 terminal 1 kink5 28.2 far_full 0.0 kink_w -1.0
+   029107_12/95     seg 95004 kind 1 len 6.53 far_len 3.76 mip 0.44 kink 97.0 shower 1 terminal 0 kink5 109.6 far_full 3.76 kink_w -1.0
+   029107_19/111    seg 111002 kind 1 len 0.24 far_len 0.0 mip 1.15 kink 64.0 shower 0 terminal 1 kink5 64.3 far_full 0.0 kink_w -1.0
+   029107_28/109    seg 109021 kind 1 len 19.4 far_len 0.0 mip 1.26 kink 31.3 shower 0 terminal 1 kink5 62.2 far_full 0.0 kink_w -1.0
+
+== every logged arm at the stop, by classifier verdict (kind), TP vs FP clusters
+   TRUE Michels     clusters   70  arms by kind {0: 18, 1: 62, 2: 1}
+   FALSE positives  clusters    7  arms by kind {0: 1, 1: 7}
