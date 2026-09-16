@@ -305,6 +305,18 @@ against a −0.020 bar), and this round proposes no flip.
    and admits the 72* — doc 101 sec 6.5 explicitly left this unchased ("Which tagger decision drops a cluster is
    not chased"). It needs no new arm; `reject_bits`, `has_pass`, `topology_cleared_bits` and the per-check
    counters are already persisted in `T_stm_michel` on all four arms.
+
+   > **Correction (round 10, doc 107 sec 4.1).** This was a *size* argument and size was the wrong test. Round 10
+   > ran the direct one: **8 of A1's 9 Michel false positives are clusters production also scored**, only 1 is a
+   > gained candidate, and **20 of its 77 true positives are gained**. The churn is large, benign, and on the
+   > efficiency side — it is where the +0.085 efficiency gain comes from, not the −0.035 purity cost. Chasing it
+   > was still productive (it identified the mechanism: the STM evaluation's `flag_pass` flipping, 60–67 % of the
+   > churn in both directions), but the ranking below should not be reused.
+   >
+   > The pointer in the sentence above is also wrong: `reject_bits` / `has_pass` / `topology_cleared_bits` live in
+   > `T_stm_michel`, and a **lost cluster has no `T_stm_michel` row at all**, so those columns cannot describe it.
+   > The churn is decided upstream, and the record that answers it is `T_stm_pass` / `T_stm_eval` in
+   > `tracking-stm.root` (doc 107 sec 1.2).
 2. **The direction reversals.** Smaller (5 of 261) but a worse failure, sampler-attributed, and cheap to localise
    because the cases are named in sec 5. Worth doing whether or not PDHD ever flips, since S is already **live in
    PDVD production** (toolkit `8fc6070e`) — the same reversal mechanism should be counted there.

@@ -1,0 +1,115 @@
+# A0 = d101hnew   candidates  341   T_stm_pass clusters  1140   T_stm_eval clusters  1043
+# K  = d101hkf    candidates  320   T_stm_pass clusters  1136   T_stm_eval clusters  1038
+# S  = d102hocs   candidates  328   T_stm_pass clusters  1135   T_stm_eval clusters  1043
+# A1 = d102hcs    candidates  333   T_stm_pass clusters  1135   T_stm_eval clusters  1044
+
+=== V1: is the STM candidate set exactly the status-0 set? ===
+  A0  candidates  341  status-0  341  |cand \ st0|   0  |st0 \ cand|   0
+  K   candidates  320  status-0  320  |cand \ st0|   0  |st0 \ cand|   0
+  S   candidates  328  status-0  328  |cand \ st0|   0  |st0 \ cand|   0
+  A1  candidates  333  status-0  333  |cand \ st0|   0  |st0 \ cand|   0
+  The two sets are EQUAL on every arm.  status 0 is therefore not merely necessary but exactly the
+  gate: on these events the main_cluster and not-TGM conditions never bind beyond it, and the
+  max_candidates=8 cap (:2627) never fires -- no PDHD event here reaches 8 candidates.  So every
+  candidate gained or lost below is an STM tagger verdict change and nothing else.
+
+=== V2: within ONE pass, status 3 means flag_pass false, so that pass's max(verdict) must be 0 ===
+  A0  status-3 PASSES with eval rows  427, of which max(verdict)>0: 0  ok
+  K   status-3 PASSES with eval rows  436, of which max(verdict)>0: 0  ok
+  S   status-3 PASSES with eval rows  426, of which max(verdict)>0: 0  ok
+  A1  status-3 PASSES with eval rows  443, of which max(verdict)>0: 0  ok
+  Keyed per (cluster, pass).  Pooling a cluster's two passes instead reports one false violation per
+  arm on A0 and S -- see the module docstring for the case that produces it.
+
+
+=== 1. the whole candidate population by tagger status, per arm ===
+        status      A0       K       S      A1
+-1      no row      23      27      28      28
+ 0    accepted     341     320     328     333
+ 2 left-charge      98      99      92      91
+ 3 eval failed     409     418     411     427
+ 4 mid-point trk      24      25      31      33
+ 5      proton      13      22      14      11
+ 7 pre-fit exit     255     252     258     240
+ 8      no fit       0       0       1       0
+
+
+=== 2. THE ANSWER: which tagger decision churns the candidate set ===
+
+--- K vs A0:  lost 70   gained 49 ---
+  LOST  (A0 cand -> not):
+     status  0    accepted  ->   3 eval failed     39  (0.56)
+     status  0    accepted  ->   5      proton     15  (0.21)
+     status  0    accepted  ->  -1      no row      8  (0.11)
+     status  0    accepted  ->   2 left-charge      5  (0.07)
+     status  0    accepted  ->   4 mid-point trk      3  (0.04)
+  GAINED(not -> L cand):
+     status  3 eval failed  ->   0    accepted     29  (0.59)
+     status  2 left-charge  ->   0    accepted     10  (0.20)
+     status -1      no row  ->   0    accepted      5  (0.10)
+     status  5      proton  ->   0    accepted      5  (0.10)
+
+--- S vs A0:  lost 89   gained 76 ---
+  LOST  (A0 cand -> not):
+     status  0    accepted  ->   3 eval failed     54  (0.61)
+     status  0    accepted  ->   4 mid-point trk      9  (0.10)
+     status  0    accepted  ->   2 left-charge      9  (0.10)
+     status  0    accepted  ->  -1      no row      7  (0.08)
+     status  0    accepted  ->   5      proton      6  (0.07)
+     status  0    accepted  ->   7 pre-fit exit      4  (0.04)
+  GAINED(not -> L cand):
+     status  3 eval failed  ->   0    accepted     48  (0.63)
+     status  2 left-charge  ->   0    accepted     15  (0.20)
+     status  5      proton  ->   0    accepted      5  (0.07)
+     status  4 mid-point trk  ->   0    accepted      4  (0.05)
+     status  7 pre-fit exit  ->   0    accepted      3  (0.04)
+     status -1      no row  ->   0    accepted      1  (0.01)
+
+--- A1 vs A0:  lost 80   gained 72 ---
+  LOST  (A0 cand -> not):
+     status  0    accepted  ->   3 eval failed     48  (0.60)
+     status  0    accepted  ->  -1      no row      8  (0.10)
+     status  0    accepted  ->   4 mid-point trk      8  (0.10)
+     status  0    accepted  ->   2 left-charge      7  (0.09)
+     status  0    accepted  ->   5      proton      5  (0.06)
+     status  0    accepted  ->   7 pre-fit exit      4  (0.05)
+  GAINED(not -> L cand):
+     status  3 eval failed  ->   0    accepted     48  (0.67)
+     status  2 left-charge  ->   0    accepted     16  (0.22)
+     status -1      no row  ->   0    accepted      3  (0.04)
+     status  4 mid-point trk  ->   0    accepted      3  (0.04)
+     status  5      proton  ->   0    accepted      2  (0.03)
+
+
+=== 3. the 0<->3 flips are the STM evaluation changing its mind on the same charge ===
+  status 3 is flag_pass==false, i.e. eval_stm_core never returned true on any of its attempts.
+lever               direction     n |  n_eval A0      L |   ks1 A0       L |  ratio1 A0       L |  res_length A0        L
+K              0 -> 3  (lost)    39 |        2.0    8.0 |   0.0786  0.0979 |     1.5358  1.4121 |          12.45    14.37
+K            3 -> 0  (gained)    29 |        8.0    2.0 |   0.0955  0.0757 |     1.5643  1.6134 |          16.94    14.73
+S              0 -> 3  (lost)    54 |        3.0    8.0 |   0.0890  0.0829 |     1.4403  1.3021 |          18.79    14.76
+S            3 -> 0  (gained)    48 |        8.0    2.0 |   0.0817  0.0686 |     1.3018  1.2048 |          15.51    14.30
+A1             0 -> 3  (lost)    48 |        3.0    8.0 |   0.0790  0.0832 |     1.3367  1.2688 |          13.87    14.79
+A1           3 -> 0  (gained)    48 |        8.0    2.0 |   0.0812  0.0607 |     1.3408  1.2035 |          16.74    12.54
+
+
+=== 4. what the churn costs: the truth-relevant load of the lost and gained (reco flags) ===
+lever   stratum     n   is_stm   michel  muon_len p50
+K          lost    70       22       28          94.3
+K        gained    49       14       21         124.2
+S          lost    89       22       34         157.6
+S        gained    76       25       37         146.0
+A1         lost    80       20       34         145.5
+A1       gained    72       27       36         123.4
+  These are the levers' reco flags on objects the OTHER arm never scored, so they are a size, not a
+  grade: a lost is_stm is only a loss if the cluster was truly a stopper, which no arm-vs-arm number
+  can say.  The doc 103 union grade is the instrument for that, and sec 5 uses it.
+
+
+=== 5. THE LINK TO THE PURITY COST: are the Michel false positives GAINED candidates? ===
+  A1: graded Michel population 196, of which A1 tags 77 true / 9 false
+     false positives that are GAINED candidates (production never scored them): 1/9
+     true  positives that are GAINED candidates:                                20/77
+  A0: tags 4 Michel false positives, of which LOST under A1: 0/4
+  Reading: if the false positives were mostly gained clusters, the churn would BE the purity cost
+  and round 11 would be the STM evaluation.  If they are mostly clusters both arms scored, the
+  churn is a large but purity-neutral reshuffle and the cost is elsewhere.
