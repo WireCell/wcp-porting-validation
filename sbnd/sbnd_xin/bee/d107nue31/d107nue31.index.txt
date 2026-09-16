@@ -1,0 +1,38 @@
+# doc 107 -- the 31 true nueCC in FV (5<|x|<190, |y|<190, 10<z<450 cm; Edep>100 MeV) of the lar+WCT SBND MC production
+# Bee set (31 events, verified): https://www.phy.bnl.gov/twister/bee/set/27f7c3e0-2c54-4ef2-aed6-d32799a8f991/event/list/
+# event i: https://www.phy.bnl.gov/twister/bee/set/27f7c3e0-2c54-4ef2-aed6-d32799a8f991/event/<i>/
+# built: scripts/bee/merge_mabc_bee.py -w /nfs/data/1/xqian/sbnd_data/run/bee --src 'bee_{evt}.zip' (production zips unmodified; all layers incl. mc.json truth+reco PF, sed-* truth deposits)
+# order = failure category. vtx = |reco - true vertex| cm; true e = true electron KE (mc.json); reco PF = reco particles at the vertex (mc.json "nu 0" node)
+# fails = uBooNE nue sub-tagger flags that are 0 (background-like) in T_tagger; mip_filled=0 => no e- shower at the vertex => nue_score = -15
+# bee_idx	event	category	true (mode, Enu, e KE)	vtx	nue	numu	reco PF at vertex	evidence
+0	r713_s5_e5	NO CANDIDATE	RES 853 MeV, e- 204	-	-	-	-	no in-window candidate: nearest cluster (21.8 cm) is 478 cm long and matched to a flash at 144.7 us; the only in-window activity is a 1.5 cm blob with lm_flag=1
+1	r715_s99_e39	NO CANDIDATE	QE 826 MeV, e- 589	-	-	-	-	0 in-window mains: the nu charge is 7.0 cm from a 340 cm cluster matched to a flash at 48.5 us
+2	r480_s49_e45	WRONG CLUSTER	QE 333 MeV, e- 236	135.9	-15	0.83	gamma 282, mu- 218, pi+ 6, pi+ 7	the nu piece (33.4 cm activity, 0.6 cm from the true vertex) lost "longest wins" to an 85 cm activity of the same flash bundle; PR cosmic tagger fires on the pick
+3	r717_s40_e27	VERTEX MOVED OFF THE NU PIECE	QE 464 MeV, e- 344	17.0	-11.78	-1.53	gamma 8, pi0 170	nu attached to a 430 cm STM-tagged cosmic (vetoed); the 32.6 cm companion (1.0 cm from the true vertex) was selected, but the final main cluster/vertex sits 17 cm away (cluster 60, 38 cm from the true vertex); shower as pi0; fails mip, pio, stw
+4	r711_s8_e28	VERTEX MISPLACED	RES 989 MeV, e- 247	32.5	-15	-0.13	proton 194	right cluster (contains the true vertex) but reco vertex 32 cm away; no e- shower at the reco vertex
+5	r716_s81_e4	VERTEX MISPLACED	QE 359 MeV, e- 290	34.7	-15	-0.18	e- 14, gamma 18, mu- 90, pi+ 30, pi+ 37	right cluster, vertex 35 cm away; no e- shower at the reco vertex; PF has mu-/pi+ nodes with no true muon or pion
+6	r713_s81_e37	VERTEX MISPLACED	MEC 1417 MeV, e- 1227	19.1	2.21	-0.22	e- 869, e- 100, e- 27, pi+ 84	right cluster, vertex 19 cm off; shower found but split (869+100+27 vs 1227); no failing sub-flag, low BDT score
+7	r713_s47_e30	EM MISRECO, pi0 in final state	RES 906 MeV, e- 170 (+pi0 89)	0.9	1.32	1.15	pi+ 29, e- 60, e- 142, pi0 112, p 336, p 79	primary e- 142 MeV next to a reconstructed pi0; fails gap, stem_dir
+8	r714_s30_e17	EM STEM NOT MIP-LIKE	RES 1951 MeV, e- 656 (+pi+ 365, 286)	0.2	2.57	1.55	e- 540, mu- 161, pi+ 107, pi+ 45	e- found (540 vs 656) but fails mip (stem dQ/dx); the two true pi+ appear as mu- 161, pi+ 107, pi+ 45
+9	r714_s38_e41	SHOWER ENERGY LOW	DIS 4438 MeV, e- 1237 (+pi+ 2006, p 1028)	2.5	-1.42	1.31	e- 448, neutron 378, neutron 496, gamma 26	shower 448 vs 1237; no pi+ track in the PF (two neutron nodes 378/496 MeV); fails br4, cme; numu_cc_flag on
+10	r715_s66_e15	SHOWER SPLIT + MUON-LIKE PION	DIS 2487 MeV, e- 542 (+pi+ 1337)	1.2	2.68	3.62	mu- 802, e- 358, gamma 364, mu- 14	shower split into e- 358 + gamma 364; muon-like track mu- 802 (true pi+ 1337); fails cme; numu_cc_flag on
+11	r718_s14_e22	TWO PHOTONS + ELECTRON	MEC 1820 MeV, e- 661 (+gamma 453, 405)	1.0	3.04	-1.11	e- 889, gamma 335, gamma 438, p 267	both true photons found (335/438) but e- over-collected (889 vs 661); fails gap, stem_dir
+12	r718_s35_e16	SHOWER ENERGY LOW	QE 810 MeV, e- 348	0.5	-2.74	0.61	e- 115, pi+ 136, neutron 95, p 416	e- 115 vs 348; PF has pi+ 136 with no true pion; fails mip, br3, hol
+13	r719_s17_e35	SHOWER SPLIT + MUON-LIKE PION	DIS 1099 MeV, e- 299 (+pi+ 225)	0.7	-1.58	1.89	e- 46, e- 132, mu- 205, p 108	e- split (132+46 vs 299); muon-like track mu- 205 (true pi+ 225); fails mip, cme; numu_cc_flag on
+14	r719_s22_e22	LOW-ENERGY ELECTRON	RES 1041 MeV, e- 103 (+pi- 474)	0.4	-7.34	0.48	e- 81, pi+ 92, pi+ 172	103 MeV electron beside a 474 MeV pi-; fails mip, br3, lem
+15	r720_s39_e3	EXTRA PHOTON / pi0-LIKE	DIS 2252 MeV, e- 272 (+pi+ 207, pi- 138, 396)	1.5	-9.13	2.65	e- 267, gamma 261, pi0 120, mu- 238, p 350	e- energy right (267 vs 272) but an extra gamma 261 + pi0 120 and a mu- 238 (no true muon); fails mip, tro, mgt, cme, stem_dir
+16	r720_s68_e10	pi0 CONFUSION	RES 1596 MeV, e- 722 (+pi0 449)	4.5	-4.16	-0.82	e- 439, gamma 729, gamma 8, pi0 156	electron and pi0 photons share energy (e- 439 vs 722, gamma 729); fails mip, mip_quality, mgt
+17	r717_s80_e46	MARGINAL 4<nue<7	DIS 3524 MeV, e- 597	1.8	4.86	1.00	e- 611, mu- 186, p 151, p 76	e- right (611 vs 597); extra mu- 186 (no true muon); fails mip_quality, stem_dir
+18	r711_s57_e6	MARGINAL 4<nue<7	QE 2039 MeV, e- 1387 (+p 612)	0.8	5.59	-0.66	e- 1426	e- right (1426 vs 1387); the 612 MeV proton is absent from the PF; fails br4, tro
+19	r716_s54_e16	MARGINAL 4<nue<7	RES 2264 MeV, e- 1799	3.2	6.56	-1.81	e- 1831, e- 31, gamma 16, gamma 10, p 97	e- right (1831 vs 1799); no failing sub-flag; BDT just below 7
+20	r719_s80_e49	SELECTED (>7)	QE 1045 MeV, e- 645	1.4	7.16	1.42	e- 579, mu- 68, gamma 6	just above 7 despite fails mip, mip_quality, hol and a 68 MeV mu- stub
+21	r711_s32_e8	SELECTED (>7)	DIS 1420 MeV, e- 560 (+pi+ 137, pi- 314)	0.4	9.60	2.14	e- 608, p 159, p 89	pions absent from the PF; fails cme
+22	r711_s63_e33	SELECTED (>7)	QE 824 MeV, e- 662	1.6	10.53	-1.14	e- 720, e- 39, p 36, p 7	fails gap
+23	r712_s6_e33	SELECTED (>7)	QE 2014 MeV, e- 1419	0.4	11.95	-1.00	e- 1330, p 424	clean
+24	r712_s43_e19	SELECTED (>7)	QE 962 MeV, e- 622	1.8	12.34	0.10	e- 694, p 50	clean; the selected 58.9 cm activity shares its bundle with a 277 cm activity that was not picked
+25	r713_s14_e43	SELECTED (>7)	QE 1108 MeV, e+ 691	2.5	12.44	-0.69	e- 691	anti-nue CC (e+), energy right
+26	r716_s92_e2	SELECTED (>7)	MEC 2967 MeV, e- 2637	2.5	11.15	-0.40	e- 2639, p 166, p 15	clean
+27	r718_s23_e2	SELECTED (>7)	QE 2122 MeV, e- 1568	1.3	13.13	0.38	e- 1595, p 515	clean; the event's second row (other bundle, 174 cm away, cosmic-tagged) is not this nu
+28	r719_s1_e19	SELECTED (>7)	QE 984 MeV, e- 458	0.3	11.88	0.80	e- 234, p 404, p 55	selected though the shower energy is half (234 vs 458)
+29	r719_s68_e46	SELECTED (>7)	QE 1807 MeV, e- 1406	1.9	11.18	-1.40	e- 1498, p 233	clean
+30	r720_s6_e30	SELECTED (>7)	RES 2413 MeV, e- 1592	2.8	12.67	-1.07	e- 1744, p 270, p 119, p 168, mu- 39, pi+ 32	clean

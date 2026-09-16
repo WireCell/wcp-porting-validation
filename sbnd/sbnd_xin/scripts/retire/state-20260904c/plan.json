@@ -20,6 +20,7 @@
   "work-d97prodchk-ncpi0",
   "work-d97prodchk-nuecc48",
   "work-dbg25a-d97prodchk",
+  "work-dbg25a-ql",
   "work-mcp1k-d97fv",
   "work-mcp1k-d97fvpr2",
   "work-mcp1k-grp0825",
@@ -144,5 +145,5 @@
  "grp0825_ql": [],
  "bytes_arms": 0,
  "bytes_ql": 0,
- "planned_at": "2026-09-04T19:20:51"
+ "planned_at": "2026-09-04T19:36:29"
 }
