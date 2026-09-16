@@ -16,6 +16,18 @@ SBND production keeps `stepped`.
 
 **Recommendation: do not switch SBND.** §10 lists what would have to come first.
 
+**Round 2 (§13, same day; toolkit `e73850ad`, default OFF): switching the whole cloud does not help either.** The owner asked whether ISO
+failed to improve because the track fit still associates pixels through the clustering job's `stepped`
+"3d" cloud. A new default-OFF stage (`resample_live_strategy`, toolkit `ClusteringResampleLive`) re-samples
+every cluster's own cloud with `charge_stepped` inside the PR job, as the prototype's PR executables do.
+- The pre-registered primary endpoint fails: long-ISO muon zig-zag does not fall (whole cloud + retile
+  59 improved / 71 worsened; whole cloud alone 55 / 76).
+- The premise does not hold. On ~4 500 ISO fit points the main association is the same in every arm
+  (15 cells per plane, centroid within 0.19 wire of the solved point).
+- Post hoc, the retile *does* reduce the local jitter across the wires (83 / 7 with the resample). But the
+  zig-zag metric measures drift x about one chord, which on long ISO muons is a ~1.2 cm smooth bow that no
+  sampler or fit key moves.
+
 Owner request (2026-09-16): PDHD and PDVD retiled with `stepped` instead of the prototype's `charge_stepped`;
 SBND (`sbnd_xin`) does too. Investigate the switch on SBND, where much of the pattern recognition (neutrino
 vertex, taggers) builds on the track fit:
@@ -87,6 +99,36 @@ python3 scripts/bee/make_pr_bee.py -q work-{nuecc48,ncpi0,mcp1k,mcp2k}-d102m -p 
         -o bee/pr149/pr149-s0-stepped.zip $(cut -f3 bee/pr149/pr149.index.txt | grep -v '^#')  # and -p <cs arms>
 ```
 
+Round 2 (§13), toolkit with `ClusteringResampleLive` (built in an isolated worktree of `06fd9e22` plus the
+round-2 files only, private prefix; pin `libWireCellClus.so` md5 `5f41937c3318`, all 25 pinned files identical
+at start and end):
+
+```bash
+P=/home/xqian/tmp/pr149r2/libpin; D=$PWD/docs/pr/149_figs
+BASE=06fd9e22 bash scripts/analysis/pr149/cfg_proof_r2.sh > $D/149_r2_cfg_proof.txt
+./build/clus/wcdoctest-clus                                          # in the round-2 build: 423/423
+# gates (manifest_gate16, geometric vertex); CFG_TREE = git archive 06fd9e22 cfg
+TAG=r2goffold PIN=$P SAMPLES="mcp1k mcp2k" MANIFEST=$D/manifest_gate16 NO_DL=1 JOBS=4 CFG_TREE=<pre>/cfg bash scripts/pr149_arm.sh
+TAG=r2goffnew PIN=$P SAMPLES="mcp1k mcp2k" MANIFEST=$D/manifest_gate16 NO_DL=1 JOBS=4 bash scripts/pr149_arm.sh
+TAG=r2gidst   ... TLA_FILE=$D/tla/rsst.tla   # stepped resample = identity gate
+TAG=r2gidcs   ... TLA_FILE=$D/tla/rs.tla     # charge_stepped resample = RESAMPLE census
+python3 scripts/analysis/pr149/arm_identity.py work-<s>-pr149r2goffold work-<s>-pr149r2goffnew --allow Trun.cfg_tree
+python3 scripts/analysis/pr149/arm_identity.py work-<s>-pr149r2goffnew work-<s>-pr149r2gidst --allow Trun.op_config_sha256
+sha256sum $D/149_pred_r2.txt                                         # e486f9ad... (10:54:46)
+# arms: Stage 1 TAG=r2<cell> (67 evt, JOBS=4); Stage 2 TAG=s2r2<cell> (manifest_stage2, JOBS=6);
+#       trace TAG=r2t<cell> (manifest_r2trace, JOBS=2, WCT_TRAJ_ASSOC_DEBUG=1); cells s0 / cs (tla/cs.tla) /
+#       rs (tla/rs.tla) / rscs (tla/rscs.tla)
+python3 scripts/analysis/pr149/r2_zzi_sign.py --stage 2 --pairs pr149s2r2rscs:pr149s2r2s0 pr149s2r2rs:pr149s2r2s0 \
+        pr149s2r2rscs:pr149s2r2cs pr149s2r2cs:pr149s2r2s0 pr149s2r2rscs:pr149s2r2rs      # and --stage 1 with pr149r2*
+python3 scripts/analysis/pr149/r2_assoc_trace.py --arms pr149r2ts0 pr149r2tcs pr149r2trs pr149r2trscs --events-manifest $D/manifest_r2trace
+python3 scripts/analysis/pr149/r2_local_jitter.py --stage 2 --pairs pr149s2r2cs:pr149s2r2s0 pr149s2r2rs:pr149s2r2s0 pr149s2r2rscs:pr149s2r2s0 pr149s2kf:pr149s2s0
+python3 scripts/analysis/pr149/r2_topology.py --base pr149s2r2s0 --arms pr149s2r2cs pr149s2r2rs pr149s2r2rscs --samples mcp1k mcp2k
+python3 scripts/analysis/pr149/q1_verdict.py --base1 pr149r2s0 --base2 pr149s2r2s0 --cells r2cs:s2r2cs r2rs:s2r2rs r2rscs:s2r2rscs
+python3 scripts/analysis/pr149/vertex_tolerance.py --stage 2 --base pr149s2r2s0 --arms pr149s2r2cs pr149s2r2rs pr149s2r2rscs
+python3 scripts/analysis/pr149/sentinels_tolerant.py --arms work-mcp1k-pr149s2r2<cell> work-mcp2k-pr149s2r2<cell> work-nuecc48-pr149r2<cell> work-ncpi0-pr149r2<cell>
+```
+The analysis commands above run in one pass as `scripts/analysis/pr149/r2_secondary.sh`.
+
 All tables quoted below are committed under `149_figs/`:
 - per-event metrics: `metrics/<arm>-<sample>.tsv`;
 - comparison printouts: `149_s{1,2,3}_compare_*.txt`;
@@ -108,12 +150,14 @@ before any number was read, and relaunched sharded as `s3a*`. They are not used 
   - The main cluster's Steiner cloud grows ×1.8–2.2 (Stage 3 numu ISO median +563 points).
   - The 4000 e charge cut, not the product cut, bounds the added points (§2).
 - **Trajectory smoothness improves only where showers are.**
-  - nueCC/NCpi0 ISO: zig-zag rms median Δ −0.071 mm.
-  - Long ISO **muon** tracks, full numu sample: Δ +0.003 mm; path/chord −0.006.
-  - The likely reason, read in the code: TrackFitting's main association block reads the clustering job's
-    `stepped` cloud, which this switch does not touch.
-  - Only the second block reads the Steiner cloud (`TrackFitting.cxx:3079-3104` vs `:3249-3340`), and it
-    gathers pixels over `nlevel` graph hops, so a denser cloud shrinks its physical window.
+  - nueCC/NCpi0 ISO: zig-zag rms median Δ −0.071 **cm** (round 2 corrected the unit: the calib dump's
+    length unit is cm, and round 1 labelled these numbers mm).
+  - Long ISO **muon** tracks, full numu sample: Δ +0.003 cm; path/chord −0.006.
+  - ~~The likely reason, read in the code: TrackFitting's main association block reads the clustering job's
+    `stepped` cloud, which this switch does not touch.~~ **Tested and refuted in round 2 (§13):** re-sampling
+    that cloud too leaves the association unchanged and the metric flat. What does move is the local
+    jitter across the wires. The metric is dominated by a smooth drift-direction bow that neither cloud
+    reaches (§13.6).
 - **The vertex gets worse, and worse on ISO than elsewhere.** Truth is the vtx105 hand clicks. The full numu
   sample (Stage 3, 3000 events):
 
@@ -272,7 +316,7 @@ Lineage: s0 reproduces `d102mpr` on Enu for all 67 Stage-1 events.
 
 | metric | definition |
 |---|---|
-| zig-zag `rms_dr`, `ratio`, `fold` | doc pr/73's definitions on the calib dump's fitted points (the same `Segment::fits()` as the Bee `track_fit` layer), length-weighted over main-cluster segments ≥ 10 cm with ≥ 10 points |
+| zig-zag `rms_dr`, `ratio`, `fold` | doc pr/73's definitions (in **cm**, the calib dump's length unit; `rms_dr` here is the drift-x component of the residual about the segment chord) on the calib dump's fitted points (the same `Segment::fits()` as the Bee `track_fit` layer), length-weighted over main-cluster segments ≥ 10 cm with ≥ 10 points |
 | `uncov` | fraction of the main cluster's measured charge in cells predicted at < 10 % of the measured, from `tracking-pr.root` **`T_proj_data`** (per-cluster `get_cluster_fitted_charge_2d()`) |
 | stubs | main-cluster segments < 3 cm with a degree-1 end vertex |
 | vertex | 3-D distance of `main_vertex` to the vtx105 rank-1 click; a missing vertex counts as a failure |
@@ -308,7 +352,7 @@ Arms `pr149{s0,s0rep,cs,kf,cskf,csq2000,csq6000}`, all rc=0; `149_s1_compare_*.t
 
 ### 6.1 Q1 on the ISO stratum (49 events), vs s0
 
-| cell | Steiner pts Δ | terminals Δ | zig-zag rms Δ | path/chord Δ | uncov Δ | stubs | ≤ 3 cm (40) | > 10 cm away / toward |
+| cell | Steiner pts Δ | terminals Δ | zig-zag rms Δ (cm) | path/chord Δ | uncov Δ | stubs | ≤ 3 cm (40) | > 10 cm away / toward |
 |---|---|---|---|---|---|---|---|---|
 | s0rep | 0 | 0 | 0 | 0 | 0 | 63 → 63 | 34 → 34 | 0 / 0 |
 | cs | +3183 | +173 | −0.071 | +0.005 | +0.003 | 63 → 79 | 34 → 34 | 4 / 4 |
@@ -355,7 +399,7 @@ The DL route even compensates partly: production 48 vs geometric 33 at ≤ 3 cm.
 
 ### 6.4 Owner ISO cases (docs pr/24, pr/67)
 
-| event | zig-zag rms s0 → cs | vertex to click s0 → cs → csq6000 |
+| event | zig-zag rms s0 → cs (cm) | vertex to click s0 → cs → csq6000 |
 |---|---|---|
 | nuecc48 42280 | 0.736 → 0.661 | 0.70 → 1.30 → 1.88 cm |
 | nuecc48 137238 | 0.526 → 0.194 | 0.22 → 0.29 → 0.17 |
@@ -371,7 +415,7 @@ The DL route even compensates partly: production 48 vs geometric 33 at ≤ 3 cm.
 
 ### 7.1 Q1, all cells
 
-| cell | ISO ≤ 3 cm (345) | ISO > 10 cm away / toward | ISO lost | ISO-strong ≤ 3 cm (89) | ISO stubs | rms_dr Δ | ratio Δ | STM flips | lost | control > 10 cm away / toward |
+| cell | ISO ≤ 3 cm (345) | ISO > 10 cm away / toward | ISO lost | ISO-strong ≤ 3 cm (89) | ISO stubs | rms_dr Δ (cm) | ratio Δ | STM flips | lost | control > 10 cm away / toward |
 |---|---|---|---|---|---|---|---|---|---|---|
 | s0 / s0rep | 288 | 0 / 0 | 0 | 82 | 105 | 0 | 0 | 0 | 0 | 0 / 0 |
 | cs | 257 | 31 / 12 | 12 | 64 | 151 | +0.004 | −0.006 | 17 | 15 | 3 / 4 |
@@ -383,7 +427,7 @@ The DL route even compensates partly: production 48 vs geometric 33 at ≤ 3 cm.
 | cstsep07 (amend. 1) | 253 | 32 / 15 | 13 | 65 | 120 | +0.010 | −0.005 | 20 | 18 | 4 / 4 |
 
 Owner mcp1k cases:
-- 57903: vertex 1.04 → 13.18 cm, ISO zig-zag 0.27 → 1.80 mm;
+- 57903: vertex 1.04 → 13.18 cm, ISO zig-zag 0.27 → 1.80 cm (unit corrected in round 2);
 - 284794: vertex 0.00 → 163.6 cm;
 - 56463, 58717 and 59899 barely move.
 
@@ -507,7 +551,10 @@ same open item PDHD carries (docs pdvd/103–107):
 2. **Vertex choice.** Test whether the stub-branch vertices (§7.2) are removable by a length or charge floor
    on degree-1 branches *at the candidate main vertex only*, as a default-OFF knob graded on the Stage-2
    manifest. The thinning result says terminal density alone is not enough.
-3. **Owner scan.** 34 A/B events (owner cases, Stage-1 > 10 cm movers, Stage-2 lost candidates and ISO-strong
+3. **Round 2 changes the trajectory item.** Neither cloud is the lever for ISO trajectories (§13). The next ISO
+   round should measure the ~1.2 cm drift-direction bow on long ISO muons at its source (§13.8), not retune a
+   sampler.
+4. **Owner scan.** 34 A/B events (owner cases, Stage-1 > 10 cm movers, Stage-2 lost candidates and ISO-strong
    movers) are packaged locally at `bee/pr149/` with an annotated `pr149.index.txt`. Not uploaded: say the word
    and they go up. The scan would decide whether any "away" mover is an A0-WAS-WRONG, the one class this doc
    cannot adjudicate from labels drawn on `stepped`.
@@ -535,14 +582,279 @@ same open item PDHD carries (docs pdvd/103–107):
 4. **Sentinel event ids collide across samples** (69314 exists in both nuecc48 and mcp2k), and
    `pr127_sentinels.py` takes the first arm glob that has it. Comparisons here use the same arm order for
    every cell, so they are like for like. The registry itself is ambiguous.
+5. **Round 1 labelled the zig-zag numbers mm; they are cm** (found in round 2). `pr149_metrics.py` reads the
+   calib dump's `x/y/z`, whose `meta.length_unit` is `cm`. §1, §6.1, §6.4 and §7.1 are corrected in place.
+   The frozen `149_pred.txt` / `149_pred_r2.txt` keep the old label. Their numeric thresholds were always
+   applied in the metric's own unit, so no verdict changes.
+6. **`arm_identity.py --allow A --allow B` keeps only B** (argparse `nargs='+'`, last flag wins) and reports a
+   false difference on A. The list must be one flag: `--allow A B C`. Round 1's gates each used a single
+   `--allow`, so they are unaffected. Round 2 hit it once and re-ran with the list form.
 
 ---
 
 ## 12. What this doc did not do
 
-- It did not switch the clustering job's 3-D sampler (owner scope). TrackFitting's main association still
-  reads that `stepped` cloud.
+- Round 1 did not switch the clustering job's 3-D sampler (owner scope). **Round 2 (§13) switched the PR
+  job's copy of it**, the prototype's own step, and found no ISO gain. The clustering job's sampler itself
+  stays `stepped`, as in the prototype.
 - No simulation leg (owner scope), so there is no truth-level trajectory residual.
 - No production flip and no Bee upload.
 - No π⁰ fixed-pairing check (doc pr/135 method). The window counts in §6.2 and §8 are pairing-dependent.
 - No blinding of the Bee package (house OFF/ON convention); the zip names reveal the arm.
+
+---
+
+## 13. Round 2 — re-sampling the whole cloud, the prototype PR job's step
+
+**Owner question (2026-09-16):** the round-1 hypothesis was that ISO did not improve because the track fit's
+association still reads the old `stepped` cloud, not the `charge_stepped` one. Change the cloud altogether on
+ISO events and see whether things improve. This round is for understanding only; no production change is
+intended.
+
+**Answer: no.** Neither the premise nor the prediction holds:
+1. **Pre-registered primary endpoint fails.** On the 150 long-ISO muon events (Stage-2 `iso` stratum):
+   - whole cloud + retile vs s0: median Δ`zzi_rms_dr` +0.008 cm, 59 improved / 71 worsened (p = 0.34);
+   - whole cloud alone: +0.015 cm, 55 / 76 (p = 0.08).
+2. **The association never depended on the cloud.** On ~4 500 ISO fit points per arm, the fit's per-plane
+   association is the same in all four arms: 15 cells per plane, and the charge centroid sits 0.08 / 0.19 /
+   0.005 wires and 0.24 ticks from the solved point (§13.4).
+3. **What the retile does move is the wrong component for this metric (post hoc, §13.6).**
+   - The local jitter across the wires falls: whole cloud + retile 83 improved / 7 worsened, p = 1e-17.
+   - `zzi_rms_dr` measures drift x about one chord. On long ISO muons that is a ~1.2 cm smooth bow, which no
+     cloud and no fit key moves.
+4. **Costs are round 1's, not worse.** Same class of vertex loss, the same 17 STM flips, the same
+   shipped-fix sentinel failures. Whole cloud alone fails 6 of 12 sentinels.
+
+### 13.1 What the prototype does
+
+- **Clustering** samples with the stepped rule, `WCP2dToy::calc_sampling_points`
+  (`2dtoy/src/CalcPoints.cxx:613-700`, every `max(3, N/12)` wires). The toolkit's stepped clustering cloud is
+  faithful.
+- **The PR executables replace every live cluster's cloud before any PR** ("replace by the new sampling
+  points ...", `pid/apps/wire-cell-prod-nue.cxx:1289-1294`, same step `wire-cell-prod-stm.cxx:734`).
+  - They use `WCPPID::calc_sampling_points`, the charge_stepped rule with `disable_mix_dead_cell = true`
+    (`pid/inc/WCPPID/CalcPoints.h:9-10`).
+  - This runs before `Protect_Over_Clustering` and `NeutrinoID`.
+  - The retile (`ImprovePR3DCluster.cxx:59`) separately uses `false`.
+- **The toolkit's SBND PR job had no such step.** It reads stage A's stepped points from the pctree, which
+  makes this a second prototype divergence, undocumented until now.
+
+So "the cloud altogether" was implemented as that step. Switching the clustering job's sampler instead would
+also have moved clustering, bundles and the flash match, which the prototype does not do.
+
+### 13.2 Implementation and gates (toolkit, default OFF)
+
+- **New visitor `ClusteringResampleLive`** (`clus/src/clustering_resample_live.cxx`; pure helpers in
+  `clus/inc/WireCellClus/ResampleLive.h`; doctest `clus/test/doctest_resample_live.cxx`). No production C++
+  file is edited.
+  - The PR job holds no IBlob or ISlice, so for each live blob it rebuilds the blob **shape** from its
+    `scalar` wire bounds (two dummy layers + U/V/W) and the slice **activity**.
+  - Activity precedence: the grouping's ctpc row (live), else the dead-wind registry as `(0, 1e12)`, else
+    absent.
+  - It then samples, replaces the blob node's `"3d"` and refreshes only `center_x/y/z` and `npoints` in
+    `scalar`.
+  - Blob nodes are replaced as nodes, in order, so the facade caches and scoped views are notified and the
+    per-blob provenance rows stay aligned.
+- **Config** (`sbnd/{clus,wct-pr-perevt}.jsonnet`): TLA `resample_live_strategy`.
+  - Non-null prepends `resample_live` to the PR pipeline, ahead of `switch_scope`, which rebuilds `x_t0cor`
+    and the in-volume split from the new points.
+  - The sampler is `live-rs-<cs|st>-<apa>-0`: charge_stepped with `disable_mix_dead_cell: true`, and the
+    clustering job's `extra` arrays.
+  - null ⇒ stage absent ⇒ byte-identical.
+
+**The gate that licenses the round.** A `stepped` resample must rebuild the clustering job's saved cloud bit
+for bit. It does:
+- 16/16 events identical over 40 files each: every pctree-pr member, the Bee zip, the calib dump, every
+  ROOT branch, nusel;
+- the only difference is `Trun.op_config_sha256`, the hash of the compiled config;
+- the `RESAMPLE` log line confirms the stage ran (points N → N, `interval_mismatch 0`).
+
+So the shape, x/tick, charge and dead-flag reconstruction is exact wherever a sampled point lands.
+
+| gate (`149_r2_*`) | result |
+|---|---|
+| `cfg_proof.txt`: prod_cfg_gate before and after | PASS 21/21, both |
+| one-step LArSoft chain, sync/bare × tracking root | identical 4/4 |
+| ON node diff (charge_stepped / stepped / + retile) | only `ClusteringResampleLive:pr`, 2 × `BlobSampler:live-rs-*`, the `clus_pr` pipeline head (+ round 1's retile nodes); typo aborts |
+| `wcdoctest-clus` in the round-2 build | 423/423 (5 new cases, 240 assertions; includes a tiled-vs-rebuilt blob sampling bit for bit under both strategies, and a negative control showing why an absent wire must not be written dead) |
+| runtime OFF gate `gate_off_*` (16 evt, geometric vertex, knob tree vs `06fd9e22` cfg overlay, same pin) | 16/16 identical (`Trun.cfg_tree` allowed) |
+| identity gate `gate_identity_stepped_*` | 16/16 identical (`Trun.op_config_sha256` allowed) |
+| dead-path census `resample_census_gate16.txt` (charge_stepped) | 82 509 blobs; a dead first/last strip wire on U 0.91 % / V 2.72 % / W 2.70 % of blobs; dead only through the hand-declared W gap 0.95 % (those W channels are chndb-bad, dead in imaging too); cloud ×2.57 over all clusters |
+| lineage `lineage_s0_*`, `lineage_s2s0_*`: new-pin s0 vs round-1 s0 | Stage 1 67/67 and Stage 2 559/559 events identical over every file and ROOT branch, apart from `Trun.toolkit_git` / `wct_version` / `op_config_sha256`; round-1 arms (kf) are directly comparable |
+
+Build isolation: a peer had uncommitted C++ in `SteinerGrapher.cxx` / `TaggerCheckSTM.cxx` in the shared
+toolkit tree. Round 2 therefore built a detached worktree of `06fd9e22` plus only the round-2 files, into a
+private prefix. It used the shared build's exact waf flags (package list equal, `root` included), and the pin
+prepends that prefix. All 16 running gate jobs loaded the pinned `libWireCellClus.so` (checked in
+`/proc/<pid>/maps`).
+
+The peer then pushed that work as `724cf205` (an env-gated, log-only Steiner graph dump). The round-2 commit
+**`e73850ad`** sits on top of it; an incremental rebuild of exactly `e73850ad` compiles and passes
+`wcdoctest-clus` 426/426.
+
+### 13.3 Pre-registration
+
+`149_figs/149_pred_r2.txt`, sha256 `e486f9ada408…`, frozen 10:54:46, after the non-physics gates and before
+the first physics arm (10:55:02). It fixes:
+- the four cells (`s0`, `cs` = round 1's retile, `rs` = whole cloud, `rscs` = both, the prototype-faithful
+  cell);
+- the events: Stage 1 = 67 nueCC/NCpi0, Stage 2 = round 1's 559-event manifest, trace = 8 long-ISO events;
+- the primary endpoint and its rule;
+- the attribution pairs, with secondaries marked descriptive-only.
+
+Deviations, all recorded:
+1. **Unit label.** The pred text says mm; the metric is cm (§11 item 5). The threshold 0.01 is applied in cm.
+2. **Trace call selection.** The pred says "last `trajectory_fit` call" of the main cluster. The last call is a
+   per-segment refit of 3–5 points, and the first output compared 51 against 783 ISO points across arms. The
+   script was changed to the largest call of the highest charge-division method (the whole-cluster fit), after
+   seeing that first output.
+3. **§13.6 is post hoc:** the jitter/bow split, suggested by doc pr/73 §4.7.
+4. **Sentinel denominator.** The round-2 arms cover the Stage-1 + Stage-2 manifests, so 12 sentinels are
+   evaluable (10 SKIP), against round 1's 21 on the full samples.
+
+All arms rc=0: Stage 1 4 × 67, Stage 2 4 × 559, trace 4 × 8, gates 4 × 16.
+
+### 13.4 The association is not starved and does not follow the cloud
+
+`WCT_TRAJ_ASSOC_DEBUG` trace (doc pdvd/111) on the 8 long-ISO events (`manifest_r2trace`: top 3 of the `iso`
+stratum per numu sample, plus owner cases 284794 and 57903). The table covers ISO fit points (local chord
+≥ 75° to drift) of the main cluster's whole-cluster fit (`149_r2_assoc_trace.txt`).
+
+| arm | ISO points | cells per plane U/V/W (median) | \|wcen − wsol\| U/V/W (wires) | \|tcen − tsol\| (ticks) | points with 0 cells on a plane |
+|---|---|---|---|---|---|
+| s0 | 4522 | 15 / 15 / 14 | 0.081 / 0.186 / 0.005 | 0.238 | 6.7 % |
+| cs (retile) | 4121 | 15 / 15 / 13 | 0.085 / 0.190 / 0.005 | 0.252 | 4.1 % |
+| rs (whole cloud) | 4531 | 15 / 15 / 14 | 0.088 / 0.193 / 0.005 | 0.244 | 4.0 % |
+| rscs (both) | 4516 | 15 / 14 / 13 | 0.082 / 0.187 / 0.005 | 0.245 | 5.8 % |
+
+- The main association (`TrackFitting.cxx:3079-3106`) takes the closest point of the cluster's cloud, walks
+  `nlevel` `basic_pid` hops to collect **blobs**, and then takes those blobs' pixels within the distance cut.
+- A denser cloud changes which points are hops apart, but on an ISO ribbon the handful of blobs reached, and
+  hence the pixel set, is essentially the same.
+- Every arm's solved point already sits on its association centroid to 0.2 wire.
+- cs, whose Steiner block does change, leaves these numbers as flat as rs does.
+- Per event the arms agree too, except where the main cluster itself changed: cs on 284794 moves the main
+  vertex to another cluster, as in round 1.
+
+### 13.5 Primary endpoint and attribution
+
+`149_r2_primary_stage2.txt`, `149_r2_primary_stage1.txt`. The comparison is paired over events with a finite
+`zzi` in both arms. Improved / worsened means |Δ`zzi_rms_dr`| > 0.01 cm, with an exact sign test.
+
+| comparison | Stage-2 `iso` (150): median Δ`zzi_rms_dr` cm; Δratio; imp / wor; p | Stage-2 `vtx_iso` (256) | Stage-1 ISO (49) |
+|---|---|---|---|
+| **rscs vs s0 (PRIMARY)** | **+0.0078; −0.0106; 59 / 71; 0.34 → does not improve** | −0.0062; −0.011; 108 / 103; 0.78 | −0.074; +0.011; 27 / 16; 0.13 |
+| rs vs s0 (whole cloud alone) | +0.0149; −0.0010; 55 / 76; 0.08 | −0.0033; −0.002; 107 / 103; 0.84 | +0.026; +0.007; 22 / 24; 0.88 |
+| cs vs s0 (round 1 reproduced) | −0.0031; −0.0062; 66 / 65; 1.0 | +0.0079; −0.006; 98 / 116; 0.25 | −0.028; +0.001; 27 / 18; 0.23 |
+| rscs vs cs (resample on top of retile) | +0.0076; −0.0022; 61 / 69; 0.54 | −0.0144; −0.004; 115 / 87; 0.06 | −0.033; +0.001; 25 / 16; 0.21 |
+| rscs vs rs (retile on top of resample) | −0.0146; −0.0071; 77 / 58; 0.12 | +0.0074; −0.008; 96 / 106; 0.53 | −0.054; −0.010; 26 / 17; 0.22 |
+
+- No comparison meets the rule anywhere.
+- The whole cloud alone leans the wrong way on long ISO muons.
+- The two sub-threshold negatives (Stage 1 rscs −0.074; Stage 2 rscs vs rs) are what the retile contributes.
+  They are not a whole-cloud effect.
+- The pairing conditions on survival: 11–12 labelled ISO candidates are lost in each ON cell (§13.7), and a
+  lost candidate leaves the pairing rather than counting as a failure. That can only flatter an ON cell, and
+  the result is null anyway. It would matter for a future small positive (same trap as §5.2).
+
+### 13.6 Why the metric stays flat: jitter vs bow (post hoc)
+
+`r2_local_jitter.py`, `149_r2_local_jitter_stage{1,2}.txt`. The same segments as `zzi` are split into three
+terms:
+- `jit_x`: point-to-point jitter in drift x, the rms second difference / √6;
+- `jit_t`: the same jitter in the in-plane transverse direction (across the wires);
+- `bow_x`: the rms drift-x residual about the chord after a 9-point running mean, i.e. the smooth excursion.
+
+The table uses Stage-2 `iso` (150); kf is round 1's fit-key arm vs round-1 s0 (lineage identical).
+
+| vs s0 | `jit_x` (base 0.043 cm) | `jit_t` (base 0.096 cm) | `bow_x` (base ~1.17 cm) |
+|---|---|---|---|
+| cs | +0.0004; 31 / 43; p 0.20 | **−0.0048; 68 / 25; p 9e-6** | −0.004; 69 / 66; p 0.86 |
+| rs | +0.0003; 29 / 38; p 0.33 | −0.0018; 45 / 31; p 0.14 | +0.016; 55 / 78; p 0.06 |
+| rscs | −0.0005; 31 / 37; p 0.55 | **−0.0076; 83 / 7; p 1e-17** | +0.009; 63 / 75; p 0.35 |
+| kf (round 1) | −0.0010; 38 / 27; p 0.22 | **−0.0106; 113 / 4; p 9e-29** | −0.010; 73 / 61; p 0.34 |
+
+**This is the answer to "why not improved".**
+1. **The metric is dominated by a term no lever reaches.** `zzi_rms_dr` (base 1.15 cm) is almost entirely
+   `bow_x` (1.17 cm), a smooth drift-direction excursion of the segment about its chord. The drift-x jitter is
+   0.04 cm and does not move.
+2. **What the levers do fix is invisible to `zzi_rms_dr`.**
+   - The charge_stepped retile, which builds the Steiner seed path, removes part of the lattice sawtooth
+     *across the wires* (doc pr/73 §2: seed points on the wire-crossing grid). This is −5 % of `jit_t`, and
+     −8 % together with the whole-cloud resample.
+   - The fit keys remove the most (−11 %).
+   - The whole-cloud resample alone removes little (−2 %, not significant), consistent with §13.4.
+3. **On the 49 Stage-1 nueCC/NCpi0 ISO events**, `bow_x` is smaller (~0.5 cm) and no term reaches
+   significance.
+
+What the bow is has not been adjudicated here.
+- Doc pr/73 §2 shows one mechanism on its cases: `multi_trajectory_fit` pins both segment ends to the vertex
+  fit points, so an off-ridge vertex forces a bow.
+- On data, part of a 1.2 cm excursion over a 100–500 cm muon can also be physical: space-charge distortion of
+  drift x, or multiple scattering.
+
+### 13.7 Secondary and costs (descriptive, per pred §5)
+
+Stage 2 (559 numu events, vs `pr149s2r2s0`; `149_r2_s2_compare_*.txt`, `149_r2_s2_vertex_tolerance.txt`,
+`149_r2_q1_verdict.txt`, `149_r2_s2_topology.txt`):
+
+| | cs | rs | rscs |
+|---|---|---|---|
+| ISO (345) ≤ 3 cm (s0 288) | 257 | 249 | 250 |
+| ISO > 10 cm away / toward; lost | 31 / 12; 12 | 35 / 10; 12 | 40 / 13; 11 |
+| ISO-strong (89) ≤ 3 cm (s0 82) | 64 | 67 | 66 |
+| control (87) ≤ 3 cm (s0 70); away / toward | 67; 3 / 4 | 62; 5 / 2 | 64; 2 / 2 |
+| ISO stubs (paired) | 105 → 151 | 107 → 108 | 106 → 159 |
+| event_label migrations / nu_evaluated flips | 16 / 15 | 15 / 13 | 16 / 13 |
+| STM / FC / TGM flips | 17 / 2 / 0 | 17 / 1 / 0 | 17 / 2 / 0 |
+| \|ΔEnu\| median / p90 (MeV) | 36 / 201 | 31 / 214 | 28 / 243 |
+| wall median / p90 ratio; RSS median | 1.04 / 1.31; 1.00 | 1.12 / 1.45; 1.03 | 1.14 / 1.52; 1.03 |
+| events whose cluster count changes (net); main cluster or its length changed | 4 (−5); 0 | 17 (−13); 0 | 19 (−17); 0 |
+| round-1 Q1 a–d, pooled 455 ISO events | 1/4 | 1/4 | 1/4 |
+
+Stage 1 (67 nueCC/NCpi0, vs `pr149r2s0`; `149_r2_s1_*`):
+
+| | cs | rs | rscs |
+|---|---|---|---|
+| all 56 labelled ≤ 3 cm (s0 48) | 45 | 41 | 42 |
+| ISO (40) ≤ 3 cm (s0 34); > 10 cm away / toward | 34; 4 / 4 | 31; 6 / 2 | 31; 4 / 4 |
+| ISO stubs (s0 63) | 79 | 53 | 90 |
+| label / nu_evaluated / STM flips | 0 / 0 / 0 | 0 / 0 / 0 | 0 / 0 / 0 |
+| events whose cluster count changes (net) | 0 | 13 (−17) | 13 (−17) |
+| wall median / p90 ratio; RSS median | 1.28 / 1.75; 1.01 | 1.28 / 1.64; 1.06 | **1.55 / 2.14**; 1.06 |
+
+Sentinels evaluable on the round-2 manifests (12; `149_r2_sentinels_*.txt`):
+
+| s0 | cs | rs | rscs |
+|---|---|---|---|
+| 12 PASS / 0 FAIL | 9 / 3 (37112 K3, 69314 K5, 393505 pr/129) | **6 / 6** (+ 77328 pr/125 guard, 315167 pr/93 r4, 497311 doc 84 r1) | 9 / 3 (the same as cs) |
+
+Reading:
+- **The vertex and churn cost is round 1's.** Every cell loses ~30–40 ISO vertices > 10 cm away against
+  ~10–13 toward, and flips the same 17 STM verdicts. This is refit instability (§7.3), and the extra cloud does
+  not change its size.
+- **The whole cloud alone is the worst cell on sentinels (6 FAIL)** without a trajectory gain. This is reported,
+  not explained.
+- **Topology:** the resample changes the cluster count on 17–19 of 559 and 13 of 67 events, always fewer
+  clusters. More points let more blobs pass `switch_scope`'s volume filter, so fewer out-of-volume shards are
+  split off. The main cluster and its length never change, so the per-event metric join is on the same object.
+- **Resources:** the whole cloud costs +12–14 % wall on numu and up to +55 % median (p90 +114 %) on nueCC, with
+  RSS +3–6 %. Stage-1 arms ran concurrently at equal job counts, so their ratios are like for like.
+
+### 13.8 Conclusion and next step
+
+- **Switching the cloud altogether does not improve ISO PR on SBND,** and switching the whole cloud alone is
+  mildly worse.
+- The round-1 explanation was wrong. The association does not depend on which cloud the fit walks, and the
+  ISO trajectory deviation that the metric sees is a smooth drift-direction bow outside any sampler's reach.
+- The part the samplers can reach, the jitter across wires, does fall with the retile, most with the fit keys.
+  It is ~0.1 cm against a ~1.2 cm bow, and it comes with round 1's refit-instability costs.
+
+**Recommended next step: measure the bow at its source before any further ISO lever.**
+- **Sample:** the 150 long-ISO muons of the `iso` stratum.
+- **Comparison:** the fitted drift-x profile against the image's own time centroid along the track, from the
+  ctpc charge per wire and slice (T_proj_data).
+- **If the image follows the bow,** it is physical (space charge, scattering), and no PR lever should remove
+  it; the zig-zag metric should then be measured about a smooth curve, not a chord.
+- **If the image is straight** and the fit bows toward the pinned segment ends, it is doc pr/73's
+  seed/vertex pinning in `multi_trajectory_fit`, and that is the lever to test.

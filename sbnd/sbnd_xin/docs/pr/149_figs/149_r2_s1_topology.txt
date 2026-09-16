@@ -1,0 +1,7 @@
+# doc pr/149 round 2 topology vs pr149r2s0 (tracking-pr.root T_cluster)
+nuecc48  pr149r2cs          events 48  n_clusters differs 0 (net +0)  n_in_scope differs 0  n_main differs 0  main length moved >1 cm 0
+nuecc48  pr149r2rs          events 48  n_clusters differs 10 (net -13)  n_in_scope differs 10  n_main differs 0  main length moved >1 cm 0
+nuecc48  pr149r2rscs        events 48  n_clusters differs 10 (net -13)  n_in_scope differs 10  n_main differs 0  main length moved >1 cm 0
+ncpi0    pr149r2cs          events 19  n_clusters differs 0 (net +0)  n_in_scope differs 0  n_main differs 0  main length moved >1 cm 0
+ncpi0    pr149r2rs          events 19  n_clusters differs 3 (net -4)  n_in_scope differs 3  n_main differs 0  main length moved >1 cm 0
+ncpi0    pr149r2rscs        events 19  n_clusters differs 3 (net -4)  n_in_scope differs 3  n_main differs 0  main length moved >1 cm 0

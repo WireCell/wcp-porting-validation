@@ -1,0 +1,2 @@
+resample_live_strategy='charge_stepped'
+retile_sampler_strategy='charge_stepped'

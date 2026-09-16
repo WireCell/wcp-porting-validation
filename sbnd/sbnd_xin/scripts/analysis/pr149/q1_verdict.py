@@ -13,6 +13,7 @@ Stage 1 ISO   = d102mpr iso_len_any75 >= 10 cm (nuecc48, ncpi0)
 Stage 2 ISO   = strata iso + vtx_iso of 149_stage2_selection.tsv (mcp1k, mcp2k)
 
 Usage: q1_verdict.py --cells cs:s2cs csq2000:s2csq2000 ...   (stage-1 arm : stage-2 arm, prefix pr149)
+       [--base1 pr149s0 --base2 pr149s2s0]   (round 2: --base1 pr149r2s0 --base2 pr149s2r2s0)
 """
 import argparse
 import csv
@@ -93,12 +94,15 @@ def verdict(P):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--cells', nargs='+', required=True)
+    ap.add_argument('--base1', default='pr149s0', help='stage-1 base arm (round 2: pr149r2s0)')
+    ap.add_argument('--base2', default='pr149s2s0', help='stage-2 base arm (round 2: pr149s2r2s0)')
     a = ap.parse_args()
     lab = {d['eventNo']: d['truth'] for d in vtx_io.load_labels(tags=vtx_io.TAGS_VTX105) if d['truth']}
     s1, s2 = strata()
-    A1 = load('pr149s0', ['nuecc48', 'ncpi0'])
-    A2 = load('pr149s2s0', ['mcp1k', 'mcp2k'])
-    print('# doc pr/149 Q1 verdict (149_pred.txt sec 4); criteria a b c d; PASS = all four')
+    A1 = load(a.base1, ['nuecc48', 'ncpi0'])
+    A2 = load(a.base2, ['mcp1k', 'mcp2k'])
+    print('# doc pr/149 Q1 verdict (149_pred.txt sec 4); criteria a b c d; PASS = all four'
+          + ('' if (a.base1, a.base2) == ('pr149s0', 'pr149s2s0') else f'; bases {a.base1} / {a.base2}'))
     rows = []
     for cell in a.cells:
         c1, c2 = cell.split(':')

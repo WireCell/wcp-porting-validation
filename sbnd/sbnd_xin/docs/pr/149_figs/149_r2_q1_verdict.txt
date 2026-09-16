@@ -1,0 +1,11 @@
+# doc pr/149 Q1 verdict (149_pred.txt sec 4); criteria a b c d; PASS = all four; bases pr149r2s0 / pr149s2r2s0
+r2cs       stage1: n=49 paired=49  d_rms -0.0706  d_ratio +0.0048  d_uncov +0.0026  vtx lab 40 toward 5 away 6 <=3cm 34->34  stubs 63->79  a=0 b=0 c=0 d=0  passed 0/4
+r2cs       stage2: n=406 paired=393  d_rms +0.0041  d_ratio -0.0057  d_uncov -0.0005  vtx lab 345 toward 32 away 88 <=3cm 288->257  stubs 105->151  a=0 b=1 c=0 d=0  passed 1/4
+r2cs       pooled: n=455 paired=442  d_rms +0.0028  d_ratio -0.0055  d_uncov -0.0004  vtx lab 385 toward 37 away 94 <=3cm 322->291  stubs 168->230  a=0 b=1 c=0 d=0  passed 1/4
+r2rs       stage1: n=49 paired=49  d_rms -0.0329  d_ratio +0.0021  d_uncov +0.0157  vtx lab 40 toward 4 away 10 <=3cm 34->31  stubs 63->53  a=0 b=0 c=0 d=1  passed 1/4
+r2rs       stage2: n=406 paired=394  d_rms +0.0104  d_ratio -0.0009  d_uncov -0.0004  vtx lab 345 toward 24 away 95 <=3cm 288->249  stubs 107->108  a=0 b=1 c=0 d=1  passed 2/4
+r2rs       pooled: n=455 paired=443  d_rms +0.0053  d_ratio -0.0008  d_uncov +0.0001  vtx lab 385 toward 28 away 105 <=3cm 322->280  stubs 170->161  a=0 b=0 c=0 d=1  passed 1/4
+r2rscs     stage1: n=49 paired=49  d_rms -0.0763  d_ratio -0.0175  d_uncov -0.0010  vtx lab 40 toward 5 away 6 <=3cm 34->31  stubs 63->90  a=1 b=1 c=0 d=0  passed 2/4
+r2rscs     stage2: n=406 paired=394  d_rms +0.0043  d_ratio -0.0096  d_uncov -0.0014  vtx lab 345 toward 32 away 97 <=3cm 288->250  stubs 106->159  a=0 b=1 c=0 d=0  passed 1/4
+r2rscs     pooled: n=455 paired=443  d_rms +0.0001  d_ratio -0.0097  d_uncov -0.0014  vtx lab 385 toward 37 away 103 <=3cm 322->281  stubs 169->249  a=0 b=1 c=0 d=0  passed 1/4
+# most criteria passed (pooled): 1/4 by ['r2cs', 'r2rs', 'r2rscs'] (ties -> fewer Q2 adjudicated degradations -> cs, 149_pred.txt sec 6)

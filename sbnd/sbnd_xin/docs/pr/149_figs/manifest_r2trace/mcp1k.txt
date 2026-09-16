@@ -1,0 +1,6 @@
+# doc pr/149 round 2 trace set: top 3 of the Stage-2 iso stratum by iso_len80 + owner cases 284794, 57903
+283713
+390842
+393042
+284794
+57903

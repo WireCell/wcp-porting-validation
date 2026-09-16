@@ -1,0 +1,39 @@
+# doc pr/149 round 2 association trace on ISO fit points (main cluster, largest trajectory_fit call of the top method)
+# per plane U/V/W: median ncell | median |wcen-wsol| (wires); median |tcen-tsol| (ticks, 3-plane mean); share of ISO points with 0 cells on any plane
+pr149r2ts0     mcp1k 283713 cid 17: fit pts  828 iso pts  766  ncell 15/15/13  |wcen-wsol| 0.087/0.185/0.006  |tcen-tsol| 0.189  zero-cell share 0.050
+pr149r2ts0     mcp1k 390842 cid 3: fit pts  690 iso pts  646  ncell 15/15/13  |wcen-wsol| 0.082/0.184/0.005  |tcen-tsol| 0.170  zero-cell share 0.023
+pr149r2ts0     mcp1k 393042 cid 15: fit pts  669 iso pts  597  ncell 16/15/13  |wcen-wsol| 0.088/0.171/0.005  |tcen-tsol| 0.159  zero-cell share 0.022
+pr149r2ts0     mcp1k 284794 cid 12: fit pts  438 iso pts  414  ncell 15/14/14  |wcen-wsol| 0.090/0.173/0.005  |tcen-tsol| 0.222  zero-cell share 0.041
+pr149r2ts0     mcp1k 57903 cid 14: fit pts  170 iso pts   89  ncell 32/29/29  |wcen-wsol| 0.048/0.106/0.004  |tcen-tsol| 0.120  zero-cell share 0.022
+pr149r2ts0     mcp2k 398191 cid 22: fit pts  683 iso pts  630  ncell 13/12/14  |wcen-wsol| 0.056/0.239/0.004  |tcen-tsol| 0.385  zero-cell share 0.287
+pr149r2ts0     mcp2k 99838 cid 14: fit pts  725 iso pts  676  ncell 15/14/13  |wcen-wsol| 0.077/0.202/0.005  |tcen-tsol| 0.273  zero-cell share 0.004
+pr149r2ts0     mcp2k 283833 cid 11: fit pts  741 iso pts  704  ncell 21/17/20  |wcen-wsol| 0.090/0.184/0.005  |tcen-tsol| 0.628  zero-cell share 0.047
+pr149r2tcs     mcp1k 283713 cid 17: fit pts  819 iso pts  755  ncell 15/15/12  |wcen-wsol| 0.097/0.189/0.006  |tcen-tsol| 0.193  zero-cell share 0.049
+pr149r2tcs     mcp1k 390842 cid 3: fit pts  689 iso pts  654  ncell 15/15/13  |wcen-wsol| 0.085/0.172/0.005  |tcen-tsol| 0.161  zero-cell share 0.017
+pr149r2tcs     mcp1k 393042 cid 15: fit pts  665 iso pts  594  ncell 15/15/12  |wcen-wsol| 0.089/0.175/0.006  |tcen-tsol| 0.170  zero-cell share 0.022
+pr149r2tcs     mcp1k 284794 cid 58: fit pts   35 iso pts   27  ncell 9/4/14  |wcen-wsol| 0.652/0.504/0.000  |tcen-tsol| 2.191  zero-cell share 0.037
+pr149r2tcs     mcp1k 57903 cid 14: fit pts  165 iso pts   91  ncell 32/29/29  |wcen-wsol| 0.045/0.106/0.003  |tcen-tsol| 0.115  zero-cell share 0.000
+pr149r2tcs     mcp2k 398191 cid 22: fit pts  669 iso pts  620  ncell 14/13/15  |wcen-wsol| 0.070/0.218/0.004  |tcen-tsol| 0.442  zero-cell share 0.110
+pr149r2tcs     mcp2k 99838 cid 14: fit pts  736 iso pts  682  ncell 14/14/12  |wcen-wsol| 0.084/0.219/0.005  |tcen-tsol| 0.287  zero-cell share 0.000
+pr149r2tcs     mcp2k 283833 cid 11: fit pts  735 iso pts  698  ncell 22/18/21  |wcen-wsol| 0.095/0.191/0.005  |tcen-tsol| 0.637  zero-cell share 0.056
+pr149r2trs     mcp1k 283713 cid 17: fit pts  828 iso pts  768  ncell 15/15/12  |wcen-wsol| 0.083/0.171/0.005  |tcen-tsol| 0.201  zero-cell share 0.051
+pr149r2trs     mcp1k 390842 cid 3: fit pts  695 iso pts  652  ncell 15/15/13  |wcen-wsol| 0.086/0.177/0.005  |tcen-tsol| 0.162  zero-cell share 0.018
+pr149r2trs     mcp1k 393042 cid 15: fit pts  666 iso pts  601  ncell 15/15/13  |wcen-wsol| 0.094/0.184/0.006  |tcen-tsol| 0.167  zero-cell share 0.022
+pr149r2trs     mcp1k 284794 cid 12: fit pts  440 iso pts  418  ncell 15/13/14  |wcen-wsol| 0.100/0.188/0.005  |tcen-tsol| 0.277  zero-cell share 0.041
+pr149r2trs     mcp1k 57903 cid 14: fit pts  171 iso pts   90  ncell 24/24/22  |wcen-wsol| 0.056/0.160/0.005  |tcen-tsol| 0.156  zero-cell share 0.011
+pr149r2trs     mcp2k 398191 cid 22: fit pts  667 iso pts  627  ncell 14/14/15  |wcen-wsol| 0.076/0.264/0.004  |tcen-tsol| 0.407  zero-cell share 0.108
+pr149r2trs     mcp2k 99838 cid 14: fit pts  725 iso pts  672  ncell 15/14/13  |wcen-wsol| 0.089/0.225/0.006  |tcen-tsol| 0.253  zero-cell share 0.001
+pr149r2trs     mcp2k 283833 cid 11: fit pts  740 iso pts  703  ncell 19/16/18  |wcen-wsol| 0.092/0.175/0.005  |tcen-tsol| 0.654  zero-cell share 0.046
+pr149r2trscs   mcp1k 283713 cid 17: fit pts  825 iso pts  763  ncell 15/15/12  |wcen-wsol| 0.096/0.192/0.006  |tcen-tsol| 0.191  zero-cell share 0.056
+pr149r2trscs   mcp1k 390842 cid 3: fit pts  693 iso pts  649  ncell 15/15/12  |wcen-wsol| 0.080/0.171/0.005  |tcen-tsol| 0.162  zero-cell share 0.017
+pr149r2trscs   mcp1k 393042 cid 15: fit pts  674 iso pts  595  ncell 15/15/12  |wcen-wsol| 0.086/0.178/0.006  |tcen-tsol| 0.160  zero-cell share 0.022
+pr149r2trscs   mcp1k 284794 cid 12: fit pts  441 iso pts  420  ncell 15/13/13  |wcen-wsol| 0.091/0.192/0.005  |tcen-tsol| 0.300  zero-cell share 0.045
+pr149r2trscs   mcp1k 57903 cid 14: fit pts  168 iso pts   90  ncell 20/20/20  |wcen-wsol| 0.052/0.160/0.004  |tcen-tsol| 0.150  zero-cell share 0.011
+pr149r2trscs   mcp2k 398191 cid 22: fit pts  683 iso pts  625  ncell 13/12/14  |wcen-wsol| 0.071/0.237/0.004  |tcen-tsol| 0.420  zero-cell share 0.221
+pr149r2trscs   mcp2k 99838 cid 14: fit pts  727 iso pts  676  ncell 14/14/13  |wcen-wsol| 0.073/0.195/0.005  |tcen-tsol| 0.255  zero-cell share 0.003
+pr149r2trscs   mcp2k 283833 cid 11: fit pts  735 iso pts  698  ncell 20/17/19  |wcen-wsol| 0.091/0.184/0.005  |tcen-tsol| 0.649  zero-cell share 0.053
+# pooled
+pr149r2ts0     iso pts  4522  ncell 15/15/14  |wcen-wsol| 0.081/0.186/0.005  |tcen-tsol| 0.238  zero-cell share 0.067
+pr149r2tcs     iso pts  4121  ncell 15/15/13  |wcen-wsol| 0.085/0.190/0.005  |tcen-tsol| 0.252  zero-cell share 0.041
+pr149r2trs     iso pts  4531  ncell 15/15/14  |wcen-wsol| 0.088/0.193/0.005  |tcen-tsol| 0.244  zero-cell share 0.040
+pr149r2trscs   iso pts  4516  ncell 15/14/13  |wcen-wsol| 0.082/0.187/0.005  |tcen-tsol| 0.245  zero-cell share 0.058

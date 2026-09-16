@@ -1,0 +1,81 @@
+doc sbnd_xin/pr/149 ROUND 2 -- pre-registration (frozen by sha256 before the first physics arm)
+=====================================================================================================
+
+Owner request (2026-09-16): "zoom into the question why things are not improved for ISO cases ...
+the hypothesis that the association is not with the charge_stepped, but the old stepped cloud.
+Use some ISO case events to test if we change the cloud altogether, will things get improved?
+Not targeting a production change for SBND; trying to understand."
+
+1. Hypothesis under test
+   H: round 1 left long isochronous (ISO) muon trajectories flat (Stage 2 iso stratum: median
+   d zzi_rms_dr -0.003 mm, sign test 66 improved / 65 worsened) because only the retile cloud
+   changed.  TrackFitting's main association (closest point of the cluster's own cloud, basic_pid
+   graph nlevel hops -> blobs -> pixels), basic_pid, switch_scope and the taggers still read the
+   clustering job's STEPPED "3d" cloud.  If the whole cloud is re-sampled with charge_stepped, as
+   the prototype's PR executables do (wire-cell-prod-nue.cxx:1289-1294; clustering stays stepped,
+   2dtoy/src/CalcPoints.cxx:613-700), ISO trajectories straighten.
+
+2. Arms (one binary pin, taken after the round-2 build; production config; production DL vertex)
+     r2s0     knob off                                     (base)
+     r2cs     retile_sampler_strategy='charge_stepped'     (round-1 cell, re-run on this pin)
+     r2rs     resample_live_strategy='charge_stepped'      (whole cloud; retile stays stepped)
+     r2rscs   both                                          (prototype-faithful)
+   Resample sampler: charge_stepped, disable_mix_dead_cell TRUE, thresholds C++ 4000 / 2500.
+   Events: Stage 1 = nuecc48 + ncpi0, all 67 (work-<s>-pr149r2<cell>);
+           Stage 2 = docs/pr/149_figs/manifest_stage2, 559 (work-<s>-pr149s2r2<cell>).
+   Stage A is the production work-<s>-d102m for every arm.
+
+3. PRIMARY endpoint (the trajectory; decides the round)
+   Stratum: Stage-2 "iso" (150 long-ISO muon events, 149_stage2_selection.tsv).
+   Metric: zzi_rms_dr (mm) and zzi_ratio (path/chord) of main-cluster ISO segments
+   (>= 10 cm, >= 10 points, theta_drift >= 75 deg; pr149_metrics.py), paired over events with a
+   calib dump and a finite zzi in both arms.
+   IMPROVES iff, for r2rscs vs r2s0, ALL of:
+     (i)   median d zzi_rms_dr < 0
+     (ii)  median d zzi_ratio < 0
+     (iii) improved (d zzi_rms_dr < -0.01 mm) > worsened (> +0.01 mm), exact two-sided sign test
+           p < 0.05
+   Script: scripts/analysis/pr149/r2_zzi_sign.py --stage 2.
+   Second reading (same rule, reported, not decisive): Stage-1 ISO stratum (d102mpr
+   iso_len_any75 >= 10 cm, 49 events), and the Stage-2 vtx_iso stratum.
+
+4. Attribution (reported with the same rule)
+     r2rs   vs r2s0   the whole cloud alone
+     r2rscs vs r2cs   the resample on top of the retile
+     r2cs   vs r2s0   expected to reproduce round 1's flat result
+     r2rscs vs r2rs   the retile on top of the resample
+
+5. Secondary -- DESCRIPTIVE ONLY.  Round 1 showed these move under any trajectory perturbation
+   (the fit keys alone did comparable vertex damage on mostly different events), so they do not
+   adjudicate this round:
+     uncov; stubs; Steiner terminals; vertex vs vtx105 (> 10 cm away / toward, <= 3 cm, lost) on
+     labelled ISO events (vertex_tolerance.py); STM flips and nu_evaluated churn; sentinels
+     (sentinels_tolerant.py); Enu; wall / RSS; the round-1 Q1 a-d table
+     (q1_verdict.py --base1 pr149r2s0 --base2 pr149s2r2s0).
+
+6. Mechanism (reported either way): WCT_TRAJ_ASSOC_DEBUG trace on 8 long-ISO events
+   (149_figs/manifest_r2trace: top 3 of the iso stratum per numu sample by iso_len80, plus owner
+   cases 284794 and 57903), arms s0 / cs / rs / rscs, output work-<s>-pr149r2t<cell>.
+   Per ISO fit point of the main cluster's last trajectory_fit call: ncell per plane,
+   |wcen - wsol|, |tcen - tsol| (r2_assoc_trace.py).  Question: does cs leave the association
+   unchanged, and does rs / rscs change it?
+
+7. Topology check: per event, T_cluster count, in-scope count, n main, main length (r2_topology.py),
+   each arm vs r2s0.  A moved object set is reported, not filtered.
+
+8. Gates BEFORE any arm above (non-physics, may precede this freeze):
+   compiled-config proof (149_r2_cfg_proof.txt), wcdoctest-clus, runtime OFF gate
+   (manifest_gate16, NO_DL=1, knob tree vs pre-change cfg overlay, same pin, arm_identity.py),
+   identity gate (resample_live_strategy='stepped' vs OFF, same 16 events, NO_DL=1: every output
+   identical), dead-path census (RESAMPLE log line under charge_stepped).
+
+9. Stop list: OFF or identity gate FAIL not explained; a new crash class; a physics number that looks
+   wrong.  No Bee upload, no production flip.
+
+10. Gate results recorded before this freeze (non-physics):
+    149_r2_cfg_proof.txt (prod_cfg_gate PASS 21/21; one-step chain identical 4/4; ON diff = the new
+    visitor + 2 samplers + the pipeline head); wcdoctest-clus 423/423 in the round-2 worktree build;
+    149_r2_gate_off_{mcp1k,mcp2k}.txt 16/16 identical; 149_r2_gate_identity_stepped_{mcp1k,mcp2k}.txt
+    16/16 identical apart from Trun.op_config_sha256; 149_r2_resample_census_gate16.txt.
+    Pin: /home/xqian/tmp/pr149r2/libpin (private-prefix build of toolkit 06fd9e22 + the round-2
+    files only), libWireCellClus.so md5 5f41937c3318.

@@ -1,0 +1,2 @@
+# A=work-nuecc48-pr149s0 (48 evt)  B=work-nuecc48-pr149r2s0 (48 evt)  common=48  only A=0 only B=0  allow=['Trun.op_config_sha256', 'Trun.toolkit_git', 'Trun.wct_version']
+# 48/48 events identical over 240 files

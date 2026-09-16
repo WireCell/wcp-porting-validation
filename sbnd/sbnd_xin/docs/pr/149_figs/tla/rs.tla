@@ -1,0 +1,1 @@
+resample_live_strategy='charge_stepped'

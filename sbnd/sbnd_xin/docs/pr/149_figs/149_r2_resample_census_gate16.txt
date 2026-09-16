@@ -1,0 +1,19 @@
+# doc pr/149 round 2: RESAMPLE census, charge_stepped resample (disable_mix_dead_cell true), manifest_gate16, NO_DL=1 (work-<s>-pr149r2gidcs)
+mcp1k pr_evt172794 RESAMPLE clusters 22 blobs 4221 points 24673 -> 62677 kept_empty 0 no_scalar 0 dead_edge_u 68 dead_edge_v 218 dead_edge_w 53 dead_edge_gap_only 13 interval_mismatch 0
+mcp1k pr_evt175896 RESAMPLE clusters 17 blobs 4733 points 34260 -> 99108 kept_empty 0 no_scalar 0 dead_edge_u 48 dead_edge_v 229 dead_edge_w 119 dead_edge_gap_only 44 interval_mismatch 0
+mcp1k pr_evt320667 RESAMPLE clusters 25 blobs 8253 points 50699 -> 114903 kept_empty 0 no_scalar 0 dead_edge_u 91 dead_edge_v 200 dead_edge_w 145 dead_edge_gap_only 103 interval_mismatch 0
+mcp1k pr_evt321371 RESAMPLE clusters 18 blobs 5838 points 45507 -> 129429 kept_empty 0 no_scalar 0 dead_edge_u 20 dead_edge_v 174 dead_edge_w 121 dead_edge_gap_only 33 interval_mismatch 0
+mcp1k pr_evt350935 RESAMPLE clusters 15 blobs 4018 points 29684 -> 62090 kept_empty 0 no_scalar 0 dead_edge_u 0 dead_edge_v 116 dead_edge_w 163 dead_edge_gap_only 27 interval_mismatch 0
+mcp1k pr_evt395610 RESAMPLE clusters 22 blobs 6270 points 54042 -> 158235 kept_empty 0 no_scalar 0 dead_edge_u 75 dead_edge_v 238 dead_edge_w 232 dead_edge_gap_only 44 interval_mismatch 0
+mcp1k pr_evt408534 RESAMPLE clusters 14 blobs 3670 points 23414 -> 63139 kept_empty 0 no_scalar 0 dead_edge_u 30 dead_edge_v 76 dead_edge_w 278 dead_edge_gap_only 161 interval_mismatch 0
+mcp1k pr_evt54341 RESAMPLE clusters 24 blobs 7445 points 38939 -> 99638 kept_empty 0 no_scalar 0 dead_edge_u 94 dead_edge_v 412 dead_edge_w 218 dead_edge_gap_only 159 interval_mismatch 0
+mcp2k pr_evt101828 RESAMPLE clusters 18 blobs 4879 points 31025 -> 69013 kept_empty 0 no_scalar 0 dead_edge_u 25 dead_edge_v 51 dead_edge_w 134 dead_edge_gap_only 21 interval_mismatch 0
+mcp2k pr_evt170098 RESAMPLE clusters 16 blobs 2875 points 17646 -> 44685 kept_empty 0 no_scalar 0 dead_edge_u 9 dead_edge_v 51 dead_edge_w 3 dead_edge_gap_only 0 interval_mismatch 0
+mcp2k pr_evt392009 RESAMPLE clusters 10 blobs 5235 points 28961 -> 69773 kept_empty 0 no_scalar 0 dead_edge_u 69 dead_edge_v 20 dead_edge_w 102 dead_edge_gap_only 19 interval_mismatch 0
+mcp2k pr_evt393505 RESAMPLE clusters 18 blobs 6238 points 34635 -> 83481 kept_empty 0 no_scalar 0 dead_edge_u 69 dead_edge_v 114 dead_edge_w 86 dead_edge_gap_only 25 interval_mismatch 0
+mcp2k pr_evt47212 RESAMPLE clusters 23 blobs 5654 points 33977 -> 88268 kept_empty 0 no_scalar 0 dead_edge_u 60 dead_edge_v 75 dead_edge_w 247 dead_edge_gap_only 37 interval_mismatch 0
+mcp2k pr_evt52693 RESAMPLE clusters 18 blobs 4015 points 26118 -> 69370 kept_empty 0 no_scalar 0 dead_edge_u 18 dead_edge_v 57 dead_edge_w 60 dead_edge_gap_only 21 interval_mismatch 0
+mcp2k pr_evt74336 RESAMPLE clusters 22 blobs 6450 points 44070 -> 104765 kept_empty 0 no_scalar 0 dead_edge_u 56 dead_edge_v 137 dead_edge_w 194 dead_edge_gap_only 28 interval_mismatch 0
+mcp2k pr_evt94392 RESAMPLE clusters 8 blobs 2715 points 24407 -> 75637 kept_empty 0 no_scalar 0 dead_edge_u 21 dead_edge_v 74 dead_edge_w 74 dead_edge_gap_only 46 interval_mismatch 0
+# TOTAL 16 events: clusters 290 blobs 82509 points 542057 -> 1394211 (x2.57) kept_empty 0 no_scalar 0 interval_mismatch 0
+# blobs with a dead first/last strip wire: U 753 (0.91%) V 2242 (2.72%) W 2229 (2.70%); dead only through the hand-declared W gap registry 781 (0.95%; those W channels 4800-4805 / 10438-10443 are chndb-bad, i.e. dead in imaging too)

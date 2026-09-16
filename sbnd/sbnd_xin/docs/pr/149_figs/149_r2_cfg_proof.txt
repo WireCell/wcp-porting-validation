@@ -1,0 +1,38 @@
+# pr149 round-2 cfg proof  base=06fd9e22  post=06fd9e22 (+ working tree)  2026-09-16_10:40
+## (a) PR job
+pre          rc=0  sha=8b6ae33855553dd3
+post null    rc=0  sha=8b6ae33855553dd3
+post rs cs   rc=0  sha=2bf5d1a0b9c4b474
+post rs st   rc=0  sha=8084a07117ac4a64
+post rs+cs   rc=0  sha=13097ed39396dc96
+post typo    rc=134  (expected nonzero: assert)
+-- node diff pre -> rscs: only pre []  only post ['BlobSampler:live-rs-cs-apa0-0', 'BlobSampler:live-rs-cs-apa1-0', 'ClusteringResampleLive:pr']
+   new node BlobSampler:live-rs-cs-apa0-0: strategy=[{"disable_mix_dead_cell": true, "name": "charge_stepped"}] extra=[".*wire_index", ".*charge_val", ".*charge_unc", "wpid"]
+   new node BlobSampler:live-rs-cs-apa1-0: strategy=[{"disable_mix_dead_cell": true, "name": "charge_stepped"}] extra=[".*wire_index", ".*charge_val", ".*charge_unc", "wpid"]
+   new node ClusteringResampleLive:pr: {"anodes": ["AnodePlane:apa0", "AnodePlane:apa1"], "detector_volumes": "DetectorVolumes:dv-apa0-1", "grouping": "live", "samplers": [{"apa": 0, "face": 0, "name": "BlobSampler:live-rs-cs-apa0-0"}, {"apa": 1, "face": 0, "name": "BlobSampler:live-rs-cs-apa1-0"}]}
+   changed node MultiAlgBlobClustering:clus_pr: keys ['pipeline']
+      pipeline head pre ['ClusteringSwitchScope:pr', 'ClusteringUnmergeBundle:pr']  post ['ClusteringResampleLive:pr', 'ClusteringSwitchScope:pr', 'ClusteringUnmergeBundle:pr']
+-- node diff pre -> rsst: only pre []  only post ['BlobSampler:live-rs-st-apa0-0', 'BlobSampler:live-rs-st-apa1-0', 'ClusteringResampleLive:pr']
+   new node BlobSampler:live-rs-st-apa0-0: strategy=["stepped"] extra=[".*wire_index", ".*charge_val", ".*charge_unc", "wpid"]
+   new node BlobSampler:live-rs-st-apa1-0: strategy=["stepped"] extra=[".*wire_index", ".*charge_val", ".*charge_unc", "wpid"]
+   new node ClusteringResampleLive:pr: {"anodes": ["AnodePlane:apa0", "AnodePlane:apa1"], "detector_volumes": "DetectorVolumes:dv-apa0-1", "grouping": "live", "samplers": [{"apa": 0, "face": 0, "name": "BlobSampler:live-rs-st-apa0-0"}, {"apa": 1, "face": 0, "name": "BlobSampler:live-rs-st-apa1-0"}]}
+   changed node MultiAlgBlobClustering:clus_pr: keys ['pipeline']
+      pipeline head pre ['ClusteringSwitchScope:pr', 'ClusteringUnmergeBundle:pr']  post ['ClusteringResampleLive:pr', 'ClusteringSwitchScope:pr', 'ClusteringUnmergeBundle:pr']
+-- node diff pre -> rscsr: only pre ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0']  only post ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0', 'BlobSampler:live-rs-cs-apa0-0', 'BlobSampler:live-rs-cs-apa1-0', 'ClusteringResampleLive:pr']
+   new node BlobSampler:live-cs-apa0-0: strategy=[{"disable_mix_dead_cell": false, "name": "charge_stepped"}] extra=[".*wire_index", ".*charge_val", ".*charge_unc", "wpid"]
+   new node BlobSampler:live-cs-apa1-0: strategy=[{"disable_mix_dead_cell": false, "name": "charge_stepped"}] extra=[".*wire_index", ".*charge_val", ".*charge_unc", "wpid"]
+   new node BlobSampler:live-rs-cs-apa0-0: strategy=[{"disable_mix_dead_cell": true, "name": "charge_stepped"}] extra=[".*wire_index", ".*charge_val", ".*charge_unc", "wpid"]
+   new node BlobSampler:live-rs-cs-apa1-0: strategy=[{"disable_mix_dead_cell": true, "name": "charge_stepped"}] extra=[".*wire_index", ".*charge_val", ".*charge_unc", "wpid"]
+   new node ClusteringResampleLive:pr: {"anodes": ["AnodePlane:apa0", "AnodePlane:apa1"], "detector_volumes": "DetectorVolumes:dv-apa0-1", "grouping": "live", "samplers": [{"apa": 0, "face": 0, "name": "BlobSampler:live-rs-cs-apa0-0"}, {"apa": 1, "face": 0, "name": "BlobSampler:live-rs-cs-apa1-0"}]}
+   changed node ImproveCluster_2:pr: keys ['samplers']
+   changed node MultiAlgBlobClustering:clus_pr: keys ['pipeline']
+      pipeline head pre ['ClusteringSwitchScope:pr', 'ClusteringUnmergeBundle:pr']  post ['ClusteringResampleLive:pr', 'ClusteringSwitchScope:pr', 'ClusteringUnmergeBundle:pr']
+## (b) LArSoft one-step chain
+onestep op=sync tracking_root=true  pre=dffea4ce03f2d6ac post=dffea4ce03f2d6ac  IDENTICAL
+onestep op=sync tracking_root=false  pre=5997ca6b1d84e9d5 post=5997ca6b1d84e9d5  IDENTICAL
+onestep op=bare tracking_root=true  pre=98deab852fbfde81 post=98deab852fbfde81  IDENTICAL
+onestep op=bare tracking_root=false  pre=da8bbdfd209a2eb1 post=da8bbdfd209a2eb1  IDENTICAL
+## (c) prod_cfg_gate
+checked   : 21 artifacts
+PASS -- the compiled operating point matches prod-2026-09-14
+gate rc=0

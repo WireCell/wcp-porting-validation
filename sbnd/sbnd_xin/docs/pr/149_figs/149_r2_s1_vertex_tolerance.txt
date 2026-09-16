@@ -1,0 +1,16 @@
+# vertex_tolerance stage 1 base pr149r2s0; clicks vtx105; fixed denominator (missing vertex = inf)
+[ISO] labelled 40  base b1: dist<0.05cm 2
+   pr149r2s0        <=1cm   31  <=3cm   34  <=10cm   34  lost   0  | vs base: moved>10cm away   0 toward   0  median shift of kept(<=3cm in both) 0.00 cm
+   pr149r2cs        <=1cm   29  <=3cm   34  <=10cm   34  lost   0  | vs base: moved>10cm away   4 toward   4  median shift of kept(<=3cm in both) 0.27 cm
+   pr149r2rs        <=1cm   24  <=3cm   31  <=10cm   32  lost   0  | vs base: moved>10cm away   6 toward   2  median shift of kept(<=3cm in both) 0.18 cm
+   pr149r2rscs      <=1cm   27  <=3cm   31  <=10cm   33  lost   0  | vs base: moved>10cm away   4 toward   4  median shift of kept(<=3cm in both) 0.23 cm
+[control] labelled 16  base b1: dist<0.05cm 6
+   pr149r2s0        <=1cm   13  <=3cm   14  <=10cm   15  lost   0  | vs base: moved>10cm away   0 toward   0  median shift of kept(<=3cm in both) 0.00 cm
+   pr149r2cs        <=1cm    9  <=3cm   11  <=10cm   11  lost   0  | vs base: moved>10cm away   3 toward   0  median shift of kept(<=3cm in both) 0.16 cm
+   pr149r2rs        <=1cm    9  <=3cm   10  <=10cm   13  lost   0  | vs base: moved>10cm away   2 toward   0  median shift of kept(<=3cm in both) 0.25 cm
+   pr149r2rscs      <=1cm    9  <=3cm   11  <=10cm   11  lost   0  | vs base: moved>10cm away   4 toward   0  median shift of kept(<=3cm in both) 0.31 cm
+[all] labelled 56  base b1: dist<0.05cm 8
+   pr149r2s0        <=1cm   44  <=3cm   48  <=10cm   49  lost   0  | vs base: moved>10cm away   0 toward   0  median shift of kept(<=3cm in both) 0.00 cm
+   pr149r2cs        <=1cm   38  <=3cm   45  <=10cm   45  lost   0  | vs base: moved>10cm away   7 toward   4  median shift of kept(<=3cm in both) 0.24 cm
+   pr149r2rs        <=1cm   33  <=3cm   41  <=10cm   45  lost   0  | vs base: moved>10cm away   8 toward   2  median shift of kept(<=3cm in both) 0.23 cm
+   pr149r2rscs      <=1cm   36  <=3cm   42  <=10cm   44  lost   0  | vs base: moved>10cm away   8 toward   4  median shift of kept(<=3cm in both) 0.26 cm

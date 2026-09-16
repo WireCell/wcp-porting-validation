@@ -1,0 +1,2 @@
+# A=work-mcp2k-pr149s2s0 (345 evt)  B=work-mcp2k-pr149s2r2s0 (345 evt)  common=345  only A=0 only B=0  allow=['Trun.op_config_sha256', 'Trun.toolkit_git', 'Trun.wct_version']
+# 345/345 events identical over 1725 files

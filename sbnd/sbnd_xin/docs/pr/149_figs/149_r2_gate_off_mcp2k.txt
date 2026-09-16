@@ -1,0 +1,2 @@
+# A=work-mcp2k-pr149r2goffold (8 evt)  B=work-mcp2k-pr149r2goffnew (8 evt)  common=8  only A=0 only B=0  allow=['Trun.cfg_tree']
+# 8/8 events identical over 40 files
