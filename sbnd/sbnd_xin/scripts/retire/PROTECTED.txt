@@ -818,6 +818,7 @@ work-pr130r1-probe98-mcp1k work-pr130r1-probe98-mcp2k work-pr130r1-probe98-ncpi0
 # from grp0825, d97fv or any earlier campaign, and no earlier campaign can be
 # released "through" it.
 work-mcp1k-d102m work-mcp2k-d102m work-ncpi0-d102m work-nuecc48-d102m	**LATEST PRODUCTION stage A** (imaging + clustering + Q/L), ref/prod-2026-09-08, 3067 events, toolkit eacacafe = master.  Supersedes work-*-d97fv	doc 102 sec 0, ref/prod-2026-09-08/README.md
+# 2026-09-16 (doc 111 sec 14, owner: "remove the sbnd's final icluster npz files"): the icluster-apa*-{active,masked}.npz of work-mcp1k-d102m / work-mcp2k-d102m (12756 files, 29.34 GiB) and the 12000 in-arm ql_evt<N>/ links onto them RETIRED; 3000 emptied evt<N>/ dirs removed.  Kept: every ql_evt<N> pctree/mabc/opflash (stage-A product), g<N>/ logs and frames-dnn, and the ncpi0/nuecc48 npz.  Manifest archive/records/cleanup-20260916b/sbnd-d102m-icluster.manifest.tsv (+ .links.txt).  Re-imaging = doc 102 stage A (run_chain_group.sh on the reco1 files).
 work-mcp1k-d102mpr work-mcp2k-d102mpr work-ncpi0-d102mpr work-nuecc48-d102mpr	**LATEST PRODUCTION stage B** (the 15-stage tagger + PR chain), ref/prod-2026-09-08, 3067 events; the source of products/prod0908/*-scores-prod0908.tsv.  Supersedes work-*-d144fixprod	doc 102, products/prod0908/
 ref/ products/	the generation records and the published score tables; not work dirs, named here so no future planner's grammar has to be lucky	doc 102 sec 6
 # 2026-09-14 (doc 109 rev 2): ref/prod-2026-09-08 is REMOVED from the tree on the

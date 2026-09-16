@@ -1,6 +1,11 @@
 # 111 — cleanup round D 2026-09-16: keep production's inputs and outputs, retire the intermediate test arms
 
 **Status: PARTLY EXECUTED.**
+- **Owner follow-up, same day (§14): EXECUTED.** Two file-level releases inside kept production arms:
+  - pdvd: `p98von`'s 960 SP frame archives, 39.07 GiB;
+  - sbnd: the mcp1k/mcp2k `d102m` icluster npz, 12756 files and 29.34 GiB, plus their 12000 in-arm
+    links.
+  - Free space went to **399 G**. Broken symlinks are still 0 / 0. Sentinels are still 21/0/2/7.
 - **Done:** sbnd_xin and pdvd `work/` were released on 2026-09-16: 2211 dirs, 138.4 GiB.
   - Both ran behind a frozen record layer, a confirm-time re-plan and a stub run with a causal
     negative control (§9).
@@ -300,12 +305,12 @@ sweep really reads the suffixed file.
 
 ## 12. Open for the owner
 
-- **`p98von`'s SP frames, 40 G (`du` of the 960 `protodune-sp-dnnroi-frames-*.tar.bz2`), inside production's input chain.** They are the frames production
+- ~~**`p98von`'s SP frames, 40 G**~~ **RETIRED on the owner's yes (§14).** *Original item:* the 960 `protodune-sp-dnnroi-frames-*.tar.bz2`, inside production's input chain. They are the frames production
   imaging read. `pvdimg` holds only the imaging archives, as hard links. Doc pdvd/99 §9 regenerates SP
   frames bit for bit (it retired the July frames that way). Retiring these is a file-level release
   inside a kept arm, a different unit from this machinery, so it is not staged.
-- **sbnd production imaging inputs**: `icluster-apa*.npz` inside `work-mcp1k-d102m` / `work-mcp2k-d102m`,
-  29.3 GiB (doc 106 §12, unchanged).
+- ~~**sbnd production imaging inputs**~~ **RETIRED on the owner's yes (§14).** *Original item:*
+  `icluster-apa*.npz` inside `work-mcp1k-d102m` / `work-mcp2k-d102m`, 29.3 GiB (doc 106 §12).
 - **Hand-scan sources**: the set grew by 15 arms this round (§4): 24 G in pdvd and 3.0 G in pdhd by
   `du`. Kept per the owner's 09-10 instruction.
 - **`~/tmp/h28/libpin_h28` (1.76 GiB)** survives value-first only because a doc names `p96vprod` (a
@@ -337,3 +342,79 @@ sweep really reads the suffixed file.
   manifests' arms, the peer's `d111s*` 6.
 - **sbnd sentinel suite** on production after the release: **21 PASS / 0 FAIL / 2 OPEN / 7 INERT**,
   identical to before (`sentinels_pre_20260916.txt`, `sentinels_post_20260916.txt`).
+
+## 14. Owner follow-up: the SP frames in `p98von` and the sbnd icluster npz (EXECUTED)
+
+The owner, 2026-09-16: *"We can remove the 40 G SP frames inside p98von, and remove the sbnd's final
+icluster npz files."* Both are FILE-level releases inside arms the keep test protects, which is a
+different unit from §2–§10. They have their own plan, freeze and driver:
+- plan and freeze: `plan_files_20260916b.py`;
+- driver: `retire_files_20260916b.sh`;
+- records: `archive/records/cleanup-20260916b/`, a new label (M13).
+
+```bash
+D=/home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire; cd $D
+python3 plan_files_20260916b.py --hash          # gates F1-F5 + SHA-256 manifests (freeze_files_20260916b.log)
+./retire_files_20260916b.sh                     # dry run: record + product gates (retire_files_dry_20260916b.log)
+CONFIRM=yes ./retire_files_20260916b.sh         # EXECUTED (retire_files_confirm_20260916b.log)
+```
+
+**Scope.**
+
+| set | files | GiB | also removed |
+|---|---|---|---|
+| `pdvd/work/*_p98von/protodune-sp-dnnroi-frames-anode*.tar.bz2` | 960 | 39.07 | — |
+| `sbnd_xin/work-{mcp1k,mcp2k}-d102m/{evt,g}<N>/icluster-apa*-{active,masked}.npz` | 12756 | 29.34 | the 12000 `ql_evt<N>/icluster-*.npz` symlinks onto them (same arms), and the 3000 `evt<N>/` dirs they emptied (`rmdir` only) |
+
+The item the owner approved was doc 106 §12's mcp1k/mcp2k 29.3 GiB. `work-ncpi0-d102m` and
+`work-nuecc48-d102m` hold another 0.7 GiB of icluster npz and are **not** touched.
+
+**Gates.** Each gate refuses with its own exit code.
+
+| gate | check | result |
+|---|---|---|
+| F1 | every target is a regular file with a single name (`st_nlink == 1`) | PASS |
+| F2 | no symlink in pdvd/pdhd `work/`, sbnd_xin or `~/tmp` resolves onto a target by inode, except the listed in-arm links | PASS |
+| F3 | every listed in-arm link resolves onto its own set | PASS |
+| F4 | no process holds a target open | PASS |
+| F5 | `pvdimg`'s 2040 files share no inode with the frames | PASS |
+| record (rc 14) | a manifest row with the file's size for every target, and a frozen links file identical to the list | 960/960, 12756/12756 |
+| product (rc 15) | every `p98von` and `pvdimg` event keeps 16 non-empty imaging archives; every `ql_evt<N>` of the two arms keeps a non-empty `pctree-evt<N>.tar.gz` | PASS |
+| re-plan (rc 10/11) | at confirm time, F1–F5 re-run into `*.confirm.*` and the lists are unchanged | OK |
+| broken symlinks (rc 16) | not allowed to rise | 0 → 0 in pdvd and sbnd_xin |
+
+**Controls.**
+- **F2 is causal.** Two symlinks were placed in `~/tmp/cleanup-20260916/`, one onto a frame archive and
+  one relative link onto an npz. F2 failed naming both (`plan_files_negctl_20260916b.out`, rc=1), and
+  `--hash` froze nothing. After the links were removed, F2 passed.
+- **The record gate is causal.** A manifest copy with one npz row withheld gave
+  `REFUSING: 1 of 12756 sbnd-d102m-icluster targets have no manifest row`, rc=14
+  (`retire_files_negctl_20260916b.log`).
+
+**Post-state.**
+
+| | before §14 | after |
+|---|---|---|
+| pdvd `work/` | 149 G (plus the peer's new `d113*` arms since) | 121 G |
+| sbnd_xin | 82 G | 53 G |
+| `/home/xqian` free | 346 G | **399 G** |
+
+Checks after the delete:
+- 0 targets left on disk.
+- `pvdimg` and `p98von` still hold 1920 imaging archives each.
+- All 3000 `pctree-evt<N>.tar.gz` of the two arms are intact.
+- The sbnd sentinel suite reads 21 PASS / 0 FAIL / 2 OPEN / 7 INERT (`sentinels_post_files_20260916b.txt`).
+- The PROTECTED lines of `p98von` and `d102m` carry a dated note.
+
+**What this costs, and how to get it back.**
+- **PDVD imaging cannot be re-run from disk.** Production's imaging is still readable (`pvdimg`), but
+  a re-run needs SP first. SP is bit-deterministic (doc pdvd/99 G2). Its ON-arm command regenerates the
+  frames, and the manifest's hashes check them.
+- **sbnd stage-A clustering cannot be re-run from disk for mcp1k/mcp2k.** PR-only re-runs are
+  unaffected: they read the kept stage-A pctrees. Re-imaging is doc 102's stage A (`run_chain_group.sh`
+  on the reco1 files). The manifest's hashes check the regenerated npz.
+
+**Still on disk, if more is wanted:**
+- the sbnd group-mode SP frames `g<N>/frames-dnn.tar.bz2` in the four `d102m` arms: 194 files, 3.9 G;
+- the ncpi0/nuecc48 icluster npz: 0.7 G.
+

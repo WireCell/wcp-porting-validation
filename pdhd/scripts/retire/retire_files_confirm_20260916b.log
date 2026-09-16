@@ -1,0 +1,15 @@
+== re-plan at confirm time
+   OK: F1-F5 PASS, lists unchanged
+   record gate pdvd-p98von-frames: 960/960 manifest rows, links file identical
+   record gate sbnd-d102m-icluster: 12756/12756 manifest rows, links file identical
+   product gate: 120 p98von + 120 pvdimg events have 16 imaging archives; every ql_evt of mcp1k/mcp2k d102m has its pctree
+   broken symlinks before: pdvd 0, sbnd_xin 0
+== DELETING pdvd-p98von-frames
+   files rc=0
+== DELETING sbnd-d102m-icluster
+   files rc=0
+   removed 3000 empty evt/g dirs
+   broken symlinks after: pdvd 0, sbnd_xin 0
+   pdvd-p98von-frames left on disk: 0
+   sbnd-d102m-icluster left on disk: 0
+POST-STATE: free 399G

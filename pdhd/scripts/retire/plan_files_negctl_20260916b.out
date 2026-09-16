@@ -1,0 +1,8 @@
+pdvd-p98von-frames: 960 regular files, 0 in-arm links, 39.07 GiB
+sbnd-d102m-icluster: 12756 regular files, 12000 in-arm links, 29.34 GiB
+  PASS  F1: targets are regular files with one name (0 not; e.g. [])
+  PASS  F3: every listed in-arm link resolves onto its own set (0 do not)
+  FAIL  F2: no other symlink resolves onto a target (2; e.g. ['/home/xqian/tmp/cleanup-20260916/ctl_npz_link', '/home/xqian/tmp/cleanup-20260916/ctl_frame_link'])
+  PASS  F4: no process holds a target open (none)
+  PASS  F5: pvdimg (2040 files) shares no inode with the targets
+gate failures: ['F2']
