@@ -1,0 +1,17 @@
+# doc pdvd/109 display-only gate (pdhd): A=d108hflip (pre) vs B=d109hstm (rescoped)
+# 5 shared event(s): 028084_12, 028084_3, 029107_16, 029107_18, 029107_5
+# A-only: ['028084_0', '028084_1', '028084_10', '028084_11', '028084_13', '028084_14', '028084_15', '028084_16', '028084_17', '028084_18', '028084_19', '028084_2', '028084_20', '028084_21', '028084_22', '028084_23', '028084_24', '028084_25', '028084_26', '028084_27', '028084_28', '028084_29', '028084_30', '028084_4', '028084_5', '028084_6', '028084_7', '028084_8', '028084_9', '029107_0', '029107_1', '029107_10', '029107_11', '029107_12', '029107_13', '029107_14', '029107_15', '029107_17', '029107_19', '029107_2', '029107_20', '029107_21', '029107_22', '029107_23', '029107_24', '029107_25', '029107_26', '029107_27', '029107_28', '029107_29', '029107_3', '029107_4', '029107_6', '029107_7', '029107_8', '029107_9']   B-only: none
+#
+# Bee layer inventory
+#   A: ['0-channel-deadarea-apa1-face1', '0-channel-deadarea-apa2-face0', '0-channel-deadarea-apa3-face1', '0-clustering-global', '0-mc', '0-shower_track-global', '0-steiner_graph-global', '0-steiner_terminals-global', '0-stm-global', '0-stm_fit-global', '0-stm_tagged-global', '0-track_fit-global', '0-vertices-global']
+#   B: ['0-channel-deadarea-apa1-face1', '0-channel-deadarea-apa2-face0', '0-channel-deadarea-apa3-face1', '0-clustering-global', '0-mc', '0-shower_track-global', '0-steiner_graph-global', '0-steiner_terminals-global', '0-stm-global', '0-stm_fit-global', '0-track_fit-global', '0-vertices-global']
+#
+# stm_fit layer, per event:
+#   028084_12  stm_fit  9422 ->  2624 pts,  28 ->   9 clusters
+#   028084_3  stm_fit  5701 ->  3114 pts,  20 ->  10 clusters
+#   029107_16  stm_fit  8418 ->  1782 pts,  25 ->   7 clusters
+#   029107_18  stm_fit 12345 ->  3091 pts,  31 ->   9 clusters
+#   029107_5  stm_fit  6074 ->  2162 pts,  20 ->  11 clusters
+
+GATE PASS: G1 verdict trees identical, G2 calib dump identical, G3 every non-STM Bee layer identical,
+           G4 stm_fit == pre-arm gated to the tagged set and stm == pre-arm stm_tagged (type string aside).

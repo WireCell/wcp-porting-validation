@@ -1,0 +1,53 @@
+doc pdvd/109 -- why the PDHD Bee `stm_fit` layer draws ~5x more than PDVD's.  Read-only.
+
+================================================================================================
+1. THE BEE `stm_fit` LAYER AS DRAWN  (what the owner saw)
+================================================================================================
+  PDHD  arm d108hflip  (61 events)
+    clusters drawn in the layer        tot     1135   mean    18.61   p50    18.0   p90     25.0   max      31
+    points drawn in the layer          tot   385512   mean  6319.87   p50  6081.0   p90   8626.0   max   12345
+  PDVD  arm q29flip  (120 events)
+    clusters drawn in the layer        tot      542   mean     4.52   p50     4.0   p90      7.0   max      17
+    points drawn in the layer          tot   149894   mean  1249.12   p50  1045.5   p90   2286.7   max    4984
+  PDHD / PDVD  clusters per event 4.12x    points per event 5.06x
+
+================================================================================================
+2. WHICH POPULATION EACH LAYER DRAWS
+================================================================================================
+    det     evaluated     fitted     tagged      drawn   drawn set ==
+    pdhd         4041       1135        333       1135   fitted
+           per-event: drawn==fitted on 61/61 events, drawn==tagged on 0/61
+    pdvd         4733       1821        542        542   tagged
+           per-event: drawn==fitted on 0/120 events, drawn==tagged on 120/120
+
+    step efficiencies (pooled):
+      pdhd   fitted/evaluated  28.1%   tagged/fitted  29.3%   tagged/evaluated   8.2%
+      pdvd   fitted/evaluated  38.5%   tagged/fitted  29.8%   tagged/evaluated  11.5%
+
+================================================================================================
+3. THE MISSING GATE, APPLIED OFFLINE TO PDHD
+================================================================================================
+    clusters NOW (no gate)             tot     1135   mean    18.61   p50    18.0   p90     25.0   max      31
+    clusters GATED require_flag:'STM'  tot      333   mean     5.46   p50     5.0   p90      9.0   max      11
+    points NOW (no gate)               tot   385512   mean  6319.87   p50  6081.0   p90   8626.0   max   12345
+    points GATED                       tot    89024   mean  1459.41   p50  1274.0   p90   2320.0   max    4148
+    reduction: clusters 3.41x, points 4.33x
+    tagged-but-never-fitted clusters (require_flag keeps, require_pc would hide): tot 0, events with >=1: 0
+
+    PDHD gated vs PDVD as-is, per event:
+      clusters    5.46  vs   4.52   -> 1.21x
+      points    1459.4  vs 1249.1   -> 1.17x
+
+================================================================================================
+4. THE RESIDUAL -- how much of the difference is NOT the gate
+================================================================================================
+  PDHD (61 events)
+    live clusters/evt  345.74   in-window mains/evt   96.75   flash groups/evt   58.13
+    mains per flash group  pooled 1.664   p50 1.661
+    mains per live cluster pooled 0.2798
+    beam window (-10000.0, 10000.0) us, out-of-window counts across events: {0}  <- the gate is INERT
+  PDVD (120 events)
+    live clusters/evt  331.69   in-window mains/evt   60.75   flash groups/evt   47.33
+    mains per flash group  pooled 1.284   p50 1.281
+    mains per live cluster pooled 0.1832
+    beam window (-10000.0, 10000.0) us, out-of-window counts across events: {0}  <- the gate is INERT
