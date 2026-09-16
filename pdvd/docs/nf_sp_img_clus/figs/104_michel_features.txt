@@ -1,0 +1,73 @@
+# doc pdvd/104 sec 2: the Michel admission feature table (A1 = both trajectory levers on), by conn_type.
+# Gate inputs are michel_len/mip/kink_deg/far_len (stm_michel_michel_gate, StmMichelFunctions.cxx:668-688).
+# conn 1 attached / 2 bridged / 3 charge-only; michel_len is ~0 BY CONSTRUCTION for 2 and 3.
+
+===== pdhd: A0 d101hnew (production) purity 0.946 eff 0.603 | A1 d102hcs TP 77 FP 9 | Michel population 196 (hand positives 116, excluded 1) =====
+
+  -- conn 1: TP 56  FP 6
+     TP michel_len       min/q1/med/q3/max:    0.60    4.56    8.45   11.58   18.39
+     TP michel_mip       min/q1/med/q3/max:    0.33    0.74    1.07    1.20    1.93
+     TP michel_kink_deg  min/q1/med/q3/max:   15.21   46.58   72.69  106.66  175.08
+     TP michel_ke_best   min/q1/med/q3/max:    3.24   16.63   24.73   37.58   78.37
+     FP 028084_10/109    len   1.1 mip  0.65 kink  155.9 far   0.0 dis   0.0 ke    2.4 pieces 1 ndots 0 is_stm 1
+     FP 028084_2/49      len   1.3 mip  0.68 kink   44.3 far   0.0 dis   0.0 ke    6.2 pieces 1 ndots 0 is_stm 0
+     FP 028084_23/114    len   3.0 mip  0.65 kink   34.0 far   0.0 dis   0.0 ke    7.7 pieces 2 ndots 1 is_stm 1
+     FP 029107_12/95     len   6.5 mip  0.44 kink   97.0 far   3.8 dis   0.0 ke   18.8 pieces 2 ndots 1 is_stm 1
+     FP 029107_19/111    len   0.2 mip  1.15 kink   64.0 far   0.0 dis   0.0 ke    1.1 pieces 1 ndots 0 is_stm 0
+     FP 029107_28/109    len  19.4 mip  1.26 kink   31.3 far   0.0 dis   0.0 ke   64.1 pieces 1 ndots 0 is_stm 1
+
+  -- conn 2: TP 20  FP 2
+     TP michel_len       min/q1/med/q3/max:    0.02    1.20    5.64    8.80   22.97
+     TP michel_mip       min/q1/med/q3/max:    0.00    0.00    0.00    0.00    0.00
+     TP michel_kink_deg  min/q1/med/q3/max:   -1.00   -1.00   -1.00   -1.00   -1.00
+     TP michel_ke_best   min/q1/med/q3/max:    1.94    4.45   16.29   29.46   76.05
+     FP 029107_27/39     len  14.6 mip  0.00 kink   -1.0 far   0.0 dis   5.2 ke   37.1 pieces 1 ndots 1 is_stm 1
+     FP 029107_7/85      len   1.7 mip  0.00 kink   -1.0 far   0.0 dis   6.2 ke   11.3 pieces 2 ndots 2 is_stm 1
+
+  -- conn 3: TP 1  FP 1
+     TP michel_len       min/q1/med/q3/max:    0.00    0.00    0.00    0.00    0.00
+     TP michel_mip       min/q1/med/q3/max:    0.00    0.00    0.00    0.00    0.00
+     TP michel_kink_deg  min/q1/med/q3/max:   -1.00   -1.00   -1.00   -1.00   -1.00
+     TP michel_ke_best   min/q1/med/q3/max:   29.01   29.01   29.01   29.01   29.01
+     FP 029107_23/41     len   0.0 mip  0.00 kink   -1.0 far   0.0 dis   0.8 ke    7.7 pieces 1 ndots 0 is_stm 1
+
+  -- A1-only Michel false positives: 6 (shared with A0: 3); these are the class round 7 was asked to cut on
+     028084_10/109    conn 1 len   1.1 mip  0.65 kink  155.9 ke    2.4 | A0 candidate: yes
+     029107_12/95     conn 1 len   6.5 mip  0.44 kink   97.0 ke   18.8 | A0 candidate: yes
+     029107_19/111    conn 1 len   0.2 mip  1.15 kink   64.0 ke    1.1 | A0 candidate: yes
+     029107_23/41     conn 3 len   0.0 mip  0.00 kink   -1.0 ke    7.7 | A0 candidate: NO
+     029107_27/39     conn 2 len  14.6 mip  0.00 kink   -1.0 ke   37.1 | A0 candidate: yes
+     029107_28/109    conn 1 len  19.4 mip  1.26 kink   31.3 ke   64.1 | A0 candidate: yes
+
+===== pdvd: A0 d103v0 (production) purity 0.924 eff 0.661 | A1 d103v1 TP 171 FP 11 | Michel population 606 (hand positives 239, excluded 0) =====
+
+  -- conn 1: TP 144  FP 8
+     TP michel_len       min/q1/med/q3/max:    0.79    4.61    8.07   11.20   22.33
+     TP michel_mip       min/q1/med/q3/max:    0.30    0.85    1.08    1.26    1.89
+     TP michel_kink_deg  min/q1/med/q3/max:   19.77   47.79   74.94  106.95  177.28
+     TP michel_ke_best   min/q1/med/q3/max:    1.74   12.25   20.94   30.60   74.93
+     FP 039252_16/104    len  15.6 mip  0.63 kink  108.4 far   0.0 dis   0.0 ke   32.0 pieces 2 ndots 1 is_stm 1
+     FP 039253_0/104     len   2.5 mip  1.06 kink   26.6 far   0.0 dis   0.0 ke    9.7 pieces 2 ndots 1 is_stm 1
+     FP 039253_1/101     len   9.0 mip  0.59 kink   45.1 far   7.8 dis   0.0 ke   20.7 pieces 2 ndots 1 is_stm 0
+     FP 039349_28/50     len  10.0 mip  0.56 kink  126.2 far   5.5 dis   0.0 ke   28.1 pieces 3 ndots 1 is_stm 0
+     FP 039349_29/48     len   4.7 mip  1.66 kink   56.6 far   0.0 dis   0.0 ke   23.7 pieces 1 ndots 0 is_stm 1
+     FP 039349_47/71     len   1.5 mip  1.11 kink   99.1 far   0.0 dis   0.0 ke    4.8 pieces 1 ndots 0 is_stm 1
+     FP 039349_8/53      len   2.6 mip  1.97 kink   83.2 far   0.0 dis   0.0 ke   14.3 pieces 1 ndots 0 is_stm 1
+     FP 039349_82/25     len   4.2 mip  0.57 kink  162.1 far   0.0 dis   0.0 ke    4.7 pieces 1 ndots 0 is_stm 1
+
+  -- conn 2: TP 27  FP 3
+     TP michel_len       min/q1/med/q3/max:    1.24    3.79    7.52   12.29   23.32
+     TP michel_mip       min/q1/med/q3/max:    0.00    0.00    0.00    0.00    0.00
+     TP michel_kink_deg  min/q1/med/q3/max:   -1.00   -1.00   -1.00   -1.00   -1.00
+     TP michel_ke_best   min/q1/med/q3/max:    7.21   12.20   20.74   26.96   41.44
+     FP 039252_9/51      len   0.2 mip  0.00 kink   -1.0 far   0.0 dis   2.9 ke    0.3 pieces 1 ndots 1 is_stm 1
+     FP 039349_38/35     len   0.4 mip  0.00 kink   -1.0 far   0.0 dis   6.9 ke   25.7 pieces 4 ndots 4 is_stm 1
+     FP 039349_39/56     len   1.3 mip  0.00 kink   -1.0 far   0.0 dis   9.8 ke   12.4 pieces 1 ndots 1 is_stm 0
+
+  -- A1-only Michel false positives: 6 (shared with A0: 5); these are the class round 7 was asked to cut on
+     039253_0/104     conn 1 len   2.5 mip  1.06 kink   26.6 ke    9.7 | A0 candidate: yes
+     039253_1/101     conn 1 len   9.0 mip  0.59 kink   45.1 ke   20.7 | A0 candidate: yes
+     039349_28/50     conn 1 len  10.0 mip  0.56 kink  126.2 ke   28.1 | A0 candidate: NO
+     039349_29/48     conn 1 len   4.7 mip  1.66 kink   56.6 ke   23.7 | A0 candidate: yes
+     039349_8/53      conn 1 len   2.6 mip  1.97 kink   83.2 ke   14.3 | A0 candidate: yes
+     039349_82/25     conn 1 len   4.2 mip  0.57 kink  162.1 ke    4.7 | A0 candidate: yes

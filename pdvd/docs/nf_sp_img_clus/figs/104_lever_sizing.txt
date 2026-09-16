@@ -1,0 +1,106 @@
+# doc pdvd/104 sec 2: can ANY cut on the persisted admission geometry fix PDHD's Michel purity?
+# Offline predicate, michel_found := michel_found and <lever>; is_stm untouched.
+# Every row is A1 + lever vs production A0 UNCHANGED (the shippable framing); bar is every metric >= A0 - 0.020.
+
+===== pdhd: A0 d101hnew purity 0.946 eff 0.603 | A1 d102hcs TP 77 FP 9 =====
+   V1 ok: reproduces the committed grade (A0 70/4, A1 77/9, population 196, hand positives 116)
+   conn 1: TP  56 FP 6  mip/kink measured on this path: yes
+   conn 2: TP  20 FP 2  mip/kink measured on this path: NO
+   conn 3: TP   1 FP 1  mip/kink measured on this path: NO
+
+   -- L1 energy floor: michel_ke_best >= E
+   ke >=  1.0 MeV                                       TP  77 FP  9 (lost  0, removed 0) purity 0.895 (-0.051) eff 0.664 (+0.060)  fails
+   ke >=  2.0 MeV                                       TP  75 FP  8 (lost  2, removed 1) purity 0.904 (-0.042) eff 0.647 (+0.043)  fails
+   ke >=  4.0 MeV                                       TP  72 FP  7 (lost  5, removed 2) purity 0.911 (-0.035) eff 0.621 (+0.017)  fails
+   ke >=  6.0 MeV                                       TP  68 FP  7 (lost  9, removed 2) purity 0.907 (-0.039) eff 0.586 (-0.017)  fails
+   ke >=  8.0 MeV                                       TP  65 FP  4 (lost 12, removed 5) purity 0.942 (-0.004) eff 0.560 (-0.043)  fails
+   ke >= 10.0 MeV                                       TP  64 FP  4 (lost 13, removed 5) purity 0.941 (-0.005) eff 0.552 (-0.052)  fails
+   ke >= 12.0 MeV                                       TP  62 FP  3 (lost 15, removed 6) purity 0.954 (+0.008) eff 0.534 (-0.069)  fails
+   ke >= 15.0 MeV                                       TP  58 FP  3 (lost 19, removed 6) purity 0.951 (+0.005) eff 0.500 (-0.103)  fails
+
+   -- L2a length floor pooled over all conn types: michel_len >= L  (the trap)
+   len >=  0.5 cm (all conn)                            TP  74 FP  7 (lost  3, removed 2) purity 0.914 (-0.032) eff 0.638 (+0.034)  fails
+   len >=  1.0 cm (all conn)                            TP  71 FP  7 (lost  6, removed 2) purity 0.910 (-0.036) eff 0.612 (+0.009)  fails
+   len >=  1.5 cm (all conn)                            TP  69 FP  5 (lost  8, removed 4) purity 0.932 (-0.014) eff 0.595 (-0.009)  PASSES
+   len >=  2.0 cm (all conn)                            TP  67 FP  4 (lost 10, removed 5) purity 0.944 (-0.002) eff 0.578 (-0.026)  fails
+   len >=  2.5 cm (all conn)                            TP  67 FP  4 (lost 10, removed 5) purity 0.944 (-0.002) eff 0.578 (-0.026)  fails
+   len >=  3.0 cm (all conn)                            TP  64 FP  3 (lost 13, removed 6) purity 0.955 (+0.009) eff 0.552 (-0.052)  fails
+   -- L2b the same floor applied only where michel_len means something (conn 1)
+   len >=  0.5 cm (conn 1 only)                         TP  77 FP  8 (lost  0, removed 1) purity 0.906 (-0.040) eff 0.664 (+0.060)  fails
+   len >=  1.0 cm (conn 1 only)                         TP  76 FP  8 (lost  1, removed 1) purity 0.905 (-0.041) eff 0.655 (+0.052)  fails
+   len >=  1.5 cm (conn 1 only)                         TP  75 FP  6 (lost  2, removed 3) purity 0.926 (-0.020) eff 0.647 (+0.043)  fails
+   len >=  2.0 cm (conn 1 only)                         TP  74 FP  6 (lost  3, removed 3) purity 0.925 (-0.021) eff 0.638 (+0.034)  fails
+   len >=  2.5 cm (conn 1 only)                         TP  74 FP  6 (lost  3, removed 3) purity 0.925 (-0.021) eff 0.638 (+0.034)  fails
+   len >=  3.0 cm (conn 1 only)                         TP  71 FP  5 (lost  6, removed 4) purity 0.934 (-0.012) eff 0.612 (+0.009)  PASSES
+
+   -- L3 continuation veto: reject conn 1 with len >= L, mip >= M, kink < K
+   veto len>=3 mip>=0.7 kink<20                         TP  77 FP  9 (lost  0, removed 0) purity 0.895 (-0.051) eff 0.664 (+0.060)  fails
+   veto len>=3 mip>=0.7 kink<30                         TP  77 FP  9 (lost  0, removed 0) purity 0.895 (-0.051) eff 0.664 (+0.060)  fails
+   veto len>=6 mip>=1.0 kink<40                         TP  76 FP  8 (lost  1, removed 1) purity 0.905 (-0.041) eff 0.655 (+0.052)  fails
+   veto len>=8 mip>=0.9 kink<45                         TP  76 FP  8 (lost  1, removed 1) purity 0.905 (-0.041) eff 0.655 (+0.052)  fails
+   veto len>=10 mip>=1.0 kink<40                        TP  76 FP  8 (lost  1, removed 1) purity 0.905 (-0.041) eff 0.655 (+0.052)  fails
+   veto len>=12 mip>=1.0 kink<40                        TP  77 FP  8 (lost  0, removed 1) purity 0.906 (-0.040) eff 0.664 (+0.060)  fails
+
+   -- L4 require the muon's own Bragg peak at the stop (the tagger's bragg_here test)
+   bragg_valid and contrast >= 0.6 * expected           TP  61 FP  6 (lost 16, removed 3) purity 0.910 (-0.035) eff 0.526 (-0.078)  fails
+   bragg_valid and contrast >= 0.8 * expected           TP  39 FP  3 (lost 38, removed 6) purity 0.929 (-0.017) eff 0.336 (-0.267)  fails
+   bragg_valid and contrast >= 1.0 * expected           TP  16 FP  2 (lost 61, removed 7) purity 0.889 (-0.057) eff 0.138 (-0.466)  fails
+
+   -- anatomy of the one lever that clears the bar on both detectors (L2b, L = 3.0 cm)
+      false positives removed: 4
+        of the A1-ONLY class this round targets: 2  ['028084_10/109', '029107_19/111']
+        SHARED with production A0, which keeps them: 2  ['028084_2/49', '028084_23/114']
+      A1-only false positives SURVIVING the lever: 4  ['029107_12/95', '029107_23/41', '029107_27/39', '029107_28/109']
+      true Michels discarded: 6  (1.5 per false positive removed)
+      joint passing window across both detectors: L in [3.0, 3.2] cm (PDHD fails at 2.8 and at 4.0, PDVD fails at 3.5) -- 0.2 cm wide, on a sample of 61 + 120 events
+
+===== pdvd: A0 d103v0 purity 0.924 eff 0.661 | A1 d103v1 TP 171 FP 11 =====
+   V1 ok: reproduces the committed grade (A0 158/13, A1 171/11, population 606, hand positives 239)
+   conn 1: TP 144 FP 8  mip/kink measured on this path: yes
+   conn 2: TP  27 FP 3  mip/kink measured on this path: NO
+
+   -- L1 energy floor: michel_ke_best >= E
+   ke >=  1.0 MeV                                       TP 171 FP 10 (lost  0, removed 1) purity 0.945 (+0.021) eff 0.715 (+0.054)  PASSES
+   ke >=  2.0 MeV                                       TP 170 FP 10 (lost  1, removed 1) purity 0.944 (+0.020) eff 0.711 (+0.050)  PASSES
+   ke >=  4.0 MeV                                       TP 166 FP 10 (lost  5, removed 1) purity 0.943 (+0.019) eff 0.695 (+0.033)  PASSES
+   ke >=  6.0 MeV                                       TP 165 FP  8 (lost  6, removed 3) purity 0.954 (+0.030) eff 0.690 (+0.029)  PASSES
+   ke >=  8.0 MeV                                       TP 155 FP  8 (lost 16, removed 3) purity 0.951 (+0.027) eff 0.649 (-0.013)  PASSES
+   ke >= 10.0 MeV                                       TP 144 FP  7 (lost 27, removed 4) purity 0.954 (+0.030) eff 0.603 (-0.059)  fails
+   ke >= 12.0 MeV                                       TP 131 FP  7 (lost 40, removed 4) purity 0.949 (+0.025) eff 0.548 (-0.113)  fails
+   ke >= 15.0 MeV                                       TP 116 FP  5 (lost 55, removed 6) purity 0.959 (+0.035) eff 0.485 (-0.176)  fails
+
+   -- L2a length floor pooled over all conn types: michel_len >= L  (the trap)
+   len >=  0.5 cm (all conn)                            TP 171 FP  9 (lost  0, removed 2) purity 0.950 (+0.026) eff 0.715 (+0.054)  PASSES
+   len >=  1.0 cm (all conn)                            TP 170 FP  9 (lost  1, removed 2) purity 0.950 (+0.026) eff 0.711 (+0.050)  PASSES
+   len >=  1.5 cm (all conn)                            TP 168 FP  7 (lost  3, removed 4) purity 0.960 (+0.036) eff 0.703 (+0.042)  PASSES
+   len >=  2.0 cm (all conn)                            TP 164 FP  7 (lost  7, removed 4) purity 0.959 (+0.035) eff 0.686 (+0.025)  PASSES
+   len >=  2.5 cm (all conn)                            TP 159 FP  7 (lost 12, removed 4) purity 0.958 (+0.034) eff 0.665 (+0.004)  PASSES
+   len >=  3.0 cm (all conn)                            TP 154 FP  5 (lost 17, removed 6) purity 0.969 (+0.045) eff 0.644 (-0.017)  PASSES
+   -- L2b the same floor applied only where michel_len means something (conn 1)
+   len >=  0.5 cm (conn 1 only)                         TP 171 FP 11 (lost  0, removed 0) purity 0.940 (+0.016) eff 0.715 (+0.054)  PASSES
+   len >=  1.0 cm (conn 1 only)                         TP 170 FP 11 (lost  1, removed 0) purity 0.939 (+0.015) eff 0.711 (+0.050)  PASSES
+   len >=  1.5 cm (conn 1 only)                         TP 169 FP 10 (lost  2, removed 1) purity 0.944 (+0.020) eff 0.707 (+0.046)  PASSES
+   len >=  2.0 cm (conn 1 only)                         TP 167 FP 10 (lost  4, removed 1) purity 0.944 (+0.020) eff 0.699 (+0.038)  PASSES
+   len >=  2.5 cm (conn 1 only)                         TP 162 FP 10 (lost  9, removed 1) purity 0.942 (+0.018) eff 0.678 (+0.017)  PASSES
+   len >=  3.0 cm (conn 1 only)                         TP 158 FP  8 (lost 13, removed 3) purity 0.952 (+0.028) eff 0.661 (+0.000)  PASSES
+
+   -- L3 continuation veto: reject conn 1 with len >= L, mip >= M, kink < K
+   veto len>=3 mip>=0.7 kink<20                         TP 171 FP 11 (lost  0, removed 0) purity 0.940 (+0.016) eff 0.715 (+0.054)  PASSES
+   veto len>=3 mip>=0.7 kink<30                         TP 170 FP 11 (lost  1, removed 0) purity 0.939 (+0.015) eff 0.711 (+0.050)  PASSES
+   veto len>=6 mip>=1.0 kink<40                         TP 165 FP 11 (lost  6, removed 0) purity 0.938 (+0.014) eff 0.690 (+0.029)  PASSES
+   veto len>=8 mip>=0.9 kink<45                         TP 167 FP 11 (lost  4, removed 0) purity 0.938 (+0.014) eff 0.699 (+0.038)  PASSES
+   veto len>=10 mip>=1.0 kink<40                        TP 169 FP 11 (lost  2, removed 0) purity 0.939 (+0.015) eff 0.707 (+0.046)  PASSES
+   veto len>=12 mip>=1.0 kink<40                        TP 170 FP 11 (lost  1, removed 0) purity 0.939 (+0.015) eff 0.711 (+0.050)  PASSES
+
+   -- L4 require the muon's own Bragg peak at the stop (the tagger's bragg_here test)
+   bragg_valid and contrast >= 0.6 * expected           TP 146 FP  8 (lost 25, removed 3) purity 0.948 (+0.024) eff 0.611 (-0.050)  fails
+   bragg_valid and contrast >= 0.8 * expected           TP  90 FP  5 (lost 81, removed 6) purity 0.947 (+0.023) eff 0.377 (-0.285)  fails
+   bragg_valid and contrast >= 1.0 * expected           TP  24 FP  2 (lost 147, removed 9) purity 0.923 (-0.001) eff 0.100 (-0.561)  fails
+
+   -- anatomy of the one lever that clears the bar on both detectors (L2b, L = 3.0 cm)
+      false positives removed: 3
+        of the A1-ONLY class this round targets: 2  ['039253_0/104', '039349_8/53']
+        SHARED with production A0, which keeps them: 1  ['039349_47/71']
+      A1-only false positives SURVIVING the lever: 4  ['039253_1/101', '039349_28/50', '039349_29/48', '039349_82/25']
+      true Michels discarded: 13  (4.3 per false positive removed)
+      joint passing window across both detectors: L in [3.0, 3.2] cm (PDHD fails at 2.8 and at 4.0, PDVD fails at 3.5) -- 0.2 cm wide, on a sample of 61 + 120 events

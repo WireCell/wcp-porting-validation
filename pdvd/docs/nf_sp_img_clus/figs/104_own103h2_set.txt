@@ -1,0 +1,13 @@
+# doc pdvd/104 sec 5: the own103h2 symmetric-check set (figs/104_pred_amend7.txt), built 2026-09-15.
+# Counts only -- the drawn keys and strata live in /home/xqian/tmp/d104/own/set_pdhd_tpmover/items.tsv and are
+# not read before the owner labels (amendment 7 sec 4).
+pdhd own103h2: Michel TP-movers 39 {'A1:michel': 23, 'A0:michel': 16}; strata A1 23, A0 16; drawn A1 10, A0 10; controls 4 (pool 45); items 24; shown on A1 payload 20, A0 payload 4.
+
+# identity smoke test of d104_tpmover_score.py, run before any own103h2 label existed: every prior label fed
+# back unchanged reproduces the committed headline grade exactly and every rate is zero.
+  stratum A1: labelled 10; relabel-negative 0 (0.00); removal 0 (0.00)
+  stratum A0: labelled 10; relabel-negative 0 (0.00); removal 0 (0.00)
+  controls: stopper class changed 0 of 4
+  is_stm folded: A0 121/2/76 purity 0.984 eff 0.614 | A1 118/4/79 purity 0.967 eff 0.599 | -0.017 / -0.015
+  michel folded: A0 70/4/46 purity 0.946 eff 0.603 | A1 77/9/39 purity 0.895 eff 0.664 | -0.051 / +0.060
+  reading: D2   (== figs/103_union_grade_pdhd_own103h_stmonlyneg.txt, so the scorer is neutral under identity)

@@ -1,0 +1,62 @@
+doc pdvd/104 -- pre-registration, amendment 7 (2026-09-15): the symmetric check on PDHD's Michel purity.
+Written after doc 104 sec 2 and sec 3 had been read (no admission cut separates the A1-only Michel false positives
+from the true Michels; the mechanism is trajectory-end truncation), and before any item of the check below is drawn,
+built or looked at. It is NOT blind to those sections. Doc 103's figs/103_pred.txt and amendments 1-6 stay in force;
+this amendment governs PDHD only and changes none of their thresholds.
+
+1. Why
+   * The PDHD grade of doc 103 sec 10.3 compares a REVIEWED A1 side against an UNREVIEWED A0 side. Of the Michel
+     movers, own103h judged 8 of the 33 A1-only tags and 0 of the 21 A0-only tags
+     (figs/103_union_grade_pdhd_own103h_stmonlyneg.txt, amendment 2 split (c)).
+   * own103h was built as a false-positive adjudication queue (amendment 2 sec 2), so the one-sidedness is by
+     construction, and the cost landing on the reviewed subset is expected, not evidence of a bias. What is NOT
+     established is what the same reviewer would do to the A0 side.
+   * The untouched-population split reads michel purity -0.011 and efficiency +0.028 on 179 of 196 items (same fig),
+     i.e. the -0.051 lives entirely in the 17 reviewed items. That is a sensitivity signal, not a rescue.
+   * figs/103_d1_margin.txt: PDHD Michel purity is 3 labels from passing. With 21 A0-only tags unreviewed, both the
+     current D2 and a possible D1 rest inside that margin.
+   * Amendment 6 established the remedy for exactly this shape on PDVD. This amendment applies it to PDHD.
+
+2. Scope
+   * Michel only. Both is_stm metrics already pass (-0.017, -0.015, doc 103 sec 10.3) and no is_stm mover is drawn.
+   * This amendment does NOT generalise any own103h ruling to an unlabelled item (amendment 2 sec 5). Every verdict
+     below is the owner's own call on the item in front of them.
+   * Amendment 5's convention is in force: the grade is read with --stm-only-unset-negative, so an owner STM_ONLY
+     with no michel_kind is Michel-negative. population() is called with stm_only_unset_negative=True.
+
+3. Population (d103_union_grade.population; cells A0 d101hnew / A1 d102hcs; truth own103h > smx27 > smx28)
+   * A Michel TP-mover is a judged item whose truth is not an owner label (source not owner_review / owner, and
+     confidence not "owner"), that is hand-Michel-positive, and whose michel_found is 1 in exactly one of A0 / A1.
+   * Stratum A1: tagged in A1 only. Stratum A0: tagged in A0 only. The strata are disjoint by construction.
+   * The check is symmetric in effect: a relabel-negative in stratum A1 ADDS an A1 false positive (the delta gets
+     worse); in stratum A0 it ADDS an A0 false positive (the delta gets better). It can move the grade either way.
+
+4. The served set, tag own103h2 (free: no label dir, no record, no verdicts file)
+   * 10 items from stratum A1 and 10 from stratum A0, each drawn with random.Random(107).sample over the sorted
+     keys. A stratum with fewer than 10 items is taken whole and not filled from the other.
+   * 4 controls, random.Random(107) over the sorted judged non-owner items that are candidates in both cells with
+     identical (is_stm, michel_found), is_stm 1, and not in own103h.
+   * Shuffled with random.Random(107), shown on the A1 payload where the item is an A1 candidate, else A0, behind
+     the own103h question panel with the tag renamed. No chain answer, prior label, stratum or role on screen.
+   * The drawn keys and their roles are written only into <out>/items.tsv and are not read before the owner labels.
+
+5. The fold and the rates (d104_tpmover_score.py, written and smoke-tested before any label exists)
+   * An own103h2 verdict outranks every other source for that item. MESSY / UNCLEAR removes the item.
+   * Per stratum: the relabel-negative rate (hand-positive items the owner calls Michel-negative, including an
+     STM_ONLY with no kind under amendment 5) and the removal rate (MESSY / UNCLEAR), each with a 68 % Clopper-
+     Pearson interval.
+   * The projection applies each stratum's point rate to that stratum's UNREVIEWED movers and re-grades.
+
+6. The decision
+   * PDHD D1 only if every one of the four metrics is >= A0 - 0.020 on BOTH the folded grade and the projection.
+     Otherwise D2 stands, PDHD keeps production's trajectory, and the two levers are not flipped on PDHD.
+   * Controls: 2 or more of 4 stopper-class changes => not settled; the fold is reported and the grade is not
+     restated.
+   * A pass is reported to the owner with the numbers. It is not itself authority to change a production default.
+
+7. What this amendment does not do
+   * It does not adopt the L2b conn-1 length floor of doc 104 sec 2.4. That lever clears the arithmetic bar on both
+     detectors but was found by scanning the same data it would be graded on, leaves 4 of the 6 A1-only false
+     positives standing, discards 1.5 (PDHD) and 4.3 (PDVD) true Michels per false positive removed, and would hand
+     back PDVD's banked Michel efficiency. Adopting it would need its own pre-registration and an out-of-sample
+     grade; neither is in scope here.
