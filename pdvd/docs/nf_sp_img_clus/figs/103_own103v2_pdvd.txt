@@ -1,0 +1,50 @@
+# doc pdvd/103 own103v2 (owner): 24 of 24 items labelled; labels sha256 291f1141c84d; revealed before labelling 24 of 24; rule figs/103_pred_amend6.txt
+
+== 1. each item
+   1 039252_1/30    control movers [-] A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (record, high) -> OWNER STM_MICHEL/attached
+   2 039252_16/99   control movers [-] A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/attached (record, high) -> OWNER STM_MICHEL/attached
+   3 039349_9/21    A0      movers [A0:is_stm] A0 [is_stm 1 michel_found 0] A1 [not a candidate] | label STM_ONLY/none (record, medium) -> OWNER STM_ONLY/— not set —
+   4 039252_15/83   A0      movers [A0:is_stm,A0:michel] A0 [is_stm 1 michel_found 1] A1 [not a candidate] | label STM_MICHEL/attached (record, high) -> OWNER STM_MICHEL/attached
+   5 039349_83/67   A0      movers [A0:is_stm,A0:michel] A0 [is_stm 1 michel_found 1] A1 [is_stm 0 michel_found 0] | label STM_MICHEL/attached (record, high) -> OWNER STM_MICHEL/attached
+   6 039349_9/59    A1      movers [A1:is_stm,A1:michel] A0 [not a candidate] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (record, high) -> OWNER STM_MICHEL/attached
+   7 039252_16/44   A0      movers [A0:is_stm,A0:michel] A0 [is_stm 1 michel_found 1] A1 [not a candidate] | label STM_MICHEL/both (record, high) -> OWNER STM_MICHEL/attached
+   8 039253_9/36    A0      movers [A0:michel] A0 [is_stm 0 michel_found 1] A1 [is_stm 0 michel_found 0] | label STM_MICHEL/both (new_agent, medium) -> OWNER STM_MICHEL/both
+   9 039253_8/67    A1      movers [A1:is_stm,A1:michel] A0 [not a candidate] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/attached (new_agent, high) -> OWNER STM_MICHEL/attached
+  10 039253_1/31    A0      movers [A0:michel] A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 0] | label STM_MICHEL/attached (record, medium) -> OWNER STM_MICHEL/attached
+  11 039349_51/56   A1      movers [A1:is_stm,A1:michel] A0 [not a candidate] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (new_agent, high) -> OWNER STM_MICHEL/attached
+  12 039349_50/70   A1      movers [A1:is_stm] A0 [is_stm 0 michel_found 0] A1 [is_stm 1 michel_found 0] | label STM_ONLY/none (new_agent, high) -> OWNER STM_ONLY/— not set —
+  13 039349_54/33   A1      movers [A1:is_stm,A1:michel] A0 [not a candidate] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (record, high) -> OWNER STM_MICHEL/attached
+  14 039252_8/51    A0      movers [A0:michel] A0 [is_stm 0 michel_found 1] A1 [not a candidate] | label STM_MICHEL/attached (new_agent, medium) -> OWNER STM_MICHEL/attached
+  15 039253_13/74   A1      movers [A1:is_stm] A0 [not a candidate] A1 [is_stm 1 michel_found 0] | label STM_ONLY/detached dots (new_agent, medium) -> OWNER STM_ONLY/detached dots
+  16 039252_15/31   A1      movers [A1:is_stm,A1:michel] A0 [not a candidate] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (new_agent, high) -> OWNER STM_MICHEL/attached
+  17 039349_61/17   A1      movers [A1:is_stm] A0 [not a candidate] A1 [is_stm 1 michel_found 0] | label STM_ONLY/none (record, high) -> OWNER STM_MICHEL/attached
+  18 039252_13/70   A1      movers [A1:is_stm] A0 [not a candidate] A1 [is_stm 1 michel_found 0] | label STM_ONLY/detached dots (new_agent, high) -> OWNER STM_ONLY/detached dots
+  19 039349_71/44   control movers [-] A0 [is_stm 1 michel_found 0] A1 [is_stm 1 michel_found 0] | label STM_ONLY/detached dots (record, medium) -> OWNER STM_ONLY/detached dots
+  20 039349_7/4     A0      movers [A0:is_stm] A0 [is_stm 1 michel_found 1] A1 [is_stm 0 michel_found 1] | label STM_MICHEL/attached (record, medium) -> OWNER STM_MICHEL/attached
+  21 039349_7/48    A0      movers [A0:is_stm,A0:michel] A0 [is_stm 1 michel_found 1] A1 [is_stm 0 michel_found 0] | label STM_MICHEL/attached (record, high) -> OWNER UNCLEAR/— not set —
+  22 039252_10/74   A1      movers [A1:is_stm,A1:michel] A0 [not a candidate] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/attached (record, high) -> OWNER STM_MICHEL/attached
+  23 039349_52/33   A0      movers [A0:is_stm] A0 [is_stm 1 michel_found 1] A1 [is_stm 0 michel_found 1] | label STM_MICHEL/both (record, medium) -> OWNER STM_MICHEL/both
+  24 039349_71/18   control movers [-] A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/attached (record, high) -> OWNER STM_MICHEL/attached
+
+== 2. relabel rates per stratum and metric (labelled TP-movers on that metric)
+  stratum A1 is_stm: labelled 10; relabel-negative 0 (0.00, 68 % [0.00, 0.17]); removal 0 (0.00, 68 % [0.00, 0.17]); TP-movers in the stratum 42
+  stratum A1 michel: labelled 6; relabel-negative 0 (0.00, 68 % [0.00, 0.26]); removal 0 (0.00, 68 % [0.00, 0.26]); TP-movers in the stratum 27
+  stratum A0 is_stm: labelled 7; relabel-negative 0 (0.00, 68 % [0.00, 0.23]); removal 1 (0.14, 68 % [0.02, 0.40]); TP-movers in the stratum 27
+  stratum A0 michel: labelled 7; relabel-negative 0 (0.00, 68 % [0.00, 0.23]); removal 1 (0.14, 68 % [0.02, 0.40]); TP-movers in the stratum 21
+
+== 3. controls (amendment 6 sec 4: >= 2 of 4 stopper-class changes -> not settled)
+  stopper class changed 0 of 4; Michel call changed with the class held 0
+
+== 4. folded grade and projection (amendment 6 sec 4)
+  is_stm stratum A1: unreviewed TP-movers 32; projected relabel-negative 0.0, removal 0.0
+  is_stm stratum A0: unreviewed TP-movers 20; projected relabel-negative 0.0, removal 2.9
+  is_stm folded:    A0 TP 239 FP 5 FN 152 | A1 TP 266 FP 5 FN 125 | A1 - A0 purity +0.002 efficiency +0.069
+  is_stm projected: A0 purity 0.979 eff 0.608 | A1 purity 0.982 eff 0.685 | A1 - A0 purity +0.002 efficiency +0.077
+  michel stratum A1: unreviewed TP-movers 21; projected relabel-negative 0.0, removal 0.0
+  michel stratum A0: unreviewed TP-movers 14; projected relabel-negative 0.0, removal 2.0
+  michel folded:    A0 TP 157 FP 13 FN 82 | A1 TP 171 FP 11 FN 68 | A1 - A0 purity +0.016 efficiency +0.059
+  michel projected: A0 purity 0.923 eff 0.654 | A1 purity 0.940 eff 0.722 | A1 - A0 purity +0.017 efficiency +0.068
+
+== reading: D1
+
+== wrote /home/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/scan/pdvd_stm_michel_own103v2_verdicts.json: 24 items
