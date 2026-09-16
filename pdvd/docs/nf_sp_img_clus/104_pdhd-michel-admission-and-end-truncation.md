@@ -24,12 +24,16 @@
      discards 1.5 (PDHD) and 4.3 (PDVD) true Michels per false positive removed, half its PDHD gain comes from
      removing errors production *also* makes, its joint passing window is 0.2 cm wide, and it would hand back
      PDVD's banked Michel efficiency. It was found by scanning the same data it would be graded on.
-* **What can still move the verdict without code** (sec 5). The grade compares a **reviewed A1 side against an
+* **The symmetric check is read, and D2 stands** (sec 5). The grade compared a **reviewed A1 side against an
   unreviewed A0 side**: of the Michel movers, `own103h` judged 8 of 33 A1-only tags and **0 of 21** A0-only tags.
-  Amendment 6 set the remedy for exactly this shape on PDVD. **Amendment 7** (frozen, sha `321360da`,
-  2026-09-15T18:47:32) applies it to PDHD; the 24-item set `own103h2` is drawn and served.
-* **Not flipped. No production change, no toolkit change in this round.** PDHD keeps production's trajectory until
-  the symmetric check is read.
+  **Amendment 7** (frozen, sha `321360da`, 2026-09-15T18:47:32) applied amendment 6's remedy to PDHD, and the
+  owner labelled all 24 items of `own103h2` the same day.
+  - **The one-sidedness was real and is now corrected:** the A0 stratum's relabel-negative rate is **0.20**,
+    double the A1 stratum's **0.10**. Production picks up 2 more Michel false positives (4 → 6).
+  - **It is not enough.** Michel purity A1 − A0 moves from −0.051 to **−0.035**, still outside the −0.020 bar;
+    the projection onto the unreviewed movers reads −0.036. Controls held, **0 of 4** stopper-class changes.
+  - Both `is_stm` metrics still pass (−0.016, −0.011) and Michel efficiency rises to **+0.085**.
+* **Not flipped. No production change, no toolkit change in this round.** PDHD keeps production's trajectory.
 * **Scope.** No C++, no config, no new reconstruction arm. Every number comes from the doc 101/102 arms
   `d101hnew` / `d102hcs` (PDHD, 61 events) and `d103v0` / `d103v1` (PDVD, 120 events), pin
   `/home/xqian/tmp/d102/libpin_d102`, `libWireCellClus` md5 `091e142b9481`.
@@ -255,9 +259,34 @@ attached or both, with amendment 5's rule that an owner `STM_ONLY` carrying no k
 **Served** on port 5017 (`stm_michel_viewer.py --det pdhd --tag own103h2`), label shas recorded beforehand in
 `/home/xqian/tmp/d104/label_shas_before_own103h2.txt`.
 
-### 5.3 The fold, to run when the labels land
+### 5.3 The fold (`figs/104_own103h2_fold.txt`)
 
-Nothing in this doc depends on it: at the time of writing the set is served and unlabelled.
+The owner labelled all 24 items on 2026-09-15; labels sha256 `fcc379ac3828`.
+
+| stratum | labelled | relabel-negative | removal (MESSY / UNCLEAR / not a stopper) | movers in stratum |
+|---|---|---|---|---|
+| **A1** (tagged by both levers only) | 10 | **1** (0.10, 68 % [0.02, 0.29]) | 3 (0.30) | 23 |
+| **A0** (tagged by production only) | 10 | **2** (0.20, 68 % [0.07, 0.40]) | 4 (0.40) | 16 |
+
+**The one-sidedness was real.** The unreviewed A0 side carries twice the A1 side's relabel-negative rate, exactly
+the asymmetry amendment 7 was written to expose, and production gains 2 Michel false positives (4 → 6) from a
+review it had never had. **Controls: 0 of 4 stopper-class changes** — the reviewer is stable on the stopper call.
+
+| folded grade | A0 `d101hnew` | A1 `d102hcs` | A1 − A0 | bar |
+|---|---|---|---|---|
+| `is_stm` purity | 0.975 | 0.959 | −0.016 | pass |
+| `is_stm` efficiency | 0.626 | 0.616 | −0.011 | pass |
+| **`michel_found` purity** | **0.914** | **0.880** | **−0.035** | **FAIL** |
+| `michel_found` efficiency | 0.604 | 0.689 | +0.085 | pass |
+
+Projection onto the 13 unreviewed A1 and 6 unreviewed A0 movers: purity −0.036, efficiency +0.076 — the same
+reading, so the result is not an artifact of which 20 movers were drawn.
+
+**Reading: D2.** The correction is real and moves Michel purity by +0.016, from −0.051 to −0.035. It closes about
+a third of the gap and leaves the rest. Sec 2 and sec 3 say why the rest is there, and it is not a label problem.
+
+### 5.4 Re-running it
+
 
 ```bash
 IMG=/home/xqian/toolkit-dev/wcp-porting-img
@@ -277,9 +306,10 @@ stm_michel_viewer.py` line, logged in `/home/xqian/tmp/d104/serve_own103h2_5017.
 
 ## 6. The decision
 
-**PDHD is not flipped in this round.** D2 stands on Michel purity until the symmetric check is read. Amendment 7
-sec 6: D1 only if every one of the four metrics is ≥ A0 − 0.020 on **both** the folded grade and the projection,
-and a pass is reported with its numbers — it is not itself authority to change a production default.
+**PDHD is not flipped.** The symmetric check is read and **D2 stands**: Michel purity −0.035 folded, −0.036
+projected, against a −0.020 bar. Amendment 7 sec 6 required every one of the four metrics ≥ A0 − 0.020 on both,
+and Michel purity clears neither. Nothing here is a label artifact any more — the one review that could have
+turned it has now been done, on both sides, with stable controls.
 
 The three options doc 103 sec 12.5 put to the owner are unchanged, now with sec 2 and 3 under them:
 
@@ -317,7 +347,8 @@ gate on `is_stm` and the stopping-muon dQ/dx, and its own PDVD re-grade.
 
 ## 8. Not concluded
 
-* Whether the symmetric check turns PDHD's grade — the set is served, unlabelled at the time of writing.
+* Why production's own Michel false positives (4 → 6 after review) cluster where they do; the A0 side has now
+  had one 10-item review and no more.
 * Whether the sec 3 truncation is driven by the fit knobs or the sampler. Doc 103's per-lever Michel purity (K
   0.880, S 0.906, A1 0.895) points at the **fit knobs** as the larger contributor, but the arms were never read at
   point level per lever.
@@ -342,4 +373,5 @@ gate on `is_stm` and the stopping-muon dQ/dx, and its own PDVD re-grade.
 | `figs/104_michel_provenance.txt` | sec 3 |
 | `figs/104_pred_amend7.txt` + `.sha256` | amendment 7, frozen before the draw |
 | `figs/104_own103h2_set.txt` | the set counts and the identity smoke test |
-| `pdhd/docs/scan/pdhd_stm_michel_own103h2_verdicts.json` | the owner record (written when the labels land) |
+| `figs/104_own103h2_fold.txt` | sec 5.3, the fold, rates, projection and reading |
+| `pdhd/docs/scan/pdhd_stm_michel_own103h2_verdicts.json` | the owner record, 24 items, labels sha `fcc379ac3828` |

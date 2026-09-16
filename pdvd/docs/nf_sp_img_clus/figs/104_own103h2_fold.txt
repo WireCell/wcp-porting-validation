@@ -1,0 +1,51 @@
+# doc pdvd/104 own103h2 (owner, pdhd): 24 of 24 items labelled; labels sha256 fcc379ac3828; revealed before labelling 24 of 24; rule figs/104_pred_amend7.txt
+
+== 1. each item
+   1 029107_4/69    control movers [-] A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (smx27, medium) -> OWNER STM_MICHEL/attached
+   2 028084_4/20    A0      movers [A0:michel] A0 [is_stm 0 michel_found 1] A1 [not a candidate] | label STM_MICHEL/both (smx27, medium) -> OWNER THRU/— not set —
+   3 028084_24/111  A1      movers [A1:michel] A0 [not a candidate] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (new_agent, high) -> OWNER STM_MICHEL/attached
+   4 029107_3/51    A1      movers [A1:michel] A0 [not a candidate] A1 [is_stm 0 michel_found 1] | label STM_MICHEL/attached (new_agent, medium) -> OWNER MESSY/— not set —
+   5 029107_15/118  A1      movers [A1:michel] A0 [not a candidate] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (new_agent, medium) -> OWNER STM_MICHEL/attached
+   6 029107_18/24   A0      movers [A0:michel] A0 [is_stm 0 michel_found 1] A1 [is_stm 0 michel_found 0] | label STM_MICHEL/attached (smx27, medium) -> OWNER MESSY/— not set —
+   7 028084_22/3    A1      movers [A1:michel] A0 [not a candidate] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/attached (new_agent, medium) -> OWNER THRU/attached
+   8 029107_25/109  control movers [-] A0 [is_stm 1 michel_found 0] A1 [is_stm 1 michel_found 0] | label STM_ONLY/detached dots (smx27, medium) -> OWNER STM_ONLY/detached dots
+   9 029107_11/26   A1      movers [A1:michel] A0 [not a candidate] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/attached (new_agent, medium) -> OWNER STM_MICHEL/attached
+  10 029107_25/89   A0      movers [A0:michel] A0 [is_stm 1 michel_found 1] A1 [not a candidate] | label STM_MICHEL/attached (smx27, high) -> OWNER STM_MICHEL/attached
+  11 028084_21/17   A0      movers [A0:michel] A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 0] | label STM_MICHEL/attached (smx27, medium) -> OWNER STM_ONLY/— not set —
+  12 028084_20/107  A1      movers [A1:michel] A0 [is_stm 1 michel_found 0] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (smx27, high) -> OWNER STM_MICHEL/attached
+  13 029107_23/55   control movers [-] A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (smx27, high) -> OWNER STM_MICHEL/attached
+  14 029107_20/108  A0      movers [A0:michel] A0 [is_stm 1 michel_found 1] A1 [is_stm 0 michel_found 0] | label STM_MICHEL/both (smx27, medium) -> OWNER STM_ONLY/— not set —
+  15 029107_27/64   A0      movers [A0:michel] A0 [is_stm 1 michel_found 1] A1 [not a candidate] | label STM_MICHEL/both (smx27, medium) -> OWNER MESSY/— not set —
+  16 028084_26/41   A1      movers [A1:michel] A0 [not a candidate] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/attached (new_agent, medium) -> OWNER STM_MICHEL/attached
+  17 028084_4/119   control movers [-] A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (smx27, high) -> OWNER STM_MICHEL/attached
+  18 028084_8/37    A1      movers [A1:michel] A0 [is_stm 1 michel_found 0] A1 [is_stm 0 michel_found 1] | label STM_MICHEL/attached (smx27, high) -> OWNER STM_MICHEL/attached
+  19 029107_5/34    A1      movers [A1:michel] A0 [not a candidate] A1 [is_stm 0 michel_found 1] | label STM_MICHEL/attached (new_agent, low) -> OWNER MESSY/— not set —
+  20 029107_25/123  A0      movers [A0:michel] A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 0] | label STM_MICHEL/both (smx27, medium) -> OWNER STM_MICHEL/attached
+  21 029107_19/106  A0      movers [A0:michel] A0 [is_stm 1 michel_found 1] A1 [is_stm 0 michel_found 0] | label STM_MICHEL/both (smx27, medium) -> OWNER STM_MICHEL/attached
+  22 029107_5/32    A0      movers [A0:michel] A0 [is_stm 1 michel_found 1] A1 [not a candidate] | label STM_MICHEL/both (smx27, medium) -> OWNER THRU/— not set —
+  23 029107_9/109   A0      movers [A0:michel] A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 0] | label STM_MICHEL/both (smx27, medium) -> OWNER STM_ONLY/attached
+  24 029107_28/30   A1      movers [A1:michel] A0 [is_stm 0 michel_found 0] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (smx27, low) -> OWNER STM_ONLY/none
+
+== 2. relabel rates per stratum (labelled Michel TP-movers), on the grader's own post-fold definitions
+  stratum A1: labelled 10; relabel-negative 1 (0.10, 68 % [0.02, 0.29]); removal 3 (0.30, 68 % [0.14, 0.51]); TP-movers in the stratum 23
+    relabel-negative: ['029107_28/30']
+    removed:          ['028084_22/3', '029107_3/51', '029107_5/34']
+  stratum A0: labelled 10; relabel-negative 2 (0.20, 68 % [0.07, 0.40]); removal 4 (0.40, 68 % [0.22, 0.60]); TP-movers in the stratum 16
+    relabel-negative: ['028084_21/17', '029107_20/108']
+    removed:          ['028084_4/20', '029107_18/24', '029107_27/64', '029107_5/32']
+
+== 3. controls (amendment 7 sec 6: >= 2 of 4 stopper-class changes -> not settled)
+  stopper class changed 0 of 4 []; Michel call changed with the class held 0 []
+
+== 4. folded grade and projection (amendment 7 sec 5, 6)
+  is_stm folded:    A0 TP 119 FP 3 FN 71 purity 0.975 eff 0.626 | A1 TP 117 FP 5 FN 73 purity 0.959 eff 0.616 | A1 - A0 purity -0.016 efficiency -0.011
+  is_stm projected: not applicable -- amendment 7 sec 2 draws no is_stm mover; the folded numbers above are the ones that must clear the bar
+  michel folded:    A0 TP 64 FP 6 FN 42 purity 0.914 eff 0.604 | A1 TP 73 FP 10 FN 33 purity 0.880 eff 0.689 | A1 - A0 purity -0.035 efficiency +0.085
+  michel stratum A1: unreviewed TP-movers 13; projected relabel-negative 1.3, removal 3.9
+  michel stratum A0: unreviewed TP-movers 6; projected relabel-negative 1.2, removal 2.4
+  michel projected: A0 purity 0.893 eff 0.621 | A1 purity 0.857 eff 0.698 | A1 - A0 purity -0.036 efficiency +0.076
+
+== reading: D2
+   (a pass is reported to the owner with the numbers; amendment 7 sec 6: it is not itself authority to change a production default)
+
+== wrote /home/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/scan/pdhd_stm_michel_own103h2_verdicts.json: 24 items
