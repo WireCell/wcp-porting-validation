@@ -1,0 +1,105 @@
+# doc pdvd/110 gap census (d110_gap_census.py)
+
+## sec 0 -- the owner's clicks: layers of the arm viewed with a point within 3 cm
+
+* v1 pdvd 039349_20 [q29flip] cl80 (313.7, 95.9, 124.9): verdict STM=1 TGM=0
+    - stm_fit: nearest 1.13 cm (cl80), cl80 1.13 cm
+    - track_fit: nearest 0.86 cm (cl80), cl80 0.86 cm
+    - stm: nearest 0.07 cm (cl80), cl80 0.07 cm
+    - steiner_graph: nearest 0.07 cm (cl80), cl80 0.07 cm
+    - clustering: nearest 0.07 cm (cl80), cl80 0.07 cm
+* v2 pdvd 039349_20 [q29flip] cl80 (94.5, 30.7, 165.0): verdict STM=1 TGM=0
+    - stm_fit: nearest 1.97 cm (cl80), cl80 1.97 cm
+    - track_fit: nearest 1.68 cm (cl80), cl80 1.68 cm
+    - stm: nearest 0.02 cm (cl80), cl80 0.02 cm
+    - steiner_graph: nearest 1.51 cm (cl80), cl80 1.51 cm
+    - clustering: nearest 0.02 cm (cl80), cl80 0.02 cm
+* v3 pdvd 039349_20 [q29flip] cl25 (-270.2, -243.7, 36.0): verdict STM=1 TGM=0
+    - stm_fit: nearest 1.73 cm (cl25), cl25 1.73 cm
+    - track_fit: nearest 2.06 cm (cl25), cl25 2.06 cm
+    - stm: nearest 0.06 cm (cl25), cl25 0.06 cm
+    - steiner_graph: nearest 1.46 cm (cl25), cl25 1.46 cm
+    - clustering: nearest 0.06 cm (cl25), cl25 0.06 cm
+* h1 pdhd 029107_16 [d109hstm] cl108 (75.3, 438.3, 450.1): verdict STM=1 TGM=0
+    - stm_fit: nearest 2.31 cm (cl108), cl108 2.31 cm
+    - track_fit: nearest 0.77 cm (cl108), cl108 0.77 cm
+    - stm: nearest 0.03 cm (cl108), cl108 0.03 cm
+    - steiner_graph: nearest 0.64 cm (cl108), cl108 0.64 cm
+    - clustering: nearest 0.03 cm (cl108), cl108 0.03 cm
+* h2 pdhd 029107_16 [d109hstm] cl106 (182.0, 537.4, 401.8): verdict STM=1 TGM=0
+    - stm_fit: nearest 0.87 cm (cl106), cl106 0.87 cm
+    - track_fit: nearest 0.79 cm (cl106), cl106 0.79 cm
+    - stm: nearest 0.06 cm (cl106), cl106 0.06 cm
+    - steiner_graph: nearest 0.53 cm (cl106), cl106 0.53 cm
+    - clustering: nearest 0.06 cm (cl106), cl106 0.06 cm
+* h2-withdrawn pdhd 029107_16 [d109hstm] cl115 (278.5, 474.6, 299.1): verdict already TGM; skipped by TaggerCheckSTM
+    - stm_fit: nearest 143.80 cm (cl106), cl115 nan cm
+    - track_fit: nearest 143.78 cm (cl106), cl115 nan cm
+    - stm: nearest 142.84 cm (cl106), cl115 nan cm
+    - steiner_graph: nearest 142.99 cm (cl106), cl115 nan cm
+    - clustering: nearest 0.07 cm (cl115), cl115 0.07 cm
+
+## sec 1 -- Bee level, tagged clusters (what the stm_fit layer draws)
+
+| det | arm | role | events | tagged clusters | fit rows | fit length (m) | q<0 rows (not drawn) | of which dQ <= 0 | holes >= 3 rows | holes per 10 m | hole length total / max (cm) | off-charge rows (>=1 plane) | rows wiggle > 1 cm | track_fit rows / clamped to 0 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| pdhd | `d101hnew` | pre-flip | 61 | 341 | 99788 | 654.6 | 8908 (8.9 %) | 807 (9.1 %) | 970 | 14.82 | 4653 / 100.4 | 13.5 % | 0.9 % | 126454 / 20996 (0 evt without the layer) |
+| pdhd | `d108hflip` | production | 61 | 333 | 89024 | 584.6 | 7333 (8.2 %) | 698 (9.5 %) | 693 | 11.85 | 3846 / 92.1 | 13.5 % | 0.4 % | 112302 / 17041 (0 evt without the layer) |
+| pdvd | `q29flip` | shown in Bee set 51c1e410 (pre-flip) | 120 | 542 | 149894 | 980.5 | 8618 (5.7 %) | 955 (11.1 %) | 957 | 9.76 | 4506 / 72.6 | 12.5 % | 1.1 % | 178250 / 20905 (1 evt without the layer) |
+| pdvd | `d103v0` | pre-flip | 120 | 540 | 149374 | 977.3 | 8583 (5.7 %) | 941 (11.0 %) | 952 | 9.74 | 4493 / 72.6 | 12.5 % | 1.1 % | 177393 / 20651 (1 evt without the layer) |
+| pdvd | `d103vflip` | production | 120 | 563 | 148413 | 969.7 | 6741 (4.5 %) | 782 (11.6 %) | 588 | 6.06 | 3877 / 78.3 | 11.9 % | 0.4 % | 175198 / 17976 (0 evt without the layer) |
+
+### sec 1b -- pre-flip vs production on the clusters tagged in BOTH arms (same pctrees)
+
+| det | pair | events | common tagged clusters | fit length pre / prod (m) | q<0 rows pre / prod | holes pre / prod | hole length pre / prod (cm) | clusters with a hole pre / prod | wiggle>1 cm rows pre / prod |
+|---|---|---|---|---|---|---|---|---|---|
+| pdhd | `d101hnew` -> `d108hflip` | 61 | 261 | 478.5 / 466.8 | 7470 / 6064 | 774 / 577 | 3947 / 3288 | 193 / 162 | 669 / 288 |
+| pdvd | `d103v0` -> `d103vflip` | 120 | 422 | 734.2 / 719.3 | 6264 / 4561 | 672 / 422 | 3321 / 2625 | 253 / 195 | 1095 / 422 |
+
+## sec 2 -- ROOT level, every fitted row (all fitted clusters, all passes)
+
+### 2a -- q<0 fraction by the number of planes with no charge of the cluster within +-1 wire on the row's slice
+
+| det | arm | 0 planes off | 1 | 2 | 3 | share of all q<0 rows at 0 / 1 / 2 / 3 | wiggle p90 (cm) at 0 / 1 / 2 / 3 |
+|---|---|---|---|---|---|---|---|
+| pdhd | `d101hnew` | 5.6 % of 360483 | 24.9 % of 16746 | 33.3 % of 8882 | 16.8 % of 9886 | 70 % / 14 % / 10 % / 6 % | 0.47 / 0.78 / 0.65 / 0.63 |
+| pdhd | `d108hflip` | 3.8 % of 354178 | 22.5 % of 13514 | 28.2 % of 8691 | 16.9 % of 9129 | 66 % / 15 % / 12 % / 8 % | 0.36 / 0.64 / 0.57 / 0.56 |
+| pdvd | `q29flip` | 3.6 % of 513168 | 14.6 % of 49641 | 44.6 % of 9866 | 32.6 % of 6881 | 57 % / 22 % / 14 % / 7 % | 0.41 / 0.64 / 0.86 / 0.74 |
+| pdvd | `d103v0` | 3.7 % of 511933 | 14.6 % of 49565 | 44.7 % of 9814 | 33.3 % of 6672 | 57 % / 22 % / 13 % / 7 % | 0.41 / 0.64 / 0.86 / 0.74 |
+| pdvd | `d103vflip` | 2.2 % of 501925 | 11.7 % of 44347 | 45.2 % of 8677 | 33.9 % of 6397 | 50 % / 23 % / 17 % / 10 % | 0.30 / 0.47 / 0.66 / 0.68 |
+
+### 2b -- q<0 fraction by reg_flag (any plane) x degenerate planes
+
+| det | arm | reg | 0 degenerate | 1 | 2 | 3 | share of all q<0 rows at 0 / 1 / 2 / 3 |
+|---|---|---|---|---|---|---|---|
+| pdhd | `d101hnew` | 0 | 3.1 % of 250827 | 7.2 % of 60761 | 9.9 % of 14906 | 18.5 % of 741 | 27 % / 15 % / 5 % / 0 % |
+| pdhd | `d101hnew` | 1 | 18.0 % of 49615 | 30.7 % of 15732 | 41.4 % of 3170 | 41.2 % of 245 | 31 % / 17 % / 5 % / 0 % |
+| pdhd | `d108hflip` | 0 | 2.0 % of 254519 | 5.2 % of 58147 | 7.1 % of 13879 | 13.2 % of 668 | 25 % / 15 % / 5 % / 0 % |
+| pdhd | `d108hflip` | 1 | 15.0 % of 42076 | 29.9 % of 13483 | 37.0 % of 2585 | 40.6 % of 155 | 31 % / 20 % / 5 % / 0 % |
+| pdvd | `q29flip` | 0 | 1.5 % of 428311 | 9.6 % of 16898 | 11.3 % of 11434 | 14.3 % of 1146 | 19 % / 5 % / 4 % / 1 % |
+| pdvd | `q29flip` | 1 | 14.6 % of 103759 | 43.3 % of 10603 | 47.4 % of 6812 | 51.4 % of 593 | 47 % / 14 % / 10 % / 1 % |
+| pdvd | `d103v0` | 0 | 1.5 % of 426641 | 9.6 % of 17065 | 11.4 % of 11585 | 14.1 % of 1162 | 19 % / 5 % / 4 % / 1 % |
+| pdvd | `d103v0` | 1 | 14.6 % of 103528 | 43.3 % of 10621 | 47.4 % of 6791 | 51.1 % of 591 | 46 % / 14 % / 10 % / 1 % |
+| pdvd | `d103vflip` | 0 | 0.9 % of 429460 | 6.9 % of 16033 | 8.7 % of 10697 | 9.9 % of 934 | 17 % / 5 % / 4 % / 0 % |
+| pdvd | `d103vflip` | 1 | 11.2 % of 90073 | 42.7 % of 8298 | 48.4 % of 5530 | 48.6 % of 321 | 45 % / 16 % / 12 % / 1 % |
+
+### 2c -- off-charge rate per plane: exact own cell vs +-1 wire, all rows and q<0 rows
+
+| det | arm | own cell U / V / W | +-1 wire U / V / W | q<0 rows: own cell U / V / W | q<0 rows: +-1 wire U / V / W |
+|---|---|---|---|---|---|
+| pdhd | `d101hnew` | 8.1 / 9.3 / 8.7 | 5.3 / 5.8 / 5.1 | 24.8 / 28.6 / 25.9 | 19.2 / 19.6 / 13.1 |
+| pdhd | `d108hflip` | 7.7 / 8.7 / 8.0 | 5.0 / 5.2 / 5.0 | 28.1 / 31.6 / 29.7 | 22.4 / 22.3 / 16.7 |
+| pdvd | `q29flip` | 20.8 / 25.0 / 5.1 | 5.5 / 6.6 / 3.4 | 38.6 / 42.5 / 33.5 | 20.7 / 24.6 / 24.5 |
+| pdvd | `d103v0` | 20.7 / 25.0 / 5.1 | 5.5 / 6.6 / 3.4 | 38.5 / 42.4 / 33.4 | 20.6 / 24.6 / 24.4 |
+| pdvd | `d103vflip` | 20.0 / 24.6 / 4.5 | 5.1 / 6.2 / 3.2 | 41.6 / 47.4 / 38.8 | 25.4 / 30.8 / 31.0 |
+
+## sec 3 -- continuity of the persisted fit (steps between consecutive rows of one cluster and pass)
+
+| det | arm | steps | p50 (cm) | p99 (cm) | max (cm) | steps > 3 cm |
+|---|---|---|---|---|---|---|
+| pdhd | `d101hnew` | 394833 | 0.61 | 0.94 | 87.22 | 409 |
+| pdhd | `d108hflip` | 384354 | 0.61 | 0.95 | 84.84 | 424 |
+| pdvd | `q29flip` | 577701 | 0.62 | 0.95 | 144.51 | 540 |
+| pdvd | `d103v0` | 576133 | 0.62 | 0.95 | 144.51 | 539 |
+| pdvd | `d103vflip` | 559499 | 0.62 | 0.95 | 144.53 | 563 |
+

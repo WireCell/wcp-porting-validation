@@ -35,6 +35,11 @@ python3 pdvd/docs/nf_sp_img_clus/scripts/d109_bee_sets.py /home/xqian/tmp/d109/b
 Arms: PDHD `d108hflip` (61 evt, the flipped production config of doc pdvd/108),
 PDVD `q29flip` (120 evt). Toolkit at the run: `b9ce8b4d`.
 
+*Erratum (2026-09-16, doc pdvd/110 sec 1): the toolkit line holds for the PDHD arm only. `q29flip` ran on
+2026-09-13, before the PDVD trajectory flip `8fc6070e`, so the PDVD set of sec 7 shows pre-flip trajectories
+while the PDHD set shows production. The layer-scope finding is unaffected. A PDVD set on production is in
+doc 110 sec 1.*
+
 ## 1. The question
 
 Opening the same `stm_fit` layer on one PDHD event and one PDVD event, PDHD carries far more

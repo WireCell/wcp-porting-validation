@@ -1,0 +1,7 @@
+# doc pdvd/110: Bee client q cut, deployed bundle vs source (fetched 2026-09-16T12:30Z)
+# deployed: curl -k -s https://www.phy.bnl.gov/twister/static/js/bee/dist/bee.js | grep -o '.\{60\}"truth"==this.name||"L1".\{90\}'
+process}initData(e){this.data={};let t=e.x.length,i=[],s=0;("truth"==this.name||"L1"==this.name)&&(s=500);for(let r=0;r<t;r++)null!=e.q&&e.q[r]<s||i.push(r);let r=i.length;th
+# source: wire-cell-bee3/events/static/js/bee/physics/sst.js (git 934d031)
+47:        let QTHRESH = 0;
+49:            QTHRESH = 500;
+52:            if (data.q != null && data.q[i] < QTHRESH) continue;
