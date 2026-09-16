@@ -1,0 +1,3 @@
+# G4: retile_mode none + retile_sampler_strategy 'stepped' reproduces the clustering cloud (RETILEMODE census, wct_pr logs)
+pdhd/work/029107_16_d113hstep1: mutates 419 identical (points and xyz sums at 17 digits) 419 points 171891
+pdvd/work/039349_20_d113vstep1: mutates 221 identical (points and xyz sums at 17 digits) 221 points 34680

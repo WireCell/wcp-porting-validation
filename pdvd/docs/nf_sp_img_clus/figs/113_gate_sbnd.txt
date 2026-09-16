@@ -1,0 +1,2 @@
+=== SBND PR (d113snew vs d111ssnew): 16 event dirs, 80 files compared; branches ignored: ['Trun.toolkit_git']
+    VERDICT: BYTE-IDENTICAL

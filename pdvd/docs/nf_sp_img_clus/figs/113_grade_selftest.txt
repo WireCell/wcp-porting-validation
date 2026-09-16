@@ -1,0 +1,9 @@
+self-test pdhd is_stm       A0: TP 119 FP 3 FN 71 (expected 119 3 71) ok
+self-test pdhd is_stm       A1: TP 117 FP 5 FN 73 (expected 117 5 73) ok
+self-test pdhd michel_found A0: TP 64 FP 6 FN 42 (expected 64 6 42) ok
+self-test pdhd michel_found A1: TP 73 FP 10 FN 33 (expected 73 10 33) ok
+self-test pdvd is_stm       A0: TP 239 FP 5 FN 152 (expected 239 5 152) ok
+self-test pdvd is_stm       A1: TP 266 FP 5 FN 125 (expected 266 5 125) ok
+self-test pdvd michel_found A0: TP 157 FP 13 FN 82 (expected 157 13 82) ok
+self-test pdvd michel_found A1: TP 171 FP 11 FN 68 (expected 171 11 68) ok
+SELF-TEST PASS

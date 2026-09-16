@@ -1,0 +1,103 @@
+## pdhd: base d113hbase -- S1 off 9.87 %, far 4.00 %, h1 seed max 1.97 cm
+### pdhd L3 (d113hnone)
+  S1   FAIL      seed > 1 cm off 9.87 -> 8.51 % (-13.8 %, bar -25 %)
+  P1   FAIL      fit rows > 1 cm 7.74 -> 7.00 % (-9.6 %, bar -20 %)
+  P5   PASS      h1 seed max 0.68 cm (bar 1.2)
+  T    FAIL      grade FAIL
+  P2   PASS      off-charge rows 7.99 -> 7.41 %
+  P3   FAIL      Bee holes / 10 m 8.47 -> 8.81
+  P4   PASS      coverage 94.30 -> 95.23 %
+  P6'  PASS      clean-record rows > 1 cm 0.19 %
+  P5f  PASS      h1 fit max 1.77 -> 0.46 cm
+  Ga   PASS      truncated fits 1.58 % (bar 4.48 %)
+  Gb   PASS      seed > 5 cm off 4.00 -> 4.15 % (bar x1.10)
+  Gc   PASS      dead-touching tags lost 19/83 = 22.9 % vs other 12/46 = 26.1 % (bars <= 36.1 and <= 35.2)
+  Gd   PASS      clusters losing every fit 16 (bar 19)
+  C    PASS      runner: complete 60, incomplete 1 ['028084_14_d113hnone'], rc 0; events 61, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs base2 0.725
+### pdhd L2 (d113hfoot)
+  S1   FAIL      seed > 1 cm off 9.87 -> 8.56 % (-13.3 %, bar -25 %)
+  P1   FAIL      fit rows > 1 cm 7.74 -> 7.09 % (-8.4 %, bar -20 %)
+  P5   PASS      h1 seed max 0.68 cm (bar 1.2)
+  T    UNDECIDED grade UNDECIDED
+  P2   PASS      off-charge rows 7.99 -> 7.46 %
+  P3   FAIL      Bee holes / 10 m 8.47 -> 8.91
+  P4   PASS      coverage 94.96 -> 95.67 %
+  P6'  PASS      clean-record rows > 1 cm 0.19 %
+  P5f  PASS      h1 fit max 1.77 -> 0.46 cm
+  Ga   PASS      truncated fits 1.23 % (bar 4.48 %)
+  Gb   PASS      seed > 5 cm off 4.00 -> 4.24 % (bar x1.10)
+  Gc   PASS      dead-touching tags lost 18/83 = 21.7 % vs other 12/46 = 26.1 % (bars <= 36.1 and <= 35.2)
+  Gd   PASS      clusters losing every fit 17 (bar 19)
+  C    PASS      runner: complete 60, incomplete 1 ['028084_14_d113hfoot'], rc 0; events 61, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs base2 0.672
+### pdhd L1 (d113hnopaint)
+  S1   FAIL      seed > 1 cm off 9.87 -> 8.65 % (-12.3 %, bar -25 %)
+  P1   FAIL      fit rows > 1 cm 7.76 -> 7.24 % (-6.7 %, bar -20 %)
+  P5   PASS      h1 seed max 0.68 cm (bar 1.2)
+  T    UNDECIDED grade UNDECIDED
+  P2   PASS      off-charge rows 8.00 -> 7.74 %
+  P3   FAIL      Bee holes / 10 m 8.47 -> 8.79
+  P4   PASS      coverage 95.30 -> 95.84 %
+  P6'  PASS      clean-record rows > 1 cm 0.21 %
+  P5f  PASS      h1 fit max 1.77 -> 0.46 cm
+  Ga   PASS      truncated fits 1.57 % (bar 4.48 %)
+  Gb   PASS      seed > 5 cm off 4.00 -> 4.19 % (bar x1.10)
+  Gc   PASS      dead-touching tags lost 13/83 = 15.7 % vs other 13/46 = 28.3 % (bars <= 38.3 and <= 35.2)
+  Gd   PASS      clusters losing every fit 11 (bar 19)
+  C    PASS      runner: complete 60, incomplete 1 ['028084_14_d113hnopaint'], rc 0; events 61, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs base2 0.759
+## pdvd: base d113vbase -- S1 off 7.82 %, far 2.31 %, v3 seed max 1.64 cm
+### pdvd L3 (d113vnone)
+  S1   FAIL      seed > 1 cm off 7.82 -> 6.06 % (-22.5 %, bar -25 %)
+  P1   FAIL      fit rows > 1 cm 5.10 -> 4.71 % (-7.6 %, bar -20 %)
+  P5   FAIL      v3 seed max 1.24 cm (bar 1.2)
+  T    FAIL      grade FAIL
+  P2   PASS      off-charge rows 10.57 -> 10.50 %
+  P3   FAIL      Bee holes / 10 m 5.90 -> 6.20
+  P4   PASS      coverage 95.04 -> 95.77 %
+  P6'  PASS      clean-record rows > 1 cm 0.16 %
+  P5f  FAIL      v3 fit max 0.91 -> 1.19 cm
+  Ga   PASS      truncated fits 1.41 % (bar 3.37 %)
+  Gb   PASS      seed > 5 cm off 2.31 -> 2.27 % (bar x1.10)
+  Gc   PASS      dead-touching tags lost 46/257 = 17.9 % vs other 8/25 = 32.0 % (bars <= 42.0 and <= 30.1)
+  Gd   PASS      clusters losing every fit 2 (bar 9)
+  C    PASS      runner: complete 119, incomplete 1 ['039252_13_d113vnone'], rc 0; events 120, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs base2 0.825
+### pdvd L2 (d113vfoot)
+  S1   FAIL      seed > 1 cm off 7.82 -> 6.18 % (-21.0 %, bar -25 %)
+  P1   FAIL      fit rows > 1 cm 5.09 -> 4.82 % (-5.3 %, bar -20 %)
+  P5   FAIL      v3 seed max 1.24 cm (bar 1.2)
+  T    FAIL      grade FAIL
+  P2   FAIL      off-charge rows 10.58 -> 10.59 %
+  P3   FAIL      Bee holes / 10 m 5.89 -> 6.27
+  P4   PASS      coverage 95.70 -> 96.04 %
+  P6'  PASS      clean-record rows > 1 cm 0.17 %
+  P5f  FAIL      v3 fit max 0.91 -> 1.19 cm
+  Ga   PASS      truncated fits 1.41 % (bar 3.37 %)
+  Gb   PASS      seed > 5 cm off 2.31 -> 2.40 % (bar x1.10)
+  Gc   PASS      dead-touching tags lost 50/257 = 19.5 % vs other 8/25 = 32.0 % (bars <= 42.0 and <= 30.1)
+  Gd   PASS      clusters losing every fit 2 (bar 9)
+  C    PASS      runner: complete 120, incomplete 0 [], rc 0; events 120, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs base2 0.779
+### pdvd L1 (d113vnopaint)
+  S1   FAIL      seed > 1 cm off 7.82 -> 6.43 % (-17.8 %, bar -25 %)
+  P1   FAIL      fit rows > 1 cm 5.09 -> 4.90 % (-3.7 %, bar -20 %)
+  P5   FAIL      v3 seed max 1.24 cm (bar 1.2)
+  T    FAIL      grade FAIL
+  P2   FAIL      off-charge rows 10.55 -> 10.64 %
+  P3   FAIL      Bee holes / 10 m 5.90 -> 6.09
+  P4   PASS      coverage 95.84 -> 96.09 %
+  P6'  PASS      clean-record rows > 1 cm 0.16 %
+  P5f  FAIL      v3 fit max 0.91 -> 1.19 cm
+  Ga   PASS      truncated fits 1.41 % (bar 3.37 %)
+  Gb   PASS      seed > 5 cm off 2.31 -> 2.42 % (bar x1.10)
+  Gc   PASS      dead-touching tags lost 47/257 = 18.3 % vs other 7/25 = 28.0 % (bars <= 38.0 and <= 30.1)
+  Gd   PASS      clusters losing every fit 3 (bar 9)
+  C    PASS      runner: complete 120, incomplete 0 [], rc 0; events 120, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs base2 0.813
+
+## verdict per level (both detectors)
+  L3: FAIL  failing pdhd:S1, pdhd:P1, pdhd:T, pdhd:P3, pdvd:S1, pdvd:P1, pdvd:P5, pdvd:T, pdvd:P3, pdvd:P5f
+  L2: FAIL  failing pdhd:S1, pdhd:P1, pdhd:P3, pdvd:S1, pdvd:P1, pdvd:P5, pdvd:T, pdvd:P2, pdvd:P3, pdvd:P5f  undecided pdhd:T
+  L1: FAIL  failing pdhd:S1, pdhd:P1, pdhd:P3, pdvd:S1, pdvd:P1, pdvd:P5, pdvd:T, pdvd:P2, pdvd:P3, pdvd:P5f  undecided pdhd:T

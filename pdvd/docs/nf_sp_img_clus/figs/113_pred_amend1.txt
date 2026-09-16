@@ -1,0 +1,15 @@
+doc pdvd/113 -- AMENDMENT 1 to figs/113_pred.txt (sha256 a1275a12...), written 2026-09-16T14:01:39-07:00, after the first three knob-on
+PDHD arms finished and BEFORE any metric of any knob-on arm was computed or read.
+
+WHAT WAS SEEN: d113hfoot and d113hnone (and, by the same event, very likely d113hnopaint) report
+"complete 60, incomplete 1": event 028084_14.  That event's job exited 0 (no "wire-cell PR failed" line in any run log),
+wrote tracking-pr.root, tracking-stm.root and mabc-pr.zip, and printed "Timer: Total".  d111_run_arms.sh's completeness
+test additionally greps "CheckSTM_Michel: .* candidate(s)", which CheckSTM_Michel.cxx:4756 prints only after it has
+candidates to report; in these arms the event has no STM candidate (the base arm has 2), so the line is absent.
+The only other fact learned is therefore that this one event lost its 2 candidates in these arms -- which clause Gd and
+T already count.
+
+CHANGE: clause C is read as "every event of the arm complete = wire-cell rc 0 with tracking-pr.root, tracking-stm.root
+and mabc-pr.zip written" (d113_verdict.py: the runner's INCOMPLETE events are re-checked against those three files and
+the absence of a failure line; an event with zero STM candidates is complete).  The runner's own summary is still
+quoted.  No other clause, threshold or metric changes.

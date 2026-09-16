@@ -14,6 +14,12 @@ dump arms (`d111hst`, `d111vst`), whose outputs are identical to production (doc
 
 ## Status: the answer
 
+**Follow-up:** doc 113 (`113_steiner-without-retile.md`) builds the Steiner graph without the retile. Turning off
+the retile's path-disc painting alone removes 99 % (PDHD) / 91 % (PDVD) of the one-blank terminals below and fixes
+h1. On PDHD that settles sec 9's open item: the empty cells are painted cells. On PDVD about 9,700 one-blank
+terminals survive every reduced level and remain unexplained. The change is not recommended as is: the arm-wide
+seed, the fit and the tags miss that round's frozen rule.
+
 **Are there good on-image terminals nearby? Yes.** In the ±12 cm window there are 14 terminals on the image at h1 and
 37 at v3. The seed passes through 4 and 16 of them. From each off-image seed vertex the nearest on-image terminal is
 1.0–2.3 cm away at h1 and 0.9–1.8 cm at v3, about the terminal spacing.

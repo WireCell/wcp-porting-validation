@@ -1,0 +1,17 @@
+=== sweep d113ub: 35 events, 0 failures -> /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/d113ub/results.tsv ===
+sweep_rc=0
+ZIPS: 35/35 content-identical
+TAGGER: identical=34 diff=1 skip=0 (log: /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/d113ub/ab_check_d111ub_s.log)
+ab_rc=1
+--- the one tagger difference (event 6805, idx 22), d111ub_s vs d113ub tagger_6805.log:
+1086,1089c1086,1089
+< kine_pio_theta_2                                      1/1           5.76772e+01     0.00000e+00     5.76772e+01               0  
+< kine_pio_phi_2                                        1/1           4.63050e+01     0.00000e+00    -4.63050e+01               0  
+< kine_pio_dis_2                                        1/1           1.48041e+01     0.00000e+00     1.48041e+01               0  
+< kine_pio_angle                                        1/1           1.48058e+01     0.00000e+00     1.48058e+01               0  
+---
+> kine_pio_theta_2                                      1/1           9.13465e+01     0.00000e+00     9.13465e+01               0  
+> kine_pio_phi_2                                        1/1           8.38583e+01     0.00000e+00     8.38583e+01               0  
+> kine_pio_dis_2                                        1/1           5.18079e-01     0.00000e+00     5.18079e-01               0  
+> kine_pio_angle                                        1/1           1.09512e+02     0.00000e+00     1.09512e+02               0  
+--- known bistable: doc 90 (memory feedback_repeat_check_blind_to_pi0); 6805 DIFF also appears in 56 earlier ab_check logs

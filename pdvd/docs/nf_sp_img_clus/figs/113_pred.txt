@@ -1,0 +1,103 @@
+doc pdvd/113 -- PRE-REGISTERED evaluation rule for the retile_mode arms (building the Steiner graph without the retile).
+Written 2026-09-16 after the knob-off gates and the base census, BEFORE any knob-on arm ran.
+Its sha256 is recorded in figs/113_pred.sha256 before the first knob-on arm starts.
+
+QUESTION (owner, 2026-09-16): the PDHD/PDVD PR chains retile each cluster before the Steiner build (inherited from
+MicroBooNE, which has many more dead channels).  Does removing the retile -- keeping the charge_stepped sampling --
+fix the off-image seed problem (docs 111, 112) without introducing more issues?
+
+LEVER (C++ default "full"; knob OFF = byte-identical, gates below):
+  ImproveCluster_2 retile_mode, jsonnet TLA retile_mode.  The original cluster's basic_pid path is computed in every mode.
+    L3 none       no tiling: each original blob re-sampled in place with the retile samplers (charge_stepped)  <- the ask
+    L2 footprint  re-tile the cluster's own blob footprints only (no dead / nearby-charge extension, no painting)
+    L1 no_paint   the full activity (footprints + dead + good charge within 20 cm), no path-disc painting
+  L1 and L2 attribute the effect; L3 is the owner's question.  No other mode or setting is tried in this round.
+
+ARMS (production -nu -stm-fit chain, pin /home/xqian/tmp/d113/libpin_d113 (clus 6d97984ebbba), dump on
+      WCT_STM_PATH_DEBUG=1 WCT_STEINER_GRAPH_DUMP=1, pctrees of the production arms):
+  PDHD (61 events, SRC d108hflip): base d113hbase (no TLA); d113hnone / d113hfoot / d113hnopaint (-S retile_mode=...);
+        d113hbase2 = base again, run CONCURRENTLY with the three knob arms (the load control for R; must equal d113hbase).
+  PDVD (120 events, SRC d103vflip): d113vbase; d113vnone / d113vfoot / d113vnopaint; d113vbase2.
+  The base arms ran first and separately (JOBS=6, alongside the gate runs); they are the reference for every clause
+  except R.  The four arms of a detector (base2 + the three knob arms) run concurrently at one JOBS, and base2 is the
+  only R denominator, so d111_eval.py runs twice per knob arm: vs base (P1-P6') and vs base2 (R).
+
+PREDICTIONS (stated before measuring; not gating):
+  * L3 removes doc 112's mechanism: the 1blank share of non-extreme terminals falls from the base value to near zero
+    (only a blob footprint wire with no CTPC charge can still give a zero plane without a dead bit).
+  * L3 does NOT remove zero-charge planes: a dead wire inside an original blob is written (0, 1e12) and charge_stepped
+    with disable_mix_dead_cell=false admits a zero-charge wire (doctest_retile_mode.cxx case 4), so part of the 1blank
+    population becomes 1dead, and the 1dead terminals are already 25.0 % (PDHD) / 22.3 % (PDVD) > 1 cm off at base.
+    If S1 misses its bar, this is the first place to look.  "none" means no new blobs, not no zero-charge cells.
+  * far (> 5 cm) seed deviations are graph-level bridges (doc 111 r2) and do not shrink; they may grow where the
+    retile's fill had carried the path across a dead region.
+  * tags churn: doc 102 r2 lost 0.18 STM efficiency (PDHD) from a trajectory-improving change; the base->arm candidate
+    churn is expected to be at least that of the accepted charge_stepped flips (reference numbers below).
+
+METRICS, per knob arm vs its base, both detectors.
+
+FIX -- all required:
+  S1  Steiner seed length > 1 cm off the image ridge (d113_steiner_census.py "> 1 cm off"; the doc-111 r2 ladder
+      definition, reproduced exactly on d111hst: 9.87 %): relative drop >= 25 %.
+  P1  STM fit rows with ridge offset > 1 cm (d111_eval.py P1): relative drop >= 20 %.
+  P5  the Steiner SEED's ridge-offset max in the spot window (d113_steiner_census.py spots line: the maximum over the
+      cluster's rough walks through the window) <= 1.2 cm at h1 (PDHD 029107_16 cl108, base 1.97) and at v3
+      (PDVD 039349_20 cl25, base 1.64).  No seed through the window = FAIL.  The seed, not the fit: at v3 the production
+      fit is already 0.91 cm while its seed is 1.64 cm (doc 112), so a fit clause would pass before any change.
+      h2, v1, v2 are reported only.
+
+NO NEW ISSUES -- all required:
+  T   d113_grade.py (truth pdhd own103h2 > own103h > smx27 > smx28 with --stm-only-unset-negative; pdvd
+      own103v2 > own103v > p99rwon_carried_corrected > smx11; self-test reproduces docs 104 and 103 exactly):
+      is_stm purity, is_stm efficiency, michel_found purity, michel_found efficiency each >= base - 0.020 with the
+      unlabelled candidates bounded both ways (NEG and POS).  Any metric UNDECIDED -> T is UNDECIDED.
+  P2  fit rows off-charge in >= 1 plane (d111_eval.py P2): arm share <= base share.
+  P3  Bee holes per 10 m (d111_eval.py P3): arm <= base.
+  P4  image coverage (d111_eval.py P4): arm >= base - 1.0 point.
+  P6' clean-record share > 1 cm (d111_eval.py P6'): <= 1.0 %.
+  P5f the FIT's ridge-offset max in the spot window (d113_spot_figs.py tsv, the pass with the most rows in the window)
+      <= base + 0.2 cm at h1 (base 1.77) and v3 (base 0.91): the seed fix must not make the fitted track worse there.
+  Ga  truncation (d113_compare.py (a)): share of common STM fit records with length arm/base < 0.9 <= the share of the
+      accepted charge_stepped flip on the same detector: PDHD 4.48 % (d101hnew -> d102hcs), PDVD 3.37 % (d103v0 -> d103v1).
+  Gb  far deviations (d113_steiner_census.py "> 5 cm off"): arm share <= 1.10 x base share.
+  Gc  gap jumping (d113_compare.py --logd-base, section (c')): base is_stm tags whose BASE Steiner graph has a vertex on
+      a dead channel (the clusters where the retile's dead fill acts; PDHD 83 of 129, PDVD 257 of 282) -- the share the
+      arm loses (candidate gone, or is_stm 1 -> 0) <= the share it loses among the other base tags (PDHD 46, PDVD 25)
+      + 10 points, AND <= the accepted charge_stepped flip's overall is_stm loss + 5 points: PDHD 39/129 = 30.2 % ->
+      35.2 %, PDVD 65/259 = 25.1 % -> 30.1 %.
+  Gd  clusters that lose every STM fit (d113_compare.py "clusters with fits only in base") <= the accepted flip's count:
+      PDHD 19, PDVD 9.
+  C   completeness: every event of the arm complete (d111_run_arms.sh "incomplete 0").
+  R   median per-event PR wall arm / base2 (d111_eval.py R with base = d113?base2) <= 1.20.
+
+REPORTED, never gating: the 1blank / 1dead / 2blank+ terminal shares and the retiled cloud size (d113_steiner_census);
+  bridge edges; the is_stm tags lost split by whether the base graph touched a dead channel and whether its seed used a
+  ctpc/mst bridge (d113_compare.py --logd-base: the gap-jumping cases, each listed); candidate churn; rows > 2 cm;
+  dQ/dx median; wiggle; peak RSS; CreateSteinerGraph WARN counts; the spot figures (d113_spot_figs.py).
+
+VERDICT per level: PASS when every FIX and NO-NEW-ISSUE clause passes on both detectors; UNDECIDED when the only
+  non-passing clause is an UNDECIDED T; else FAIL, naming the clauses.  Recommendation: L3 if it passes; else the
+  passing level with the largest mean S1 drop; else none.  Whatever the verdict the C++ default stays "full" and no
+  production config changes in this round: a flip is the owner's decision.
+
+KNOB-OFF GATES (run before this rule was frozen, on libpin_d113):
+  G1 compiled PR config unchanged with the knob unset: PDHD a870511c9b22, PDVD 211a49a48229 (d102_compile_pr.sh);
+     with -S retile_mode='none' the only difference is data.retile_mode in the single ImproveCluster_2 node.
+  G2 d113hbase == d111hst (61) and d113vbase == d111vst (120), d111_identity_gate.py (same config, dump on).
+  G3 SBND d113snew == d111ssnew (16 events, Trun.toolkit_git ignored); uBooNE d113ub vs d111ub_s: zips 35/35, tagger 34/35
+     with the one difference on the known bistable event 6805 (doc 90).
+  G4 retile_mode none with the 'stepped' sampler reproduces the clustering cloud: RETILEMODE pts and xyz sums equal on
+     every mutate of PDHD 029107_16 (419) and PDVD 039349_20 (221).
+  doctest wcdoctest-clus 430/430.
+
+BASE CENSUS (filled in before freezing):
+  (d113_steiner_census.py; the PDHD numbers are d113hbase, the PDVD numbers d113vbase; both equal the doc-111 r2 dump
+   arms d111hst / d111vst and their ladder base rows)
+  PDHD  S1 seed > 1 cm off 9.87 %, > 5 cm off 4.00 % (1151 rough walks, 2820.3 m); non-extreme terminals 382126:
+        3live 74.7 %, 1blank 21.5 %, 1dead 3.9 %, 2blank+ 0.0 %; 1blank = 59.7 % of the terminals > 1 cm off;
+        bridge edges (ctpc/mst) 2413; h1 seed max 1.97 cm.
+  PDVD  S1 seed > 1 cm off 7.82 %, > 5 cm off 2.31 % (1847 rough walks, 4367.9 m); non-extreme terminals 672331:
+        3live 71.7 %, 1blank 17.8 %, 1dead 10.5 %, 2blank+ 0.0 %; 1blank = 38.3 % of the terminals > 1 cm off;
+        bridge edges (ctpc/mst) 6096; v3 seed max 1.64 cm.
+  Fit side (d113_spot_figs.py on the production dump arms): h1 fit max 1.77 cm, v3 fit max 0.91 cm.
+  So S1's 25 % bar asks PDHD 9.87 -> <= 7.40 % and PDVD 7.82 -> <= 5.87 %; Gb allows far <= 4.40 % / 2.54 %.

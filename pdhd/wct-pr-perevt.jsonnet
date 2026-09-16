@@ -197,6 +197,11 @@ function(
     retile_sampler_strategy = null,
     retile_sampler_wire_product = null,
     retile_sampler_charge_threshold = null,
+    // doc pdvd/113: ImproveCluster_2 retile_mode for the Steiner stage's retiler.  null =>
+    // key omitted => the full retile (production, byte-identical).  'no_paint' | 'footprint' |
+    // 'none' (no tiling: the cluster's own blobs re-sampled with the retile samplers, so
+    // charge_stepped is kept).  Set as code: PDHD_PR_TLA="-S retile_mode='none'".
+    retile_mode = null,
     // PR visitors to run, by name (see clus_pr's cm_by_name in
     // cfg/pgrapher/experiment/sbnd/clus.jsonnet).  The default IS the SBND
     // production tagger chain (run_full1k_nusel.sh with -unmerge-assoc), so a
@@ -4147,6 +4152,7 @@ function(
                              retile_sampler_strategy=retile_sampler_strategy,   // doc pdvd/102
                              retile_sampler_wire_product=retile_sampler_wire_product,
                              retile_sampler_charge_threshold=retile_sampler_charge_threshold,
+                             retile_mode=retile_mode,   // doc pdvd/113
                              mip_dqdx_median=mip_dqdx_median,
                              pipeline_names=pipeline_names,
                              stm_michel_knobs=stm_michel_knobs + stm_michel_extra,   // doc pdhd/03; + doc pdvd/51 override bag

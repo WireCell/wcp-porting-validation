@@ -1,0 +1,31 @@
+## seed off-ridge share split: near (1-5 cm) = off - far, far (> 5 cm)
+pdhd base     off 9.87 % | near 5.87 % (+0.0 %) | far 4.00 % (+0.0 %) | seed 2820 m | cloud 11565219 | vertices 2870401 | terminals 382126 (off 87618) | 1blank 81995 1dead 14797 | bridges 2413 (312 m)
+pdhd none     off 8.51 % | near 4.36 % (-25.8 %) | far 4.15 % (+3.7 %) | seed 2841 m | cloud 5995160 | vertices 1983117 | terminals 363796 (off 47743) | 1blank 57 1dead 20158 | bridges 5224 (435 m)
+pdhd foot     off 8.56 % | near 4.32 % (-26.4 %) | far 4.24 % (+6.0 %) | seed 2844 m | cloud 6016452 | vertices 1905311 | terminals 348618 (off 46628) | 1blank 368 1dead 13114 | bridges 4911 (430 m)
+pdhd nopaint  off 8.65 % | near 4.46 % (-24.0 %) | far 4.19 % (+4.8 %) | seed 2844 m | cloud 6326021 | vertices 1970640 | terminals 354742 (off 50602) | 1blank 464 1dead 16802 | bridges 3778 (391 m)
+pdvd base     off 7.82 % | near 5.51 % (+0.0 %) | far 2.31 % (+0.0 %) | seed 4368 m | cloud 13622727 | vertices 4082097 | terminals 672331 (off 96850) | 1blank 119476 1dead 70930 | bridges 6096 (487 m)
+pdvd none     off 6.06 % | near 3.79 % (-31.1 %) | far 2.27 % (-1.8 %) | seed 4287 m | cloud 5880928 | vertices 2850826 | terminals 700630 (off 71712) | 1blank 9666 1dead 86490 | bridges 14709 (775 m)
+pdvd foot     off 6.18 % | near 3.78 % (-31.3 %) | far 2.40 % (+3.6 %) | seed 4281 m | cloud 5874811 | vertices 2763762 | terminals 654119 (off 71982) | 1blank 10147 1dead 65558 | bridges 13039 (748 m)
+pdvd nopaint  off 6.43 % | near 4.01 % (-27.2 %) | far 2.42 % (+4.5 %) | seed 4280 m | cloud 6393763 | vertices 2919586 | terminals 668081 (off 81589) | 1blank 11128 1dead 82022 | bridges 9226 (623 m)
+
+## L3 (none) tag movers vs base with label source
+pdhd is_stm: new FP 3 {'owner_review': 1, 'smx27': 2}; FP gone 3 {'owner': 1, 'owner_review': 2}; TP lost 23 {'new_agent': 4, 'owner': 1, 'owner_review': 11, 'smx27': 7}; TP new 19 {'new_agent': 3, 'owner': 1, 'owner_review': 7, 'smx27': 8}
+   new FP keys: ['028084_15/102', '028084_22/103', '029107_16/79']
+   new FP verdicts: ['THRU/None', 'THRU/none', 'THRU/none']
+pdhd michel_found: new FP 2 {'owner': 1, 'smx27': 1}; FP gone 4 {'owner': 1, 'owner_review': 3}; TP lost 21 {'new_agent': 4, 'owner': 2, 'owner_review': 8, 'smx27': 7}; TP new 10 {'new_agent': 3, 'owner': 1, 'owner_review': 3, 'smx27': 3}
+   new FP keys: ['028084_27/107', '028084_4/41']
+   new FP verdicts: ['STM_ONLY/detached dots', 'STM_ONLY/detached dots']
+pdvd is_stm: new FP 9 {'new_agent': 3, 'record': 6}; FP gone 2 {'owner_review': 1, 'record': 1}; TP lost 44 {'new_agent': 11, 'owner_review': 7, 'record': 26}; TP new 41 {'new_agent': 7, 'owner_review': 3, 'record': 31}
+   new FP keys: ['039349_23/52', '039349_24/24', '039349_32/56', '039349_39/56', '039349_66/85', '039349_72/18', '039349_72/47', '039349_80/71', '039349_81/22']
+   new FP verdicts: ['THRU/None', 'THRU/none', 'THRU/none', 'THRU/none', 'THRU/none', 'THRU/none', 'THRU/none', 'THRU/— not set —', 'THRU/— not set —']
+pdvd michel_found: new FP 20 {'new_agent': 5, 'record': 15}; FP gone 4 {'owner_review': 1, 'record': 3}; TP lost 32 {'new_agent': 7, 'owner_review': 6, 'record': 19}; TP new 28 {'new_agent': 3, 'owner_review': 4, 'record': 21}
+   new FP keys: ['039252_12/84', '039252_14/39', '039252_15/33', '039253_6/85', '039253_8/31', '039253_8/58', '039349_1/72', '039349_18/10', '039349_20/76', '039349_20/78', '039349_20/80', '039349_29/40', '039349_29/54', '039349_34/49', '039349_38/23', '039349_66/85', '039349_71/53', '039349_72/47', '039349_76/82', '039349_80/71']
+   new FP verdicts: ['STM_ONLY/None', 'STM_ONLY/detached dots', 'STM_ONLY/detached dots', 'STM_ONLY/detached dots', 'STM_ONLY/detached dots', 'STM_ONLY/none', 'STM_ONLY/none', 'STM_ONLY/— not set —', 'THRU/none', 'THRU/none', 'THRU/none', 'THRU/none', 'THRU/none', 'THRU/none', 'THRU/none', 'THRU/none', 'THRU/none', 'THRU/none', 'THRU/none', 'THRU/— not set —']
+
+## resources vs base2 (arms run concurrently): median per-event ratio, and totals
+pdhd none     events 61: wall median ratio 0.725 (total 2585 s vs 3639 s); peak RSS median ratio 0.918 (max 3.14 GB vs 3.10 GB)
+pdhd foot     events 61: wall median ratio 0.672 (total 2498 s vs 3639 s); peak RSS median ratio 0.941 (max 2.93 GB vs 3.10 GB)
+pdhd nopaint  events 61: wall median ratio 0.759 (total 2741 s vs 3639 s); peak RSS median ratio 0.982 (max 3.06 GB vs 3.10 GB)
+pdvd none     events 120: wall median ratio 0.825 (total 3981 s vs 5003 s); peak RSS median ratio 0.929 (max 3.13 GB vs 3.49 GB)
+pdvd foot     events 120: wall median ratio 0.779 (total 3714 s vs 5003 s); peak RSS median ratio 0.939 (max 3.03 GB vs 3.49 GB)
+pdvd nopaint  events 120: wall median ratio 0.813 (total 3997 s vs 5003 s); peak RSS median ratio 0.951 (max 3.34 GB vs 3.49 GB)

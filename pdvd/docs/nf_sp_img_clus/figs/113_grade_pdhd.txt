@@ -1,0 +1,44 @@
+# doc pdvd/113 grade (pdhd); truth sources in precedence order (items taken): [('pdhd_stm_michel_own103h2_verdicts.json', 24), ('pdhd_stm_michel_own103h_verdicts.json', 27), ('pdhd_stm_michel_smx27_verdicts.json', 296), ('pdhd_stm_michel_smx28_verdicts.json', 97)]
+# cells: A0=d113hbase, L3=d113hnone, L2=d113hfoot, L1=d113hnopaint; base A0; bar A_x - A0 >= -0.02
+population 331 (fixed 248); Michel population 183 (excluded 1); unlabelled candidates of any cell 47
+  unlabelled candidates of A0: 20; is_stm 1 0, michel_found 1 1
+  unlabelled candidates of L3: 37; is_stm 1 4, michel_found 1 8
+  unlabelled candidates of L2: 34; is_stm 1 3, michel_found 1 8
+  unlabelled candidates of L1: 37; is_stm 1 5, michel_found 1 7
+
+== is_stm
+  A0  d113hbase     TP 117 FP   5 FN  67 TN  142 | purity 0.959 [0.943, 0.977] efficiency 0.636 [0.600, 0.672]
+  L3  d113hnone     TP 113 FP   5 FN  71 TN  142 | purity 0.958 [0.940, 0.975] efficiency 0.614 [0.578, 0.652]
+  L2  d113hfoot     TP 118 FP   4 FN  66 TN  143 | purity 0.967 [0.951, 0.983] efficiency 0.641 [0.606, 0.676]
+  L1  d113hnopaint  TP 118 FP   6 FN  66 TN  141 | purity 0.952 [0.932, 0.971] efficiency 0.641 [0.606, 0.674]
+
+== michel_found
+  A0  d113hbase     TP  73 FP  10 FN  31 TN   69 | purity 0.880 [0.844, 0.915] efficiency 0.702 [0.654, 0.745]
+  L3  d113hnone     TP  62 FP   8 FN  42 TN   71 | purity 0.886 [0.847, 0.925] efficiency 0.596 [0.549, 0.642]
+  L2  d113hfoot     TP  69 FP  10 FN  35 TN   69 | purity 0.873 [0.836, 0.911] efficiency 0.663 [0.616, 0.704]
+  L1  d113hnopaint  TP  71 FP  10 FN  33 TN   69 | purity 0.877 [0.839, 0.915] efficiency 0.683 [0.636, 0.723]
+
+== reading per cell vs A0 (labelled; NEG / POS bounds for the unlabelled)
+  L3  is_stm       purity    : -0.001  (NEG -0.033, POS +0.000)  UNDECIDED
+  L3  is_stm       efficiency: -0.022  (NEG -0.022, POS +0.000)  UNDECIDED
+  L3  michel_found purity    : +0.006  (NEG +0.006, POS +0.016)  PASS
+  L3  michel_found efficiency: -0.106  (NEG -0.106, POS -0.026)  FAIL
+  L3  T -> FAIL
+  L2  is_stm       purity    : +0.008  (NEG -0.015, POS +0.009)  PASS
+  L2  is_stm       efficiency: +0.005  (NEG +0.005, POS +0.017)  PASS
+  L2  michel_found purity    : -0.006  (NEG -0.006, POS +0.004)  PASS
+  L2  michel_found efficiency: -0.038  (NEG -0.038, POS +0.020)  UNDECIDED
+  L2  T -> UNDECIDED
+  L1  is_stm       purity    : -0.007  (NEG -0.044, POS -0.006)  UNDECIDED
+  L1  is_stm       efficiency: +0.005  (NEG +0.005, POS +0.026)  PASS
+  L1  michel_found purity    : -0.003  (NEG -0.003, POS +0.005)  PASS
+  L1  michel_found efficiency: -0.019  (NEG -0.019, POS +0.026)  PASS
+  L1  T -> UNDECIDED
+
+== candidates on one side only, vs A0, by hand class
+  L3 only: 48 {'stopper': 9, 'non-stopper': 11, 'unjudged': 8, 'unlabelled': 20}
+  A0 only (vs L3): 71 {'stopper': 24, 'non-stopper': 36, 'unjudged': 8, 'unlabelled': 3}
+  L2 only: 43 {'stopper': 11, 'non-stopper': 9, 'unjudged': 6, 'unlabelled': 17}
+  A0 only (vs L2): 62 {'stopper': 20, 'non-stopper': 32, 'unjudged': 7, 'unlabelled': 3}
+  L1 only: 49 {'stopper': 12, 'non-stopper': 10, 'unjudged': 8, 'unlabelled': 19}
+  A0 only (vs L1): 59 {'stopper': 16, 'non-stopper': 30, 'unjudged': 11, 'unlabelled': 2}

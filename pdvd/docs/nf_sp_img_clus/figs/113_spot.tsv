@@ -1,0 +1,21 @@
+spot	arm	label	seed_max_off_cm	fit_max_off_cm	terminals	term_1blank	term_1blank_off
+h1	d113hbase	production (full retile)	1.970	1.769	18	5	4
+h1	d113hnopaint	no_paint	0.680	0.463	14	0	0
+h1	d113hfoot	footprint	0.680	0.463	14	0	0
+h1	d113hnone	none (no retile)	0.680	0.463	14	0	0
+h2	d113hbase	production (full retile)	0.835	2.545	92	21	14
+h2	d113hnopaint	no_paint	0.599	0.757	80	0	0
+h2	d113hfoot	footprint	0.599	0.757	79	0	0
+h2	d113hnone	none (no retile)	0.599	0.757	84	0	0
+v1	d113vbase	production (full retile)	1.030	0.533	37	14	3
+v1	d113vnopaint	no_paint	1.050	0.717	36	0	0
+v1	d113vfoot	footprint	1.050	0.717	35	0	0
+v1	d113vnone	none (no retile)	1.050	0.717	38	0	0
+v2	d113vbase	production (full retile)	0.985	1.274	47	10	6
+v2	d113vnopaint	no_paint	0.801	0.336	43	1	0
+v2	d113vfoot	footprint	0.801	0.417	43	1	0
+v2	d113vnone	none (no retile)	0.801	0.417	43	1	0
+v3	d113vbase	production (full retile)	1.635	0.912	41	14	3
+v3	d113vnopaint	no_paint	1.235	1.190	50	0	0
+v3	d113vfoot	footprint	1.235	1.190	50	0	0
+v3	d113vnone	none (no retile)	1.235	1.190	50	0	0
