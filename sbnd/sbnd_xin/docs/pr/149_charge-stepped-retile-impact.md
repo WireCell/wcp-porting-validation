@@ -676,7 +676,7 @@ So the shape, x/tick, charge and dead-flag reconstruction is exact wherever a sa
 | `cfg_proof.txt`: prod_cfg_gate before and after | PASS 21/21, both |
 | one-step LArSoft chain, sync/bare × tracking root | identical 4/4 |
 | ON node diff (charge_stepped / stepped / + retile) | only `ClusteringResampleLive:pr`, 2 × `BlobSampler:live-rs-*`, the `clus_pr` pipeline head (+ round 1's retile nodes); typo aborts |
-| `wcdoctest-clus` in the round-2 build | 423/423 (5 new cases, 240 assertions; includes a tiled-vs-rebuilt blob sampling bit for bit under both strategies, and a negative control showing why an absent wire must not be written dead) |
+| `wcdoctest-clus` | 423/423 in the validation build (`06fd9e22` + round-2 files); 426/426 at the committed `e73850ad` (+3 cases from `724cf205`). 5 new cases, 240 assertions; includes a tiled-vs-rebuilt blob sampling bit for bit under both strategies, and a negative control showing why an absent wire must not be written dead) |
 | runtime OFF gate `gate_off_*` (16 evt, geometric vertex, knob tree vs `06fd9e22` cfg overlay, same pin) | 16/16 identical (`Trun.cfg_tree` allowed) |
 | identity gate `gate_identity_stepped_*` | 16/16 identical (`Trun.op_config_sha256` allowed) |
 | dead-path census `resample_census_gate16.txt` (charge_stepped) | 82 509 blobs; a dead first/last strip wire on U 0.91 % / V 2.72 % / W 2.70 % of blobs; dead only through the hand-declared W gap 0.95 % (those W channels are chndb-bad, dead in imaging too); cloud ×2.57 over all clusters |
@@ -688,7 +688,9 @@ private prefix. It used the shared build's exact waf flags (package list equal, 
 prepends that prefix. All 16 running gate jobs loaded the pinned `libWireCellClus.so` (checked in
 `/proc/<pid>/maps`).
 
-The peer then pushed that work as `724cf205` (an env-gated, log-only Steiner graph dump). The round-2 commit
+The peer then pushed that work as `724cf205`, a log-only Steiner graph dump. Every line it adds to
+`SteinerGrapher.cxx` and `TaggerCheckSTM.cxx` runs only under `getenv("WCT_STEINER_GRAPH_DUMP")` (read from its
+diff), so the physics validated here on the parent commit is the committed behaviour. The round-2 commit
 **`e73850ad`** sits on top of it; an incremental rebuild of exactly `e73850ad` compiles and passes
 `wcdoctest-clus` 426/426.
 
@@ -775,9 +777,10 @@ The table uses Stage-2 `iso` (150); kf is round 1's fit-key arm vs round-1 s0 (l
 | kf (round 1) | −0.0010; 38 / 27; p 0.22 | **−0.0106; 113 / 4; p 9e-29** | −0.010; 73 / 61; p 0.34 |
 
 **This is the answer to "why not improved".**
-1. **The metric is dominated by a term no lever reaches.** `zzi_rms_dr` (base 1.15 cm) is almost entirely
-   `bow_x` (1.17 cm), a smooth drift-direction excursion of the segment about its chord. The drift-x jitter is
-   0.04 cm and does not move.
+1. **The metric is dominated by a term no lever reaches.** `zzi_rms_dr` (base 1.15 cm) is the same size as
+   `bow_x` (1.17 cm), a smooth drift-direction excursion of the segment about its chord. The drift-x jitter
+   (0.04 cm) is 30× too small to account for it, and does not move. (The two estimators are not a variance
+   decomposition: `bow_x` uses a 9-point running mean on a subset of points.)
 2. **What the levers do fix is invisible to `zzi_rms_dr`.**
    - The charge_stepped retile, which builds the Steiner seed path, removes part of the lattice sawtooth
      *across the wires* (doc pr/73 §2: seed points on the wire-crossing grid). This is −5 % of `jit_t`, and
