@@ -1,0 +1,7 @@
+== INTERLOCK A: re-planning before deleting (peer-session guard)
+   OK: all interlocks still PASS; the tier file of every tree being
+   run (sbnd) is unchanged.
+==================================================================
+== sbnd   tier 1   file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_sbnd_20260916.txt
+   lines 132 | present 132 | already gone 0 | 95.95 GiB
+   REFUSING: 1 of 132 targets have no manifest in /home/xqian/tmp/claude-25225/-home-xqian-toolkit-dev-toolkit/87534ba0-ada7-4811-b7af-02fbd8996b32/scratchpad/cl16/negrec -- the freeze is incomplete.

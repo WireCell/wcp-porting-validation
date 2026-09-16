@@ -49,7 +49,7 @@ input_data_14_old_coh_grouping	symlink -> /nfs/data/1/xning/wirecell-working/dat
 
 # --- added 2026-09-10 (doc 104): substrate, scans, production, live round ---
 d51hclus	THE TREE'S SUBSTRATE: 5132 inbound links on the corrected census (see the pdvd file for the realpath defect that number fixes).	symlink census
-d09 d09ctl d09ctl2 wcc d16hnu	the rest of the substrate, inbound 2010 / 240 / 950 / 310 / 62 / 2 / 12 / 62 / 4 / 8.  The 38 bare 029107_<N> dirs (847 inbound) were already protected and stay.	symlink census
+d09 d09ctl d09ctl2 wcc	the rest of the substrate, inbound 2010 / 240 / 950 / 310 / 62 / 2 / 12 / 62 / 4 / 8.  The 38 bare 029107_<N> dirs (847 inbound) were already protected and stay.	symlink census
 d53h	**THE pdhd smx1 HAND-SCAN SOURCE** (prep-pdhd names it for 303 of 304 prep items).  The owner asked on 2026-09-10 to keep the STM hand scans for PDHD as well as PDVD.	stm_michel_scan/prep-pdhd; work/stm_michel_labels/smx1
 work/stm_michel_labels/ work/stm_scan_labels/ work/ql_labels/	hand-scan labels, the scientific record itself.  M13	M13
 
@@ -60,13 +60,24 @@ h18b p82bhoff p82hoff	smx18's double-scan keys (docs/scan/smx18/pdhd_stm_michel_
 h23conf	own23's ruled items (docs/scan/smx23/owner_rulings_own23.json) and prep-pdhd-h23conf.	docs/scan/smx23; stm_michel_scan/prep-pdhd-h23conf
 h25base h25k h25kr h25r h25va h25vb	smx25/smx26/smx27 + own25/own26: prep-pdhd-h25base, and the movers of lever 1 (h25k), compare_range_cm 45 (h25r) and both (h25kr) put in front of the blind two-scanner re-judge (docs/scan/smx25 key_smx25, items_a*).  h25va/h25vb are over-emitted from movers_*.tsv -- the safe direction.	docs/scan/smx25, smx26; doc pdhd/25 sec 5-8
 
-# --- added 2026-09-13 (doc 106, round C): PDHD production moved to h28prod ---
-h28prod h28wl	**THE LATEST PDHD PRODUCTION ARM** and its confirm twin.  Primary source: doc pdhd/28 line 12 ("PDHD's is now h28prod (pin libpin_h28, Clus md5 30113227)"); gate F h28prod == h28wl bit-identical (docs/scan/d28/gate_h28prod.txt).  One claim, two arms.  Supersedes h26q2dprod/h26conf (RETIRED below).	doc pdhd/28 sec 1, lines 12 and 119
-h28off	the knob-off baseline of michel_q2d_region_wire_lookup on the production pin: G1 h28off == h26q2dprod on every branch, row, tree, zip, calib and census (docs/scan/d28/gate_h28off.txt).  Kept so the OFF side of the flip stays re-checkable (doc 98); the only PDHD off baseline once h26q2dprod goes.	doc pdhd/28 G1; peer session 2026-09-13
-h28cfg h28cfg0 h28cfgT h28cfgoff	the compiled-config proofs of the doc pdhd/28 flip (F proofs: h28cfg0 -> h28cfgT +1 key, h28cfgT -> h28cfg 0/0/0)	doc pdhd/28 line 118
-/home/xqian/tmp/h28/libpin_h28	THE PDHD PRODUCTION PIN (libWireCellClus md5 30113227); h28prod/h28wl/h28off ran on it.  The rest of ~/tmp/h28 is scratch (~9 MB: launcher logs, private git indexes, superseded readouts -- per the session that wrote it).	doc pdhd/28 line 12
+# --- added 2026-09-16 (doc sbnd_xin/111, round D): PDHD production moved to d108hflip ---
+d108hflip d102hcs	**THE LATEST PDHD PRODUCTION ARM** and the graded arm it reproduces.  Primary source: doc pdvd/108 line 3 ("PDHD production default CHANGED"), sec 3: d108hflip = the flipped config with no TLA on d102hcs's pctrees, gated equal to d102hcs (d103_flip_gate.py).  One claim, two arms.  Supersedes h28prod/h28wl (RETIRED below).  Docs 109-112 run SRC=d108hflip.	doc pdvd/108 sec 0-3
+d109hstm	the display-scope proof of the current PDHD production config (doc pdvd/109: equal to d108hflip on the STM trees, G1) and the source of Bee set c3165b38 (doc pdvd/110 sec 1).  5 events, 0.11 GiB.	doc pdvd/109; doc pdvd/110 sec 1
+d101hnew	the OFF side of the doc 108 flip: the graded A0 (doc 108 sec 1.1), == h28prod on T_stm_michel (doc pdvd/103 sec 10).  Also read by the peer's doc pdvd/113 round (message 2026-09-16).	doc pdvd/108 sec 1.1; doc pdvd/103 sec 10
+/home/xqian/tmp/d102/libpin_d102	THE PIN d108hflip ran on (clus md5 091e142b9481, "unchanged before and after", doc 108 sec 3); also d103vflip's (PDVD).	doc pdvd/108 sec 0 and 3
 
 # ================= RETIRED =================
+
+# 2026-09-16 round D (doc sbnd_xin/111): RELEASED on the owner's instruction --
+#   owner, 2026-09-16 (round D, doc sbnd_xin/111): "we want to keep the input and output files for the
+#   production setting for these experiments, but want to retire the intermediate test files."
+# h28prod h28wl	**THE LATEST PDHD PRODUCTION ARM** and its confirm twin.  Primary source: doc pdhd/28 line 12 ("PDHD's is now h28prod (pin libpin_h28, Clus md5 30113227)"); gate F h28prod == h28wl bit-identical (docs/scan/d28/gate_h28prod.txt).  One claim, two arms.  Supersedes h26q2dprod/h26conf (RETIRED below).	doc pdhd/28 sec 1, lines 12 and 119
+# h28off	the knob-off baseline of michel_q2d_region_wire_lookup on the production pin: G1 h28off == h26q2dprod on every branch, row, tree, zip, calib and census (docs/scan/d28/gate_h28off.txt).  Kept so the OFF side of the flip stays re-checkable (doc 98); the only PDHD off baseline once h26q2dprod goes.	doc pdhd/28 G1; peer session 2026-09-13
+# h28cfg h28cfg0 h28cfgT h28cfgoff	the compiled-config proofs of the doc pdhd/28 flip (F proofs: h28cfg0 -> h28cfgT +1 key, h28cfgT -> h28cfg 0/0/0)	doc pdhd/28 line 118
+# /home/xqian/tmp/h28/libpin_h28	THE PDHD PRODUCTION PIN (libWireCellClus md5 30113227); h28prod/h28wl/h28off ran on it.  The rest of ~/tmp/h28 is scratch (~9 MB: launcher logs, private git indexes, superseded readouts -- per the session that wrote it).	doc pdhd/28 line 12
+#   -> PDHD production is d108hflip (doc pdvd/108); h28prod == d101hnew on T_stm_michel, and d101hnew (the doc 108 A0) is kept as the OFF side.
+#   libpin_h28 goes with its arms unless the ~/tmp census finds a surviving arm that names it.
+# d16hnu	(was on the substrate line 'd09 d09ctl d09ctl2 wcc d16hnu') the old PR runners' SRC tag, 0 inbound links; production is re-run with SRC=d108hflip now (doc pdvd/111 Repro line 141).
 
 # 2026-09-13 round C (doc 106): RELEASED on the owner's instruction --
 #   owner, 2026-09-13 (round C, doc 106): "Note, we can retire the intermediate results now.

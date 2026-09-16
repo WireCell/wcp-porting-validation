@@ -1,0 +1,3 @@
+   guards: 9632 units, none written in the last hour, no process cwd inside
+   9632 units | permanent pins intact: /home/xqian/tmp/d102/libpin_d102 /home/xqian/tmp/d102m-libsnap /home/xqian/tmp/pdhdstm_libpin
+REFUSING: the freeze failed (rc=1; /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/archive_tmp_20260916.log) -- nothing removed

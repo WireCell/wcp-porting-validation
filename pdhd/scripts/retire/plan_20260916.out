@@ -1,0 +1,247 @@
+# live_tokens: reference 1ef0e67f7044, 16 untracked + 2 modified path(s) under DOCROOTS
+
+==============================================================================
+== sbnd   (/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin)
+==============================================================================
+  PASS  INTERLOCK 1: substrate present (all present)
+  PASS  INTERLOCK 2: no kept symlink resolves into a releasing dir (0 would dangle)
+  PASS  INTERLOCK 3: no live writer (0 of 132 sampled dirs moved, 0 tree-scoped wire-cell procs)
+  PASS  INTERLOCK 4: pre-existing broken symlinks recorded: 0 (the post-state number only means something against this)
+  PASS  INTERLOCK 5: PROTECTED.txt clear of the release (clear)
+  PASS  INTERLOCK 7: no record/label dir in the release (clear)
+  PASS  INTERLOCK 8: no target is itself a symlink (clear)
+  PASS  INTERLOCK 9: manifests name 446 arms, 14 exist, 0 in the release (none)
+  PASS  INTERLOCK 11: every substrate/production/scan name resolves (all resolve)
+  PASS  INTERLOCK 13: hand-scan sources kept: none for this tree
+  PASS  INTERLOCK 14: 4 uncited families in the release; each maps to a committed doc by round number (0 do not: none)
+  PASS  INTERLOCK 15: nothing released is named by an uncommitted record (clear)
+  PASS  INTERLOCK 16: live-by-uncommitted-record: 0 tokens from 0 file(s); 0 resolve in this tree (none)
+  set-relative: FREED 95.86 GiB (every link inside the release); 0.00 GiB shared with a kept link frees nothing
+
+  universe 186 dirs | KEEP 54 = 61.60 GiB | RELEASE 132 = 95.95 GiB | out-of-scope (untouched) 39
+  --- RELEASE ---   arm                       dirs      GiB  cited
+                    pr149s3acsq2000              2    10.00     25
+                    pr149s3acs                   2     9.99     29
+                    pr149s3as0                   2     9.91     30
+                    pr149s3akf                   2     9.91     25
+                    pr149s2r2rscs                2     3.30     41
+                    pr149s2r2rs                  2     3.28     34
+                    pr149s2csq2000               2     2.36      4
+                    pr149s2cskf                  2     2.36      4
+                    pr149s2r2cs                  2     2.35     35
+                    pr149s2cs                    2     2.35      6
+                    pr149s2csq6000               2     2.34      4
+                    pr149s2s0rep                 2     2.33      6
+                    pr149s2r2s0                  2     2.33     59
+                    pr149s2s0                    2     2.33     25
+                    pr149s2cstsep05              2     2.33      4
+                    pr149s2cstsep07              2     2.32      4
+                    pr149s2kf                    2     2.32      7
+                    d109dlgrp                    3     1.49     27
+                    d110dlgrp                    3     1.49     59
+                    d110grpoff                   3     1.46     29
+                    d110grp                      3     1.46     58
+                    d109grp                      3     1.46     33
+                    d109dlon2                    3     1.06     45
+                    d109dlon                     3     1.06     17
+                    d109on2                      3     1.04     53
+                    d109on                       3     1.04     16
+                    d110off                      3     1.04     38
+                    d109off2                     3     1.03     15
+                    d109off                      3     1.03     13
+                    d109base                     3     1.03     19
+                    pr149r2rscs                  2     0.56     16
+                    pr149r2rs                    2     0.54     14
+                    pr149cs                      2     0.41     11
+                    pr149csq2000                 2     0.41      6
+                    pr149r2cs                    2     0.41     14
+                    pr149cskf                    2     0.41      4
+                    pr149csq6000                 2     0.40      4
+                    pr149csg                     2     0.39      1
+                    pr149cstsep07                2     0.39      4
+                    pr149cstsep05                2     0.39      4
+                    pr149s0rep                   2     0.39      5
+                    pr149s0                      2     0.39     25
+                    pr149r2s0                    2     0.39     31
+                    pr149kf                      2     0.38      8
+                    pr149s0g                     2     0.37      1
+                    d109basegrp                  1     0.36      8
+                    pr149s3s0                    1     0.26      0
+                    pr149s3cs                    1     0.26      0
+                    pr149s3kf                    1     0.13      0
+                    pr149r2gidcs                 2     0.11      1
+                    pr149r2trscs                 2     0.08     11
+                    pr149r2gidst                 2     0.08      3
+                    d101snew                     2     0.08     11
+                    d101sold                     2     0.08      8
+                    pr149r2goffnew               2     0.08      6
+                    pr149r2goffold               2     0.08      3
+                    pr149goffold                 2     0.08      3
+                    pr149goffnew                 2     0.08      3
+                    pr149r2trs                   2     0.08     11
+                    pr149r2tcs                   2     0.06     11
+                    pr149r2ts0                   2     0.05     11
+                    pr149cstsep05r               1     0.00      0
+  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_sbnd_20260916.txt  (132 lines, 95.95 GiB)
+
+==============================================================================
+== pdvd   (/home/xqian/toolkit-dev/wcp-porting-img/pdvd/work)
+==============================================================================
+  PASS  INTERLOCK 1: substrate present (all present)
+  PASS  INTERLOCK 2: no kept symlink resolves into a releasing dir (0 would dangle)
+  PASS  INTERLOCK 3: no live writer (0 of 123 sampled dirs moved, 0 tree-scoped wire-cell procs)
+  PASS  INTERLOCK 4: pre-existing broken symlinks recorded: 0 (the post-state number only means something against this)
+  PASS  INTERLOCK 5: PROTECTED.txt clear of the release (clear)
+  PASS  INTERLOCK 7: no record/label dir in the release (clear)
+  PASS  INTERLOCK 8: no target is itself a symlink (clear)
+  PASS  INTERLOCK 9: manifests name 0 arms, 0 exist, 0 in the release (none)
+  PASS  INTERLOCK 11: every substrate/production/scan name resolves (all resolve)
+  PASS  INTERLOCK 13: hand-scan sources kept: ['d08pv30off', 'd08pv30on', 'd101vkf', 'd102vcsall', 'd102vocs', 'd103v0', 'd103v1', 'd53v', 'd67v', 'd68a3', 'd68d4', 'p100bx', 'p100bxp', 'p100c', 'p85vprod', 'p85vwh', 'p88v5fr', 'p88vprod', 'p90vprod', 'p96vprod', 'p98vonq', 'p99rwon', 'p99wflip']
+  PASS  INTERLOCK 14: 2 uncited families in the release; each maps to a committed doc by round number (0 do not: none)
+  PASS  INTERLOCK 15: nothing released is named by an uncommitted record (clear)
+  PASS  INTERLOCK 16: live-by-uncommitted-record: 0 tokens from 0 file(s); 0 resolve in this tree (none)
+  set-relative: FREED 42.55 GiB (every link inside the release); 0.00 GiB shared with a kept link frees nothing
+
+  universe 6837 dirs | KEEP 4758 = 125.79 GiB | RELEASE 2079 = 42.59 GiB | out-of-scope (untouched) 271
+  --- RELEASE ---   arm                       dirs      GiB  cited
+                    p98voff                    120    10.26    197
+                    p98voffq                   120     4.38    827
+                    p99rwprod                  120     4.29     31
+                    p100bd                     120     1.38     15
+                    p100bg                     120     1.38     18
+                    p96vscope                  120     1.09     21
+                    p100boff                   120     1.07     12
+                    p99rgon                    120     1.07     21
+                    d101vold                   120     1.07      6
+                    d16vnu                     120     1.02    150
+                    p99rgprod                  120     0.99     18
+                    q29l8                       18     0.79      5
+                    q29l1                       18     0.79      6
+                    q29base                     18     0.79     32
+                    q29l2                       18     0.79      4
+                    q29l4                       18     0.79      4
+                    q29l6                       18     0.79     36
+                    q29c1                       18     0.79      8
+                    q29l5                       18     0.79      4
+                    q29l3                       18     0.79      6
+                    q29l7                       18     0.79      9
+                    q29l9                       18     0.79      5
+                    q29v7nw                     18     0.79     11
+                    q29v6                       18     0.76    127
+                    q29v6nw                     18     0.76      7
+                    p99w6                        2     0.71     10
+                    p98kchk                      8     0.49      5
+                    p100spflip                   1     0.43     14
+                    p98g2rep                     1     0.43     18
+                    p99w5                        1     0.43     28
+                    d102vcs                      2     0.30      7
+                    p98kq                        8     0.27     11
+                    d102vdbg                     2     0.16      9
+                    d101vkfpr                  120     0.09      3
+                    p99rwnul                     1     0.04      9
+                    p98g0                        3     0.03      4
+                    d101kc                      18     0.01     11
+                    d101ks                      18     0.01     12
+                    d102cs2                     18     0.01      5
+                    d102ocs                     18     0.01      7
+                    d102cs1                     18     0.01      9
+                    d102cs3                     18     0.01      5
+                    d102b                       18     0.01     18
+                    d102brep                    18     0.01      9
+                    d102o                       18     0.01     10
+                    d102locs                    18     0.01      8
+                    d102lcs2                    18     0.01      5
+                    d102lcs1                    18     0.01      9
+                    d102lcs3                    18     0.01      5
+                    d101brep                    18     0.01      5
+                    d101b                       18     0.01     21
+                    d101koff                    18     0.01     22
+                    d101kf                      18     0.01     24
+                    d102                        18     0.01    228
+                    d101                        18     0.01    290
+                    p98g2nol1                    1     0.00     21
+                    d101pilot                    2     0.00      2
+                    p101cfg                      3     0.00     12
+                    d101p3                       1     0.00      1
+                    d101cnew3                    1     0.00      4
+                    d101cold3                    1     0.00      4
+                    d101p2                       1     0.00      0
+                    d101p0                       1     0.00      1
+                    d101p1                       1     0.00      0
+                    d101cnew2                    1     0.00      6
+                    d101cold2                    1     0.00      6
+                    d101cnew                     1     0.00      4
+                    d101cold                     1     0.00      4
+  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdvd_20260916.txt  (2079 lines, 42.59 GiB)
+
+==============================================================================
+== pdhd   (/home/xqian/toolkit-dev/wcp-porting-img/pdhd/work)
+==============================================================================
+  PASS  INTERLOCK 1: substrate present (all present)
+  PASS  INTERLOCK 2: no kept symlink resolves into a releasing dir (0 would dangle)
+  PASS  INTERLOCK 3: no live writer (0 of 122 sampled dirs moved, 0 tree-scoped wire-cell procs)
+  PASS  INTERLOCK 4: pre-existing broken symlinks recorded: 0 (the post-state number only means something against this)
+  PASS  INTERLOCK 5: PROTECTED.txt clear of the release (clear)
+  PASS  INTERLOCK 7: no record/label dir in the release (clear)
+  PASS  INTERLOCK 8: no target is itself a symlink (clear)
+  PASS  INTERLOCK 9: manifests name 1 arms, 0 exist, 0 in the release (none)
+  PASS  INTERLOCK 11: every substrate/production/scan name resolves (all resolve)
+  PASS  INTERLOCK 13: hand-scan sources kept: ['d05mON', 'd08cap10', 'd08goff', 'd101hkf', 'd102hcs', 'd102hocs', 'd53h', 'h18b', 'h18s', 'h23conf', 'h25base', 'h25k', 'h25kr', 'h25r', 'h25va', 'h25vb', 'p82bhoff', 'p82hoff', 'stm0']
+  PASS  INTERLOCK 14: 2 uncited families in the release; each maps to a committed doc by round number (0 do not: none)
+  PASS  INTERLOCK 15: nothing released is named by an uncommitted record (clear)
+  PASS  INTERLOCK 16: live-by-uncommitted-record: 0 tokens from 0 file(s); 0 resolve in this tree (none)
+  set-relative: FREED 7.97 GiB (every link inside the release); 0.00 GiB shared with a kept link frees nothing
+
+  universe 2597 dirs | KEEP 1749 = 49.71 GiB | RELEASE 848 = 7.99 GiB | out-of-scope (untouched) 109
+  --- RELEASE ---   arm                       dirs      GiB  cited
+                    d105hdiag                   61     1.01     16
+                    h28wl                       61     0.94     55
+                    d101hold                    61     0.94      6
+                    h100b                       61     0.94     14
+                    h28prod                     61     0.94    121
+                    h28off                      61     0.94     58
+                    h100a                       61     0.94     10
+                    d16hnu                      61     0.89     76
+                    d102cs                       1     0.15      8
+                    d102dbg                      1     0.08     10
+                    d101                        18     0.03    290
+                    d101cnew2                    1     0.02      6
+                    d101cold2                    1     0.02      6
+                    d102                        18     0.02    228
+                    d101smoff                    1     0.02     12
+                    d101smkf                     1     0.02     15
+                    d102brep                    18     0.01      9
+                    d102b                       18     0.01     18
+                    d102ocs                     18     0.01      7
+                    d102cs2                     18     0.01      5
+                    d102o                       18     0.01     10
+                    d102cs1                     18     0.01      9
+                    d102cs3                     18     0.01      5
+                    d101kc                      18     0.01     11
+                    d101ks                      18     0.01     12
+                    d101brep                    18     0.01      5
+                    d101b                       18     0.01     21
+                    d101koff                    18     0.01     22
+                    d101kf                      18     0.01     24
+                    d102lcs2                    18     0.01      5
+                    d102lcs3                    18     0.01      5
+                    d102locs                    18     0.01      8
+                    d102lcs1                    18     0.01      9
+                    d101pilot                    2     0.00      2
+                    d101p3                       1     0.00      1
+                    h28cfg                       1     0.00     24
+                    h28cfg0                      1     0.00     21
+                    h28cfgT                      1     0.00     24
+                    h28cfgoff                    1     0.00     19
+                    d101p2                       1     0.00      0
+                    d101p0                       1     0.00      1
+                    d101p1                       1     0.00      0
+                    d101cnew                     1     0.00      4
+                    d101cold                     1     0.00      4
+  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdhd_20260916.txt  (848 lines, 7.99 GiB)
+
+==============================================================================
+GRAND TOTAL release 146.52 GiB
+interlock failures: NONE
+
+This script retired nothing.  Review the tier files, then run the retire driver (CONFIRM=yes).

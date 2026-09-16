@@ -50,14 +50,26 @@ work/stm_michel_labels/	hand-scan labels including the LIVE scan tag smx1 -- a b
 
 # --- added 2026-09-12 (doc 105): production moved, the new hand scans, a live peer ---
 # Same keep test as 09-10 (the owner: "please do it like what we did before").
-p96vprod p96vscope	**THE LATEST PDVD PRODUCTION ARM** and its measurement twin.  Primary source: doc pdvd/96 sec 0 ("p96vprod, the flipped file with NO TLA") and its confirm step `d96_confirm.py --arm p96vscope --confirm p96vprod`.  One claim, two arms.  Supersedes p79vprod (RETIRED below).	doc pdvd/96 sec 0, line 266
 p85vprod p85vwh p88vprod p88v5fr p90vprod	**THE smx5..smx9 HAND-SCAN SOURCES**, derived by scan_arms_20260912.py: the per-item arm key of prep-pdvd-smx5..smx9, and docs/scan/pdvd_stm_michel_smx{7,8,9}_{sheet,key}.tsv.  All five were scanned 2026-09-11.	stm_michel_scan/prep-pdvd-smx5..9; work/stm_michel_labels/smx5..smx9
 
-# --- added 2026-09-13 (doc 106, round C): the runner SRC and the production pin ---
-d16vnu	the PR runners' SRC tag for every PDVD arm (0 inbound links -- p9x arms link through to d51vclus -- but d95_arms.sh:54, d96_arms.sh:64 and ~/tmp/h28/run_arm28.sh:9 stage from it).  Production cannot be RE-RUN without it.	lexical census 2026-09-13; d96_arms.sh
-/home/xqian/tmp/p96/libpin_p96	THE PDVD PRODUCTION PIN: p96vprod and p96vscope ran on it (doc pdvd/96 Repro lines 14-17).  Permanent while p96vprod is production.	doc pdvd/96 sec 0
+# --- added 2026-09-16 (doc sbnd_xin/111, round D): PDVD production moved (gain, LASSO, both trajectory levers) ---
+d103vflip d103vprod1	**THE LATEST PDVD PRODUCTION PR ARM** and its applied-tree check.  Primary source: doc pdvd/103 sec 14.4 ("APPLIED on the owner's go (toolkit 8fc6070e)"); d103vflip = the flipped config on p100flip's pctrees, the production Bee set (doc pdvd/110 sec 1); d103vprod1 = one event re-run through the applied tree with no overrides.  Docs 111-112 run SRC=d103vflip.  Supersedes p96vprod/p96vscope (RETIRED below).	doc pdvd/103 sec 14; doc pdvd/110 sec 1
+q29flip q29stm	production clustering + Q/L after the LASSO flip and its gate twin: doc qlmatch/29 sec 7 F1 "production, no overrides" (q29flip == q29stm); source of Bee set 51c1e410 (doc pdvd/110 sec 1).	doc qlmatch/29 sec 7
+pvdimg p98von p100flip	THE PRODUCTION INPUT CHAIN.  pvdimg = the production imaging tag, hard links of p98von's 16 imaging archives (doc pdvd/100 line 422); p98von holds the production SP frames (top gain 0.889) those archives were imaged from; p100flip = the production pctrees (doc pdvd/103 sec 10.5: "PDVD production since doc 100 sec 7.5 is p100flip").  Inbound 11883 / 4097 / 2190 (lexical census 2026-09-16).	doc pdvd/100 sec 7.5; doc pdvd/103 sec 10.5
+p101q	OPEN: doc pdvd/100 sec 8.7 leaves QtoL 0.0783 to the owner; the recommended next step reads p100flip and p101q dumps side by side.	doc pdvd/100 sec 8.7
+d103v0 d103v1	the OFF side (A0) and the graded A1 of the doc 103 flip on the same pctrees; both are hand-scan sources (own103v/own103v2, smx11).	doc pdvd/103 sec 10-14; docs/scan
 
 # ================= RETIRED =================
+
+# 2026-09-16 round D (doc sbnd_xin/111): RELEASED on the owner's instruction --
+#   owner, 2026-09-16 (round D, doc sbnd_xin/111): "we want to keep the input and output files for the
+#   production setting for these experiments, but want to retire the intermediate test files."
+# p96vprod p96vscope	**THE LATEST PDVD PRODUCTION ARM** and its measurement twin.  Primary source: doc pdvd/96 sec 0 ("p96vprod, the flipped file with NO TLA") and its confirm step `d96_confirm.py --arm p96vscope --confirm p96vprod`.  One claim, two arms.  Supersedes p79vprod (RETIRED below).	doc pdvd/96 sec 0, line 266
+# d16vnu	the PR runners' SRC tag for every PDVD arm (0 inbound links -- p9x arms link through to d51vclus -- but d95_arms.sh:54, d96_arms.sh:64 and ~/tmp/h28/run_arm28.sh:9 stage from it).  Production cannot be RE-RUN without it.	lexical census 2026-09-13; d96_arms.sh
+# /home/xqian/tmp/p96/libpin_p96	THE PDVD PRODUCTION PIN: p96vprod and p96vscope ran on it (doc pdvd/96 Repro lines 14-17).  Permanent while p96vprod is production.	doc pdvd/96 sec 0
+#   -> PDVD production is d103vflip on p100flip / pvdimg (docs pdvd/100, qlmatch/29, pdvd/103).  p96vprod itself SURVIVES as a hand-scan
+#      source (sw99, scan_arms_20260916.json), so libpin_p96 is judged value-first by the ~/tmp census, not held as production.
+#      d16vnu: production is re-run with SRC=d103vflip now (doc pdvd/111 Repro line 142).
 
 # 2026-09-13 round C (doc 106): RELEASED on the owner's instruction --
 #   owner, 2026-09-13 (round C, doc 106): "Note, we can retire the intermediate results now.
