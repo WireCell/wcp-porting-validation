@@ -1,0 +1,9 @@
+# doc pr/149 Stage 1 extra summary: per-sample working points, vertex fixed denominator, big movers (>10 cm)
+  s0 | nuecc48: nue>7 33 nue>4.3 37 numu>0.9 3 pi0win 3 | ncpi0: nue>7 0 nue>4.3 0 numu>0.9 4 pi0win 6 | vtx lab 56: <=1 44 <=3 48 <=10 49 | vs s0: >10cm away 0 toward 0
+  cs | nuecc48: nue>7 34 nue>4.3 36 numu>0.9 5 pi0win 9 | ncpi0: nue>7 1 nue>4.3 1 numu>0.9 5 pi0win 3 | vtx lab 56: <=1 38 <=3 45 <=10 45 | vs s0: >10cm away 7 toward 4
+  csq2000 | nuecc48: nue>7 32 nue>4.3 36 numu>0.9 3 pi0win 2 | ncpi0: nue>7 1 nue>4.3 1 numu>0.9 4 pi0win 3 | vtx lab 56: <=1 32 <=3 41 <=10 46 | vs s0: >10cm away 6 toward 4
+  csq6000 | nuecc48: nue>7 34 nue>4.3 37 numu>0.9 8 pi0win 3 | ncpi0: nue>7 1 nue>4.3 1 numu>0.9 4 pi0win 5 | vtx lab 56: <=1 36 <=3 42 <=10 45 | vs s0: >10cm away 7 toward 4
+  kf | nuecc48: nue>7 31 nue>4.3 36 numu>0.9 5 pi0win 8 | ncpi0: nue>7 0 nue>4.3 1 numu>0.9 3 pi0win 2 | vtx lab 56: <=1 37 <=3 48 <=10 50 | vs s0: >10cm away 1 toward 4
+  cskf | nuecc48: nue>7 27 nue>4.3 32 numu>0.9 7 pi0win 7 | ncpi0: nue>7 1 nue>4.3 2 numu>0.9 3 pi0win 3 | vtx lab 56: <=1 37 <=3 42 <=10 44 | vs s0: >10cm away 8 toward 4
+  s0g | nuecc48: nue>7 29 nue>4.3 34 numu>0.9 3 pi0win 5 | ncpi0: nue>7 2 nue>4.3 2 numu>0.9 3 pi0win 3 | vtx lab 56: <=1 29 <=3 33 <=10 37 | vs s0g: >10cm away 0 toward 0
+  csg | nuecc48: nue>7 27 nue>4.3 29 numu>0.9 6 pi0win 6 | ncpi0: nue>7 1 nue>4.3 2 numu>0.9 3 pi0win 1 | vtx lab 56: <=1 28 <=3 31 <=10 35 | vs s0g: >10cm away 12 toward 6

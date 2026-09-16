@@ -1,0 +1,7 @@
+# doc pr/149 Stage 3 (3000 mcp1k+mcp2k): tagger flip directions, label migrations, nu_evaluated, working points, small-cluster scope
+s3acs: flips {('fc', '-1->0'): 1, ('fc', '0->1'): 143, ('fc', '1->0'): 1, ('stm', '-1->0'): 1, ('stm', '0->1'): 39, ('stm', '1->0'): 37, ('tgm', '-1->0'): 1}
+   nu_evaluated gained 34 lost 34; numu>0.9 gained 78 lost 67 (net 11)
+s3akf: flips {('stm', '0->1'): 33, ('stm', '1->0'): 30}
+   nu_evaluated gained 27 lost 30; numu>0.9 gained 60 lost 73 (net -13)
+s3acsq2000: flips {('fc', '-1->0'): 1, ('fc', '0->1'): 143, ('fc', '1->0'): 1, ('stm', '-1->0'): 1, ('stm', '0->1'): 34, ('stm', '1->0'): 36, ('tgm', '-1->0'): 1}
+   nu_evaluated gained 30 lost 29; numu>0.9 gained 77 lost 78 (net -1)

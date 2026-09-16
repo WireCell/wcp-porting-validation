@@ -1,0 +1,2 @@
+retile_sampler_strategy='charge_stepped'
+retile_sampler_charge_threshold=2000

@@ -1,0 +1,70 @@
+# pr149 compare A=pr149s2s0 B=pr149s2csq6000 ref=d102mpr samples=['mcp1k', 'mcp2k'] events A=559 B=559
+## Q1
+  [ISO] events=406 with calib in both=394
+    n_steiner_main  median A      824.5  B       1308  median(B-A) +451.5  (n=394)
+    n_steiner_term  median A      151.5  B      191.5  median(B-A) +32  (n=394)
+    zz_rms_dr       median A     0.8062  B     0.7445  median(B-A) +0.00489  (n=390)
+    zz_ratio        median A      1.054  B      1.046  median(B-A) -0.00659  (n=390)
+    zz_fold         median A     0.1912  B     0.1608  median(B-A) -0.02319  (n=390)
+    zzi_rms_dr      median A     0.6809  B     0.6735  median(B-A) +0.0009585  (n=376)
+    zzi_ratio       median A       1.06  B      1.051  median(B-A) -0.007315  (n=376)
+    uncov           median A     0.1388  B     0.1366  median(B-A) -0.002029  (n=394)
+    mu_dqdx_med     median A  5.129e+04  B  5.165e+04  median(B-A) +354  (n=324)
+    n_seg           sum A 1365  B 1453
+    n_stub          sum A 102  B 138
+    vertex labelled=345  A n<=1cm 259 n<=3cm 288 | B n<=1cm 216 n<=3cm 256 | toward 29 away 83
+  [ISO-strong] events=150 with calib in both=144
+    n_steiner_main  median A       1159  B       1794  median(B-A) +613.5  (n=144)
+    n_steiner_term  median A      175.5  B      230.5  median(B-A) +45.5  (n=144)
+    zz_rms_dr       median A      1.101  B      1.133  median(B-A) +0.007479  (n=144)
+    zz_ratio        median A      1.064  B      1.053  median(B-A) -0.007435  (n=144)
+    zz_fold         median A     0.2125  B     0.1907  median(B-A) -0.01994  (n=144)
+    zzi_rms_dr      median A      1.135  B      1.187  median(B-A) +0.00179  (n=144)
+    zzi_ratio       median A      1.065  B      1.054  median(B-A) -0.00753  (n=144)
+    uncov           median A     0.1367  B     0.1406  median(B-A) -0.001902  (n=144)
+    mu_dqdx_med     median A  5.054e+04  B  5.113e+04  median(B-A) +348.4  (n=135)
+    n_seg           sum A 552  B 620
+    n_stub          sum A 37  B 60
+    vertex labelled=89  A n<=1cm 77 n<=3cm 82 | B n<=1cm 58 n<=3cm 71 | toward 1 away 24
+  [control] events=150 with calib in both=148
+    n_steiner_main  median A        397  B        704  median(B-A) +267  (n=148)
+    n_steiner_term  median A         85  B        121  median(B-A) +22.5  (n=148)
+    zz_rms_dr       median A     0.5351  B      0.514  median(B-A) -0.001926  (n=102)
+    zz_ratio        median A      1.027  B      1.022  median(B-A) -0.00515  (n=102)
+    zz_fold         median A    0.07079  B     0.0625  median(B-A) -0.01541  (n=102)
+    zzi_rms_dr      median A        nan  B     0.3966  median(B-A) +nan  (n=0)
+    zzi_ratio       median A        nan  B      1.049  median(B-A) +nan  (n=0)
+    uncov           median A     0.1445  B     0.1413  median(B-A) -0.001142  (n=138)
+    mu_dqdx_med     median A  5.266e+04  B   5.32e+04  median(B-A) +207.9  (n=82)
+    n_seg           sum A 311  B 324
+    n_stub          sum A 39  B 45
+    vertex labelled=87  A n<=1cm 64 n<=3cm 70 | B n<=1cm 59 n<=3cm 64 | toward 6 away 13
+  [owner-cases] events=5 with calib in both=5
+    n_steiner_main  median A        473  B        629  median(B-A) +156  (n=5)
+    n_steiner_term  median A         87  B         95  median(B-A) +14  (n=5)
+    zz_rms_dr       median A     0.8476  B      1.294  median(B-A) +0.02951  (n=5)
+    zz_ratio        median A      1.036  B       1.03  median(B-A) -0.00587  (n=5)
+    zz_fold         median A     0.1379  B    0.07168  median(B-A) -0.01059  (n=5)
+    zzi_rms_dr      median A     0.2719  B      1.694  median(B-A) +1.2  (n=3)
+    zzi_ratio       median A      1.051  B      1.058  median(B-A) -0.00139  (n=3)
+    uncov           median A     0.1365  B     0.1371  median(B-A) -0.001936  (n=5)
+    mu_dqdx_med     median A  5.007e+04  B  5.063e+04  median(B-A) +2348  (n=3)
+    n_seg           sum A 14  B 15
+    n_stub          sum A 1  B 2
+    vertex labelled=3  A n<=1cm 1 n<=3cm 2 | B n<=1cm 1 n<=3cm 1 | toward 0 away 1
+  owner cases, per event (A -> B):
+    mcp1k 56463: zz_rms_dr 3.26543->3.15718  zzi_rms_dr 0.0936684->0.0823711  uncov 0.385231->0.383295  n_seg 5->5  n_stub 0->0  n_steiner_main 3130->6054
+    mcp1k 57903: zz_rms_dr 0.847585->1.29373  zzi_rms_dr 0.271924->1.69432  uncov 0.0129918->0.00682864  n_seg 2->2  n_stub 0->0  n_steiner_main 473->629 vtx 1.04->13.14cm
+    mcp1k 58717: zz_rms_dr 0.0717762->0.101282  zzi_rms_dr nan->nan  uncov 0.303888->0.137094  n_seg 2->4  n_stub 0->1  n_steiner_main 188->344
+    mcp1k 59899: zz_rms_dr 0.2718->0.277134  zzi_rms_dr nan->nan  uncov 0.0396613->0.0882768  n_seg 3->2  n_stub 1->0  n_steiner_main 246->398 vtx 4.47->4.92cm
+    mcp1k 284794: zz_rms_dr 3.71604->4.916  zzi_rms_dr 3.71604->4.916  uncov 0.136493->0.140568  n_seg 2->2  n_stub 0->1  n_steiner_main 1082->1468 vtx 0.00->0.28cm
+## Q2
+  event_label migrations: 16  nu-candidate->cosmic-tagged:16
+  nu_evaluated flips: 14
+  working points A/B: nue7 1/0, nue43 2/0, numu09 381/375
+  |dEnu| MeV over both-evaluated (n=545): median 23.88  p90 205.82  nonzero 535
+  tagger flips (bundle-matched): TGM 0  STM 18  FC 0
+  pi0 kine_pio_flag==1 A/B 413/395  mass in (100,170) A/B 23/23
+  resources B/A: wall median 0.981 p90 1.426  RSS median 0.998 p90 1.005
+  nonzero rc: 0
+  movers: 171  (ISO 142, control 29, other 0)

@@ -1,0 +1,13 @@
+# doc pr/149 Stage 2: candidates lost (nu_evaluated 1 -> 0) per arm, and whether s0 had them right
+s2cs: lost 15 gained 0; lost & labelled 12; s0 vertex <=3cm on 7: mcp1k 48895 (0.0cm), mcp1k 58345 (46.4cm), mcp1k 62613 (0.0cm), mcp1k 172788 (99.3cm), mcp1k 281953 (0.0cm), mcp2k 70472 (3.8cm), mcp2k 77328 (0.4cm), mcp2k 93776 (0.0cm), mcp2k 174795 (0.0cm), mcp2k 177939 (3.5cm), mcp2k 323369 (235.1cm), mcp2k 409052 (0.0cm)
+s2kf: lost 13 gained 0; lost & labelled 11; s0 vertex <=3cm on 7: mcp1k 62613 (0.0cm), mcp1k 65025 (0.0cm), mcp1k 172788 (99.3cm), mcp1k 281953 (0.0cm), mcp1k 286353 (262.6cm), mcp1k 316553 (0.3cm), mcp1k 393608 (0.1cm), mcp2k 70472 (3.8cm), mcp2k 177939 (3.5cm), mcp2k 178350 (0.0cm), mcp2k 348594 (1.8cm)
+s2cskf: lost 11 gained 0; lost & labelled 10; s0 vertex <=3cm on 7: mcp1k 58345 (46.4cm), mcp1k 65025 (0.0cm), mcp1k 281953 (0.0cm), mcp1k 393608 (0.1cm), mcp1k 405740 (0.0cm), mcp2k 70472 (3.8cm), mcp2k 93776 (0.0cm), mcp2k 174795 (0.0cm), mcp2k 177939 (3.5cm), mcp2k 409052 (0.0cm)
+# all Stage-2 cells: nu_evaluated lost / gained vs s2s0 (559 events)
+s2s0rep: lost 0 gained 0
+s2cs: lost 15 gained 0
+s2csq2000: lost 11 gained 0
+s2csq6000: lost 14 gained 0
+s2kf: lost 13 gained 0
+s2cskf: lost 11 gained 0
+s2cstsep05: lost 19 gained 0
+s2cstsep07: lost 18 gained 0

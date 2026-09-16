@@ -1,0 +1,38 @@
+# pr149 cfg proof  base=9d8fd892  post=9d8fd892 (+ working tree)  2026-09-16_06:21
+## (a) PR job
+pre          rc=0  sha=8b6ae33855553dd3
+post null    rc=0  sha=8b6ae33855553dd3
+post stepped rc=0  sha=8b6ae33855553dd3
+post cs      rc=0  sha=50b05e16597ac7b7
+post cs+num  rc=0  sha=f7772be840d90437
+post typo    rc=134  (expected nonzero: assert)
+post sep0    rc=0  sha=8b6ae33855553dd3
+post cs+sep  rc=0  sha=2cb7f6670a7d3342
+-- node diff pre -> cs: only pre ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0']  only post ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']
+   changed node ImproveCluster_2:pr: keys ['samplers']
+   new node BlobSampler:live-cs-apa0-0: strategy=[{"disable_mix_dead_cell": false, "name": "charge_stepped"}]
+   new node BlobSampler:live-cs-apa1-0: strategy=[{"disable_mix_dead_cell": false, "name": "charge_stepped"}]
+   other changed nodes: 0
+-- node diff pre -> csn: only pre ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0']  only post ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']
+   changed node ImproveCluster_2:pr: keys ['samplers']
+   new node BlobSampler:live-cs-apa0-0: strategy=[{"charge_threshold_max": 2000, "charge_threshold_min": 2000, "charge_threshold_other": 2000, "disable_mix_dead_cell": false, "max_wire_product_threshold": 10000, "name": "charge_stepped"}]
+   new node BlobSampler:live-cs-apa1-0: strategy=[{"charge_threshold_max": 2000, "charge_threshold_min": 2000, "charge_threshold_other": 2000, "disable_mix_dead_cell": false, "max_wire_product_threshold": 10000, "name": "charge_stepped"}]
+   other changed nodes: 0
+-- node diff pre -> cssep: only pre ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0']  only post ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']
+   changed node CreateSteinerGraph:pr: keys ['terminal_min_separation']
+   changed node CreateSteinerGraph:prrefresh: keys ['terminal_min_separation']
+   changed node ImproveCluster_2:pr: keys ['samplers']
+   new node BlobSampler:live-cs-apa0-0: strategy=[{"disable_mix_dead_cell": false, "name": "charge_stepped"}]
+   new node BlobSampler:live-cs-apa1-0: strategy=[{"disable_mix_dead_cell": false, "name": "charge_stepped"}]
+   CreateSteinerGraph:pr: terminal_min_separation=5
+   CreateSteinerGraph:prrefresh: terminal_min_separation=5
+   other changed nodes: 0
+## (b) LArSoft one-step chain
+onestep op=sync tracking_root=true  pre=dffea4ce03f2d6ac post=dffea4ce03f2d6ac  IDENTICAL
+onestep op=sync tracking_root=false  pre=5997ca6b1d84e9d5 post=5997ca6b1d84e9d5  IDENTICAL
+onestep op=bare tracking_root=true  pre=98deab852fbfde81 post=98deab852fbfde81  IDENTICAL
+onestep op=bare tracking_root=false  pre=da8bbdfd209a2eb1 post=da8bbdfd209a2eb1  IDENTICAL
+## (c) prod_cfg_gate
+checked   : 21 artifacts
+PASS -- the compiled operating point matches prod-2026-09-14
+gate rc=0

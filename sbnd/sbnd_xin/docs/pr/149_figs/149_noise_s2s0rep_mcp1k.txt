@@ -1,0 +1,2 @@
+# A=work-mcp1k-pr149s2s0 (214 evt)  B=work-mcp1k-pr149s2s0rep (214 evt)  common=214  only A=0 only B=0  allow=[]
+# 214/214 events identical over 1070 files

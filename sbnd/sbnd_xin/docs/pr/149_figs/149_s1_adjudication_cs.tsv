@@ -1,0 +1,29 @@
+sample	event	stratum	class	vertex_moved_cm	click_A_cm	click_B_cm	what
+ncpi0	21073	control	vertex-choice	10.35	0.97	10.47	vertex ADVERSE 0.97->10.47cm
+ncpi0	56982	ISO	vertex-choice	22.83	34.86	12.29	vertex toward 34.86->12.29cm
+ncpi0	71372	ISO	vertex-choice	1.32	0.70	1.83	vertex ADVERSE 0.70->1.83cm
+ncpi0	84229	ISO	pr-structure	0.16	0.33	0.31	numu09 0->1
+ncpi0	180801	ISO	vertex-choice	6.42	77.49	71.21	vertex toward 77.49->71.20cm
+ncpi0	399860	ISO	vertex-choice	2.97	nan	nan	nue7 0->1; nue43 0->1
+ncpi0	463565	ISO	vertex-choice	14.43	28.18	42.51	vertex ADVERSE 28.18->42.51cm
+nuecc48	30504	ISO	vertex-choice	30.89	30.99	0.10	nue7 0->1; nue43 0->1; vertex toward 30.99->0.10cm
+nuecc48	38856	ISO	vertex-choice	32.36	32.25	0.30	nue7 0->1; nue43 0->1; vertex toward 32.25->0.30cm
+nuecc48	52672	control	vertex-choice	68.41	3.83	68.37	vertex ADVERSE 3.83->68.37cm
+nuecc48	111412	ISO	vertex-choice	49.34	1.84	47.62	nue7 1->0; nue43 1->0; vertex ADVERSE 1.84->47.62cm
+nuecc48	122660	ISO	vertex-choice	85.13	0.48	85.18	vertex ADVERSE 0.48->85.18cm
+nuecc48	138009	ISO	pr-structure	0.73	0.30	0.99	nue7 0->1
+nuecc48	163543	ISO	vertex-choice	32.89	32.85	0.08	nue7 0->1; nue43 0->1; vertex toward 32.85->0.08cm
+nuecc48	168596	ISO	pr-structure	0.56	nan	nan	nue7 0->1
+nuecc48	174637	ISO	pr-structure	0.55	0.72	0.20	numu09 0->1
+nuecc48	196649	ISO	pr-structure	0.78	0.00	0.78	nue7 0->1; nue43 0->1
+nuecc48	219295	ISO	pr-structure	0.35	0.09	0.27	numu09 1->0
+nuecc48	234638	ISO	pr-structure	0.31	nan	nan	numu09 0->1
+nuecc48	235435	control	vertex-choice	35.65	0.18	35.55	nue7 1->0; nue43 1->0; numu09 0->1; vertex ADVERSE 0.18->35.55cm
+nuecc48	268067	control	vertex-choice	4.44	nan	nan	nue7 1->0; nue43 1->0
+nuecc48	271851	ISO	vertex-choice	26.63	nan	nan	nue43 0->1
+nuecc48	342199	ISO	vertex-choice	2.41	0.65	1.84	vertex ADVERSE 0.65->1.84cm
+nuecc48	350186	control	vertex-choice	40.82	0.00	40.82	nue7 1->0; nue43 1->0; vertex ADVERSE 0.00->40.82cm
+nuecc48	389538	ISO	vertex-choice	213.59	0.28	213.56	nue7 0->1; nue43 0->1; numu09 1->0; vertex ADVERSE 0.28->213.56cm
+nuecc48	422851	control	vertex-choice	2.77	0.17	2.73	nue7 1->0; nue43 1->0; vertex ADVERSE 0.17->2.72cm
+nuecc48	444187	control	pr-structure	0.37	0.33	0.05	nue7 1->0; nue43 1->0; numu09 0->1
+nuecc48	469665	ISO	vertex-choice	1.25	1.08	0.40	nue43 1->0

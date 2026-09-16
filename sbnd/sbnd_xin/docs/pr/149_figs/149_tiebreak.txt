@@ -1,0 +1,5 @@
+cs       stage1 label/nu_eval/tagflips (0, 0, 0)  stage2 (16, 15, 19)  ISO away s1+s2 [6, 88]  sentinel FAIL 2  => 146
+csq2000  stage1 label/nu_eval/tagflips (0, 0, 0)  stage2 (12, 11, 17)  ISO away s1+s2 [12, 89]  sentinel FAIL 1  => 142
+csq6000  stage1 label/nu_eval/tagflips (0, 0, 0)  stage2 (16, 14, 18)  ISO away s1+s2 [12, 83]  sentinel FAIL 0  => 143
+kf       stage1 label/nu_eval/tagflips (0, 0, 1)  stage2 (13, 13, 15)  ISO away s1+s2 [7, 73]  sentinel FAIL 1  => 123
+cskf     stage1 label/nu_eval/tagflips (0, 0, 0)  stage2 (15, 11, 19)  ISO away s1+s2 [9, 97]  sentinel FAIL 2  => 153

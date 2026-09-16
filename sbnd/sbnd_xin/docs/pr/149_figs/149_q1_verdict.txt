@@ -1,0 +1,17 @@
+# doc pr/149 Q1 verdict (149_pred.txt sec 4); criteria a b c d; PASS = all four
+cs         stage1: n=49 paired=49  d_rms -0.0706  d_ratio +0.0048  d_uncov +0.0026  vtx lab 40 toward 5 away 6 <=3cm 34->34  stubs 63->79  a=0 b=0 c=0 d=0  passed 0/4
+cs         stage2: n=406 paired=393  d_rms +0.0041  d_ratio -0.0057  d_uncov -0.0005  vtx lab 345 toward 32 away 88 <=3cm 288->257  stubs 105->151  a=0 b=1 c=0 d=0  passed 1/4
+cs         pooled: n=455 paired=442  d_rms +0.0028  d_ratio -0.0055  d_uncov -0.0004  vtx lab 385 toward 37 away 94 <=3cm 322->291  stubs 168->230  a=0 b=1 c=0 d=0  passed 1/4
+csq2000    stage1: n=49 paired=49  d_rms -0.0260  d_ratio -0.0068  d_uncov -0.0051  vtx lab 40 toward 5 away 12 <=3cm 34->29  stubs 63->78  a=1 b=1 c=0 d=0  passed 2/4
+csq2000    stage2: n=406 paired=395  d_rms +0.0013  d_ratio -0.0057  d_uncov -0.0012  vtx lab 345 toward 28 away 89 <=3cm 288->260  stubs 104->144  a=0 b=1 c=0 d=1  passed 2/4
+csq2000    pooled: n=455 paired=444  d_rms -0.0018  d_ratio -0.0058  d_uncov -0.0013  vtx lab 385 toward 33 away 101 <=3cm 322->289  stubs 167->222  a=1 b=1 c=0 d=0  passed 2/4
+csq6000    stage1: n=49 paired=49  d_rms -0.0050  d_ratio -0.0071  d_uncov -0.0093  vtx lab 40 toward 5 away 12 <=3cm 34->27  stubs 63->61  a=1 b=1 c=0 d=1  passed 3/4
+csq6000    stage2: n=406 paired=394  d_rms +0.0049  d_ratio -0.0066  d_uncov -0.0020  vtx lab 345 toward 29 away 83 <=3cm 288->256  stubs 102->138  a=0 b=1 c=0 d=1  passed 2/4
+csq6000    pooled: n=455 paired=443  d_rms +0.0033  d_ratio -0.0066  d_uncov -0.0022  vtx lab 385 toward 34 away 95 <=3cm 322->283  stubs 165->199  a=0 b=1 c=0 d=1  passed 2/4
+kf         stage1: n=49 paired=49  d_rms -0.0155  d_ratio -0.0096  d_uncov +0.0048  vtx lab 40 toward 4 away 7 <=3cm 34->34  stubs 63->58  a=1 b=0 c=0 d=1  passed 2/4
+kf         stage2: n=406 paired=394  d_rms -0.0004  d_ratio -0.0072  d_uncov +0.0003  vtx lab 345 toward 21 away 73 <=3cm 288->252  stubs 103->103  a=1 b=0 c=0 d=1  passed 2/4
+kf         pooled: n=455 paired=443  d_rms -0.0010  d_ratio -0.0074  d_uncov +0.0003  vtx lab 385 toward 25 away 80 <=3cm 322->286  stubs 166->161  a=1 b=0 c=0 d=1  passed 2/4
+cskf       stage1: n=49 paired=49  d_rms -0.0168  d_ratio -0.0065  d_uncov -0.0058  vtx lab 40 toward 4 away 9 <=3cm 34->31  stubs 63->79  a=1 b=1 c=0 d=0  passed 2/4
+cskf       stage2: n=406 paired=395  d_rms +0.0012  d_ratio -0.0124  d_uncov -0.0012  vtx lab 345 toward 30 away 97 <=3cm 288->249  stubs 106->153  a=0 b=1 c=0 d=0  passed 1/4
+cskf       pooled: n=455 paired=444  d_rms +0.0000  d_ratio -0.0123  d_uncov -0.0014  vtx lab 385 toward 34 away 106 <=3cm 322->280  stubs 169->232  a=0 b=1 c=0 d=0  passed 1/4
+# most criteria passed (pooled): 2/4 by ['csq2000', 'csq6000', 'kf'] (ties -> fewer Q2 adjudicated degradations -> cs, 149_pred.txt sec 6)

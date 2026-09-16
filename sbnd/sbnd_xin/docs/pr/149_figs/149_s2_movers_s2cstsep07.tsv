@@ -1,0 +1,187 @@
+sample	event	stratum	what
+mcp1k	54341	ISO	numu09 0->1
+mcp1k	55595	ISO	numu09 1->0
+mcp1k	56211	ISO	vertex toward 6.30->0.29cm
+mcp1k	57903	ISO	numu09 1->0; vertex ADVERSE 1.04->17.42cm
+mcp1k	58345	ISO	label nu-candidate->cosmic-tagged; nu_eval 1->0; numu09 1->0; stm bundle 7:1000009 0->1; vertex ADVERSE 46.43->infcm
+mcp1k	58607	ISO	vertex ADVERSE 3.47->4.86cm
+mcp1k	58717	other	numu09 0->1
+mcp1k	59003	ISO	label nu-candidate->cosmic-tagged; nu_eval 1->0; numu09 1->0; stm bundle 19:10 0->1; vertex ADVERSE 0.00->infcm
+mcp1k	59335	ISO	numu09 0->1; vertex toward 65.05->0.93cm
+mcp1k	62281	ISO	vertex toward 29.27->0.44cm
+mcp1k	62459	ISO	numu09 1->0
+mcp1k	62583	control	numu09 1->0
+mcp1k	62613	ISO	label nu-candidate->cosmic-tagged; nu_eval 1->0; stm bundle 17:1000000 0->1; vertex ADVERSE 0.00->infcm
+mcp1k	63163	ISO	numu09 1->0
+mcp1k	63559	ISO	label nu-candidate->cosmic-tagged; nu_eval 1->0; numu09 1->0; stm bundle 11:1000004 0->1; vertex ADVERSE 0.94->infcm
+mcp1k	63669	control	numu09 1->0
+mcp1k	65267	control	vertex ADVERSE 0.00->1.05cm
+mcp1k	65295	ISO	numu09 1->0
+mcp1k	66118	ISO	vertex ADVERSE 0.13->12.60cm
+mcp1k	66712	ISO	vertex toward 1.32->0.03cm
+mcp1k	68648	ISO	vertex ADVERSE 0.00->1.44cm
+mcp1k	71046	ISO	vertex ADVERSE 0.28->1.33cm
+mcp1k	71178	control	vertex toward 22.81->10.65cm
+mcp1k	72586	ISO	numu09 1->0
+mcp1k	73004	ISO	vertex ADVERSE 0.30->2.00cm
+mcp1k	166870	ISO	vertex ADVERSE 2.52->19.67cm
+mcp1k	168658	control	vertex ADVERSE 0.00->44.19cm
+mcp1k	169356	control	numu09 1->0
+mcp1k	170792	ISO	numu09 1->0; vertex ADVERSE 2.42->4.05cm
+mcp1k	170880	ISO	vertex toward 1.79->0.68cm
+mcp1k	172788	ISO	vertex ADVERSE 99.26->268.81cm
+mcp1k	174114	ISO	numu09 0->1; vertex ADVERSE 0.13->1.37cm
+mcp1k	175808	ISO	numu09 0->1; vertex toward 9.90->2.13cm
+mcp1k	278046	ISO	vertex ADVERSE 7.74->17.54cm
+mcp1k	278420	ISO	vertex ADVERSE 0.57->2.28cm
+mcp1k	279190	control	vertex ADVERSE 0.00->2.92cm
+mcp1k	279256	ISO	vertex toward 29.46->0.29cm
+mcp1k	280752	control	vertex ADVERSE 0.76->3.47cm
+mcp1k	281837	ISO	vertex ADVERSE 0.16->5.06cm
+mcp1k	281953	ISO	label nu-candidate->cosmic-tagged; nu_eval 1->0; stm bundle 10:1000001 0->1; vertex ADVERSE 0.00->infcm
+mcp1k	282072	ISO	vertex ADVERSE 0.16->3.39cm
+mcp1k	282231	ISO	numu09 1->0
+mcp1k	282737	control	vertex ADVERSE 0.06->29.02cm
+mcp1k	282979	ISO	vertex ADVERSE 87.82->119.05cm
+mcp1k	283463	ISO	vertex ADVERSE 0.92->4.91cm
+mcp1k	283713	ISO	vertex ADVERSE 0.62->5.05cm
+mcp1k	284145	ISO	vertex toward 5.68->0.73cm
+mcp1k	284200	ISO	numu09 1->0
+mcp1k	284791	ISO	vertex ADVERSE 8.08->13.11cm
+mcp1k	284794	ISO	label nu-candidate->cosmic-tagged; nu_eval 1->0; numu09 1->0; stm bundle 12:5 0->1; vertex ADVERSE 0.00->infcm
+mcp1k	285253	control	numu09 0->1
+mcp1k	285665	ISO	vertex toward 88.95->0.68cm
+mcp1k	286353	control	vertex toward 262.56->260.06cm
+mcp1k	286655	control	vertex toward 27.88->10.27cm
+mcp1k	286681	ISO	numu09 0->1
+mcp1k	286818	control	numu09 0->1; vertex ADVERSE 0.00->5.54cm
+mcp1k	287249	control	vertex ADVERSE 0.09->3.97cm
+mcp1k	287517	ISO	vertex ADVERSE 0.09->1.42cm
+mcp1k	287555	ISO	vertex toward 1.86->0.42cm
+mcp1k	290052	ISO	numu09 1->0
+mcp1k	313781	control	vertex ADVERSE 40.53->43.13cm
+mcp1k	315167	ISO	vertex ADVERSE 1.45->2.48cm
+mcp1k	315343	ISO	vertex toward 10.91->0.88cm
+mcp1k	315497	ISO	vertex ADVERSE 0.00->3.07cm
+mcp1k	316025	ISO	vertex ADVERSE 0.25->7.30cm
+mcp1k	319039	ISO	vertex ADVERSE 0.00->5.47cm
+mcp1k	319611	ISO	vertex ADVERSE 0.95->3.80cm
+mcp1k	320667	ISO	vertex toward 134.52->131.23cm
+mcp1k	321107	ISO	vertex ADVERSE 0.02->3.85cm
+mcp1k	321173	ISO	vertex toward 22.10->8.22cm
+mcp1k	321371	ISO	label nu-candidate->cosmic-tagged; stm bundle 18:1000002 0->1
+mcp1k	345633	ISO	numu09 1->0; vertex ADVERSE 0.16->5.92cm
+mcp1k	348713	ISO	numu09 0->1; vertex ADVERSE 0.00->89.97cm
+mcp1k	349241	ISO	label nu-candidate->cosmic-tagged; nu_eval 1->0; numu09 1->0; stm bundle 15:11 0->1; vertex ADVERSE 0.18->infcm
+mcp1k	349835	ISO	vertex ADVERSE 0.05->2.12cm
+mcp1k	353223	ISO	numu09 0->1
+mcp1k	388224	control	vertex ADVERSE 0.47->1.59cm
+mcp1k	390864	ISO	label nu-candidate->cosmic-tagged; nu_eval 1->0; stm bundle 16:1 0->1; vertex ADVERSE 93.19->infcm
+mcp1k	394642	ISO	vertex ADVERSE 0.17->1.45cm
+mcp1k	399118	control	numu09 1->0; vertex toward 11.01->1.03cm
+mcp1k	399328	ISO	vertex ADVERSE 0.80->9.57cm
+mcp1k	399856	ISO	numu09 1->0
+mcp1k	399998	ISO	numu09 1->0
+mcp1k	400054	control	vertex ADVERSE 0.00->5.44cm
+mcp1k	400504	ISO	vertex ADVERSE 0.00->48.82cm
+mcp1k	402880	ISO	vertex ADVERSE 0.00->3.02cm
+mcp1k	406752	control	label nu-candidate->cosmic-tagged; nu_eval 1->0; stm bundle 7:6 0->1
+mcp1k	406796	control	vertex ADVERSE 0.62->1.88cm
+mcp1k	411460	control	vertex ADVERSE 2.71->12.45cm
+mcp1k	486687	ISO	vertex ADVERSE 0.06->7.51cm
+mcp1k	487853	ISO	vertex ADVERSE 5.69->14.96cm
+mcp2k	47278	control	numu09 1->0; vertex ADVERSE 0.21->27.24cm
+mcp2k	51219	ISO	vertex ADVERSE 0.85->2.07cm
+mcp2k	51546	ISO	numu09 0->1; vertex ADVERSE 0.00->3.09cm
+mcp2k	53658	ISO	vertex toward 72.55->1.43cm
+mcp2k	53793	ISO	vertex ADVERSE 0.75->165.30cm
+mcp2k	54508	ISO	vertex ADVERSE 0.28->3.87cm
+mcp2k	57709	ISO	vertex toward 3.36->0.22cm
+mcp2k	57742	ISO	vertex ADVERSE 0.31->4.78cm
+mcp2k	58072	ISO	vertex ADVERSE 0.20->11.23cm
+mcp2k	66872	ISO	vertex ADVERSE 5.12->12.05cm
+mcp2k	68748	ISO	vertex ADVERSE 0.00->5.04cm
+mcp2k	70472	ISO	label nu-candidate->cosmic-tagged; nu_eval 1->0; stm bundle 16:4 0->1; vertex ADVERSE 3.82->infcm
+mcp2k	71022	ISO	numu09 0->1; vertex ADVERSE 0.00->8.19cm
+mcp2k	71872	ISO	vertex ADVERSE 0.47->1.94cm
+mcp2k	72055	ISO	numu09 1->0
+mcp2k	75040	control	vertex ADVERSE 0.10->1.69cm
+mcp2k	77328	ISO	vertex ADVERSE 0.37->6.08cm
+mcp2k	92225	ISO	vertex ADVERSE 1.49->2.52cm
+mcp2k	93105	ISO	vertex ADVERSE 0.28->1.56cm
+mcp2k	93776	ISO	label nu-candidate->cosmic-tagged; nu_eval 1->0; numu09 1->0; stm bundle 9:1000000 0->1; vertex ADVERSE 0.00->infcm
+mcp2k	94224	ISO	numu09 0->1; vertex ADVERSE 0.98->7.23cm
+mcp2k	94546	ISO	vertex ADVERSE 0.94->12.59cm
+mcp2k	95405	ISO	vertex ADVERSE 2.96->21.82cm
+mcp2k	95690	ISO	vertex ADVERSE 0.13->1.21cm
+mcp2k	97062	ISO	numu09 1->0; vertex toward 35.15->0.45cm
+mcp2k	98294	ISO	vertex ADVERSE 0.00->18.64cm
+mcp2k	98660	ISO	stm bundle 23:1000011 1->0
+mcp2k	99232	ISO	vertex ADVERSE 0.27->32.76cm
+mcp2k	101675	ISO	vertex ADVERSE 0.23->4.90cm
+mcp2k	104216	ISO	numu09 1->0
+mcp2k	104260	control	numu09 0->1
+mcp2k	105316	ISO	vertex ADVERSE 0.75->2.08cm
+mcp2k	105492	control	vertex toward 12.50->0.07cm
+mcp2k	157281	ISO	vertex ADVERSE 0.09->5.01cm
+mcp2k	161725	ISO	numu09 0->1
+mcp2k	167351	ISO	vertex toward 134.89->2.62cm
+mcp2k	168448	ISO	numu09 1->0
+mcp2k	169221	ISO	vertex ADVERSE 0.00->1.78cm
+mcp2k	171528	ISO	vertex toward 33.38->29.22cm
+mcp2k	173620	ISO	numu09 0->1; vertex toward 15.09->12.32cm
+mcp2k	177939	ISO	label nu-candidate->cosmic-tagged; nu_eval 1->0; stm bundle 11:7 0->1; vertex ADVERSE 3.50->infcm
+mcp2k	179765	ISO	numu09 0->1
+mcp2k	179912	ISO	vertex toward 5.23->1.02cm
+mcp2k	180544	ISO	numu09 1->0; vertex ADVERSE 0.81->8.01cm
+mcp2k	181050	control	nue43 0->1
+mcp2k	237380	control	label nu-candidate->cosmic-tagged; nu_eval 1->0; stm bundle 2:3 0->1
+mcp2k	241626	ISO	numu09 1->0
+mcp2k	280159	ISO	vertex toward 13.21->11.59cm
+mcp2k	281567	ISO	vertex ADVERSE 10.72->46.16cm
+mcp2k	282491	control	vertex ADVERSE 0.59->2.04cm
+mcp2k	283035	control	fc bundle 9:1000012 0->1
+mcp2k	283299	ISO	vertex ADVERSE 0.00->1.59cm
+mcp2k	284047	ISO	vertex ADVERSE 2.05->4.99cm
+mcp2k	285680	ISO	numu09 1->0
+mcp2k	286296	ISO	vertex ADVERSE 3.18->18.10cm
+mcp2k	290588	ISO	vertex ADVERSE 0.32->2.23cm
+mcp2k	293536	ISO	numu09 0->1; vertex ADVERSE 0.59->3.69cm
+mcp2k	316197	ISO	numu09 0->1; vertex toward 33.23->2.55cm
+mcp2k	318021	ISO	vertex toward 6.56->0.19cm
+mcp2k	321015	ISO	vertex toward 28.95->4.38cm
+mcp2k	321937	ISO	vertex ADVERSE 0.00->8.91cm
+mcp2k	322707	ISO	vertex ADVERSE 0.16->28.30cm
+mcp2k	323171	ISO	vertex ADVERSE 0.22->5.05cm
+mcp2k	323369	ISO	label nu-candidate->cosmic-tagged; nu_eval 1->0; stm bundle 13:9 0->1; vertex ADVERSE 235.09->infcm
+mcp2k	347824	control	numu09 1->0; vertex ADVERSE 1.00->62.66cm
+mcp2k	348594	ISO	vertex ADVERSE 1.83->22.01cm
+mcp2k	350354	ISO	nue7 0->1; nue43 0->1; numu09 0->1; vertex toward 5.22->0.21cm
+mcp2k	354248	ISO	numu09 0->1
+mcp2k	390391	ISO	numu09 1->0; vertex ADVERSE 1.03->11.28cm
+mcp2k	390743	control	fc bundle 17:6 0->1
+mcp2k	390810	ISO	numu09 1->0
+mcp2k	391899	ISO	vertex ADVERSE 0.47->2.16cm
+mcp2k	393538	ISO	numu09 1->0
+mcp2k	395079	ISO	numu09 0->1
+mcp2k	395597	ISO	vertex ADVERSE 1.22->5.84cm
+mcp2k	395717	ISO	label nu-candidate->cosmic-tagged; nu_eval 1->0; stm bundle 21:9 0->1
+mcp2k	396037	control	vertex ADVERSE 33.74->35.26cm
+mcp2k	396816	control	vertex toward 32.30->13.87cm
+mcp2k	396927	ISO	numu09 1->0
+mcp2k	397542	ISO	vertex ADVERSE 2.35->4.82cm
+mcp2k	400239	ISO	label nu-candidate->cosmic-tagged; nu_eval 1->0; numu09 1->0; stm bundle 5:8 0->1
+mcp2k	400779	control	vertex toward 6.72->0.04cm
+mcp2k	401197	control	vertex ADVERSE 0.00->9.05cm
+mcp2k	402297	ISO	numu09 1->0
+mcp2k	407886	ISO	vertex toward 104.15->42.03cm
+mcp2k	409052	ISO	label nu-candidate->cosmic-tagged; nu_eval 1->0; stm bundle 17:1000000 0->1; vertex ADVERSE 0.00->infcm
+mcp2k	409140	ISO	vertex toward 2.22->1.18cm
+mcp2k	410126	control	label nu-candidate->cosmic-tagged; nu_eval 1->0; stm bundle 17:9 0->1
+mcp2k	410680	ISO	vertex toward 3.56->0.23cm
+mcp2k	414240	ISO	vertex ADVERSE 21.23->31.85cm
+mcp2k	414306	ISO	numu09 0->1
+mcp2k	417782	ISO	vertex toward 10.98->0.26cm
+mcp2k	478088	ISO	vertex ADVERSE 0.06->4.91cm
+mcp2k	479650	ISO	vertex toward 25.87->6.47cm
+mcp2k	497311	ISO	vertex toward 191.78->145.71cm

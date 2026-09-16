@@ -1,0 +1,31 @@
+# vertex_tolerance stage 1 base pr149s0; clicks vtx105; fixed denominator (missing vertex = inf)
+[ISO] labelled 40  base b1: dist<0.05cm 2
+   pr149s0          <=1cm   31  <=3cm   34  <=10cm   34  lost   0  | vs base: moved>10cm away   0 toward   0  median shift of kept(<=3cm in both) 0.00 cm
+   pr149s0rep       <=1cm   31  <=3cm   34  <=10cm   34  lost   0  | vs base: moved>10cm away   0 toward   0  median shift of kept(<=3cm in both) 0.00 cm
+   pr149cs          <=1cm   29  <=3cm   34  <=10cm   34  lost   0  | vs base: moved>10cm away   4 toward   4  median shift of kept(<=3cm in both) 0.27 cm
+   pr149csq2000     <=1cm   22  <=3cm   29  <=10cm   34  lost   0  | vs base: moved>10cm away   3 toward   3  median shift of kept(<=3cm in both) 0.22 cm
+   pr149csq6000     <=1cm   22  <=3cm   27  <=10cm   30  lost   0  | vs base: moved>10cm away   7 toward   4  median shift of kept(<=3cm in both) 0.23 cm
+   pr149kf          <=1cm   23  <=3cm   34  <=10cm   35  lost   0  | vs base: moved>10cm away   1 toward   4  median shift of kept(<=3cm in both) 0.29 cm
+   pr149cskf        <=1cm   27  <=3cm   31  <=10cm   33  lost   0  | vs base: moved>10cm away   4 toward   4  median shift of kept(<=3cm in both) 0.16 cm
+   pr149cstsep05    <=1cm   26  <=3cm   28  <=10cm   33  lost   1  | vs base: moved>10cm away   3 toward   3  median shift of kept(<=3cm in both) 0.22 cm
+   pr149cstsep07    <=1cm   26  <=3cm   31  <=10cm   34  lost   0  | vs base: moved>10cm away   2 toward   5  median shift of kept(<=3cm in both) 0.30 cm
+[control] labelled 16  base b1: dist<0.05cm 6
+   pr149s0          <=1cm   13  <=3cm   14  <=10cm   15  lost   0  | vs base: moved>10cm away   0 toward   0  median shift of kept(<=3cm in both) 0.00 cm
+   pr149s0rep       <=1cm   13  <=3cm   14  <=10cm   15  lost   0  | vs base: moved>10cm away   0 toward   0  median shift of kept(<=3cm in both) 0.00 cm
+   pr149cs          <=1cm    9  <=3cm   11  <=10cm   11  lost   0  | vs base: moved>10cm away   3 toward   0  median shift of kept(<=3cm in both) 0.16 cm
+   pr149csq2000     <=1cm   10  <=3cm   12  <=10cm   12  lost   0  | vs base: moved>10cm away   3 toward   1  median shift of kept(<=3cm in both) 0.28 cm
+   pr149csq6000     <=1cm   14  <=3cm   15  <=10cm   15  lost   0  | vs base: moved>10cm away   0 toward   0  median shift of kept(<=3cm in both) 0.30 cm
+   pr149kf          <=1cm   14  <=3cm   14  <=10cm   15  lost   0  | vs base: moved>10cm away   0 toward   0  median shift of kept(<=3cm in both) 0.09 cm
+   pr149cskf        <=1cm   10  <=3cm   11  <=10cm   11  lost   0  | vs base: moved>10cm away   4 toward   0  median shift of kept(<=3cm in both) 0.30 cm
+   pr149cstsep05    <=1cm    9  <=3cm    9  <=10cm   12  lost   0  | vs base: moved>10cm away   3 toward   0  median shift of kept(<=3cm in both) 0.19 cm
+   pr149cstsep07    <=1cm   10  <=3cm   11  <=10cm   13  lost   0  | vs base: moved>10cm away   2 toward   0  median shift of kept(<=3cm in both) 0.21 cm
+[all] labelled 56  base b1: dist<0.05cm 8
+   pr149s0          <=1cm   44  <=3cm   48  <=10cm   49  lost   0  | vs base: moved>10cm away   0 toward   0  median shift of kept(<=3cm in both) 0.00 cm
+   pr149s0rep       <=1cm   44  <=3cm   48  <=10cm   49  lost   0  | vs base: moved>10cm away   0 toward   0  median shift of kept(<=3cm in both) 0.00 cm
+   pr149cs          <=1cm   38  <=3cm   45  <=10cm   45  lost   0  | vs base: moved>10cm away   7 toward   4  median shift of kept(<=3cm in both) 0.24 cm
+   pr149csq2000     <=1cm   32  <=3cm   41  <=10cm   46  lost   0  | vs base: moved>10cm away   6 toward   4  median shift of kept(<=3cm in both) 0.26 cm
+   pr149csq6000     <=1cm   36  <=3cm   42  <=10cm   45  lost   0  | vs base: moved>10cm away   7 toward   4  median shift of kept(<=3cm in both) 0.25 cm
+   pr149kf          <=1cm   37  <=3cm   48  <=10cm   50  lost   0  | vs base: moved>10cm away   1 toward   4  median shift of kept(<=3cm in both) 0.16 cm
+   pr149cskf        <=1cm   37  <=3cm   42  <=10cm   44  lost   0  | vs base: moved>10cm away   8 toward   4  median shift of kept(<=3cm in both) 0.17 cm
+   pr149cstsep05    <=1cm   35  <=3cm   37  <=10cm   45  lost   1  | vs base: moved>10cm away   6 toward   3  median shift of kept(<=3cm in both) 0.19 cm
+   pr149cstsep07    <=1cm   36  <=3cm   42  <=10cm   47  lost   0  | vs base: moved>10cm away   4 toward   5  median shift of kept(<=3cm in both) 0.24 cm

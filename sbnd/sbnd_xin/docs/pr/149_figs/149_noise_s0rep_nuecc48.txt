@@ -1,0 +1,2 @@
+# A=work-nuecc48-pr149s0 (48 evt)  B=work-nuecc48-pr149s0rep (48 evt)  common=48  only A=0 only B=0  allow=[]
+# 48/48 events identical over 240 files

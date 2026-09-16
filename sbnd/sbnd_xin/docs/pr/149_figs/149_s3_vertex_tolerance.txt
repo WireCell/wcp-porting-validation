@@ -1,0 +1,16 @@
+# vertex_tolerance stage 3 base pr149s3as0; clicks vtx105; fixed denominator (missing vertex = inf)
+[ISO] labelled 357  base b1: dist<0.05cm 79
+   pr149s3as0       <=1cm  268  <=3cm  297  <=10cm  317  lost   0  | vs base: moved>10cm away   0 toward   0  median shift of kept(<=3cm in both) 0.00 cm
+   pr149s3acs       <=1cm  204  <=3cm  265  <=10cm  302  lost  13  | vs base: moved>10cm away  35 toward  13  median shift of kept(<=3cm in both) 0.24 cm
+   pr149s3akf       <=1cm  213  <=3cm  260  <=10cm  293  lost  12  | vs base: moved>10cm away  35 toward  13  median shift of kept(<=3cm in both) 0.18 cm
+   pr149s3acsq2000  <=1cm  204  <=3cm  269  <=10cm  303  lost  11  | vs base: moved>10cm away  37 toward  14  median shift of kept(<=3cm in both) 0.19 cm
+[control] labelled 465  base b1: dist<0.05cm 110
+   pr149s3as0       <=1cm  346  <=3cm  378  <=10cm  399  lost   2  | vs base: moved>10cm away   0 toward   0  median shift of kept(<=3cm in both) 0.00 cm
+   pr149s3acs       <=1cm  326  <=3cm  360  <=10cm  393  lost   7  | vs base: moved>10cm away  34 toward  27  median shift of kept(<=3cm in both) 0.17 cm
+   pr149s3akf       <=1cm  322  <=3cm  353  <=10cm  386  lost  13  | vs base: moved>10cm away  36 toward  20  median shift of kept(<=3cm in both) 0.14 cm
+   pr149s3acsq2000  <=1cm  314  <=3cm  354  <=10cm  386  lost   7  | vs base: moved>10cm away  34 toward  19  median shift of kept(<=3cm in both) 0.16 cm
+[all] labelled 823  base b1: dist<0.05cm 189
+   pr149s3as0       <=1cm  614  <=3cm  675  <=10cm  716  lost   3  | vs base: moved>10cm away   0 toward   0  median shift of kept(<=3cm in both) 0.00 cm
+   pr149s3acs       <=1cm  530  <=3cm  625  <=10cm  695  lost  21  | vs base: moved>10cm away  69 toward  40  median shift of kept(<=3cm in both) 0.19 cm
+   pr149s3akf       <=1cm  535  <=3cm  613  <=10cm  679  lost  26  | vs base: moved>10cm away  71 toward  33  median shift of kept(<=3cm in both) 0.16 cm
+   pr149s3acsq2000  <=1cm  518  <=3cm  623  <=10cm  689  lost  19  | vs base: moved>10cm away  71 toward  33  median shift of kept(<=3cm in both) 0.17 cm

@@ -1,0 +1,40 @@
+# doc pr/149 A/B index -- A = stepped (production; arms pr149s0 / pr149s2s0), B = charge_stepped (pr149cs / pr149s2cs)
+# zips bee/pr149/pr149-s0-stepped.zip / pr149-cs-charge_stepped.zip (built locally, NOT uploaded: owner-gated)
+# order: owner ISO cases (docs pr/24,45,67,73), then Stage-1 >10 cm vertex movers, then Stage-2 lost candidates and ISO-strong movers
+# NOT blinded: arm identity is in the zip names (house bee-review convention)
+# status: owner = owner case; RESCUED = B within 3 cm of the click and A was not; ADVERSE = B moved >10 cm away or lost the candidate; mover = other large move
+# bee_idx	sample	event	status
+0	nuecc48	42280	owner: owner ISO case; vertex to click 0.7 -> 1.3 cm; nu_eval 1->1; nue 14.073776->11.422957; numu -2.6743217->-1.0036515; Enu 1846.8833->1812.3937 MeV; zigzag rms 0.736->0.661 mm; stubs 2->1
+1	nuecc48	137238	owner: owner ISO case; vertex to click 0.2 -> 0.3 cm; nu_eval 1->1; nue -4.3124743->-15.0; numu -0.2608087->0.28603342; Enu 1161.1917->1227.99 MeV; zigzag rms 0.526->0.194 mm; stubs 1->1
+2	nuecc48	271851	owner: owner ISO case; nu_eval 1->1; nue 3.2343032->5.6964045; numu 0.39844736->-0.22194211; Enu 1365.6597->1448.246 MeV; zigzag rms 0.664->0.540 mm; stubs 0->2
+3	nuecc48	350186	owner: owner ISO case; vertex to click 0.0 -> 40.8 cm; nu_eval 1->1; nue 9.75624->-15.0; numu -0.8223966->-0.58324945; Enu 623.98663->751.7866 MeV; zigzag rms 0.749->0.282 mm; stubs 1->1
+4	ncpi0	21073	owner: owner ISO case; vertex to click 1.0 -> 10.5 cm; nu_eval 1->1; nue -2.4996884->-15.0; numu -0.696057->0.40825903; Enu 1623.7389->932.38715 MeV; zigzag rms 0.919->0.805 mm; stubs 0->0
+5	mcp1k	57903	owner: owner ISO case; vertex to click 1.0 -> 13.2 cm; nu_eval 1->1; nue -15.0->-15.0; numu 1.0886312->1.0503361; Enu 567.0622->580.0586 MeV; zigzag rms 0.848->1.383 mm; stubs 0->0
+6	mcp1k	56463	owner: owner ISO case; nu_eval 1->1; nue -15.0->-11.1610155; numu 4.9545403->2.6928878; Enu 1429.368->1426.3904 MeV; zigzag rms 3.265->3.384 mm; stubs 0->0
+7	mcp1k	284794	owner: owner ISO case; vertex to click 0.0 -> 163.6 cm; nu_eval 1->1; nue -15.0->-15.0; numu 3.3015637->-1.2273992; Enu 883.8054->329.09296 MeV; zigzag rms 3.716->0.096 mm; stubs 0->1
+8	mcp1k	59899	owner: owner ISO case; vertex to click 4.5 -> 4.6 cm; nu_eval 1->1; nue -15.0->-15.0; numu -1.5150106->-0.5700719; Enu 409.35477->498.22668 MeV; zigzag rms 0.272->0.298 mm; stubs 1->1
+9	mcp1k	58717	owner: owner ISO case; nu_eval 1->1; nue -15.0->-15.0; numu -1.6785984->-0.4292591; Enu 182.6539->241.37663 MeV; zigzag rms 0.072->0.043 mm; stubs 0->0
+10	ncpi0	56982	mover: stage1 vertex toward 34.9->12.3 cm; vertex to click 34.9 -> 12.3 cm; nu_eval 1->1; nue -4.8177->0.8186438; numu 0.06565701->0.26049173; Enu 1268.5352->1317.3492 MeV; zigzag rms 0.760->0.606 mm; stubs 1->2
+11	ncpi0	463565	ADVERSE: stage1 vertex away 28.2->42.5 cm; vertex to click 28.2 -> 42.5 cm; nu_eval 1->1; nue -15.0->-5.132115; numu -0.034788106->-0.2546196; Enu 1480.9683->1280.0466 MeV; zigzag rms 0.668->0.957 mm; stubs 0->0
+12	nuecc48	30504	RESCUED: stage1 vertex toward 31.0->0.1 cm; vertex to click 31.0 -> 0.1 cm; nu_eval 1->1; nue 1.8491964->12.812826; numu 0.230809->-0.66503775; Enu 1307.6099->1071.1854 MeV; zigzag rms 0.403->0.359 mm; stubs 2->2
+13	nuecc48	38856	RESCUED: stage1 vertex toward 32.3->0.3 cm; vertex to click 32.3 -> 0.3 cm; nu_eval 1->1; nue -4.133667->10.439015; numu 0.17366612->0.5234351; Enu 1253.9102->1307.1743 MeV; zigzag rms 0.379->0.285 mm; stubs 0->1
+14	nuecc48	52672	ADVERSE: stage1 vertex away 3.8->68.4 cm; vertex to click 3.8 -> 68.4 cm; nu_eval 1->1; nue -10.831776->-0.9711118; numu -0.5772848->-0.6791827; Enu 892.92676->1095.4097 MeV; zigzag rms 0.161->0.532 mm; stubs 1->1
+15	nuecc48	111412	ADVERSE: stage1 vertex away 1.8->47.6 cm; vertex to click 1.8 -> 47.6 cm; nu_eval 1->1; nue 9.043853->-0.68887943; numu -0.4662523->-0.251179; Enu 1180.5537->838.1068 MeV; zigzag rms 0.318->0.443 mm; stubs 0->2
+16	nuecc48	122660	ADVERSE: stage1 vertex away 0.5->85.2 cm; vertex to click 0.5 -> 85.2 cm; nu_eval 1->1; nue -15.0->-15.0; numu -0.032953702->-0.2000955; Enu 1406.5555->1299.6466 MeV; zigzag rms 0.715->nan mm; stubs 1->1
+17	nuecc48	163543	RESCUED: stage1 vertex toward 32.8->0.1 cm; vertex to click 32.8 -> 0.1 cm; nu_eval 1->1; nue 3.1110559->9.8817625; numu 0.5043457->-0.5862825; Enu 1304.0721->1014.3253 MeV; zigzag rms 1.192->0.963 mm; stubs 0->4
+18	nuecc48	235435	ADVERSE: stage1 vertex away 0.2->35.5 cm; vertex to click 0.2 -> 35.5 cm; nu_eval 1->1; nue 7.6831274->-4.2176323; numu -0.58877313->1.3581169; Enu 739.5147->609.23883 MeV; zigzag rms 0.228->0.497 mm; stubs 0->2
+19	nuecc48	389538	ADVERSE: stage1 vertex away 0.3->213.6 cm; vertex to click 0.3 -> 213.6 cm; nu_eval 1->1; nue -15.0->9.839396; numu 4.6861024->0.49936938; Enu 2200.0942->1245.629 MeV; zigzag rms 1.853->0.273 mm; stubs 0->1
+20	mcp1k	48895	ADVERSE: stage2 lost candidate (s0 vertex 0.0 cm); vertex to click 0.0 -> inf cm; nu_eval 1->0; nue -15.0->-; numu 2.8101292->-; Enu 534.05963->- MeV; zigzag rms 0.808->nan mm; stubs 0->-
+21	mcp1k	62613	ADVERSE: stage2 lost candidate (s0 vertex 0.0 cm); vertex to click 0.0 -> inf cm; nu_eval 1->0; nue -15.0->-; numu -4.122855->-; Enu 805.35895->- MeV; zigzag rms 0.602->nan mm; stubs 0->-
+22	mcp1k	172788	ADVERSE: stage2 vertex away 99.3->inf cm; vertex to click 99.3 -> inf cm; nu_eval 1->0; nue -15.0->-; numu 1.728139->-; Enu 807.6218->- MeV; zigzag rms 1.872->nan mm; stubs 2->-
+23	mcp1k	281953	ADVERSE: stage2 lost candidate (s0 vertex 0.0 cm); vertex to click 0.0 -> inf cm; nu_eval 1->0; nue -15.0->-; numu -1.3760822->-; Enu 331.29236->- MeV; zigzag rms 1.012->nan mm; stubs 0->-
+24	mcp2k	70472	ADVERSE: stage2 vertex away 3.8->inf cm; vertex to click 3.8 -> inf cm; nu_eval 1->0; nue -15.0->-; numu 0.77778333->-; Enu 1188.1641->- MeV; zigzag rms 2.667->nan mm; stubs 0->-
+25	mcp2k	77328	ADVERSE: stage2 lost candidate (s0 vertex 0.4 cm); vertex to click 0.4 -> inf cm; nu_eval 1->0; nue -15.0->-; numu 2.6310334->-; Enu 1054.9174->- MeV; zigzag rms 0.499->nan mm; stubs 0->-
+26	mcp2k	93776	ADVERSE: stage2 lost candidate (s0 vertex 0.0 cm); vertex to click 0.0 -> inf cm; nu_eval 1->0; nue -15.0->-; numu 4.2862206->-; Enu 502.0243->- MeV; zigzag rms 0.499->nan mm; stubs 0->-
+27	mcp2k	99232	ADVERSE: stage2 vertex away 0.3->31.5 cm; vertex to click 0.3 -> 31.5 cm; nu_eval 1->1; nue -15.0->-15.0; numu 3.8869133->2.2813802; Enu 1042.0941->995.5105 MeV; zigzag rms 3.676->3.679 mm; stubs 0->1
+28	mcp2k	174795	ADVERSE: stage2 lost candidate (s0 vertex 0.0 cm); vertex to click 0.0 -> inf cm; nu_eval 1->0; nue -15.0->-; numu 2.183978->-; Enu 609.9256->- MeV; zigzag rms 1.327->nan mm; stubs 0->-
+29	mcp2k	321235	ADVERSE: stage2 vertex away 0.3->195.5 cm; vertex to click 0.3 -> 195.5 cm; nu_eval 1->1; nue -15.0->-15.0; numu -2.3276658->-1.9364256; Enu 1458.5139->854.9808 MeV; zigzag rms 0.330->0.335 mm; stubs 1->0
+30	mcp2k	321937	ADVERSE: stage2 vertex away 0.0->11.5 cm; vertex to click 0.0 -> 11.5 cm; nu_eval 1->1; nue -15.0->-15.0; numu 4.6010056->3.7892995; Enu 675.29175->850.7607 MeV; zigzag rms 1.531->1.999 mm; stubs 0->0
+31	mcp2k	350354	ADVERSE: stage2 vertex away 5.2->16.5 cm; vertex to click 5.2 -> 16.5 cm; nu_eval 1->1; nue -15.0->-3.832005; numu 0.6892362->0.49038276; Enu 965.83203->645.3812 MeV; zigzag rms 0.514->0.540 mm; stubs 0->4
+32	mcp2k	409052	ADVERSE: stage2 lost candidate (s0 vertex 0.0 cm); vertex to click 0.0 -> inf cm; nu_eval 1->0; nue -15.0->-; numu -1.2915916->-; Enu 521.7295->- MeV; zigzag rms 1.408->nan mm; stubs 0->-
+33	mcp2k	497311	mover: stage2 vertex toward 191.8->145.8 cm; vertex to click 191.8 -> 145.8 cm; nu_eval 1->1; nue -15.0->-15.0; numu -2.7735426->-2.4793649; Enu 581.6688->1265.4514 MeV; zigzag rms 1.041->0.240 mm; stubs 0->1

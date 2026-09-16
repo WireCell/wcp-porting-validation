@@ -1,0 +1,110 @@
+doc sbnd_xin/pr/149 -- PRE-REGISTRATION (frozen before the first physics arm; sha256 recorded in the doc)
+=======================================================================================================
+
+Question (owner, 2026-09-16): switch the SBND PR RETILE sampler stepped -> charge_stepped.
+  Q1  do isochronous (ISO) cases' pattern recognition improve?
+  Q2  what degrades elsewhere, and is it recoverable?
+Owner scope: PR retile only (clustering 3d PC stays stepped); data only; nueCC + NCpi0 first; numuCC on a
+selected large-ISO subset; full 3067-event census last; no production flip in this doc; ask before Bee upload.
+
+Known before any arm (Phase 0, 149_p0_blob_product_*.tsv, imaging blobs as a proxy for retile blobs):
+  - N_max*N_min <= 2500 for >= 99.0 % of blobs in every theta_drift bin, ISO included, on all four samples
+    => charge_stepped's all-wire branch is live; a wire_product sweep is expected inert and is NOT run.
+  - 67-74 % of stepped sample points carry a nonzero wire charge < 4000 (median min-nonzero 1400-2200)
+    => the 4000 charge cut, not the product cut, decides how many extra points charge_stepped adds.
+    Sweep cells therefore vary charge_threshold only: 2000 and 6000 (bracketing the 4000 default).
+
+-------------------------------------------------------------------------------------------------------
+1. ARMS  (stage B from work-<s>-d102m; pin /home/xqian/tmp/pr149/libpin, Clus md5 091e142b9481;
+          PR_EXTRA_STAGES=pr_display; production config incl. DL vertex unless stated; per-event mode)
+   s0       production (knob null)
+   s0rep    repeat of s0 -- noise floor.  If s0rep != s0 on any vertex/score, a geometric pair
+            (SBND_NO_DL=1: s0g / csg) is added for attribution and the noise floor is quoted.
+   cs       retile_sampler_strategy='charge_stepped'
+   kf       fit JSON = production + fit_weight_pow 1.5 + assoc_cont_center 1 (149_tf_sbnd_kf.json)
+   cskf     cs + kf  (the PDHD/PDVD production combination)
+   csq2000  cs with retile_sampler_charge_threshold=2000
+   csq6000  cs with retile_sampler_charge_threshold=6000
+   Arm dirs: work-<sample>-pr149<arm>.
+   Stage 1: nuecc48 (48) + ncpi0 (19), all arms.
+   Stage 2: mcp1k + mcp2k manifest of sec 3, arms s0 s0rep cs kf cskf csq2000 csq6000.
+   Stage 3: all 3067 events, arms s0, cs and the ONE best cell named at the end of Stage 2 (rule sec 6).
+
+2. OBJECTS AND STRATA  (selection from the EPOCH-REFERENCE arms work-<s>-d102mpr, never from a measured arm)
+   segment length  = sum of 3-D steps between consecutive fitted points (calib-pr-evt*.json segments[].points)
+   theta_drift     = angle between the segment chord (first->last fitted point) and the drift axis x, deg;
+                     90 = isochronous  (pr/73's "iso" = 90 - theta_drift)
+   main cluster    = main_vertex.cluster_id of the calib dump (candidate 0)
+   iso_len(T)      = total length of main-cluster segments with flag_shower == false, length >= 10 cm,
+                     theta_drift >= T
+   iso_len_any(T)  = same but showers included (for the EM samples)
+   ISO event (Stage 1)      : iso_len_any(75) >= 10 cm in d102mpr
+   ISO-strong               : iso_len_any(85) >= 10 cm
+   non-ISO control          : has a calib dump and iso_len_any(75) == 0
+   Owner ISO cases (fixed list, all present in d102m):
+     nuecc48 42280 271851 350186 137238 (pr/24, pr/67); ncpi0 21073 (pr/67);
+     mcp1k 57903 (pr/73) 56463 (pr/45) 284794 59899 (pr/24) 58717 (pr/67)
+   A symmetric strata definition from s0 is reported beside it, never used as the selection.
+
+3. STAGE 2 numuCC MANIFEST RULE  (script scripts/analysis/pr149/select_iso_numu.py, output
+   149_figs/manifest_stage2/{mcp1k,mcp2k}.txt + 149_stage2_selection.tsv)
+   pool     = mcp1k + mcp2k events with a calib dump in d102mpr
+   ISO set  = iso_len(80) >= 30 cm, ranked by iso_len(80) descending (ties: sample, event id), top 150
+   plus     = every vtx105-labelled event (vtx_io.TAGS_VTX105) with iso_len(75) >= 10 cm not already in
+   plus     = the 5 mcp1k owner cases
+   control  = 150 events drawn with numpy default_rng(149) from the pool with iso_len_any(75) == 0
+              (sorted by (sample, event id) before the draw)
+
+4. Q1 METRICS  (per event unless stated; computed identically on every arm by pr149_metrics.py)
+   M1 cloud     steiner points of the main cluster (calib steiner[] rows with cluster_id == main)
+   M2 zig-zag   per main-cluster segment with length >= 10 cm and >= 10 points, pr/73 definitions on the
+                fitted points: ratio = path/chord; rms_dr = rms distance of the points from the chord,
+                projected on the drift axis; fold = fraction of interior turns > 30 deg.
+                Event value = length-weighted mean over those segments.
+   M3 coverage  uncov = sum(charge in main-cluster T_proj_data cells with charge_pred < 0.1*charge)
+                        / sum(charge in those cells)          (cell set is readout-only => same denominator)
+   M4 structure n_seg (main cluster), n_stub = main-cluster segments shorter than 3 cm with an endpoint
+                vertex of degree 1
+   M5 vertex    distance of main_vertex to the vtx105 hand click; fixed denominator = every labelled
+                event of the stage; an arm with no calib dump / no main vertex on a labelled event scores
+                that event as a FAILURE (distance = inf).  Report n(<=1 cm), n(<=3 cm), and per-event
+                movers: toward (closer by > 1 cm), away (farther by > 1 cm).  pr90_movers.py is run too.
+   M6 owner cases: M2/M3/M4/M5 per case, before/after, one-line reading each.
+
+   Q1 READING (stated before seeing numbers): "ISO PR improves" for an arm X vs s0 iff, on the ISO stratum
+   (Stage 1 ISO events for Stage 1; Stage 2 ISO set for Stage 2):
+     (a) median per-event delta rms_dr < 0 AND median delta ratio <= 0, AND
+     (b) median per-event delta uncov < 0, AND
+     (c) vertex: toward > away on the labelled ISO events, AND n(<=3 cm) does not fall, AND
+     (d) n_stub summed over the stratum rises by no more than max(2, 10 % of the stratum's events).
+   Partial (a/b pass, c or d fail) is reported as "trajectory improves, PR does not follow".
+   The same numbers on the non-ISO control are reported beside it; an effect equal on both strata is
+   not ISO-specific and is said so.
+
+5. Q2 METRICS  (Stage 1, Stage 2, then Stage 3 global)
+   - nusel event_label migration matrix and nu_evaluated flips (pr_scores_table.py + pr142_campaign_ab.py)
+   - working points: nue_score > 7.0 and > 4.3; numu_score > 0.9 (counts per arm, per sample)
+   - Enu (kine_reco_Enu): median and p90 of |delta| over events evaluated in both arms
+   - taggers per cluster from T_tagger act_* (act_tgm / act_stm / act_fc), matched on (event, act_cluster_id):
+     TGM flips MUST be 0 (TGM reads no Steiner product) -- a nonzero count is a stop-and-report
+   - pi0 (ncpi0 + nuecc48): kine_pio_flag==1 count and kine_pio_mass in (100,170) MeV count
+   - vertex ADVERSE: labelled events whose distance to the click grows by > 1 cm (M5 "away")
+   - sentinels: pr127_sentinels.py on Stage 3 arms, FAIL count vs s0
+   - resources: per-event wall (timecmd) and peak RSS, arms run interleaved at the same PR_JOBS;
+     bar (doc pdvd/102): median wall <= +50 %, median RSS <= +25 %
+   Every event_label change, nu_evaluated flip, working-point crossing, ADVERSE vertex and sentinel FAIL
+   is adjudicated with one mechanism line: tagger-threshold / PR-structure / vertex-choice / energy-scale.
+
+6. RECOVERABILITY  (per adjudicated degradation of cs vs s0)
+   RECOVERED-BY-SAMPLER-PARAM  csq2000 or csq6000 returns it to the s0 outcome while (a)+(b) of sec 4
+                               still pass for that cell
+   RECOVERED-BY-FIT-KEYS       cskf returns it while (a)+(b) still pass
+   NEEDS-DOWNSTREAM-RETUNE     no cell returns it; the mechanism names a threshold (e.g. a tagger cut)
+   TRADE                       no cell returns it and no single threshold is named
+   A0-WAS-WRONG                the s0 outcome is itself the error (needs the owner's scan to confirm)
+   Best cell for Stage 3 = the cell with the most Q1 criteria passed on the pooled Stage 1 + Stage 2 ISO
+   strata; ties broken by fewer Q2 adjudicated degradations, then by cs over the others (simplest).
+
+7. STOP-AND-REPORT
+   TGM flips != 0; s0rep != s0 beyond the DL vertex; any arm with nonzero rc on an event s0 ran clean;
+   pin md5 change mid-arm; a physics number that looks wrong (reported, never tuned).

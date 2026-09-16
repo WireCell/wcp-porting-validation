@@ -1,0 +1,36 @@
+doc sbnd_xin/pr/149 -- AMENDMENT 1 (POST-HOC, EXPLORATORY; frozen before its arms run; sha256 in the doc)
+======================================================================================================
+
+Why an amendment.  149_pred.txt sec 6 named two recovery lever families (sampler charge threshold,
+track-fit keys).  Stage 1 (67 evt) and Stage 2 mcp1k (214 evt, partial) were read before this file and
+showed, for cs vs s0:
+  - the vertex degradation is not DL-specific (geometric pair s0g/csg degrades too, 12 away vs 6 toward
+    beyond 10 cm on 56 labelled events);
+  - ISO vertex-away movers mostly gain an extra short (2-10 cm) branch at the new main vertex;
+  - main-cluster Steiner terminals rise x1.38 while points rise x1.83; terminal nearest-neighbour spacing
+    falls from median 0.68 cm (nuecc48 s0) / 0.76 cm (mcp1k Stage 2 s0) to 0.47 cm (cs, both).
+Mechanism read from the code: find_peak_point_indices suppresses non-peak candidates within nlevel=3
+graph hops (SteinerGrapher.cxx:591-640); a denser cloud shrinks that neighbourhood physically, so more
+local maxima survive as terminals.  The length-based lever for exactly this already exists:
+Grapher::Config::terminal_min_separation (doc pdvd/37 round 2, C++ default 0, PDVD production 0.5 cm),
+not exposed by SBND's jsonnet.
+
+This amendment is EXPLORATORY.  It cannot change the pre-registered Q1/Q2 verdict of 149_pred.txt, and
+its result is reported as "a candidate recovery lever", never as a passed gate.
+
+1. KNOB  sbnd pr() / wct-pr-perevt TLA steiner_terminal_min_separation (cm, default 0 => key omitted =>
+   byte-identical), passed to BOTH CreateSteinerGraph instances (steiner, steiner_refresh), as PDHD/PDVD do.
+
+2. ARMS  (same pin, same drivers)
+   cstsep05   cs + steiner_terminal_min_separation=0.5   (the PDVD production value)
+   cstsep07   cs + steiner_terminal_min_separation=0.7   (the s0 median terminal NN spacing, rounded)
+   Stage 1 (67 evt) and the Stage 2 manifest (559 evt).  No thinning-only (stepped + sep) arm: the
+   question is whether cs's cost is recovered, not what thinning does to production.
+
+3. READING (stated now)
+   A value "recovers" a cs degradation class if, vs s0 on the same stage:
+     vertex:   n(<=3 cm) on labelled events is within 1 of s0's, AND away(>1 cm) <= toward + 2
+     stubs:    n_stub sum within max(2, 10 % of stratum events) of s0's
+     STM:      bundle STM flips <= half of cs's
+   while the cs trajectory gain holds (ISO median delta rms_dr <= 0 and median delta ratio <= 0 vs s0).
+   Anything else is reported as "not recovered by thinning".
