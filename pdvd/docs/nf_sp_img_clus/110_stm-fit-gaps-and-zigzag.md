@@ -4,8 +4,9 @@
 The owner's five Bee spots are reproduced as figures on the arm they viewed and on the other side of the
 trajectory flip, and each defect is traced to where it is made:
 
-- **The gaps are made by the viewer.** The persisted STM fit is continuous (step p99 0.95 cm). Bee skips every
-  point with `q < 0`, and the `stm_fit` layer encodes `q = dQ·0.1 − 1000` without the clamp the
+- **The gaps are made by the viewer.** The persisted STM fit is continuous at all five spots and on 99.9 % of
+  steps arm-wide (step p99 0.95 cm; the 0.1 % that jump, up to 1.4 m, are of the doc-102 off-image chord kind, not
+  checked one by one, and not these holes). Bee skips every point with `q < 0`, and the `stm_fit` layer encodes `q = dQ·0.1 − 1000` without the clamp the
   `track_fit` layer has. So every fitted row with **dQ < 10 ke** disappears. Every named gap is such a run.
 - **The rows are low where the fit trajectory has left the track's charge**: a bump off the image (v1–v3,
   pre-flip PDVD), a corner cut across a bend (h1, production PDHD), rows stacked at one time slice across
@@ -13,8 +14,9 @@ trajectory flip, and each defect is traced to where it is made:
   positive.
 - **The PDVD set the owner viewed is pre-flip** (`q29flip`, 2026-09-13; flip `8fc6070e`, 2026-09-15). The
   PDHD set is production. On PDVD production v1 and v3 are fixed, and cl80 is no longer tagged, so it is not drawn
-  at all. The two PDHD spots are **flip-made local defects**. Arm-wide, both flips *reduce* holes (PDHD −25 %,
-  PDVD −37 % on clusters tagged in both arms).
+  at all. **Both PDHD spots are defects the PDHD flip created** (pre-flip: no hole at h2, a 2-row run at h1).
+  Arm-wide both flips reduce holes (PDHD −25 %, PDVD −37 % on clusters tagged in both arms), but on PDHD the
+  share of fitted rows sitting off the charge did not move (13.5 % → 13.5 %).
 - Zig-zag is the doc 101/102 lattice mechanism; this doc does not re-derive it.
 
 ## 0. Repro
@@ -97,8 +99,8 @@ as it was.
    i.e. JSON rounding (`d110_spot_figs.py` asserts it; `zip_eq_root` column in the TSVs).
 
 **The persisted fit has no gaps** (census sec 3): step p50 0.61–0.62 cm, p99 0.94–0.95 cm on all five arms.
-Steps > 3 cm are 0.11 % (424 of 384,354 PDHD production; 563 of 559,499 PDVD production). Those are the
-doc-102 off-image chords, not the owner's holes.
+Steps > 3 cm are 0.11 % (424 of 384,354 PDHD production; 563 of 559,499 PDVD production). They are of the
+doc-102 off-image chord kind (not checked one by one), and none is at the owner's holes.
 
 **Every named hole is a q<0 run** (`figs/110_*_bee.png`: top row = every persisted row, × = q<0; middle row =
 what Bee draws; bottom row = `track_fit` as drawn). Window ±12 cm of arc (±24 cm for h2):
@@ -224,8 +226,24 @@ Census sec 1b, on the clusters tagged in **both** arms of each pair (same pctree
 | PDHD `d101hnew` → `d108hflip` (61 evt) | 261 | 7,470 → 6,064 | 774 → **577** | 3,947 → 3,288 | 193 → 162 | 669 → 288 |
 | PDVD `d103v0` → `d103vflip` (120 evt) | 422 | 6,264 → 4,561 | 672 → **422** | 3,321 → 2,625 | 253 → 195 | 1,095 → 422 |
 
-**Both flips reduce holes arm-wide** (−25 % PDHD, −37 % PDVD). h1 and h2 are local counter-examples, not the
-trend. They are still common in production. On all tagged clusters (census sec 1):
+**Both flips reduce holes arm-wide** (−25 % PDHD, −37 % PDVD). Two caveats keep this from being a clean bill:
+
+- **The fit is off the charge as often as before on PDHD.** Rows off-charge in ≥ 1 plane (±1 wire): PDHD
+  13.5 % → 13.5 %, PDVD 12.5 % → 11.9 % (census sec 1, on each arm's own tagged set, 341 vs 333 and 540 vs 563
+  clusters, not the common set). The PDHD flip made fewer off-charge rows fall below 10 ke; it did not make the fit
+  leave the charge less often. The wiggle metric above cannot see the h1/h2 kind of excursion (sec 5).
+- **Clusters gain holes as well as lose them** (census sec 1c, cluster level, common tagged set):
+
+  | | gained a hole | lost all holes | holes in both | in neither |
+  |---|---|---|---|---|
+  | PDHD | 13 | 44 | 149 | 55 |
+  | PDVD | 20 | 78 | 175 | 149 |
+
+  The owner's cl106 (h2) is one of the 13 PDHD clusters that gained one (0 → 1). cl108 (h1) sits in "both" but
+  went from 2 holes / 7.5 cm to 4 holes / 12.3 cm. A location-level split (which holes are new at a place that
+  was clean) was not built.
+
+Holes are still common in production. On all tagged clusters (census sec 1):
 - **PDHD:** 693 holes in 585 m of fit (11.9 per 10 m); 6.6 % of the fitted length lies in them.
 - **PDVD:** 588 holes in 970 m (6.1 per 10 m); 4.0 % of the length.
 
@@ -240,14 +258,16 @@ That is why the owner meets them on almost every track.
 | dQ ≤ 0 rows | positivity in `dQ_dx_fit` (NNLS or clamp-and-refit) | reaches only 9–12 % of the holes. Tagger-affecting: same hand-scan grade. Not recommended as a first lever |
 
 The clamp is the smallest change that answers "we should have a continuously fitted trajectory" for the
-display. It hides nothing: a clamped row is drawn at zero charge, as on the PR layer.
+display. It removes the holes but not the information that the row is low: a clamped row is drawn in the
+zero-charge colour, as on the PR layer. Every sub-10-ke value collapses to that one colour, so the magnitude
+below 10 ke is lost from the display (the ROOT rows keep it).
 
 ## 8. Not concluded
 
 - **Causality of the sec 3 strata.** Off-charge, reg_flag and degeneracy are measured correlates of a low row.
   No counterfactual arm separates them.
-- **How often production makes an h1/h2-type excursion** (a hole present in production but not pre-flip at the
-  same place). The net count is lower (sec 6), but the new-vs-removed split was not built.
+- **How often production makes an h1/h2-type excursion at a place that was clean.** Sec 6 gives the cluster-level
+  split (PDHD 13 gained / 44 lost); the location-level split was not built.
 - **The PDVD U/V own-cell rounding offset** (sec 3 caveat). Not traced to a convention. It may bias doc 102's
   PDVD on-charge numbers.
 - **The cl106 side branch.** About 95 image points within 25 cm of h2 lie more than 3 cm from the STM fit in
@@ -261,7 +281,7 @@ display. It hides nothing: a clamped row is drawn at zero charge, as on the PR l
 | path | what |
 |---|---|
 | `scripts/d110_spot_figs.py` | sec 2, 4, 5: per-spot figures + TSV, zip = ROOT assert (fork of `d102_spot_figs.py`, untouched) |
-| `scripts/d110_gap_census.py` | sec 1, 2, 3, 6: whole-arm census |
+| `scripts/d110_gap_census.py` | sec 1, 2, 3, 6: whole-arm census (sec 1c = gained / lost holes per cluster) |
 | `scripts/d110_bee_sets.py` | sec 1: PDVD 5-event set on production (fork of `d109_bee_sets.py`, untouched) |
 | `figs/110_{v1,v2,v3,h1,h2}_{bee,3d,2d,profile}.png` | the spot figures (top row of `_bee` = every persisted row, middle = what Bee draws) |
 | `figs/110_pdvd_spots.tsv`, `figs/110_pdhd_spots.tsv` | per-spot, per-arm metrics |

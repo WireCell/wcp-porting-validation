@@ -244,6 +244,7 @@ def main():
                   f"| {pct(a['off1'], a['rows']).strip()} | {pct(a['wig1'], a['rows']).strip()} "
                   f"| {int(a['tf_rows'])} / {int(a['tf_zero'])} ({int(a['tf_nolayer'])} evt without the layer) |")
     print()
+    SPLIT = {}
     print("### sec 1b -- pre-flip vs production on the clusters tagged in BOTH arms (same pctrees)\n")
     print("| det | pair | events | common tagged clusters | fit length pre / prod (m) | q<0 rows pre / prod "
           "| holes pre / prod | hole length pre / prod (cm) | clusters with a hole pre / prod | wiggle>1 cm rows pre / prod |")
@@ -252,7 +253,7 @@ def main():
         A, B = PAIRS[det]
         pa, pb = S1[(det, A)]["per_event"], S1[(det, B)]["per_event"]
         evs = sorted(set(pa) & set(pb))
-        tot = defaultdict(float)
+        tot = defaultdict(float); split = Counter()
         for ev in evs:
             common = TAG[(det, A)][ev] & TAG[(det, B)][ev]
             tot["cl"] += len(common)
@@ -261,15 +262,28 @@ def main():
                 tot["neg" + side] += int((r["q"][m] < 0).sum())
                 tot["wig" + side] += int((r["wig"][m] > 1.0).sum())
                 tot["arc" + side] += sum(v for c, v in r["arc"].items() if c in common)
-                withhole = set()
+                withhole = set(); tot.setdefault("sets", {})
                 for c, hs in r["holes"]:
                     if c in common and hs:
                         tot["h" + side] += len(hs); tot["hcm" + side] += sum(h[1] for h in hs); withhole.add(c)
                 tot["hc" + side] += len(withhole)
+                tot["sets"][side] = withhole
+            ha, hb = tot["sets"]["a"], tot["sets"]["b"]
+            split["gained"] += len(hb - ha); split["lost"] += len(ha - hb)
+            split["both"] += len(ha & hb); split["neither"] += len(common - ha - hb)
         print(f"| {det} | `{A}` -> `{B}` | {len(evs)} | {int(tot['cl'])} | {tot['arca'] / 100:.1f} / {tot['arcb'] / 100:.1f} "
               f"| {int(tot['nega'])} / {int(tot['negb'])} | {int(tot['ha'])} / {int(tot['hb'])} "
               f"| {tot['hcma']:.0f} / {tot['hcmb']:.0f} | {int(tot['hca'])} / {int(tot['hcb'])} "
               f"| {int(tot['wiga'])} / {int(tot['wigb'])} |")
+        SPLIT[det] = split
+    print()
+    print("### sec 1c -- per cluster (common tagged set): hole >= 3 rows only in production (gained), only pre-flip "
+          "(lost), in both, in neither.  Cluster level, not location level.\n")
+    print("| det | gained | lost | both | neither |")
+    print("|---|---|---|---|---|")
+    for det in ("pdhd", "pdvd"):
+        sp = SPLIT[det]
+        print(f"| {det} | {sp['gained']} | {sp['lost']} | {sp['both']} | {sp['neither']} |")
     print()
 
     print("## sec 2 -- ROOT level, every fitted row (all fitted clusters, all passes)\n")

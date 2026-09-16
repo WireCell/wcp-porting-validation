@@ -56,6 +56,13 @@
 | pdhd | `d101hnew` -> `d108hflip` | 61 | 261 | 478.5 / 466.8 | 7470 / 6064 | 774 / 577 | 3947 / 3288 | 193 / 162 | 669 / 288 |
 | pdvd | `d103v0` -> `d103vflip` | 120 | 422 | 734.2 / 719.3 | 6264 / 4561 | 672 / 422 | 3321 / 2625 | 253 / 195 | 1095 / 422 |
 
+### sec 1c -- per cluster (common tagged set): hole >= 3 rows only in production (gained), only pre-flip (lost), in both, in neither.  Cluster level, not location level.
+
+| det | gained | lost | both | neither |
+|---|---|---|---|---|
+| pdhd | 13 | 44 | 149 | 55 |
+| pdvd | 20 | 78 | 175 | 149 |
+
 ## sec 2 -- ROOT level, every fitted row (all fitted clusters, all passes)
 
 ### 2a -- q<0 fraction by the number of planes with no charge of the cluster within +-1 wire on the row's slice
