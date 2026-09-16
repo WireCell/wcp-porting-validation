@@ -60,7 +60,8 @@
   - Two patches: the retile default (PDVD only) and the two fit keys.
   - The flipped config reproduces the graded arm exactly: every branch of `T_stm_michel` on 120 / 120 events.
   - Resources, like for like: median wall +13.7 %, median peak RSS +2.4 %.
-  - **No production file is changed. The flip waits on the owner's go**, and PDHD's choice is still open.
+  - **APPLIED on the owner's go** (toolkit `8fc6070e`): PDVD production runs both levers. Verified on the applied
+    tree, not the scratch copy. PDHD is **not** flipped; its Michel admission tuning is round 7, next session.
 
 ## 0. Repro
 
@@ -1129,13 +1130,27 @@ its per-event wall is inflated ×2.5 by contention and is not a measurement. The
 arms' tagger output is byte-identical — the same work was done — and `d103vflip`'s peak RSS (3.50 GB), which
 contention does not inflate, matches `d103v1`'s 3.49 GB.
 
-### 14.4 What is left
+### 14.4 Applied
 
-1. **The owner's go.** Applying the two patches changes PDVD production defaults.
-2. **PDHD's choice** (sec 12.3, 12.4), unchanged and still open: hold PDHD; accept Michel purity 0.946 → 0.895 for
-   efficiency 0.603 → 0.664; or study a geometric admission rule.
-3. Nothing else: the grade is on the production lineage, the owner's two adjudications are folded, amendment 6's
-   symmetric check passed, and the flipped config is proven to be the arm that was graded.
+The owner gave the go on 2026-09-15. Both patches are applied, PDVD only: **toolkit `8fc6070e`**.
+
+* **What changed:** `protodunevd/pr.jsonnet` (the retile default) and `protodunevd/pdvd_track_fitting.json` (the two
+  keys). `git diff cfg/pgrapher/experiment/pdhd/` is empty — PDHD is untouched.
+* **Checks on the applied tree**, not on the scratch copy:
+  - the compiled PR job is **byte-identical** to the flipped compile the gate rests on;
+  - one event (039252, evt 298567) re-run through it with **no overrides** — arm `d103vprod1` — is **identical** to
+    `d103v1` on all 198 branches of `T_stm_michel`. This closes the one link sec 14.2 named as inferred;
+  - the escape hatch holds: `retile_sampler_strategy='stepped'` compiles byte-identical to the pre-flip job, and
+    deleting the two fit keys restores the C++ defaults 2.0 / 0.
+* The two patches in `figs/` were regenerated from the applied state, so they are exactly what landed.
+
+### 14.4b What is left
+
+* **PDHD.** The owner's answer on 2026-09-15: tune it as well, next session. Its Michel purity cost is owner-backed
+  and no energy floor fixes it (sec 12.3, 12.4), so round 7 builds an admission rule on sec 10.4's class — default
+  OFF with a byte-identical gate, graded on both detectors so PDVD keeps its D1.
+* Nothing else for PDVD: the grade is on the production lineage, both owner adjudications are folded, amendment 6's
+  symmetric check passed, and the applied config is the arm that was graded.
 
 ### 14.5 Files (round 6)
 

@@ -1,6 +1,8 @@
+diff --git a/cfg/pgrapher/experiment/protodunevd/pr.jsonnet b/cfg/pgrapher/experiment/protodunevd/pr.jsonnet
+index 7ef144e0..050fd9a8 100644
 --- a/cfg/pgrapher/experiment/protodunevd/pr.jsonnet
 +++ b/cfg/pgrapher/experiment/protodunevd/pr.jsonnet
-@@ -113,11 +113,17 @@
+@@ -113,11 +113,17 @@ function(output_dir='', runNo=1, subRunNo=1, eventNo=1, stepped_center_fallback=
                // stepped spacing.  false / null => keys omitted => byte-identical.
                retile_sampler_half_pitch=false,
                retile_sampler_min_step=null,
@@ -23,7 +25,7 @@
                retile_sampler_strategy=null,
                retile_sampler_wire_product=null,
                retile_sampler_charge_threshold=null,
-@@ -1442,7 +1448,7 @@
+@@ -1442,7 +1448,7 @@ function(output_dir='', runNo=1, subRunNo=1, eventNo=1, stepped_center_fallback=
              anodes=anodes,
              samplers=[clus.sampler(clus_maker.live_sampler(a, f, half_pitch=retile_sampler_half_pitch,
                                                             min_step_size=retile_sampler_min_step,   // doc pdvd/101
