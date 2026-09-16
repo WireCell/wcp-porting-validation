@@ -1,0 +1,184 @@
+# doc pdvd/111 round 2 Steiner-level census: det=pdhd arm=d111hst events=61 (missing 0, without dump 0)
+# THR=1.0 cm, near <= 5.0 cm, foot radius 1.0 cm; rows = round-1 table origin seed/org1
+
+## A3 checks
+dump lines rejoined after a spliced stderr line: 6
+join: seed points 687824, not a dumped vertex 0; blocks without a dump 0
+replay (round-1 rough walks): 1151 walks, cost equal 1151, path identical 1145, unreachable 0
+records 1158, unmatched 0, no graph/image 7, no ridge 0, seed unjoined 0, used 1151
+
+## null floors: ridge offset > 1 cm / p50 (cm)
+| image | n 2864636 | > 1 cm 33.2 % | p50 0.84 | p90 1.33 |
+| retiled | n 11565219 | > 1 cm 53.9 % | p50 1.08 | p90 2.21 |
+| term | n 388976 | > 1 cm 23.4 % | p50 0.43 | p90 1.39 |
+| inter | n 2481425 | > 1 cm 35.7 % | p50 0.76 | p90 1.65 |
+on-ridge terminals (< 0.5 cm) failing the 3-plane test at the vertex: r0.2/ch0 2.8 %, r0.6/ch1 0.0 % (n 212116)
+
+## painted or dead cells (a retiled point with a zero-charge plane), by ridge offset: <= 1 / 1-5 / > 5 cm
+retiled points: 16.9 % / 81.4 % / 51.2 % (n 5327637 / 6064580 / 173002)
+Steiner vertices: 15.3 % / 70.8 % / 33.4 % (n 1893498 / 951474 / 25429)
+
+## edge discrimination: persisted-seed edges >= 0.5 cm, on the ridge (f_off = 0) vs off (f_off >= 0.5)
+edges on 210251 (201019 cm), off 13471 (28453 cm)
+| test | radius | mean bad on | mean bad off | bad >= 0.2 on | bad >= 0.2 off |
+|---|---|---|---|---|---|
+| 3pl | 02 | 0.094 | 0.592 | 21.4 % | 74.0 % |
+| 3pl | 61 | 0.002 | 0.161 | 0.3 % | 22.6 % |
+| 2pl | 02 | 0.017 | 0.142 | 4.6 % | 25.8 % |
+| 2pl | 61 | 0.000 | 0.040 | 0.0 % | 5.5 % |
+| sgp | 02 | 0.001 | 0.044 | 0.4 % | 7.2 % |
+| sgp | 61 | 0.000 | 0.027 | 0.0 % | 4.0 % |
+
+## near seed-born deviated rows: 14564
+| layer at the ridge foot | rows | share | iso (>= 75 deg) share of iso rows |
+|---|---|---|---|
+| no_image_at_foot | 250 | 1.7 % | 2.3 % |
+| retile_gap | 80 | 0.5 % | 1.1 % |
+| tree_omission | 1179 | 8.1 % | 12.5 % |
+| path_choice | 13055 | 89.6 % | 84.2 % |
+
+| carrying edge source x base | rows | share |
+|---|---|---|
+| path / closely_other | 3846 | 26.4 % |
+| connect / ctpc | 2413 | 16.6 % |
+| sbt / none | 2178 | 15.0 % |
+| path / closely_same | 1807 | 12.4 % |
+| connect / closely_same | 1743 | 12.0 % |
+| connect / closely_other | 1549 | 10.6 % |
+| connect / mst | 788 | 5.4 % |
+| sbt / closely_same | 127 | 0.9 % |
+| path / ctpc | 87 | 0.6 % |
+| path / mst | 25 | 0.2 % |
+| no_edge / no_edge | 1 | 0.0 % |
+carrying edge > 3 cm: 43.7 %; crawl re-route rows: 12.2 %
+
+| carrying edge interior: image within 1 cm / retiled within 1 cm (share of samples >= 0.5) | rows | share |
+|---|---|---|
+| img>=0.5 / ret>=0.5 | 7391 | 50.7 % |
+| img>=0.5 / ret<0.5 | 5 | 0.0 % |
+| img<0.5 / ret>=0.5 | 4356 | 29.9 % |
+| img<0.5 / ret<0.5 | 2812 | 19.3 % |
+
+| layer | retiled centroid within 2 cm of the foot on the ridge | off the ridge (> 1 cm) | n/a |
+|---|---|---|---|
+| no_image_at_foot | 203 | 41 | 6 |
+| retile_gap | 54 | 14 | 12 |
+| tree_omission | 1091 | 85 | 3 |
+| path_choice | 12573 | 462 | 20 |
+
+| carrying edge ends | rows | share |
+|---|---|---|
+| off_interior | 7728 | 53.1 % |
+| off_interior+terminal | 2907 | 20.0 % |
+| both_on_ridge | 2402 | 16.5 % |
+| off_terminal | 1290 | 8.9 % |
+| off_extreme | 109 | 0.7 % |
+| off_extreme+interior | 100 | 0.7 % |
+| off_extreme+terminal | 28 | 0.2 % |
+an end vertex > 1 cm from every image point (fabricated): 39.1 %
+carrying edge ends on painted-or-dead cells: 0 ends 29.9 %, 1 end 24.8 %, 2 ends 45.3 %
+| layer | 0 painted ends | 1 | 2 |
+|---|---|---|---|
+| no_image_at_foot | 66 | 98 | 86 |
+| retile_gap | 48 | 17 | 15 |
+| tree_omission | 540 | 256 | 383 |
+| path_choice | 3699 | 3241 | 6115 |
+
+| image oracle at the location | rows | share |
+|---|---|---|
+| alt<=1.05 | 4115 | 28.3 % |
+| alt<=1.2 | 2363 | 16.2 % |
+| alt<=1.5 | 457 | 3.1 % |
+| alt>1.5 | 0 | 0.0 % |
+| no_on_image_route | 7629 | 52.4 % |
+| unreach | 0 | 0.0 % |
+
+| layer x oracle | alt<=1.05 | alt<=1.2 | alt<=1.5 | alt>1.5 | no_on_image_route |
+|---|---|---|---|---|---|
+| no_image_at_foot | 46 | 55 | 38 | 0 | 111 |
+| retile_gap | 2 | 33 | 15 | 0 | 30 |
+| tree_omission | 83 | 195 | 95 | 0 | 806 |
+| path_choice | 3984 | 2080 | 309 | 0 | 6682 |
+
+| layer | carrying-edge 3-plane bad (r0.6/ch1) p50 | sgp bad (r0.2/ch0) p50 |
+|---|---|---|
+| no_image_at_foot | 0.00 (n 247) | 0.00 |
+| retile_gap | 0.00 (n 80) | 0.00 |
+| tree_omission | 0.00 (n 1159) | 0.00 |
+| path_choice | 0.00 (n 12280) | 0.00 |
+
+## far seed-born deviated rows: 12622
+| layer at the ridge foot | rows | share | iso (>= 75 deg) share of iso rows |
+|---|---|---|---|
+| no_image_at_foot | 45 | 0.4 % | 0.4 % |
+| retile_gap | 27 | 0.2 % | 0.4 % |
+| tree_omission | 363 | 2.9 % | 4.3 % |
+| path_choice | 12187 | 96.6 % | 94.8 % |
+
+| carrying edge source x base | rows | share |
+|---|---|---|
+| connect / ctpc | 5959 | 47.2 % |
+| connect / mst | 4070 | 32.2 % |
+| path / closely_other | 672 | 5.3 % |
+| connect / closely_other | 545 | 4.3 % |
+| connect / closely_same | 417 | 3.3 % |
+| path / ctpc | 284 | 2.3 % |
+| path / closely_same | 260 | 2.1 % |
+| sbt / none | 258 | 2.0 % |
+| path / mst | 115 | 0.9 % |
+| sbt / closely_same | 42 | 0.3 % |
+carrying edge > 3 cm: 85.6 %; crawl re-route rows: 0.4 %
+
+| carrying edge interior: image within 1 cm / retiled within 1 cm (share of samples >= 0.5) | rows | share |
+|---|---|---|
+| img>=0.5 / ret>=0.5 | 1 | 0.0 % |
+| img>=0.5 / ret<0.5 | 0 | 0.0 % |
+| img<0.5 / ret>=0.5 | 2266 | 18.0 % |
+| img<0.5 / ret<0.5 | 10355 | 82.0 % |
+
+| layer | retiled centroid within 2 cm of the foot on the ridge | off the ridge (> 1 cm) | n/a |
+|---|---|---|---|
+| no_image_at_foot | 45 | 0 | 0 |
+| retile_gap | 0 | 0 | 27 |
+| tree_omission | 350 | 13 | 0 |
+| path_choice | 11921 | 257 | 9 |
+
+| carrying edge ends | rows | share |
+|---|---|---|
+| off_interior | 5577 | 44.2 % |
+| both_on_ridge | 5055 | 40.0 % |
+| off_interior+terminal | 1688 | 13.4 % |
+| off_terminal | 258 | 2.0 % |
+| off_extreme+interior | 40 | 0.3 % |
+| off_extreme+terminal | 4 | 0.0 % |
+an end vertex > 1 cm from every image point (fabricated): 23.4 %
+carrying edge ends on painted-or-dead cells: 0 ends 35.0 %, 1 end 27.1 %, 2 ends 37.9 %
+| layer | 0 painted ends | 1 | 2 |
+|---|---|---|---|
+| no_image_at_foot | 0 | 42 | 3 |
+| retile_gap | 27 | 0 | 0 |
+| tree_omission | 97 | 138 | 128 |
+| path_choice | 4290 | 3246 | 4651 |
+
+| image oracle at the location | rows | share |
+|---|---|---|
+| alt<=1.05 | 703 | 5.6 % |
+| alt<=1.2 | 124 | 1.0 % |
+| alt<=1.5 | 6 | 0.0 % |
+| alt>1.5 | 0 | 0.0 % |
+| no_on_image_route | 11789 | 93.4 % |
+| unreach | 0 | 0.0 % |
+
+| layer x oracle | alt<=1.05 | alt<=1.2 | alt<=1.5 | alt>1.5 | no_on_image_route |
+|---|---|---|---|---|---|
+| no_image_at_foot | 0 | 0 | 0 | 0 | 45 |
+| retile_gap | 0 | 0 | 0 | 0 | 27 |
+| tree_omission | 1 | 10 | 0 | 0 | 352 |
+| path_choice | 702 | 114 | 6 | 0 | 11365 |
+
+| layer | carrying-edge 3-plane bad (r0.6/ch1) p50 | sgp bad (r0.2/ch0) p50 |
+|---|---|---|
+| no_image_at_foot | 0.90 (n 45) | 0.00 |
+| retile_gap | 0.76 (n 27) | 0.26 |
+| tree_omission | 0.68 (n 363) | 0.01 |
+| path_choice | 0.85 (n 11888) | 0.03 |

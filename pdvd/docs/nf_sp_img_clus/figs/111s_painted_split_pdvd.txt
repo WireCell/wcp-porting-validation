@@ -1,0 +1,6 @@
+# doc pdvd/111 round 2 painted vs dead Steiner vertices: det=pdvd arm=d111vst events=120
+| ridge offset | vertices | painted (a zero plane, no dead bit) | dead only | terminals painted |
+|---|---|---|---|---|
+| <= 1 cm | 2594167 | 17.3 % | 9.0 % | 82545 of 582051 |
+| 1-5 cm | 1476376 | 69.0 % | 7.3 % | 36776 of 98434 |
+| > 5 cm | 11554 | 38.0 % | 14.4 % | 358 of 2062 |

@@ -1,0 +1,57 @@
+doc pdvd/111 round 2 -- the offline counterfactual ladder (A5): what is replayed, what is measured, and the rule that
+decides whether a Steiner-level lever is built.  Frozen before d111s_replay.py runs on the full dump arms
+(d111hst PDHD 61 events, d111vst PDVD 120 events); its sha256 is in 111s_ladder_rule.sha256.
+
+WHAT IS REPLAYED
+  Every round-1 rough walk of the dump arm (STMRP "rough": TaggerCheckSTM::do_rough_path's two steiner_pc indices), on the
+  dumped steiner_graph of its cluster, for clusters with a persisted STM record.  Identical (cluster, from, to) walks are
+  counted once.  scipy Dijkstra; the base weights reproduce the C++ path cost (A3 replay check).
+  The round-2 crawl walks are NOT replayed: the crawl point depends on the round-1 fit, which the lever changes.
+
+CANDIDATES (edge re-weightings; edges shorter than 0.5 cm are never re-weighted), three values each, no others:
+  G_any(k)  w * (1 + k * bad_sgp)        bad_sgp = (unsupported + 0.25 * dead-only) / n at radius 0.2 cm / ch_range 0
+                                         (the SBND steiner_gap_penalty form, doc sbnd_xin/pr/51 round 5)   k = 2, 5, 10
+  G_3pl(k)  w * (1 + k * (1 - ok3 / n))  3-plane support at radius 0.2 cm / ch_range 0                   k = 2, 5, 10
+  G_2pl(k)  w * (1 + k * (1 - ok2 / n))  2-plane support at radius 0.2 cm / ch_range 0                   k = 2, 5, 10
+  E_len(k)  w * (1 + k) for edges >= 3 cm (a pure-geometry control)                                     k = 0.5, 1, 2
+
+  Change from the plan, made before any replay: the plan picked G_3pl's radius by the share of on-ridge TERMINALS that
+  fail the 3-plane test at the vertex (< 5 %).  Terminals sit on the wire lattice, so they pass at any radius; edge
+  samples fall between wires.  The smoke census (d111hstsmk, 029107_16) showed the 0.6 cm / ch_range 1 test almost
+  never fails on any seed edge (mean bad 0.000 on-ridge vs 0.063 off-ridge), i.e. it cannot price anything, while
+  0.2 cm / ch_range 0 separates (0.087 vs 0.550).  So the dump's 0.2 cm test is used for all three support forms, and
+  G_2pl is added because its on-ridge null is 5x lower (0.018 vs 0.123).  No ladder number had been computed.
+
+METRICS, per detector, summed over replayed walks (seed polyline = the Steiner vertices of the walk):
+  off     share of seed length > 1 cm from the image ridge (d111_stage_attrib.Ridge; samples every 0.3 cm)
+  far     share of seed length > 5 cm from the ridge (reported)
+  wig     share of interior points of the seed resampled at 1.2 cm that sit > 0.5 cm from the chord of their neighbours
+  cov     image charge within 1.5 cm of the seed / the cluster's image charge (walk-summed)
+  len     total seed length (reported)
+  unr     walks whose destination becomes unreachable (cannot happen for a positive re-weighting; checked)
+  spots   h1, h2 (PDHD 029107_16 cl108 / cl106), v1, v2, v3 (PDVD 039349_20 cl80, cl80, cl25): seed max ridge offset
+          within the round-1 windows (reported)
+
+RULE
+  A candidate value QUALIFIES when, on BOTH detectors:
+    off falls by >= 25 % relative to the base replay,
+    wig <= 1.10 x base,
+    cov >= base - 0.01 (one point),
+    unr == base unr.
+  BUILD: the family (G_any / G_3pl / G_2pl) holding the qualifying value with the largest min-over-detectors reduction
+  of off; its three k values are the Phase-C settings.  E_len is a control and is never built.
+  STOP AND REPORT (no C++ lever this round) when no G value qualifies, or when the A4 census puts retile_gap +
+  tree_omission at >= 50 % of near seed-born rows on either detector.
+
+AMENDMENT 1 (2026-09-16T10:49, before any full-arm replay; the original text above had sha256 5464b338097e...)
+  Reason: the smoke census (d111hstsmk, 029107_16) found that retiled points 1-5 cm off the ridge sit on zero-charge
+  cells in 73 % of cases (12.7 % on the ridge), and Steiner vertices 1-5 cm off in 61 % (12.5 % on).  Zero charge on a
+  plane is the value ImproveCluster_1::hack_activity_improved paints (1e-3) around the retiler's own Dijkstra paths, or a
+  dead channel.  The endpoint charge pricing of create_enhanced_steiner_graph can charge such an endpoint at most
+  1.2 / 0.8 = 1.5x.  One more family is therefore MEASURED:
+    P_paint(k)  w * (1 + k * p/2), p = number of the edge's two vertices that are PAINTED: a plane whose retiled charge
+                is 0 and whose dump mask at radius 0.2 cm / ch_range 0 has no dead bit.  All edges.  k = 2, 5, 10.
+  P_paint needs the retiled per-plane charge, which exists only inside CreateSteinerGraph (steiner_pc carries x, y, z,
+  wpid).  It is a shared-graph lever, outside this round's build path (TaggerCheckSTM-only).  So it is reported against
+  the same qualification columns but is NOT built this round: if it is the only qualifying family, the round stops and
+  reports it as the design for the next round.  The G rule, the thresholds and the other candidates are unchanged.

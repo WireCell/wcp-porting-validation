@@ -8,7 +8,11 @@ Compared per event dir pr_evt*: every TTree of every *.root (awkward, NaN-safe),
 (sha256), every *.tar.gz via abtest/hash_archive.py --members, every *.json / *.tsv byte for byte.  Symlinked
 inputs are skipped.  Zero compared events is reported as a dead net, never as a pass.
 
-Usage: d111_sbnd_gate.py --old d111sold --new d111snew; exit 0 only on BYTE-IDENTICAL
+Usage: d111_sbnd_gate.py --old d111sold --new d111snew [--ignore-branch Trun.toolkit_git]; exit 0 only on BYTE-IDENTICAL
+
+--ignore-branch TREE.BRANCH (repeatable; default none = the round-1 behaviour): drop one provenance branch before the
+tree comparison, and print that it was dropped.  Round 2 needs Trun.toolkit_git: it records the source tree's git HEAD
+at run time (doc sbnd_xin/109), so two arms run on either side of a commit differ there and nowhere else.
 """
 import argparse, glob, hashlib, os, subprocess, sys, zipfile
 import awkward as ak
@@ -30,6 +34,9 @@ def real_outputs(d):
     return out
 
 
+IGNORE = set()
+
+
 def trees(fn):
     f = uproot.open(fn)
     res = {}
@@ -38,6 +45,9 @@ def trees(fn):
         if not hasattr(o, "arrays"):
             continue
         a = o.arrays(library="ak")
+        drop = [b for b in a.fields if f"{k}.{b}" in IGNORE]
+        if drop:
+            a = a[[b for b in a.fields if b not in drop]]
         try:
             res[k] = ak.to_list(ak.nan_to_none(a))
         except Exception:
@@ -75,7 +85,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--old", required=True)
     ap.add_argument("--new", required=True)
+    ap.add_argument("--ignore-branch", action="append", default=[])
     a = ap.parse_args()
+    IGNORE.update(a.ignore_branch)
     pairs = []
     for old in sorted(glob.glob(f"{SB}/work-*-{a.old}")):
         new = old[: -len(a.old)] + a.new
@@ -96,7 +108,8 @@ def main():
             ok, why = same_file(A[f], B[f]); n_files += 1
             if not ok:
                 fails.append((os.path.basename(new), f + ": " + why))
-    print(f"=== SBND PR ({a.new} vs {a.old}): {n_ev} event dirs, {n_files} files compared")
+    print(f"=== SBND PR ({a.new} vs {a.old}): {n_ev} event dirs, {n_files} files compared"
+          + (f"; branches ignored: {sorted(IGNORE)}" if IGNORE else ""))
     for e, w in fails[:20]:
         print(f"    DIFF {e}  {w}")
     if n_ev == 0:

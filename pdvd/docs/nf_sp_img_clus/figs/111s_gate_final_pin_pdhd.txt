@@ -1,0 +1,3 @@
+# doc pdvd/111 identity gate (pdhd): A=d109hstm (1 evt)  B=d111shoff1 (1 evt)
+  029107_16: IDENTICAL | zip 7ebf8c3c37e3 (12) | stm ok (7 trees, 63 branches) | pr ok (9 trees, 281 branches)
+RESULT PASS: 1 / 1 common events identical; failures 0

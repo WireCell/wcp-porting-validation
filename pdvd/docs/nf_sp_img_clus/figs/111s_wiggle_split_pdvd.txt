@@ -1,0 +1,7 @@
+# doc pdvd/111 round 2 EXPLORATORY bow/jitter split: det=pdvd arm=d111vst events=120; +-2 cm running mean on a 0.3 cm resampling
+| candidate | L_raw/L_smooth | smooth length vs base smooth | jitter rms (cm) | off raw | off smoothed | wiggle raw | wiggle smoothed |
+|---|---|---|---|---|---|---|---|
+| base:0 | 1.1988 | 1.0000 | 0.261 | 7.82 % | 7.14 % | 9.71 % | 0.04 % |
+| G_3pl:2 | 1.2278 | 1.0013 | 0.269 | 6.44 % | 6.24 % | 11.70 % | 0.06 % |
+| G_2pl:2 | 1.2058 | 1.0009 | 0.264 | 7.12 % | 6.61 % | 10.25 % | 0.05 % |
+| P_paint:2 | 1.2218 | 1.0019 | 0.268 | 6.87 % | 6.56 % | 11.29 % | 0.08 % |

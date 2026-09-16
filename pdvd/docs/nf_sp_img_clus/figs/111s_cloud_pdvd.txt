@@ -1,0 +1,31 @@
+=== pdvd d111vtr: events 120, event_fail 0, rows unmatched/nocloud 0
+-- near: rows 15912; crawl_reroute 2153
+   no_steiner_within_1.5cm               3164  19.9 %   edge>3:   3127  edge<=3:     37
+   steiner_on_ridge_nearby               8815  55.4 %   edge>3:   2109  edge<=3:   6706
+   steiner_off_ridge_image_backed        2101  13.2 %   edge>3:    847  edge<=3:   1254
+   steiner_off_ridge_no_image            1832  11.5 %   edge>3:    467  edge<=3:   1365
+   ends: both_ends_on_ridge                3086  19.4 %
+   ends: an_off_ridge_end_is_TERMINAL      3674  23.1 %
+   ends: off_ridge_end_is_interior         9003  56.6 %
+   ends: off_ridge_end_unmatched            149   0.9 %
+   no_steiner rows with image within 1 cm of the seed: 71 / without 3093
+   steiner_on_ridge (<1 cm) rows where the nearest on-ridge Steiner is < 0.5 cm: 4937 / 0.5-1 cm 3878
+-- far: rows 9388; crawl_reroute 105
+   no_steiner_within_1.5cm               9249  98.5 %   edge>3:   7875  edge<=3:   1374
+   steiner_on_ridge_nearby                  0   0.0 %   edge>3:      0  edge<=3:      0
+   steiner_off_ridge_image_backed           0   0.0 %   edge>3:      0  edge<=3:      0
+   steiner_off_ridge_no_image             139   1.5 %   edge>3:      8  edge<=3:    131
+   ends: both_ends_on_ridge                3045  32.4 %
+   ends: an_off_ridge_end_is_TERMINAL       583   6.2 %
+   ends: off_ridge_end_is_interior         3632  38.7 %
+   ends: off_ridge_end_unmatched           2128  22.7 %
+   no_steiner rows with image within 1 cm of the seed: 0 / without 9249
+   steiner_on_ridge (<1 cm) rows where the nearest on-ridge Steiner is < 0.5 cm: 0 / 0.5-1 cm 0
+-- round 1's sub-class rule re-applied on the full calib cloud (near rows; round 1 had cloud_na for untagged clusters)
+   long_edge               6022  37.8 %
+   crawl_reroute           2153  13.5 %
+   cloud_has_ridge         3318  20.9 %
+   cloud_off               4419  27.8 %
+population steiner image: n 2555023, offset p50 0.70 p90 1.25 >1cm 23.1 % >3cm 0.0 %
+population steiner term: n 505827, offset p50 0.48 p90 1.24 >1cm 17.4 % >3cm 0.0 %
+population steiner inter: n 2687579, offset p50 0.82 p90 1.77 >1cm 39.1 % >3cm 0.9 %

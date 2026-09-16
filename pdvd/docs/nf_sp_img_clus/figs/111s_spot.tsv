@@ -1,0 +1,6 @@
+spot	cluster	pass	n_img	n_ret	n_steiner	n_term	img_off1	ret_off1	steiner_off1	term_off1	seed_max	seed_longest_edge	worst_edge_src	worst_edge_base	worst_edge_len	worst_edge_bad3	oracle_max	G_3pl2_max	G_2pl2_max	walks
+h1	108	0	171	657	154	18	40.9	41.2	28.6	22.2	1.97	3.10	connect	closely_other	1.71	0.71	0.72	0.68	1.81	crawl1+crawl2
+h2	106	0	702	2971	756	92	35.3	64.8	37.7	17.4	2.77	2.02	path	closely_other	1.31	1.00	2.44	2.44	2.44	crawl1+crawl2
+v1	80	0	143	696	179	37	11.9	76.4	43.0	8.1	1.03	1.64	connect	closely_other	1.64	0.00	1.03	1.03	1.03	crawl1+crawl2
+v2	80	0	198	1135	269	48	21.2	77.3	48.0	18.8	0.99	1.30	path	closely_other	0.93	0.50	0.99	0.99	0.96	crawl1+crawl2
+v3	25	0	207	908	222	41	27.1	78.3	40.5	9.8	1.64	1.32	path	closely_other	0.31	nan	0.93	1.15	1.54	crawl1+crawl2

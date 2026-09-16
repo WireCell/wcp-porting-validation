@@ -1,0 +1,2 @@
+ZIPS: 35/35 content-identical
+TAGGER: identical=35 diff=0 skip=0 (log: /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/d111ub_s/ab_check_d111ub_old.log)
