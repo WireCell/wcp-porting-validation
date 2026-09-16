@@ -1,0 +1,52 @@
+doc pdvd/111 -- PRE-REGISTERED evaluation rule for the seed re-centring knob (Phase C).
+Written 2026-09-16 after the Phase A census of PDHD (d111htr, 61 events) and BEFORE any knob-on arm ran.
+Its sha256 is recorded in figs/111_pred.sha256 before the first knob-on arm starts.
+
+LEVER (Phase B, chosen by the decision rule of the plan):
+  PDHD census: 87.9 % of rows > 1 cm from the image ridge originate in the Steiner seed (plus 2.4 % in the
+  organize_orig_path fill); fit1 + fit2 originate 8.5 %.  Seed-side rule (>= 30 %) met on PDHD.  Among the seed-born
+  deviations 1-5 cm from the ridge the path sits on a straight chord or the cloud's edge far more often than the
+  cloud itself is displaced, so the lever is seed re-centring, not a sampler change.
+  TrackFitting JSON parameters (C++ defaults = legacy): seed_recenter_sigma (0 = off), seed_recenter_iter (5),
+  seed_recenter_max_move (30 mm).
+
+ARMS (production -nu -stm-fit chain, same pin libpin_d111b, same pctrees as the production arms):
+  base  d111hoff (PDHD 61, SRC d108hflip) / d111voff (PDVD 120, SRC d103vflip): no TLA, knob absent.
+  knob  d111hsr6,  d111hsr10, d111hsr15 / d111vsr6, d111vsr10, d111vsr15:
+        -A trackfitting_config=<production JSON + seed_recenter_sigma = 6 / 10 / 15 mm>, nothing else changed.
+  At most these 3 settings.  No other value is tried in this round.
+
+METRICS (d111_eval.py; common (event, cluster, pass) records of base and knob arm; records in one arm only are
+tag churn, reported, excluded):
+  P1  rows with ridge offset > 1 cm (image-only charge-weighted local axis, 3 cm; d111_stage_attrib.Ridge):
+      relative drop >= 20 % on BOTH detectors.
+  P2  rows off-charge (no measured cell of the cluster within +-1 wire on the row's slice) in >= 1 plane:
+      knob share <= base share on both detectors.
+  P3  Bee-visible holes (runs of >= 3 consecutive rows with q < 0) per 10 m of fit: knob <= base on both.
+  P4  image coverage (image charge within 1.5 cm of the fit, over the charge within 1.5 cm of either arm's fit):
+      knob >= base - 1.0 point on both.
+  P5  the owner's PDHD spots (029107_16): h1 cl108 and h2 cl106 ridge-offset max within the window <= 1.2 cm.
+      PDVD spots v1-v3 are reported only (production already fixed v1/v3; cl80 untagged).
+  P6' clean-record no-regression, REPLACING the plan's simulation clause P6: in records whose base arm has no row
+      > 1 cm, the knob arm's share of rows > 1 cm <= 1.0 % on both detectors.
+      Why P6 cannot be run: the lever acts in TrackFitting::do_single_tracking.  The doc 101/102 simulated muons are
+      fully contained, so TaggerCheckSTM returns before its fit (TaggerCheckSTM.cxx:3614 "fully contained (Mid
+      Point A)"), and the -nu-legacy chain that grades them fits their trajectories with do_multi_tracking, which the
+      knob does not touch (it reaches only that chain's other-segment single fits, NeutrinoOtherSegments.cxx:592).
+      A simulation arm would not test the lever on the trajectory it grades.
+  R   median over events of the per-event PR wall (pr_resource_*.txt) knob / base <= 1.20 on both.  The base and the
+      three knob arms of a detector run CONCURRENTLY with the same JOBS, so they share the machine load (doc 102 trap).
+
+VERDICT
+  A setting PASSES when P1, P2, P3, P4, P5, P6' and R all pass.  Among passing settings the recommended one has the
+  largest P1 drop averaged over the two detectors.  If none passes: report, no retune.
+  Reported, never gating: STM/Michel candidate churn and verdict changes, dQ/dx median, rows > 2 cm, wiggle.
+  Whatever the verdict, the C++ default stays 0 and no production JSON changes in this round; a flip is the
+  owner's decision.
+
+KNOB-OFF GATES (final build libpin_d111b):
+  G1 compiled PR config PDHD / PDVD / SBND unchanged (no jsonnet edit; d102_compile_pr.sh md5 vs doc 109's values).
+  G2 d111hoff (61) == d108hflip on STM + PR trees and zip members (doc-109 re-scoped layers excluded) and
+     == d109hstm on the 5 common events including those layers; d111voff (120) == d103vflip everywhere.
+  G3 SBND: a run on libpin_d102 and one on libpin_d111b, adjacent, identical (d111_identity_gate-style).
+  G4 wcdoctest-clus all pass; freshness proof of libWireCellClus.so vs every edited source.

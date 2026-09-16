@@ -1,0 +1,13 @@
+# doc pdvd/111 h2 record check: 029107_16 cl106, window 24.0 cm, frame of d111hoff's image
+d111hoff: pass 0, rows 547, window rows 85, window length 54.3 cm, s -22.6..24.6, rows with e2 < -3 cm 14
+d111hsr6: pass 0, rows 560, window rows 82, window length 51.9 cm, s -22.7..24.7, rows with e2 < -3 cm 0
+d111hsr10: pass 0, rows 557, window rows 87, window length 54.0 cm, s -22.8..24.6, rows with e2 < -3 cm 0
+d111hsr15: pass 0, rows 563, window rows 97, window length 60.0 cm, s -23.1..24.0, rows with e2 < -3 cm 0
+d111hA0: pass 0, rows 552, window rows 78, window length 49.6 cm, s -23.0..24.4, rows with e2 < -3 cm 0
+d111hS: pass 0, rows 542, window rows 77, window length 49.4 cm, s -22.4..24.6, rows with e2 < -3 cm 0
+d111hA1: pass 0, rows 547, window rows 85, window length 54.3 cm, s -22.6..24.6, rows with e2 < -3 cm 14
+d111hsr10tr: pass 0, rows 557, window rows 87, window length 54.0 cm, s -22.8..24.6, rows with e2 < -3 cm 0
+d111hA0: round-2 seed leaves the round-1 Steiner path by up to 1.70 cm, 96.6 cm from the h2 click
+d111hS: round-2 seed leaves the round-1 Steiner path by up to 2.11 cm, 232.7 cm from the h2 click
+d111hA1: round-2 seed leaves the round-1 Steiner path by up to 3.69 cm, 7.9 cm from the h2 click
+d111hsr10tr: round-2 seed leaves the round-1 Steiner path by up to 2.40 cm, 232.6 cm from the h2 click

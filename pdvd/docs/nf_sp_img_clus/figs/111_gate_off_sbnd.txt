@@ -1,0 +1,2 @@
+=== SBND PR (d111snew vs d111sold): 16 event dirs, 80 files compared
+    VERDICT: BYTE-IDENTICAL

@@ -1,0 +1,8 @@
+# doc pdvd/111 STM tag churn (pdhd): base d111hoff STM-tagged 333
+d111hsr6: tagged 317, lost 74 (22.2 %), gained 58 (17.4 %)
+d111hsr10: tagged 330, lost 71 (21.3 %), gained 68 (20.4 %)
+d111hsr15: tagged 319, lost 73 (21.9 %), gained 59 (17.7 %)
+# doc pdvd/111 STM tag churn (pdvd): base d111voff STM-tagged 563
+d111vsr6: tagged 542, lost 103 (18.3 %), gained 82 (14.6 %)
+d111vsr10: tagged 546, lost 111 (19.7 %), gained 94 (16.7 %)
+d111vsr15: tagged 539, lost 123 (21.8 %), gained 99 (17.6 %)

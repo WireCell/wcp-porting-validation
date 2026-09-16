@@ -1,0 +1,7 @@
+# doc pdvd/111 identity gate (pdvd): A=d103vflip (120 evt)  B=d111voff5 (5 evt)
+  039252_8: IDENTICAL | zip 295c79d718ad (25) | stm ok (7 trees, 63 branches) | pr ok (9 trees, 280 branches)
+  039253_6: IDENTICAL | zip 5a782bba9e72 (25) | stm ok (7 trees, 63 branches) | pr ok (9 trees, 280 branches)
+  039349_18: IDENTICAL | zip 8c9527a58f3b (25) | stm ok (7 trees, 63 branches) | pr ok (9 trees, 280 branches)
+  039349_2: IDENTICAL | zip 445788042d9d (25) | stm ok (7 trees, 63 branches) | pr ok (9 trees, 280 branches)
+  039349_20: IDENTICAL | zip 243ee0535202 (25) | stm ok (7 trees, 63 branches) | pr ok (9 trees, 280 branches)
+RESULT PASS: 5 / 5 common events identical; failures 0

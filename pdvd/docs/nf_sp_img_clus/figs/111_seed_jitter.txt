@@ -1,0 +1,4 @@
+# doc pdvd/111 seed jitter: pdhd d111hsr10tr 029107_16
+org1 -> org1r points 4540: move p50 0.51 p90 1.11 max 2.96 cm; moved 95.1 %
+3-point wiggle: org1 p50 0.22 p90 0.52, > 0.5 cm 11.6 % | org1r p50 0.40 p90 1.03, > 0.5 cm 39.3 %
+ridge offset: org1 > 1 cm 8.1 % (p90 0.89) | org1r > 1 cm 5.7 % (p90 0.77)

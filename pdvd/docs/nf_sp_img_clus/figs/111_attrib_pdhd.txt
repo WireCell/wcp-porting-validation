@@ -1,0 +1,100 @@
+# doc pdvd/111 A4 stage attribution: det=pdhd arm=d111htr events=61 (missing trace/root 0)
+# THR=1.0 cm, RLOC=3.0 cm, VOX=1.0 cm; chain ['seed', 'org1', 'fit1', 'org2', 'fit2', 'org3', 'final']
+
+## replay check (TRAJASSOC kept `fin` == STMPATH fit1/fit2 of the same call)
+calls compared 9674, size mismatches 0, calls with max|d| > 0.005 cm 0, max |d| 0.0005 cm
+
+## persisted records
+records 1158, matched to an r2 trace block 1158, unmatched 0, no image 7; round-2 seed re-routed by the crawl (differs from the round-1 seed) in 823
+rows 385424, length 2501.9 m; ridge offset > 1.0 cm: 30090 (7.8 %, 222.1 m); > 2.0 cm: 18336 (4.8 %); off-charge +-1 wire in >= 1 plane: 31260 (8.1 %)
+validation: off-charge (>= 1 plane, +-1 wire) among deviated rows 70.6 % vs non-deviated 2.8 %; Bee-dropped q<0 among deviated 24.0 % vs non-deviated 3.7 %; share of all q<0 rows that are deviated 35.2 %
+
+## origin of deviated rows (ridge offset > 1.0 cm): earliest stage of the off run that ends at `final`
+| origin | rows | share | length (m) |
+|---|---|---|---|
+| seed | 26462 | 87.9 % | 191.25 |
+| org1 | 724 | 2.4 % | 6.07 |
+| fit1 | 1371 | 4.6 % | 10.57 |
+| org2 | 169 | 0.6 % | 3.08 |
+| fit2 | 1173 | 3.9 % | 7.43 |
+| org3 | 186 | 0.6 % | 3.73 |
+| final | 5 | 0.0 % | 0.03 |
+
+## sub-classes
+| origin | sub-class | rows | share of origin |
+|---|---|---|---|
+| seed | long_edge | 16747 | 63.3 % |
+| seed | cloud_na | 6350 | 24.0 % |
+| seed | crawl_reroute | 1749 | 6.6 % |
+| seed | cloud_off | 953 | 3.6 % |
+| seed | cloud_has_ridge | 663 | 2.5 % |
+| org1 | - | 640 | 88.4 % |
+| org1 | crawl_reroute | 84 | 11.6 % |
+| fit1 | one_plane_any | 388 | 28.3 % |
+| fit1 | solve_on_then_moved | 200 | 14.6 % |
+| fit1 | multi_plane+init_off | 193 | 14.1 % |
+| fit1 | multi_plane | 101 | 7.4 % |
+| fit1 | one_plane_any+init_off | 78 | 5.7 % |
+| fit1 | solve_on_then_moved+init_off | 75 | 5.5 % |
+| fit1 | one_plane_W | 65 | 4.7 % |
+| fit1 | revert | 63 | 4.6 % |
+| fit1 | one_plane_U | 48 | 3.5 % |
+| fit1 | skip | 45 | 3.3 % |
+| fit1 | one_plane_W+init_off | 43 | 3.1 % |
+| fit1 | one_plane_V | 33 | 2.4 % |
+| fit1 | one_plane_U+init_off | 24 | 1.8 % |
+| fit1 | one_plane_V+init_off | 15 | 1.1 % |
+| org2 | - | 169 | 100.0 % |
+| fit2 | one_plane_any | 436 | 37.2 % |
+| fit2 | multi_plane | 157 | 13.4 % |
+| fit2 | multi_plane+init_off | 115 | 9.8 % |
+| fit2 | one_plane_W | 103 | 8.8 % |
+| fit2 | one_plane_U | 59 | 5.0 % |
+| fit2 | one_plane_V | 58 | 4.9 % |
+| fit2 | one_plane_any+init_off | 47 | 4.0 % |
+| fit2 | solve_on_then_moved | 45 | 3.8 % |
+| fit2 | skip | 36 | 3.1 % |
+| fit2 | revert | 30 | 2.6 % |
+| fit2 | one_plane_W+init_off | 28 | 2.4 % |
+| fit2 | one_plane_U+init_off | 26 | 2.2 % |
+| fit2 | one_plane_V+init_off | 18 | 1.5 % |
+| fit2 | solve_on_then_moved+init_off | 15 | 1.3 % |
+| org3 | - | 186 | 100.0 % |
+| final | - | 5 | 100.0 % |
+
+seed-born rows: length of the seed segment at the location p50 14.57 cm, p90 102.00 cm, > 3 cm 64.7 %; ALL rows on a seed segment > 3 cm: 9.4 %
+
+fit1 sub-classes collapsed: one_plane 50.6 %, multi_plane 21.4 %, solve_on_then_moved 20.1 %, revert 4.6 %, skip 3.3 %; one_plane rows are 2.3 % of all deviated rows
+fit2 sub-classes collapsed: one_plane 66.1 %, multi_plane 23.2 %, solve_on_then_moved 5.1 %, skip 3.1 %, revert 2.6 %; one_plane rows are 2.6 % of all deviated rows
+
+## seed-born deviations (origin seed or org1): what the fit did there, by seed sub-class
+| seed sub-class | rows | recovered_reverted | recovered_kept | partial | no_move | no_assoc |
+|---|---|---|---|---|---|---|
+| - | 640 | 119 (19 %) | 111 (17 %) | 65 (10 %) | 345 (54 %) | 0 (0 %) |
+| cloud_has_ridge | 663 | 151 (23 %) | 157 (24 %) | 44 (7 %) | 311 (47 %) | 0 (0 %) |
+| cloud_na | 6350 | 801 (13 %) | 828 (13 %) | 945 (15 %) | 3776 (59 %) | 0 (0 %) |
+| cloud_off | 953 | 115 (12 %) | 77 (8 %) | 153 (16 %) | 608 (64 %) | 0 (0 %) |
+| crawl_reroute | 1833 | 447 (24 %) | 219 (12 %) | 261 (14 %) | 906 (49 %) | 0 (0 %) |
+| long_edge | 16747 | 675 (4 %) | 613 (4 %) | 4004 (24 %) | 11455 (68 %) | 0 (0 %) |
+| (all) | 27186 | 2308 (8 %) | 2005 (7 %) | 5472 (20 %) | 17401 (64 %) | 0 (0 %) |
+
+## by angle to drift (deg): deviated share of rows, and origin split within the bin
+| angle | rows | deviated | seed | org1 | fit1 | org2 | fit2 | org3 | final |
+|---|---|---|---|---|---|---|---|---|---|
+| 0-30 | 10408 | 21.2 % | 86 % | 3 % | 5 % | 1 % | 3 % | 1 % | 0 % |
+| 30-50 | 62304 | 7.1 % | 88 % | 2 % | 5 % | 1 % | 4 % | 0 % | 0 % |
+| 50-65 | 101900 | 4.3 % | 87 % | 2 % | 6 % | 1 % | 4 % | 1 % | 0 % |
+| 65-75 | 87139 | 4.9 % | 87 % | 2 % | 4 % | 1 % | 4 % | 1 % | 0 % |
+| 75-85 | 84850 | 8.3 % | 88 % | 3 % | 4 % | 0 % | 3 % | 1 % | 0 % |
+| 85-90 | 38823 | 20.0 % | 89 % | 2 % | 4 % | 0 % | 4 % | 0 % | 0 % |
+
+## transfer: final ridge offset binned by the seed's ridge offset at the same location (all rows)
+| seed offset (cm) | rows | fit1 offset p50 | final offset p50 | final p90 | final > 1 cm |
+|---|---|---|---|---|---|
+| 0-0.5 | 290069 | 0.18 | 0.18 | 0.38 | 0.2 % |
+| 0.5-1 | 60799 | 0.50 | 0.46 | 0.84 | 3.7 % |
+| 1-1.5 | 12958 | 1.03 | 0.99 | 1.44 | 49.2 % |
+| 1.5-2 | 3881 | 1.60 | 1.59 | 2.02 | 83.2 % |
+| 2-3 | 2128 | 2.30 | 2.30 | 2.90 | 93.5 % |
+| 3-5 | 2954 | 3.85 | 3.87 | 4.79 | 99.1 % |
+| 5-inf | 12635 | 17.16 | 17.20 | 60.63 | 100.0 % |

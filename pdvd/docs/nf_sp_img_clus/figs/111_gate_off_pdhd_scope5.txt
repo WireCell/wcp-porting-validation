@@ -1,0 +1,7 @@
+# doc pdvd/111 identity gate (pdhd): A=d109hstm (5 evt)  B=d111hoff (5 evt)
+  028084_12: IDENTICAL | zip ac1f7cf489b2 (12) | stm ok (7 trees, 63 branches) | pr ok (9 trees, 281 branches)
+  028084_3: IDENTICAL | zip 5b485d237d80 (12) | stm ok (7 trees, 63 branches) | pr ok (9 trees, 281 branches)
+  029107_16: IDENTICAL | zip 7ebf8c3c37e3 (12) | stm ok (7 trees, 63 branches) | pr ok (9 trees, 281 branches)
+  029107_18: IDENTICAL | zip c44e2b065503 (12) | stm ok (7 trees, 63 branches) | pr ok (9 trees, 281 branches)
+  029107_5: IDENTICAL | zip a8af48ee4caf (12) | stm ok (7 trees, 63 branches) | pr ok (9 trees, 281 branches)
+RESULT PASS: 5 / 5 common events identical; failures 0
