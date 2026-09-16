@@ -1,0 +1,9 @@
+# doc pdvd/103 sec 14: the flip gate.  Arm d103vflip = SRC p100flip on the doc-102 pin (clus md5 091e142b9481),
+# driven by the FLIPPED production files (a scratch copy: the patched pdvd_track_fitting.json passed as
+# trackfitting_config, and the retile strategy the patched pr.jsonnet default compiles to -- see
+# 103_flip_compiled_pdvd.txt for the compiled-config identity).  Compared with the graded arm d103v1.
+
+# doc pdvd/103 flip gate (pdvd): d103v1 (graded, TLAs) vs d103vflip (flipped config); tree T_stm_michel
+  events compared 120 (dirs 120 / 120), clusters 563, branches 198
+  IDENTICAL: every event, cluster and branch of the tagger table matches.
+gate rc=0

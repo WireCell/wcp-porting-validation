@@ -1,0 +1,29 @@
+--- a/cfg/pgrapher/experiment/protodunevd/pr.jsonnet
++++ b/cfg/pgrapher/experiment/protodunevd/pr.jsonnet
+@@ -113,11 +113,12 @@
+               // stepped spacing.  false / null => keys omitted => byte-identical.
+               retile_sampler_half_pitch=false,
+               retile_sampler_min_step=null,
+-              // doc pdvd/102: the RETILE samplers' strategy.  null => 'stepped'
+-              // (production); 'charge_stepped' => the prototype's retile rule
+-              // (clus.jsonnet bs_live_face).  retile_sampler_wire_product /
+-              // retile_sampler_charge_threshold override its C++ 2500 / 4000.
+-              // All null => strategy untouched => byte-identical.
++              // doc pdvd/102: the RETILE samplers' strategy.  FLIPPED in doc 102
++              // round 2 (2026-09-15, owner's go): null => 'charge_stepped', the
++              // prototype's retile rule (clus.jsonnet bs_live_face; CalcPoints.cxx),
++              // now production.  'stepped' => the pre-flip retile; it compiles
++              // byte-identical to the pre-flip default.  retile_sampler_wire_product /
++              // retile_sampler_charge_threshold override the C++ 2500 / 4000.
+               retile_sampler_strategy=null,
+               retile_sampler_wire_product=null,
+               retile_sampler_charge_threshold=null,
+@@ -1442,7 +1443,7 @@
+             anodes=anodes,
+             samplers=[clus.sampler(clus_maker.live_sampler(a, f, half_pitch=retile_sampler_half_pitch,
+                                                            min_step_size=retile_sampler_min_step,   // doc pdvd/101
+-                                                           strategy_name=if retile_sampler_strategy == null then 'stepped' else retile_sampler_strategy,
++                                                           strategy_name=if retile_sampler_strategy == null then 'charge_stepped' else retile_sampler_strategy,   // doc pdvd/102 r2 flip
+                                                            wire_product=retile_sampler_wire_product,   // doc pdvd/102
+                                                            charge_threshold=retile_sampler_charge_threshold),
+                                    apa=a.data.ident, face=f)

@@ -53,6 +53,14 @@
     Amendment 6 (frozen) makes a symmetric owner check of the stoppers tagged by one arm only a gate before D1 is
     stated or a flip proposed.
   - **PDHD** still fails Michel purity (−0.051, owner-backed). No Michel energy floor fixes it.
+* **Round 5 (sec 13, same day).** The owner labelled amendment 6's symmetric check `own103v2` (24 items).
+  - 22 of 24 labels held, the relabel-negative rate is 0 in every stratum and metric, and the controls hold.
+  - Folded and projected, every metric still passes. **PDVD is D1, stated.**
+* **Round 6 (sec 14, same day).** The PDVD flip unit and its proof, prepared but **not applied**.
+  - Two patches: the retile default (PDVD only) and the two fit keys.
+  - The flipped config reproduces the graded arm exactly: every branch of `T_stm_michel` on 120 / 120 events.
+  - Resources, like for like: median wall +13.7 %, median peak RSS +2.4 %.
+  - **No production file is changed. The flip waits on the owner's go**, and PDHD's choice is still open.
 
 ## 0. Repro
 
@@ -974,12 +982,9 @@ python3 $S/d103_tpmover_set.py --new-record $N11 --owner-record $OWN --out $O/se
        written before any label existed.
      - D1 stands only if the folded grade AND a projection of each stratum's relabel rate onto its unreviewed items
        both pass.
-   - **Then the flip unit:**
-     - the sampler: `figs/102r2_flip.patch`;
-     - the fit-knob keys in `pdvd_track_fitting.json`.
-
-     It is proved on an arm identical to `d103v1` (compiled-config proof). Completeness: `d103v0` / `d103v1` have
-     120 / 120 events.
+   - **Then the flip unit**, built and proven in sec 14: `figs/103_flip_pdvd.patch` (PDVD only; doc 102's
+     `102r2_flip.patch` would flip PDHD with it) and `figs/103_flip_pdvd_fit.patch`. Completeness: `d103v0` /
+     `d103v1` have 120 / 120 events.
    - The owner's go.
 2. **PDHD fails Michel purity**, owner-backed, and no energy floor fixes it. The owner's choice:
    - hold PDHD at production and flip PDVD alone;
@@ -1000,4 +1005,130 @@ python3 $S/d103_tpmover_set.py --new-record $N11 --owner-record $OWN --out $O/se
     byte, apart from the output-path line.
 * **Record:** `pdvd/docs/scan/pdvd_stm_michel_own103v_verdicts.json` (owner, 40 items).
 * **Figures:** `103_own103v_pdvd.txt`, `103_union_grade_pdvd_own103v.txt`, `103_fp_classes_pdvd_own103v.txt`,
-  `103_d1_margin.txt`, `103_michel_floor_sizing.txt`.
+  `103_d1_margin.txt`, `103_michel_floor_sizing.txt`, `103_union_grade_pdvd_own103v_removals_only.txt`.
+
+## 13. Round 5 (2026-09-15): the symmetric check `own103v2`, and PDVD's reading
+
+### 13.0 Repro
+
+```bash
+# names from 12.0; the set was built in 12.0 and served on :5017
+python3 $S/d103_tpmover_score.py --new-record $N11 --owner-record $OWN --set $O/set_pdvd_tpmover \
+    --labels $IMG/pdvd/work/stm_michel_labels/own103v2/labels.json \
+    --record-out $IMG/pdvd/docs/scan/pdvd_stm_michel_own103v2_verdicts.json > $F/103_own103v2_pdvd.txt
+```
+
+### 13.1 The session
+
+* **Labelled:** 24 / 24; not blind, as before. Labels sha256 `291f1141`; record `own103v2`, 24 items.
+* No other label tag changed (24 files checked). The :5017 server is stopped.
+* **The owner kept 22 of the 24 labels.** The two changes:
+  - 039349_7/48 (A0 stratum, carried record, high): STM_MICHEL → UNCLEAR, so it leaves the population;
+  - 039349_61/17 (A1 stratum, carried record, high): STM_ONLY → STM_MICHEL, a Michel that A1 does not find.
+* **Controls: 0 of 4 changed.**
+* This is the contrast that matters. On `own103v`'s disputed false positives 29 of 32 labels changed; on the
+  one-arm stopper tags, where the same records are used and the arms agree with the label, they hold.
+
+### 13.2 The reading (amendment 6 sec 4)
+
+| Stratum, metric | Labelled | Relabel-negative | Removal |
+|---|---|---|---|
+| A1 `is_stm` | 10 | 0 (68 % ≤ 0.17) | 0 |
+| A1 Michel | 6 | 0 (68 % ≤ 0.26) | 0 |
+| A0 `is_stm` | 7 | 0 (68 % ≤ 0.23) | 1 (0.14) |
+| A0 Michel | 7 | 0 (68 % ≤ 0.23) | 1 (0.14) |
+
+* **Folded grade:** `is_stm` purity +0.002, efficiency +0.069; Michel purity +0.016, efficiency +0.059.
+* **Projection** onto the unreviewed TP-movers (`is_stm` 32 A1 + 20 A0; Michel 21 A1 + 14 A0): purity +0.002 and
+  +0.017, efficiency +0.077 and +0.068.
+  - Nothing is projected onto the A1 stratum: its measured rates are 0.
+  - The A0 removal rate takes 2.9 and 2.0 expected items out of A0's own tags, which is why the projection is
+    slightly kinder to A1 than the folded grade.
+* **Reading: D1 for PDVD, stated.** On the production lineage the two levers together cost the PDVD taggers nothing
+  measurable, and they raise both efficiencies by 0.06–0.07.
+
+### 13.3 Files (round 5)
+
+* **Record:** `pdvd/docs/scan/pdvd_stm_michel_own103v2_verdicts.json` (owner, 24 items).
+* **Figure:** `103_own103v2_pdvd.txt`.
+
+## 14. Round 6 (2026-09-15): the PDVD flip unit and its proof
+
+Prepared, proven, **not applied**. No file under `toolkit/cfg` is modified: every patch here was applied to a copy
+(`/home/xqian/tmp/d103/flipcfg`), and `git status cfg/` in the toolkit is clean.
+
+### 14.0 Repro
+
+```bash
+# the flip unit, against a copy of the production config tree
+cp -a $WCT/toolkit/cfg /home/xqian/tmp/d103/flipcfg/cfg
+(cd /home/xqian/tmp/d103/flipcfg && patch -p1 < $F/103_flip_pdvd.patch && patch -p1 < $F/103_flip_pdvd_fit.patch)
+# compiled-config proof: A production cfg + the graded arm's TLAs, B flipped cfg with none, C production as it runs
+#   (the TLA value keeps its inner quotes: -S "retile_sampler_strategy='charge_stepped'")
+#   the three wcsonnet commands and their diffs are in figs/103_flip_compiled_pdvd.txt
+# the proof arm and the gate
+ARM=d103vflip DET=pdvd SRC=p100flip JOBS=3 PIN=/home/xqian/tmp/d102/libpin_d102 \
+    PR_TLA="-A trackfitting_config=/home/xqian/tmp/d103/flipcfg/cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json \
+            -S retile_sampler_strategy='charge_stepped'" bash $S/d102_run_arms.sh
+python3 $S/d103_flip_gate.py --a d103v1 --b d103vflip > $F/103_flip_gate_pdvd.txt
+```
+
+### 14.1 The flip unit (PDVD only)
+
+* **`figs/103_flip_pdvd.patch`**: `protodunevd/pr.jsonnet`, the retile sampler default `stepped` → `charge_stepped`.
+  - This is doc 102's `102r2_flip.patch` **with its PDHD hunk dropped**. That patch flips both detectors; PDHD is not
+    approved (sec 12.3), so applying it as it stands would flip PDHD silently.
+  - `retile_sampler_strategy='stepped'` still compiles to the pre-flip sampler, so the old behaviour stays reachable.
+* **`figs/103_flip_pdvd_fit.patch`**: `protodunevd/pdvd_track_fitting.json` gains `fit_weight_pow` 1.5 and
+  `assoc_cont_center` 1, with a provenance comment.
+  - The C++ defaults are 2.0 and 0, so deleting the two keys restores the pre-flip fit exactly.
+  - This file is read at **runtime**, so a compiled-config diff cannot see it.
+* Both apply cleanly to the toolkit tree (`git apply --check`). PDHD's `pr.jsonnet` and `pdhd_track_fitting.json` are
+  untouched by both.
+
+### 14.2 Why the flipped config is the graded arm
+
+The grade of sec 12–13 was measured on `d103v1`, an arm driven by TLAs. The flip instead changes two files, so the
+proof is in two pieces.
+
+* **The compiled job** (`103_flip_compiled_pdvd.txt`):
+  - flipped config with no overrides vs production config with the graded arm's TLAs: the compiled JSON differs in
+    **two lines**, both the *path* of the runtime-read fit json;
+  - flipped config vs today's production: the only difference is the sampler, `stepped` → `charge_stepped`, on all
+    16 live samplers of the retile stage.
+* **The fit json**, compared key by key: the patched production file equals the graded arm's
+  `101_tf_prod_pdvd_kf.json` on **every** non-comment key, and differs from today's production only by the two
+  added keys.
+* **The arm** (`103_flip_gate_pdvd.txt`): `d103vflip` runs the patched fit json on the same 120 events, same pctrees,
+  same pinned library (clus md5 `091e142b9481`, unchanged across the arm), 120 / 120 complete.
+  - Against `d103v1`: **identical**, on every one of the 198 branches of `T_stm_michel`, for all 563 clusters.
+  - The gate script is checked both ways: it reports identical for an arm against itself, and diverges on
+    production vs both-on (row counts and `bragg_anchor_shift_cm`).
+
+### 14.3 Resources
+
+Like for like, both arms at 3 jobs, production `d103v0` → both-on `d103v1` over the same 120 events:
+
+| | production | both on | change |
+|---|---|---|---|
+| wall, sum | 2528 s | 2845 s | +12.5 % (median per event +13.7 %, p90 +40 %) |
+| peak RSS, max | 2.98 GB | 3.49 GB | median per event +2.4 % |
+
+Doc 102's pre-registered data-resource rule is median RSS ≤ +25 % and wall ≤ +50 %: **pass**.
+
+`d103vflip` itself is not a resource measurement. It was run at 32 jobs on the owner's licence, so its per-event wall
+is inflated ×2.5 by contention; its peak RSS (3.50 GB) matches `d103v1`'s 3.49 GB.
+
+### 14.4 What is left
+
+1. **The owner's go.** Applying the two patches changes PDVD production defaults.
+2. **PDHD's choice** (sec 12.3, 12.4), unchanged and still open: hold PDHD; accept Michel purity 0.946 → 0.895 for
+   efficiency 0.603 → 0.664; or study a geometric admission rule.
+3. Nothing else: the grade is on the production lineage, the owner's two adjudications are folded, amendment 6's
+   symmetric check passed, and the flipped config is proven to be the arm that was graded.
+
+### 14.5 Files (round 6)
+
+* **Patches:** `figs/103_flip_pdvd.patch`, `figs/103_flip_pdvd_fit.patch`.
+* **Script:** `d103_flip_gate.py` (self-tested both ways).
+* **Figures:** `103_flip_compiled_pdvd.txt`, `103_flip_gate_pdvd.txt`.

@@ -1,0 +1,120 @@
+# doc pdvd/103 sec 14: the PDVD flip, compiled-config proof.  wcsonnet on pdvd/wct-pr-perevt.jsonnet with the
+# runner's own TLAs for 039252 evt 298567 (-nu -stm-fit pipeline_names), three ways:
+#   A  production cfg + the graded arm's TLAs: -A trackfitting_config=figs/101_tf_prod_pdvd_kf.json -S retile_sampler_strategy='charge_stepped'
+#   B  flipped cfg (figs/103_flip_pdvd.patch + figs/103_flip_pdvd_fit.patch applied to a copy of toolkit/cfg), no TLAs
+#   C  production cfg, no TLAs = today's PDVD production
+# The flipped cfg copy lives in /home/xqian/tmp/d103/flipcfg; no production file was touched.
+
+== A vs B: the flipped config reproduces the graded arm's compiled job
+(the only difference is the PATH of the runtime-read fit json; its non-comment keys are equal, see below)
+1137c1137
+< 			"trackfitting_config_file" : "/home/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/figs/101_tf_prod_pdvd_kf.json"
+---
+> 			"trackfitting_config_file" : "pgrapher/experiment/protodunevd/pdvd_track_fitting.json"
+1322c1322
+< 			"trackfitting_config_file" : "/home/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/figs/101_tf_prod_pdvd_kf.json",
+---
+> 			"trackfitting_config_file" : "pgrapher/experiment/protodunevd/pdvd_track_fitting.json",
+
+== C vs B: what the flip changes in the compiled job (every live sampler of the retile stage)
+550,551c550,551
+< 					"center_fallback" : false,
+< 					"name" : "stepped"
+---
+> 					"disable_mix_dead_cell" : false,
+> 					"name" : "charge_stepped"
+574,575c574,575
+< 					"center_fallback" : false,
+< 					"name" : "stepped"
+---
+> 					"disable_mix_dead_cell" : false,
+> 					"name" : "charge_stepped"
+598,599c598,599
+< 					"center_fallback" : false,
+< 					"name" : "stepped"
+---
+> 					"disable_mix_dead_cell" : false,
+> 					"name" : "charge_stepped"
+622,623c622,623
+< 					"center_fallback" : false,
+< 					"name" : "stepped"
+---
+> 					"disable_mix_dead_cell" : false,
+> 					"name" : "charge_stepped"
+646,647c646,647
+< 					"center_fallback" : false,
+< 					"name" : "stepped"
+---
+> 					"disable_mix_dead_cell" : false,
+> 					"name" : "charge_stepped"
+670,671c670,671
+< 					"center_fallback" : false,
+< 					"name" : "stepped"
+---
+> 					"disable_mix_dead_cell" : false,
+> 					"name" : "charge_stepped"
+694,695c694,695
+< 					"center_fallback" : false,
+< 					"name" : "stepped"
+---
+> 					"disable_mix_dead_cell" : false,
+> 					"name" : "charge_stepped"
+718,719c718,719
+< 					"center_fallback" : false,
+< 					"name" : "stepped"
+---
+> 					"disable_mix_dead_cell" : false,
+> 					"name" : "charge_stepped"
+742,743c742,743
+< 					"center_fallback" : false,
+< 					"name" : "stepped"
+---
+> 					"disable_mix_dead_cell" : false,
+> 					"name" : "charge_stepped"
+766,767c766,767
+< 					"center_fallback" : false,
+< 					"name" : "stepped"
+---
+> 					"disable_mix_dead_cell" : false,
+> 					"name" : "charge_stepped"
+790,791c790,791
+< 					"center_fallback" : false,
+< 					"name" : "stepped"
+---
+> 					"disable_mix_dead_cell" : false,
+> 					"name" : "charge_stepped"
+814,815c814,815
+< 					"center_fallback" : false,
+< 					"name" : "stepped"
+---
+> 					"disable_mix_dead_cell" : false,
+> 					"name" : "charge_stepped"
+838,839c838,839
+< 					"center_fallback" : false,
+< 					"name" : "stepped"
+---
+> 					"disable_mix_dead_cell" : false,
+> 					"name" : "charge_stepped"
+862,863c862,863
+< 					"center_fallback" : false,
+< 					"name" : "stepped"
+---
+> 					"disable_mix_dead_cell" : false,
+> 					"name" : "charge_stepped"
+886,887c886,887
+< 					"center_fallback" : false,
+< 					"name" : "stepped"
+---
+> 					"disable_mix_dead_cell" : false,
+> 					"name" : "charge_stepped"
+910,911c910,911
+< 					"center_fallback" : false,
+< 					"name" : "stepped"
+---
+> 					"disable_mix_dead_cell" : false,
+> 					"name" : "charge_stepped"
+
+== the fit json is read at RUNTIME, so it is compared key by key
+flipped file == the graded arm 101_tf_prod_pdvd_kf.json on every non-comment key: True
+flipped file vs production, keys added: {'fit_weight_pow': 1.5, 'assoc_cont_center': 1}
+flipped file vs production, keys changed: {}
