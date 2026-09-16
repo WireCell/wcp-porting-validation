@@ -54,13 +54,10 @@ D103_PDHD_RECORD=$IMG/pdhd/docs/scan/pdhd_stm_michel_smx27_verdicts.json \
   python3 d104_tpmover_set.py --new-record $IMG/pdhd/docs/scan/pdhd_stm_michel_smx28_verdicts.json \
     --owner-record $IMG/pdhd/docs/scan/pdhd_stm_michel_own103h_verdicts.json \
     --out /home/xqian/tmp/d104/own/set_pdhd_tpmover
-D103_PDHD_RECORD=$IMG/pdhd/docs/scan/pdhd_stm_michel_smx27_verdicts.json \
-  python3 d104_tpmover_score.py --new-record $IMG/pdhd/docs/scan/pdhd_stm_michel_smx28_verdicts.json \
-    --owner-record $IMG/pdhd/docs/scan/pdhd_stm_michel_own103h_verdicts.json \
-    --set /home/xqian/tmp/d104/own/set_pdhd_tpmover \
-    --labels $IMG/pdhd/work/stm_michel_labels/own103h2/labels.json \
-    --record-out $IMG/pdhd/docs/scan/pdhd_stm_michel_own103h2_verdicts.json
 ```
+
+Every number in this doc comes from the three commands above plus the frozen amendment. The fold is
+**pending** — the `own103h2` labels do not exist yet — so its command is in sec 5.3, not here.
 
 The starting grade this round argues about is doc 103's
 `figs/103_union_grade_pdhd_own103h_stmonlyneg.txt` (truth `own103h > smx27 > smx28`, amendment 5's
@@ -257,6 +254,24 @@ attached or both, with amendment 5's rule that an owner `STM_ONLY` carrying no k
 
 **Served** on port 5017 (`stm_michel_viewer.py --det pdhd --tag own103h2`), label shas recorded beforehand in
 `/home/xqian/tmp/d104/label_shas_before_own103h2.txt`.
+
+### 5.3 The fold, to run when the labels land
+
+Nothing in this doc depends on it: at the time of writing the set is served and unlabelled.
+
+```bash
+IMG=/home/xqian/toolkit-dev/wcp-porting-img
+D103_PDHD_RECORD=$IMG/pdhd/docs/scan/pdhd_stm_michel_smx27_verdicts.json \
+  python3 d104_tpmover_score.py --new-record $IMG/pdhd/docs/scan/pdhd_stm_michel_smx28_verdicts.json \
+    --owner-record $IMG/pdhd/docs/scan/pdhd_stm_michel_own103h_verdicts.json \
+    --set /home/xqian/tmp/d104/own/set_pdhd_tpmover \
+    --labels $IMG/pdhd/work/stm_michel_labels/own103h2/labels.json \
+    --record-out $IMG/pdhd/docs/scan/pdhd_stm_michel_own103h2_verdicts.json
+```
+
+If the viewer is no longer up, the set itself is the durable artifact
+(`/home/xqian/tmp/d104/own/set_pdhd_tpmover`); re-serving it is the same `bokeh serve --port 5017
+stm_michel_viewer.py` line, logged in `/home/xqian/tmp/d104/serve_own103h2_5017.log`.
 
 ---
 
