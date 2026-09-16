@@ -1,0 +1,14 @@
+# doc pdvd/111 round 2 EXPLORATORY (not pre-registered) same-blob-terminal edge pricing: det=pdvd arm=d111vst events=120; walks 1847
+| candidate | off (> 1 cm) | rel. change | far (> 5 cm) | wiggle | cov | seed length (m) | walks changed |
+|---|---|---|---|---|---|---|---|
+| base:0 | 7.82 % | +0.0 % | 2.31 % | 9.71 % | 49.51 % | 4367.9 | 0 |
+| SBT_q:0 | 7.82 % | -0.0 % | 2.31 % | 9.71 % | 49.49 % | 4365.7 | 1394 |
+| SBT_q+P_paint:2 | 6.84 % | -12.6 % | 2.27 % | 11.34 % | 50.08 % | 4458.3 | 1821 |
+| G_3pl:2 | 6.44 % | -17.6 % | 2.25 % | 11.70 % | 50.26 % | 4479.4 | 1822 |
+| P_paint:2 | 6.87 % | -12.1 % | 2.27 % | 11.29 % | 50.05 % | 4460.1 | 1785 |
+
+| spot | base:0 | SBT_q:0 | SBT_q+P_paint:2 | G_3pl:2 | P_paint:2 |
+|---|---|---|---|---|---|
+| v1 | 1.03 | 1.03 | 1.03 | 1.03 | 1.03 |
+| v2 | 0.99 | 0.99 | 1.13 | 0.99 | 1.13 |
+| v3 | 1.64 | 1.64 | 1.15 | 1.15 | 1.15 |

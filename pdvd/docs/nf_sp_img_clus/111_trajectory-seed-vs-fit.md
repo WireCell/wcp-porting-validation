@@ -51,7 +51,9 @@ to figure out some way to reduce these at that level."*
   - It also adds lattice staircase (wiggle 4.4 → 6.1 % / 9.7 → 11.7 %).
   - The SBND `steiner_gap_penalty` form moves it by 3 % / 1 %. Pricing painted ends moves it by 16.5 % / 12.1 %.
   - Even a perfect re-pricing could reach at most the rows that have an on-image route: 29 % / 27 % of seed-born
-    deviated rows.
+    deviated rows, just above the bar. The best form already takes most of that.
+  - Found afterwards and measured (exploratory): the same-blob terminal edges are priced at plain length, but giving
+    them the tree edges' charge factor does not help (+3.9 % / 0.0 %).
   - **No lever was built.**
 - **What was built:** `WCT_STEINER_GRAPH_DUMP` (toolkit `724cf205`), log-only.
   - Byte-identical on PDHD (61), PDVD (120), SBND (16 events) and uBooNE (35).
@@ -658,6 +660,13 @@ python3 $S/d111s_replay.py --det pdhd --arm d111hst --out $F/111s_replay_pdhd   
 python3 $S/d111s_replay.py --det pdvd --arm d111vst --out $F/111s_replay_pdvd
 python3 $S/d111s_wiggle_split.py --det pdhd --arm d111hst > $F/111s_wiggle_split_pdhd.txt
 python3 $S/d111s_wiggle_split.py --det pdvd --arm d111vst > $F/111s_wiggle_split_pdvd.txt
+# EXPLORATORY, after the ladder: charge-weighted same-blob terminal edges (sec 11.5, 11.8)
+python3 $S/d111s_sbt_explore.py --det pdhd --arm d111hst --out $F/111s_explore_sbt_pdhd
+python3 $S/d111s_sbt_explore.py --det pdvd --arm d111vst --out $F/111s_explore_sbt_pdvd
+# the commit's own build on the 5 scope events (every zip member)
+ARM=d111shoff5b DET=pdhd SRC=d108hflip JOBS=3 PIN=/home/xqian/tmp/d111/libpin_d111s2 \
+  EVENTS="028084_3 028084_12 029107_5 029107_16 029107_18" bash $S/d111_run_arms.sh
+python3 $S/d111_identity_gate.py --det pdhd --a d109hstm --b d111shoff5b > $F/111s_gate_final_pin5_pdhd.txt
 ```
 
 All arms are new tags (M13). Their pctrees are symlinks to the production arms' (PDHD `d108hflip`, PDVD `d103vflip`).
@@ -773,6 +782,7 @@ persisted seed (`figs/111s_cloud_{pdhd,pdvd}.txt`).
 | uBooNE `sweep/d111ub_s` vs `d111ub_old` | **35 / 35 zips content-identical, tagger logs identical 35** (`figs/111s_gate_uboone.txt`) |
 | compiled PR config PDHD / PDVD | md5 `a870511c9b22` / `211a49a48229`, **equal** to doc 109's |
 | the commit's own build (`libpin_d111s2`, clus `362c634a95d6`): `d111shoff1` 029107_16 vs `d109hstm` | **identical**, every zip member (`figs/111s_gate_final_pin_pdhd.txt`) |
+| the commit's own build: `d111shoff5b` (the 5 scope events) vs `d109hstm` | **5 / 5 identical**, every zip member (`figs/111s_gate_final_pin5_pdhd.txt`) |
 | `wcdoctest-clus` | **421 / 421** |
 | freshness | `libWireCellClus.so` 10:35:11 newer than every edited source (10:34:22); rebuilt 11:10:26 after the whitespace restore (11:09:27) |
 
@@ -804,8 +814,15 @@ Nothing is paid when it is off.
 | Steiner vertices with a zero-charge plane (painted or dead) | 15.3 / **70.8** / 33.4 % | 26.4 / **76.3** / 52.4 % |
 | Steiner vertices **painted** (a zero plane with no dead channel at 0.2 cm) | 12.0 / **67.9** / 31.3 % | 17.3 / **69.0** / 38.0 % |
 | Steiner vertices on dead-only cells | 3.3 / 2.9 / 2.2 % | 9.0 / 7.3 / 14.4 % |
+| painted Steiner vertices, 1–5 cm split as 1–2 / 2–3 / 3–5 cm | 65.8 / 88.6 / 67.9 % (of 855,826 / 85,800 / 9,848) | 66.5 / 84.3 / 69.2 % (of 1,244,800 / 203,624 / 27,952) |
 
-- The retiled cloud's off-image part is mostly painted.
+- The retiled cloud's off-image part is mostly painted, at every distance out to 5 cm.
+- The painted disc is ±3 wires × ±3 slices around each retiler path point: about ±1.4 cm × ±0.95 cm on PDHD, and up to
+  ±2.3 cm on PDVD's 7.65 mm induction planes.
+  - The 1–2 cm bin, which holds 90 % / 84 % of the off-ridge vertices, is within its reach.
+  - The 3–5 cm painted share (68 % / 69 %) is not explained by the disc around an on-image path alone. It needs the
+    retiler's own path to be off the image there, or overlapping discs. The dump does not print the retiler's paths
+    (sec 11.9).
 - Painted vertices enter the Steiner graph as path interiors, and some as terminals: a painted plane still lets
   `calc_charge_wcp` pass on the other two. 51,481 of the 87,218 PDHD terminals 1–5 cm off the ridge are painted.
 
@@ -842,6 +859,17 @@ The cost ratio compares the oracle route and the chosen route under the producti
 | `path` / `closely_same` | 12.4 % | 9.5 % |
 | `connect` / `closely_same` + `closely_other` | 22.6 % | 20.8 % |
 | `connect` / `mst` | 5.4 % | 6.8 % |
+
+**The same-blob terminal edges are priced differently.**
+- `establish_same_blob_steiner_edges_steiner_graph` adds each `sbt` edge at its plain length (weight 1.0 × length),
+  while every tree edge carries 0.8–1.2× length.
+  - The dump confirms it: `sbt` weight equals length to 5e-5 cm; tree edges run 0.83–1.20× on h1's cluster.
+  - The base-graph version of the function discounts by 0.8 / 0.9; the Steiner-graph version applies no factor.
+- `sbt` edges carry 15.9 % / 11.0 % of the near rows.
+- **Refuted as a lever:** an exploratory, not pre-registered replay that gives `sbt` edges the tree edges' charge factor
+  moves off-ridge seed length by **+3.9 % (worse) / 0.0 %** (`figs/111s_explore_sbt_{pdhd,pdvd}.txt`).
+  - A bright on-ridge `sbt` shortcut gets cheaper as well.
+  - Combined with the painted-end factor it gives −16.4 % / −12.6 %, the same as the painted-end factor alone.
 
 **Far rows (seed > 5 cm off; 12,622 PDHD / 9,388 PDVD)**
 - Base provenance: `connect` / `ctpc` 47.2 / 55.6 %; `connect` / `mst` 32.2 / 27.1 %.
@@ -909,6 +937,12 @@ The crawl point is kept, so a crawl detour stays in every replay. `figs/111s_spo
   - Around it, the retiled cloud sits in a band below the image (65 % of retiled points more than 1 cm off).
 - **v1, v2.** The production seed is already within about 1 cm; nothing moves.
 - **v3.** A 1.6 cm offset that the oracle removes (0.93) and the 3-plane replay halves (1.15).
+- **Two kinds of spot.**
+  - At h1 the retiled cloud is no more off-ridge than the image (41.2 % against 40.9 %), and re-pricing recovers the
+    seed.
+  - At v1–v3 the retiled cloud is 3–6× more off-ridge than the image (76–78 % against 12–27 %). v1 and v2 are within
+    about 1 cm anyway, and v3 is only partly recovered (1.64 → 1.15 cm).
+  - Re-pricing and cloud content act on different rows; they are not alternatives.
 - **The h2 maximum appears three ways; they measure different things:**
   - 2.25 cm in sec 1: the persisted seed, measured at the final rows' locations within ±24 cm;
   - 2.77 cm here: seed samples within the window, crawl walks;
@@ -967,10 +1001,16 @@ The crawl point is kept, so a crawl detour stays in every replay. `figs/111s_spo
 **Verdict: no candidate qualifies on either detector, so under the frozen rule no lever is built this round.**
 
 **Why re-pricing cannot get there**
-- **The reach is capped.** On-image routes exist in:
+- **The reach is capped, just above the bar.** On-image routes exist in:
   - PDHD: 6,935 of 14,564 near rows and 833 of 12,622 far rows, 28.6 % of seed-born deviated rows;
   - PDVD: 6,586 of 15,912 near rows and 312 of 9,388 far rows, 27.3 %.
   A perfect re-pricing of today's graph could fix only those rows.
+  - The ceiling (28.6 % / 27.3 %) sits just above the 25 % bar, and the best form (G_3pl, −21.5 % / −17.9 %) already
+    takes roughly three quarters / two thirds of it.
+  - The ceiling counts rows, while the bar is a share of off-ridge seed LENGTH. Read the comparison as indicative, not
+    as a bound on the metric.
+  - The rule is not relaxed. The reading is that re-pricing today's graph is close to exhausted, not that it
+    underperformed.
 - **The wiggle it adds is lattice staircase, not bow.** From the exploratory split (not pre-registered;
   `figs/111s_wiggle_split_{pdhd,pdvd}.txt`, ±2 cm running mean):
 
@@ -1006,18 +1046,25 @@ The census points at what enters the graph, not only at how the walk prices it.
    wire of real 3-plane activity, would stop the halo at its source.
    - It changes the retiled cloud for every consumer, and the terminals too: some are painted.
    - It needs its own gate, like doc pdhd/08's bridge cap.
-4. **Whatever re-routes must also smooth.** The frozen rule of the next round should split bow from jitter, as in doc
-   pr/73 sec 4.7, rather than carry one wiggle number.
-5. **Far bridges are not a Steiner-pricing problem.** 93 % / 97 % have no on-image alternative. They belong to the
+4. **Smoothing is the easy half, not a round of its own.** After a ±2 cm running mean the wiggle of every candidate,
+   base included, drops to 0.01–0.08 %, while the off-ridge shortfall stays (−18 % / −13 %). The binding constraint is
+   reach. The next rule should still split bow from jitter (doc pr/73 sec 4.7), for honesty, rather than carry one
+   wiggle number.
+5. **Not a lever:** charge-weighting the same-blob terminal edges (sec 11.5). It was measured, and it does nothing or
+   makes things worse.
+6. **Far bridges are not a Steiner-pricing problem.** 93 % / 97 % have no on-image alternative. They belong to the
    component bridging (`connect_graph_ctpc_with_reference`, the MST) and to clustering (doc pdhd/11 R1, doc 102).
 
 Recommended order: 1 and 3 measured together on the dump (the dump already carries per-vertex painted flags and per-edge
-provenance), then a frozen rule with a bow/jitter clause.
+provenance), then a frozen rule with a bow/jitter clause. Item 3 should first print the retiler's two paths (sec 11.9).
 
 ### 11.9 Not concluded
 
 - **Painted against dead is split only for Steiner vertices.** Retiled points carry no dead mask, so the retiled-point
   row of sec 11.5 is painted-or-dead.
+- **Why painted vertices reach 3–5 cm is not established.** The painted disc around an on-image path does not reach
+  that far. The retiler's own `basic_pid` / `ctpc_ref_pid` paths are not dumped, so whether they leave the image there
+  is untested.
 - **A zero plane could have other causes**, such as a sampler that failed to assign charge on a live wire. The wrapped-
   wire fix (`wrapped_channel_activity`) is on in production; no other cause was tested.
 - **The ladder scores round-1 rough walks**, not the persisted round-2 seed.
@@ -1038,5 +1085,6 @@ provenance), then a frozen rule with a bow/jitter clause.
 | `scripts/d111s_spot_anatomy.py` | sec 11.6 figures + TSV |
 | `scripts/d111s_replay.py` | sec 11.7 ladder |
 | `scripts/d111s_wiggle_split.py` | sec 11.7 exploratory bow/jitter split |
+| `scripts/d111s_sbt_explore.py` | sec 11.5 exploratory same-blob-edge pricing (refuted) |
 | `scripts/d111_sbnd_gate.py` | `--ignore-branch` added (default: round-1 behaviour) |
 | `figs/111s_*` | census, gates, ladder rule + sha, ladder results, spot figures and TSV |

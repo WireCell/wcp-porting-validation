@@ -7,7 +7,8 @@ per Steiner vertex, test_good_point's live/dead plane mask at radius 0.2 cm / ch
 two can be told apart: a zero-charge plane whose mask has the dead bit is DEAD, otherwise PAINTED.  (Retiled points carry
 no mask; d111s_graph_census.py reports them as painted-or-dead.)
 
-Per detector, for the Steiner vertices of the clusters with a persisted STM record, by ridge offset (<= 1, 1-5, > 5 cm):
+Per detector, for the Steiner vertices of the clusters with a persisted STM record, by ridge offset (<= 1, 1-5 split into
+1-2 / 2-3 / 3-5, > 5 cm):
 share with any painted plane, any dead-only zero plane, and none.
 
 Usage: d111s_painted_split.py --det pdhd --arm d111hst [--jobs 10] > figs/111s_painted_split_<det>.txt
@@ -48,7 +49,8 @@ def one(args):
         dead = np.c_[[(m >= 0) & (((m >> (3 + p)) & 1) > 0) for p in range(3)]].T
         painted = (q0 & ~dead).any(axis=1)
         deadonly = (q0 & dead).any(axis=1) & ~painted
-        for lab, mm in (("on", vo <= 1.0), ("off", (vo > 1.0) & (vo <= 5.0)), ("far", vo > 5.0)):
+        for lab, mm in (("on", vo <= 1.0), ("off", (vo > 1.0) & (vo <= 5.0)), ("far", vo > 5.0),
+                        ("1-2", (vo > 1.0) & (vo <= 2.0)), ("2-3", (vo > 2.0) & (vo <= 3.0)), ("3-5", (vo > 3.0) & (vo <= 5.0))):
             acc[("n", lab)] += int(mm.sum())
             acc[("painted", lab)] += int((mm & painted).sum())
             acc[("dead", lab)] += int((mm & deadonly).sum())
@@ -71,7 +73,8 @@ def main():
     print(f"# doc pdvd/111 round 2 painted vs dead Steiner vertices: det={a.det} arm={a.arm} events={len(evs)}")
     print("| ridge offset | vertices | painted (a zero plane, no dead bit) | dead only | terminals painted |")
     print("|---|---|---|---|---|")
-    for lab, name in (("on", "<= 1 cm"), ("off", "1-5 cm"), ("far", "> 5 cm")):
+    for lab, name in (("on", "<= 1 cm"), ("off", "1-5 cm"), ("1-2", "  1-2 cm"), ("2-3", "  2-3 cm"), ("3-5", "  3-5 cm"),
+                      ("far", "> 5 cm")):
         n = tot[("n", lab)]
         print(f"| {name} | {n} | {100*tot[('painted', lab)]/max(n,1):.1f} % | {100*tot[('dead', lab)]/max(n,1):.1f} % | "
               f"{tot[('painted_term', lab)]} of {tot[('n_term', lab)]} |")
