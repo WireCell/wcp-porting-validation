@@ -1,0 +1,64 @@
+# doc pdvd/112 terminal planes: det=pdhd arm=d111hst events=61 (missing 0); clusters with a persisted STM record and a dump: 1131
+
+## checks
+- dumped vertex charge == RMS over the nonzero planes (0 when < 2): 2869671 of 2870401 (100.0 %)
+  - 3live: 1897630 of 1897630 (100.0 %)
+  - 1blank: 559501 of 560037 (99.9 %)
+  - 1dead: 90171 of 90171 (100.0 %)
+  - 2blank+: 322369 of 322563 (99.9 %)
+- control: non-extreme terminals in class 2blank+: 0 (expected 0); non-extreme terminals with charge <= 500: 0
+
+## table A -- Steiner vertices by role x class x ridge offset
+| role | class | vertices | <= 1 cm | 1-2 cm | 2-5 cm | > 5 cm | share > 1 cm |
+|---|---|---|---|---|---|---|---|
+| terminal | 3live | 285334 | 253760 | 28255 | 558 | 2761 | 11.1 % |
+| terminal | 1blank | 81995 | 29649 | 49079 | 2390 | 877 | 63.8 % |
+| terminal | 1dead | 14797 | 11099 | 3410 | 205 | 83 | 25.0 % |
+| terminal | 2blank+ | 0 | 0 | 0 | 0 | 0 | n/a |
+| extreme | 3live | 6552 | 3293 | 3084 | 106 | 69 | 49.7 % |
+| extreme | 1blank | 14 | 2 | 12 | 0 | 0 | 85.7 % |
+| extreme | 1dead | 284 | 164 | 107 | 12 | 1 | 42.3 % |
+| extreme | 2blank+ | 0 | 0 | 0 | 0 | 0 | n/a |
+| interior | 3live | 1605744 | 1345904 | 236714 | 9024 | 14102 | 16.2 % |
+| interior | 1blank | 478028 | 162009 | 281321 | 30095 | 4603 | 66.1 % |
+| interior | 1dead | 75090 | 51302 | 20660 | 2740 | 388 | 31.7 % |
+| interior | 2blank+ | 322563 | 36316 | 233184 | 50518 | 2545 | 88.7 % |
+
+Class mix of each role on (<= 1 cm) and off (> 1 cm) the ridge:
+| role | side | vertices | 3live | 1blank | 1dead | 2blank+ |
+|---|---|---|---|---|---|---|
+| terminal | <= 1 cm | 294508 | 86.2 % | 10.1 % | 3.8 % | 0.0 % |
+| terminal | > 1 cm | 87618 | 36.0 % | 59.7 % | 4.2 % | 0.0 % |
+| terminal | 1-2 cm | 80744 | 35.0 % | 60.8 % | 4.2 % | 0.0 % |
+| terminal | 2-5 cm | 3153 | 17.7 % | 75.8 % | 6.5 % | 0.0 % |
+| extreme | <= 1 cm | 3459 | 95.2 % | 0.1 % | 4.7 % | 0.0 % |
+| extreme | > 1 cm | 3391 | 96.1 % | 0.4 % | 3.5 % | 0.0 % |
+| extreme | 1-2 cm | 3203 | 96.3 % | 0.4 % | 3.3 % | 0.0 % |
+| extreme | 2-5 cm | 118 | 89.8 % | 0.0 % | 10.2 % | 0.0 % |
+| interior | <= 1 cm | 1595531 | 84.4 % | 10.2 % | 3.2 % | 2.3 % |
+| interior | > 1 cm | 885894 | 29.3 % | 35.7 % | 2.7 % | 32.3 % |
+| interior | 1-2 cm | 771879 | 30.7 % | 36.4 % | 2.7 % | 30.2 % |
+| interior | 2-5 cm | 92377 | 9.8 % | 32.6 % | 3.0 % | 54.7 % |
+
+Non-extreme terminals: the second-strongest plane charge (for 1blank: the weaker of the two planes the charge test
+graded; the per-plane cut is terminal_charge_threshold = 500):
+| class | side | terminals | <=1000 | 1000-2000 | 2000-5000 | >5000 |
+|---|---|---|---|---|---|---|
+| 3live | <= 1 cm | 253760 | 0.5 % | 1.5 % | 3.7 % | 94.3 % |
+| 3live | > 1 cm | 31574 | 5.5 % | 12.8 % | 21.8 % | 60.0 % |
+| 1blank | <= 1 cm | 29649 | 6.2 % | 5.7 % | 10.8 % | 77.3 % |
+| 1blank | > 1 cm | 52346 | 12.6 % | 9.8 % | 14.4 % | 63.2 % |
+
+## table B -- persisted round-2 seeds: records 1158 (unmatched 0, no graph/ridge 7); seed points 340420 (not joined 0); distinct seed vertices per record
+| side | role | vertices | 3live | 1blank | 1dead | 2blank+ |
+|---|---|---|---|---|---|---|
+| <= 1 cm | terminal | 139057 | 92.0 % | 5.1 % | 2.9 % | 0.0 % |
+| <= 1 cm | extreme | 881 | 95.1 % | 0.1 % | 4.8 % | 0.0 % |
+| <= 1 cm | interior | 183578 | 92.4 % | 5.0 % | 2.3 % | 0.4 % |
+| <= 1 cm | all | 323516 | 92.3 % | 5.0 % | 2.5 % | 0.2 % |
+| > 1 cm | terminal | 4787 | 34.7 % | 62.0 % | 3.3 % | 0.0 % |
+| > 1 cm | extreme | 376 | 96.0 % | 0.3 % | 3.7 % | 0.0 % |
+| > 1 cm | interior | 11739 | 38.8 % | 44.8 % | 3.3 % | 13.1 % |
+| > 1 cm | all | 16902 | 38.9 % | 48.7 % | 3.3 % | 9.1 % |
+
+- off-ridge seed vertices that are 1blank: 8227 of 16902 (48.7 %); 1blank terminals: 2968 (17.6 %)

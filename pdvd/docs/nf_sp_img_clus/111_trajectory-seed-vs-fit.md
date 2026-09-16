@@ -12,6 +12,10 @@ Tag changes are reported, not gated. A flip is the owner's call (sec 8).
 
 ## Round 2 status (2026-09-16): why the Steiner path leaves the image (sec 11)
 
+**Follow-up:** doc 112 (`112_steiner-seed-off-image-cases.md`) takes two of the owner's spots, h1 and v3, apart vertex
+by vertex. There, off-image points that see charge on only two wire planes pass the terminal charge test, and the seed
+takes the shorter route through them.
+
 **Owner, after round 1:** *"Let's investigate a bit why the Steiner Graph deviate from the 3D image. My understand is
 that the origin of the problem must happen inside the retiling step. But I thought that the Steiner Graph Terminal
 identificaiton is based on 2D charge, and should bring the terminal back to be consistent with the 3D image. … for
