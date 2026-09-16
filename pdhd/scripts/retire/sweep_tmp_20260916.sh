@@ -28,7 +28,10 @@ T=/home/xqian/tmp
 R=/home/xqian/toolkit-dev/wcp-porting-img
 D=/home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire
 STAMP=20260916
-TF="$D/tmp_tier_${STAMP}.txt"
+# CENSUS_SUFFIX (round D review): the owner's pre-sweep re-census writes tmp_tier_${STAMP}.<suffix>.txt,
+# so the committed plan-time tier is never overwritten; this sweep then acts on the suffixed file.
+CS=${CENSUS_SUFFIX:+.$CENSUS_SUFFIX}
+TF="$D/tmp_tier_${STAMP}${CS}.txt"
 CONFIRM=${CONFIRM:-no}
 export RETIRE_OUT=${RETIRE_OUT:-$R/sbnd/sbnd_xin/archive/records/cleanup-${STAMP}/tmp}
 THIS=87534ba0-ada7-4811-b7af-02fbd8996b32
@@ -133,7 +136,7 @@ PY
     if ! git -C "$R" merge-base --is-ancestor "$h" "$REMOTE"; then echo "   WT HEAD $h not on the remote, skipped: $w"; continue; fi
     git -C "$R" worktree remove "$w" && echo "   WT removed: $w (HEAD ${h:0:8} on the remote)"
     c=$(dirname "$w"); rmdir "$c" 2>/dev/null && echo "   removed empty container $c"
-  done < "$D/tmp_worktrees_${STAMP}.txt"
+  done < "$D/tmp_worktrees_${STAMP}${CS}.txt"
 else
   echo "   DRY RUN -- would freeze $n units into $RETIRE_OUT, then remove them.  First 3:"
   head -3 "$TF" | sed 's/^/      /'

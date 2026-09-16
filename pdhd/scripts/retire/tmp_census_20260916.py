@@ -47,6 +47,9 @@ R     = "/home/xqian/toolkit-dev/wcp-porting-img"
 TK    = "/home/xqian/toolkit-dev/toolkit"
 HERE  = os.path.dirname(os.path.abspath(__file__))
 STAMP = "20260916"
+# CENSUS_SUFFIX: a re-census writes <name>.<suffix>.{txt,json} and never touches the committed
+# plan-time records (the doc-104 defect the planner's PLAN_SUFFIX fixed; round D review).
+SUFFIX = ('.' + os.environ["CENSUS_SUFFIX"]) if os.environ.get("CENSUS_SUFFIX") else ""
 CL    = f"{T}/claude-25225"
 NOW   = time.time()
 
@@ -391,11 +394,11 @@ def main():
     print(f"\nrelease units {len(free)} | nominal {nominal / 2**30:.2f} GiB | "
           f"FREED (every link inside the set) {freed / 2**30:.2f} GiB | "
           f"shared with a kept file, frees nothing {shared / 2**30:.2f} GiB")
-    open(f"{HERE}/tmp_tier_{STAMP}.txt", "w").write("\n".join(free) + "\n")
-    open(f"{HERE}/tmp_worktrees_{STAMP}.txt", "w").write("\n".join(wt_list) + "\n")
+    open(f"{HERE}/tmp_tier_{STAMP}{SUFFIX}.txt", "w").write("\n".join(free) + "\n")
+    open(f"{HERE}/tmp_worktrees_{STAMP}{SUFFIX}.txt", "w").write("\n".join(wt_list) + "\n")
     json.dump([dict(kind=k, path=p, verdict=v, why=w) for k, p, v, w in units],
-              open(f"{HERE}/tmp_census_{STAMP}.json", "w"), indent=1)
-    print(f"tier file: {HERE}/tmp_tier_{STAMP}.txt ({len(free)} lines).  This script removed nothing.")
+              open(f"{HERE}/tmp_census_{STAMP}{SUFFIX}.json", "w"), indent=1)
+    print(f"tier file: {HERE}/tmp_tier_{STAMP}{SUFFIX}.txt ({len(free)} lines).  This script removed nothing.")
     return 0
 
 if __name__ == "__main__":
