@@ -1,0 +1,44 @@
+# live_tokens: reference 55da248eab06, 13 untracked + 1 modified path(s) under DOCROOTS
+
+==============================================================================
+== pdvd   (/home/xqian/toolkit-dev/wcp-porting-img/pdvd/work)
+==============================================================================
+  PASS  INTERLOCK 1: substrate present (all present)
+  PASS  INTERLOCK 2: no kept symlink resolves into a releasing dir (0 would dangle)
+  PASS  INTERLOCK 3: no live writer (0 of 122 sampled dirs moved, 0 tree-scoped wire-cell procs)
+  PASS  INTERLOCK 4: pre-existing broken symlinks recorded: 0 (the post-state number only means something against this)
+  PASS  INTERLOCK 5: PROTECTED.txt clear of the release (clear)
+  PASS  INTERLOCK 7: no record/label dir in the release (clear)
+  PASS  INTERLOCK 8: no target is itself a symlink (clear)
+  PASS  INTERLOCK 9: manifests name 0 arms, 0 exist, 0 in the release (none)
+  PASS  INTERLOCK 11: every substrate/production/scan name resolves (all resolve)
+  PASS  INTERLOCK 13: hand-scan sources kept: ['d08pv30off', 'd08pv30on', 'd101vkf', 'd102vcsall', 'd102vocs', 'd103v0', 'd103v1', 'd53v', 'd67v', 'd68a3', 'd68d4', 'p100bx', 'p100bxp', 'p100c', 'p85vprod', 'p85vwh', 'p88v5fr', 'p88vprod', 'p90vprod', 'p96vprod', 'p98vonq', 'p99rwon', 'p99wflip']
+  PASS  INTERLOCK 14: 0 uncited families in the release; each maps to a committed doc by round number (0 do not: none)
+  PASS  INTERLOCK 15: nothing released is named by an uncommitted record (clear)
+  PASS  INTERLOCK 16: live-by-uncommitted-record: 0 tokens from 0 file(s); 0 resolve in this tree (none)
+  set-relative: FREED 9.79 GiB (every link inside the release); 0.00 GiB shared with a kept link frees nothing
+
+  universe 5359 dirs | KEEP 4384 = 82.68 GiB | RELEASE 975 = 9.80 GiB | out-of-scope (untouched) 271
+  --- RELEASE ---   arm                       dirs      GiB  cited
+                    d111vsr10                  120     1.25      4
+                    d111vtr                    120     1.25      9
+                    d113vbase2                 120     1.25      6
+                    d111voff                   120     1.25     14
+                    d111vsr15                  120     1.24      4
+                    d111vsr6                   120     1.23      4
+                    d113vnopaint               120     1.09     15
+                    d113vfoot                  120     1.07     15
+                    d111voff5                    5     0.07      4
+                    d111svoff5                   5     0.07      4
+                    d111vS                       1     0.01      6
+                    d111vA0                      1     0.01      7
+                    d111vA1                      1     0.01      7
+                    d111vK                       1     0.01      6
+                    d113vstep1                   1     0.01      2
+  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdvd_20260916d.txt  (975 lines, 9.80 GiB)
+
+==============================================================================
+GRAND TOTAL release 9.80 GiB
+interlock failures: NONE
+
+This script retired nothing.  Review the tier files, then run the retire driver (CONFIRM=yes).

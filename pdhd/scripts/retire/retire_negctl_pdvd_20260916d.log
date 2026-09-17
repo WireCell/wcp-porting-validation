@@ -1,0 +1,4 @@
+==================================================================
+== pdvd   tier 1   file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdvd_20260916d.txt
+   lines 975 | present 975 | already gone 0 | 9.80 GiB
+   REFUSING: 1 of 975 targets have no manifest in /home/xqian/tmp/claude-25225/-home-xqian-toolkit-dev-toolkit/87534ba0-ada7-4811-b7af-02fbd8996b32/scratchpad/r16d/negrec -- the freeze is incomplete.

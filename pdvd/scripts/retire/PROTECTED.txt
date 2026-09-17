@@ -60,6 +60,11 @@ pvdimg p98von p100flip	THE PRODUCTION INPUT CHAIN.  pvdimg = the production imag
 p101q	OPEN: doc pdvd/100 sec 8.7 leaves QtoL 0.0783 to the owner; the recommended next step reads p100flip and p101q dumps side by side.	doc pdvd/100 sec 8.7
 d103v0 d103v1	the OFF side (A0) and the graded A1 of the doc 103 flip on the same pctrees; both are hand-scan sources (own103v/own103v2, smx11).	doc pdvd/103 sec 10-14; docs/scan
 
+# --- added 2026-09-16 (doc sbnd_xin/111 sec 15, round E): what the release of d111v*/d113v* left on purpose ---
+d113vbase d113vnone	the doc-113 session's open follow-up (its message 2026-09-16): a hand scan of the 29 new PDVD false positives in `none` vs base, reading these two arms' tracking-pr.root, tracking-stm.root and mabc-pr.zip.  Their pctrees are symlinks into d103vflip.	doc pdvd/113; peer message
+d111vst	named in the Repro blocks of docs pdvd/112 and 113; d112_case_anatomy.py / d112_terminal_planes.py take --arm d111vst.  d113vbase == d111vst 120/120 (figs/113_gate_base_pdvd.txt).	docs pdvd/112-113 Repro
+/home/xqian/tmp/d102/cfg	the shared compiled-config proof dir of d102_compile_pr.sh (docs 102-113, despite its round-102 name).  Doc pdvd/113's G1 row cites d113knob{off,none}_{pdhd,pdvd}.json here.  The round-D sweep released it and those four files were restored byte-identical (doc sbnd_xin/111 sec 8).	doc pdvd/113 sec 2 G1; restore_d102cfg_20260916.log
+
 # ================= RETIRED =================
 
 # 2026-09-16 round D (doc sbnd_xin/111): RELEASED on the owner's instruction --

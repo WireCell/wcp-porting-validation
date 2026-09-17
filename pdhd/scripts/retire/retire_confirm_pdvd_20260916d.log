@@ -1,0 +1,16 @@
+== INTERLOCK A: re-planning before deleting (peer-session guard)
+   OK: all interlocks still PASS; the tier file of every tree being
+   run (pdvd) is unchanged.
+==================================================================
+== pdvd   tier 1   file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdvd_20260916d.txt
+   lines 975 | present 975 | already gone 0 | 9.80 GiB
+   record gate: 975/975 targets have a manifest in /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/../../../sbnd/sbnd_xin/archive/records/cleanup-20260916d/pdvd-tier1
+   DELETING...
+   done, rc=0
+
+POST-STATE CHECK.  interlock 4 recorded the PRE-existing broken-symlink
+count per tree (prebroken_<tree>_20260916d.txt); this number only means
+something compared against that.
+   pdhd: 0 broken symlinks
+   pdvd: 0 broken symlinks
+   sbnd/sbnd_xin: 0 broken symlinks

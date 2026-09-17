@@ -2,6 +2,10 @@
 
 **Status: EXECUTED.** `/home/xqian` free went from **214 G** before the round to **449 G** after its
 last step. About 10 G of that rise came from outside the round (§13).
+- **Round E, same evening (§15): EXECUTED.** On the owner's *"clean up a bit the pdvd/work
+  directory"*, the closed doc pdvd/111 and 113 study arms were released: 975 dirs, 9.80 GiB.
+  - `pdvd/work` went from 115 G to 105 G, and free space to **459 G**.
+  - The doc-113 session's two follow-up arms and `d111vst` stay.
 - **sbnd_xin and pdvd `work/`:** 2211 dirs, 138.4 GiB, released by this session on 2026-09-16.
   - Both ran behind a frozen record layer, a confirm-time re-plan and a stub run with a causal
     negative control (§9).
@@ -514,3 +518,107 @@ Checks after the delete:
 - the sbnd group-mode SP frames `g<N>/frames-dnn.tar.bz2` in the four `d102m` arms: 194 files, 3.9 G;
 - the ncpi0/nuecc48 icluster npz: 0.7 G.
 
+
+## 15. Round E: the closed doc 111 and 113 arms in `pdvd/work` (EXECUTED)
+
+```bash
+D=/home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire; cd $D     # remote_head_20260916d.txt = 55da248e
+python3 scan_arms_20260916d.py --json=scan_arms_20260916d.json       # scan set unchanged from round D
+python3 toks_20260916d.py && python3 cit_20260916d.py toks_20260916d.txt cit_20260916d.json   # 7671 tokens -> 611 cited
+python3 plan_20260916d.py pdvd        # -> plan_20260916d.out: 975 dirs, FREED 9.79 GiB, interlock failures NONE
+python3 archive_records_20260916d.py 1   # 975/975 manifests, 50 M (archive_t1_20260916d.log)
+PATH=<stub>:$PATH CONFIRM=yes ./retire_20260916d.sh 1 pdvd                                   # STUBRM 976 (-rf + 975), rc=0
+PATH=<stub>:$PATH REC_OVERRIDE=<copy, 1 manifest withheld> REPLAN=no CONFIRM=yes ./retire_20260916d.sh 1 pdvd   # rc=14
+CONFIRM=yes ./retire_20260916d.sh 1 pdvd   # EXECUTED by the owner, retire_confirm_pdvd_20260916d.log, rc=0
+python3 survey_pdvd_20260916d.py; python3 patterns_pdvd_20260916d.py   # family / file-class census (survey writes /home/xqian/tmp/cleanup-20260916c/survey.json)
+```
+
+**The instruction.** The owner, 2026-09-16, after §10–§14: *"you may clean up a bit the pdvd/work
+directory to remove some intermediate files?"*
+
+**What was left to release, measured before planning.** After round D, `pdvd/work` held 92.47 GiB
+(first link of every inode). Walked through the keep test, it was nearly all keeps:
+- production and its input chain (§3);
+- substrate (§6);
+- OPEN `p101q`;
+- the 23 hand-scan sources (§4);
+- the arms round D held by prefix for the live peer: `d111*`, `d112*`, `d113*`.
+
+The prefix hold was the only mass reachable without a new policy. A new session,
+`steiner-graph-retile-removal`, had started minutes earlier, so it was asked before planning.
+
+**The peer's answer**, by message:
+- **Keep `d113vbase` and `d113vnone`.** Its one open follow-up is a hand scan, waiting for the owner,
+  of the 29 new PDVD false positives in `none` vs base. The scan reads these arms'
+  `tracking-pr.root`, `tracking-stm.root` and `mabc-pr.zip`.
+- **Not needed:** the rest of `d111v*`, `d111svoff5` and `d113v{base2,foot,nopaint,step1}`.
+- No new prefix is planned. The earlier holds are unchanged.
+- **Costs it named:**
+  - Docs 112/113's Repro and the `d112_*` scripts' `--arm` name `d111vst`.
+  - `d113_verdict.py` cannot re-run levels L1/L2 once `foot`/`nopaint` are gone.
+
+**The planner** is `plan_20260916d.py`, round D's planner with only the pdvd config changed. It was
+run on pdvd only.
+- The `d111`/`d113` prefix hold is lifted; `d112` stays held.
+- `keep_arms` gains `d113vbase`, `d113vnone` and `d111vst`. `d111vst` stays although the peer could
+  spare it, so docs 112/113 still reproduce as written (1.24 GiB).
+- Liveness is read against the pushed head `55da248e`.
+
+| released family | dirs | | released family | dirs |
+|---|---|---|---|---|
+| `d111voff` | 120 | | `d113vbase2` | 120 |
+| `d111vsr6` | 120 | | `d113vfoot` | 120 |
+| `d111vsr10` | 120 | | `d113vnopaint` | 120 |
+| `d111vsr15` | 120 | | `d113vstep1` | 1 |
+| `d111vtr` | 120 | | `d111voff5`, `d111svoff5` | 5 + 5 |
+| `d111v{S,A0,A1,K}` | 1 each | | **total** | **975 dirs, 9.79 GiB set-relative** |
+
+**Gates and controls.**
+- **Planner interlocks:** all pass, with 0 live writers and 0 tree-scoped procs.
+  - No kept symlink resolves into the release, and nothing released is PROTECTED or a record dir.
+  - All 23 hand-scan sources are kept, and INTERLOCK 14 finds 0 uncited families.
+  - 0 live tokens from uncommitted records.
+- **Outside links:** a walk of `~/tmp` (depth 4), `pdhd/work`, `sbnd_xin` and `pdvd` found **0** symlinks
+  resolving into a released dir.
+- **Stub run:** INTERLOCK A re-plan unchanged, record gate 975/975, `STUBRM 976 targets`, rc=0
+  (`retire_stub_pdvd_20260916d.log`).
+- **Causal control:** one manifest withheld (`039349_31_d111vtr`) → `REFUSING: 1 of 975 targets have no
+  manifest`, **rc=14**, no `STUBRM` (`retire_negctl_pdvd_20260916d.log`).
+- **Execution:** the owner ran `CONFIRM=yes ./retire_20260916d.sh 1 pdvd` in this session's shell mode.
+  - The re-plan was unchanged (`plan_20260916d.confirm.out`: interlock failures NONE).
+  - Record gate 975/975, deleted, rc=0.
+
+**Post-state.**
+
+| | before | after |
+|---|---|---|
+| `pdvd/work` (`du`) | 115 G | **105 G** |
+| `pdvd/work` (first link) | 92.47 GiB | 82.69 GiB |
+| `/home/xqian` free | 449 G | **459 G** |
+
+- **Release complete:** 0 of 975 targets are left, and every released family is at 0 dirs.
+- **Keeps intact:** all 4384 planned keep dirs are on disk.
+  - Production at full count: `d103vflip` 120, `d103vprod1` 1, `q29flip`/`q29stm`/`p100flip`/`pvdimg`/`p98von` 120.
+  - `p101q`, `d103v0`, `d103v1`, `d101vnew`, `d113vbase`, `d113vnone` and `d111vst` at 120 each.
+- **Broken symlinks** are 0 / 0 / 0 in pdhd, pdvd and sbnd_xin.
+- **PROTECTED:** pdvd `PROTECTED.txt` now carries `d113vbase d113vnone`, `d111vst` and
+  `/home/xqian/tmp/d102/cfg` (§8, §12), each with its reason.
+
+**Costs.**
+- **Doc pdvd/111's lever tables** (`sr6/sr10/sr15`, `off`, `tr`) and the single-event trace arms can be
+  read from the committed figs but not regenerated without re-running.
+- **Doc pdvd/113's verdict:** the L1/L2 levels (`foot`, `nopaint`) and the base2 repeat are gone.
+  `figs/113_verdict.txt` and `figs/113_gate_base2_*.txt` remain the record.
+
+**What is left in `pdvd/work`, by file class (first link, after this round).**
+- **Every family is a keep.** More space means removing files inside kept arms, the §14 unit, which
+  needs the owner to name each class.
+
+| class | GiB | why it is not proposed |
+|---|---|---|
+| `calib-pr-evt*.json` + `calib-evt*.json` | 23.36 + 13.33 | records of past runs (M13), and the dumps hand scans were read against; production's Bee set comes from `d103vflip`'s |
+| `pctree-evt*.tar.gz` | 13.48 | the inputs every PR re-run reads (production, substrate, scan sources) |
+| `clusters-apa-*-ms-{active,masked}.tar.gz` | 9.69 + 0.96 | production imaging (`pvdimg` hard links `p98von`); its SP frames are already gone (§14), so nothing on disk regenerates it |
+| `tracking-{stm,pr}.root`, `mabc-*.zip` | ~12 | scan-facing outputs (ROOT trees, Bee zips) |
+| `wct_{clus,pr,img}_*.log` | ~5.6 | 120 committed pdvd docs and scripts name `wct_pr_*` logs (census and scan tools read them by name); gzip would break them |
+| `gpu_mem_*.csv` in `keep`/`p98von` | 0.83 | the only pure run-time trace; a candidate if the owner wants it |
