@@ -1,0 +1,12 @@
+# doc pdvd/97 round 2 -- d97r2_view_hints.py on d103vflip (definitions in the script header)
+bee_event	cls	key	volume	stop	michel_start	turn_deg	chain_kink_deg	michel_reach_cm	best_view_key	box_x	box_y	box_z	pf_near_stop
+0	detached	039349_1/62	top	199.0,-169.1,142.7	201.3,-170.7,143.8	128	-1	23.4	y (Top, XZ)	169..229	-199..-139	113..173	gamma 36 MeV @0.1 cm; e- 36 MeV @0.1 cm
+1	backward	039349_5/54	top	99.4,-73.7,251.6	99.4,-73.7,251.6	118	121	8.9	y (Top, XZ)	69..129	-104..-44	222..282	e- 43 MeV @0.1 cm
+2	multicluster	039349_9/50	top	118.3,-291.3,240.1	118.3,-291.3,240.1	83	78	12.0	y (Top, XZ)	88..148	-321..-261	210..270	e- 28 MeV @0.1 cm
+3	energetic	039253_3/67	top	182.6,-237.9,215.5	182.6,-237.9,215.5	50	47	14.2	y (Top, XZ)	153..213	-268..-208	186..246	e- 50 MeV @0.0 cm
+4	soft	039349_47/32	bottom	-324.1,182.8,233.7	-324.1,182.8,233.7	59	59	3.8	z (Side, XY)	-354..-294	153..213	204..264	e- 9.64 MeV @0.1 cm
+5	forward	039349_56/38	top	183.0,-19.8,210.4	183.0,-19.8,210.4	49	48	9.8	y (Top, XZ)	153..213	-50..10	180..240	e- 33 MeV @0.0 cm
+6	gamma	039349_67/78	top	318.6,92.6,112.0	318.6,92.6,112.0	39	39	6.1	x (Front, YZ)	289..349	63..123	82..142	e- 20 MeV @0.0 cm; e- 4.17 MeV @41.3 cm
+7	perpendicular	039253_17/110	top	320.7,301.7,75.0	320.7,301.7,75.0	102	102	8.8	y (Top, XZ)	291..351	272..332	45..105	e- 20 MeV @0.1 cm
+8	dots	039252_17/40	bottom	-38.1,117.0,28.2	-	46	-1	12.2	y (Top, XZ)	-68..-8	87..147	-2..58	gamma 5.74 MeV @0.0 cm; e- 5.74 MeV @0.0 cm
+9	bare	039253_4/78	top	153.9,-288.6,82.6	-	nan	-1	nan	z (Side, XY)	124..184	-319..-259	53..113	none

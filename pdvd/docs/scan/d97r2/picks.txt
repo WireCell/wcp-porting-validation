@@ -1,0 +1,99 @@
+# doc pdvd/97 round 2 picks; arm d103vflip; truth sources in precedence order (items taken): [('pdvd_stm_michel_own103v2_verdicts.json', 24), ('pdvd_stm_michel_own103v_verdicts.json', 40), ('pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json', 610), ('pdvd_stm_michel_smx11_verdicts.json', 204)]
+# skipped after the visual check: 039252_13/70, 039252_9/103, 039253_6/40, 039349_10/66, 039349_23/56, 039349_51/23, 039349_53/48, 039349_58/55, 039349_59/60
+
+== per-class stage counts (hand items surviving each gate, in order; Q2 = owner/high among TRAJ survivors)
+  detached      H 217 | Q4 151 | Q5 128 | SIT 19 | Q6 19 | Q7 18 | Q9 18 | Q8 18 | TRAJ 8 | Q2 8
+  backward      H 143 | Q4 93 | Q5 73 | SIT 12 | Q6 12 | Q7 12 | Q9 12 | Q8 8 | TRAJ 5 | Q2 4
+  multicluster  H 217 | Q4 151 | Q5 128 | SIT 23 | Q6 23 | Q7 23 | Q9 22 | Q8 22 | TRAJ 16 | Q2 14
+  energetic     H 217 | Q4 151 | Q5 128 | SIT 27 | Q6 27 | Q7 27 | Q9 27 | Q8 26 | TRAJ 16 | Q2 14
+  soft          H 217 | Q4 151 | Q5 128 | SIT 33 | Q6 33 | Q7 33 | Q9 33 | Q8 32 | TRAJ 17 | Q2 15
+  forward       H 143 | Q4 93 | Q5 73 | SIT 19 | Q6 19 | Q7 18 | Q9 18 | Q8 12 | TRAJ 8 | Q2 8
+  gamma         H 73 | Q4 58 | Q5 55 | SIT 39 | Q6 39 | Q7 39 | Q9 39 | Q8 10 | TRAJ 7 | Q2 7
+  perpendicular H 143 | Q4 93 | Q5 73 | SIT 28 | Q6 28 | Q7 28 | Q9 27 | Q8 23 | TRAJ 17 | Q2 17
+  dots          H 51 | Q4 42 | Q5 41 | SIT 41 | Q6 41 | Q7 41 | Q9 40 | Q8 21 | TRAJ 13 | Q2 12
+  bare          H 51 | Q4 28 | Q5 28 | SIT 28 | Q6 28 | Q7 27 | Q9 27 | Q8 22 | TRAJ 11 | Q2 8
+
+  detached: usable tier0 8 tier1 0; visually skipped 2
+  PICK detached      039349_1/62    ratio 0.96 muon 182 cm | Michel ke_best 36.9 region 24.9 kink -1 len 23.3 conn 2 dis 3.0 ncl 1 pieces 1 gammas 0 dots 1 | traj sf 278 rows holes 0 dev1 0.0% ; tf 345 rows dev1 2.0% wig1 0.0% | src new_agent:high (pdvd_stm_michel_smx11_verdicts.json)
+       stop (199.0, -169.1, 142.7)  PF mu- 115 MeV(mu- 348 MeV(gamma 36 MeV(e- 36 MeV)))
+       evidence [record:high]: 182 cm muon entering on the z=298 side wall (face.z 0.5 cm at x=+276.5) and ending at (199.0, -169.2, 142.7) in the top volume, 141 cm below the anode and 196 cm above the cathode. The end sits right on CRU seams: 0.7 cm from the y=-168.5 seam and 7 cm past the z=149.65 seam. dx=-78 of a 178 cm chord (-0.44), so the fit end is the lower end. The dQ/dx plateau is ~5.5-6.5e4. The last 3 cm carry fou
+  ALT  detached      039349_48/64   ratio 0.96 muon 125 cm | Michel ke_best 31.1 region 37.2 kink -1 len 15.1 conn 2 dis 3.9 ncl 1 pieces 1 gammas 1 dots 1 | traj sf 192 rows holes 0 dev1 0.0% ; tf 252 rows dev1 0.0% wig1 0.0% | src record:owner (pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json)
+       stop (236.8, 275.0, 69.2)  PF mu- 295 MeV(e- 4.99 MeV, mu- 29 MeV(gamma 31 MeV(e- 31 MeV)))
+       evidence [record:owner]: 
+
+  backward: usable tier0 4 tier1 1; visually skipped 0
+  PICK backward      039349_5/54    ratio 1.12 muon 137 cm | Michel ke_best 43.6 region 32.2 kink 121 len 5.3 conn 1 dis 0.0 ncl 1 pieces 3 gammas 0 dots 1 | traj sf 214 rows holes 0 dev1 0.0% ; tf 265 rows dev1 0.8% wig1 0.0% | src record:high (pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json)
+       stop (99.4, -73.7, 251.6)  PF mu- 331 MeV(e- 43 MeV)
+       evidence [record:high]: 141 cm chain, enters through the z = 298 wall (face.z 0.2 at x = +217) and stops at x = +99 in the top volume, 95.8 cm above the cathode face, 47 cm from the z = 298 wall, 74 cm from the y = 0 seam, 102 cm from the z seam. dx = -118 of a 133 cm chord, so the fit end is the lower end. Profile: plateau ~6e4, climbing along the muon curve to 0.8-1.0e5 at s = 4-10 cm and 1.1-1.4e5 at s = 1-3 cm (the t
+  ALT  backward      039349_17/24   ratio 1.04 muon 70 cm | Michel ke_best 17.1 region 31.5 kink 130 len 7.7 conn 1 dis 0.0 ncl 1 pieces 1 gammas 0 dots 0 | traj sf 110 rows holes 0 dev1 0.0% ; tf 134 rows dev1 1.5% wig1 1.5% | src record:high (pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json)
+       stop (-70.1, -77.8, 193.8)  PF mu- 186 MeV(e- 17 MeV)
+       evidence [record:high]: Fitted chain 71 cm in the bottom volume. Entry at x = -4.3 just under the cathode (thin grey context carries the muon from the cathode up to x ~ +190 in the top volume, so it crossed the cathode from above); stop at (-70.4, -77.6, 193.9), 105 cm from the nearest side wall, 44 cm from the z = 149.65 seam, 78 cm from the y = 0 seam, 67 cm from the cathode, 270 cm from the anode. dx = -66 of a 69 cm 
+
+  multicluster: usable tier0 14 tier1 2; visually skipped 3
+  PICK multicluster  039349_9/50    ratio 0.96 muon 224 cm | Michel ke_best 28.2 region 25.1 kink 78 len 6.6 conn 1 dis 0.0 ncl 2 pieces 3 gammas 1 dots 2 | traj sf 352 rows holes 0 dev1 0.6% ; tf 389 rows dev1 0.0% wig1 0.0% | src record:high (pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json)
+       stop (118.3, -291.3, 240.1)  PF mu- 519 MeV(e- 28 MeV)
+       evidence [record:high]: 231 cm, enters 0.1 cm from the z face, stops 45.3 cm from the y wall. The profile hugs the muon reference curve all the way to 1.5e5 -- as clean a Bragg as this sample has. A four-piece arm covers 0-12 cm past the stop (cos_fwd 0.13-0.68) with profile charge to -14 cm. 122009 is a 0.7 cm dot 42 cm out, forward and at 8.5e4 e/cm: gamma. 124016 is 52 cm out, sideways-backward and 0.3 MIP -- too far,
+  ALT  multicluster  039349_54/58   ratio 0.89 muon 177 cm | Michel ke_best 27.6 region 31.7 kink 103 len 11.3 conn 1 dis 0.0 ncl 2 pieces 2 gammas 1 dots 1 | traj sf 282 rows holes 0 dev1 0.0% ; tf 320 rows dev1 0.0% wig1 0.0% | src record:high (pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json)
+       stop (208.4, -302.6, 211.0)  PF mu- 417 MeV(e- 27 MeV)
+       evidence [record:high]: 181 cm, enters at the anode face, stops 33.8 cm from the y wall. Bragg rise 5e4 -> 9e4 on the muon curve. A 12.8 cm arm at 4.8e4 e/cm leaves the stop sideways (cos_fwd -0.07) -- range and charge of a ~25 MeV Michel. Two isolated dots: 139007 sits 14 cm out, just past the arm's tip and ~15 deg off its axis; 138006 is 50 cm out on the same side, clear of the muon body in the wide view. Both tagged g
+
+  energetic: usable tier0 14 tier1 2; visually skipped 2
+  PICK energetic     039253_3/67    ratio 1.12 muon 158 cm | Michel ke_best 50.2 region 32.7 kink 47 len 12.9 conn 1 dis 0.0 ncl 1 pieces 2 gammas 0 dots 1 | traj sf 269 rows holes 0 dev1 0.0% ; tf 297 rows dev1 0.7% wig1 0.0% | src record:owner (pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json)
+       stop (182.6, -237.9, 215.5)  PF mu- 377 MeV(e- 50 MeV)
+       evidence [record:owner]: 
+  ALT  energetic     039252_7/92    ratio 0.94 muon 325 cm | Michel ke_best 38.6 region 36.6 kink 112 len 12.3 conn 1 dis 0.0 ncl 1 pieces 1 gammas 2 dots 0 | traj sf 506 rows holes 0 dev1 0.0% ; tf 585 rows dev1 1.2% wig1 0.0% | src record:owner (pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json)
+       stop (63.0, 289.5, 60.0)  PF mu- 666 MeV(mu- 114 MeV(e- 38 MeV), e- 3.18 MeV)
+       evidence [record:owner]: 
+
+  soft: usable tier0 15 tier1 2; visually skipped 4
+  PICK soft          039349_47/32   ratio 0.92 muon 98 cm | Michel ke_best 9.6 region 19.0 kink 59 len 4.0 conn 1 dis 0.0 ncl 1 pieces 1 gammas 0 dots 0 | traj sf 157 rows holes 0 dev1 0.0% ; tf 176 rows dev1 0.0% wig1 0.0% | src record:high (pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json)
+       stop (-324.1, 182.8, 233.7)  PF mu- 247 MeV(e- 9.64 MeV)
+       evidence [record:high]: 98 cm chain, enters 0.4 cm from the z face and the fit ends 15.9 cm from the anode face, deep enough to be a real stop. The dQ/dx panel is a textbook Bragg: a 5.4e4 plateau beyond s=40 climbing smoothly through 6.5e4 at s=15, 8e4 at s=6, 1.0e5 at s=3 and 1.20-1.26e5 in the last centimetre, tracking the solid muon curve point for point with almost no scatter -- the cleanest rise I could ask for. Pa
+  ALT  soft          039349_12/52   ratio 0.90 muon 72 cm | Michel ke_best 12.5 region 12.5 kink 37 len 3.3 conn 1 dis 0.0 ncl 1 pieces 2 gammas 0 dots 1 | traj sf 121 rows holes 0 dev1 0.8% ; tf 141 rows dev1 5.0% wig1 0.7% | src record:owner (pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json)
+       stop (246.6, -127.6, 39.2)  PF mu- 190 MeV(e- 12 MeV, e- 3.80 MeV)
+       evidence [record:owner]: 403.8 cm chain in four segments, entering 5.1 cm from a z face and ending 38.4 cm from the nearest z wall (93.3 cm from the anode, 208.9 cm in y), so the stop is deep. The dQ/dx panel at 4x is the textbook case: the profile sits on the muon reference's asymptote at 5.4-6e4 from s=60 back to s=20, lifts to 6.5-8.2e4 by s=10-18, 8.5-9.8e4 at s=3-8, and the last four real points climb 1.22, 1.26, 1.3
+
+  forward: usable tier0 8 tier1 0; visually skipped 1
+  PICK forward       039349_56/38   ratio 0.91 muon 208 cm | Michel ke_best 33.5 region 39.7 kink 48 len 10.4 conn 1 dis 0.0 ncl 1 pieces 2 gammas 0 dots 1 | traj sf 340 rows holes 0 dev1 0.0% ; tf 372 rows dev1 0.0% wig1 0.0% | src record:owner (pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json)
+       stop (183.0, -19.8, 210.4)  PF mu- 486 MeV(e- 33 MeV)
+       evidence [record:owner]: 
+  ALT  forward       039253_2/32    ratio 0.90 muon 22 cm | Michel ke_best 26.0 region 43.4 kink 40 len 5.3 conn 1 dis 0.0 ncl 1 pieces 2 gammas 0 dots 1 | traj sf 49 rows holes 0 dev1 0.0% ; tf 61 rows dev1 0.0% wig1 0.0% | src record:high (pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json)
+       stop (-290.0, 146.9, 11.1)  PF mu- 80 MeV(e- 26 MeV)
+       evidence [record:high]: 22.4 cm, entry 0.5 cm from the z face, stop 10.7 cm inside it. Clear Bragg rise, 6e4 at 20 cm to 1.0e5 at the last cm, on the muon reference curve. A 12.8 cm two-piece arm leaves the stop at 43 deg at MIP dQ/dx -- a muon at its own Bragg peak cannot continue at MIP, so the arm is a second particle, and 12.8 cm is the right range for a ~31 MeV electron. No dead region at the stop in any plane.
+
+  gamma: usable tier0 7 tier1 0; visually skipped 2
+  PICK gamma         039349_67/78   ratio 1.02 muon 148 cm | Michel ke_best 20.9 region 25.2 kink 39 len 6.9 conn 1 dis 0.0 ncl 1 pieces 1 gammas 2 dots 0 | traj sf 238 rows holes 0 dev1 2.9% ; tf 284 rows dev1 1.8% wig1 0.4% | src record:high (pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json)
+       stop (318.6, 92.6, 112.0)  PF mu- 252 MeV(mu- 139 MeV(e- 20 MeV), e- 4.17 MeV)
+       evidence [record:high]: 154 cm chain entering 0.3 cm from the z face and stopping 21.0 cm from the x (anode) face, inside the volume. The Bragg rise is clean and follows the reference curve the whole way: 5.5-6.5e4 plateau beyond s=15, 7-8e4 at s=8-11, 8.7-9.5e4 at s=4-6, 1.1-1.15e5 at s=2-3 and a top pair at 1.37-1.40e5 within the last 1.5 cm, and the range, dQ/dx and MCS momenta agree at 461/466/444 MeV/c with ambiguit
+  ALT  gamma         039253_5/32    ratio 0.80 muon 133 cm | Michel ke_best 19.3 region 20.9 kink 75 len 4.8 conn 1 dis 0.0 ncl 2 pieces 2 gammas 1 dots 1 | traj sf 215 rows holes 0 dev1 0.0% ; tf 251 rows dev1 1.6% wig1 0.0% | src record:high (pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json)
+       stop (-320.4, -141.3, 74.2)  PF mu- 70 MeV(mu- 281 MeV(e- 19 MeV, gamma 0.70 MeV(e- 0.70 MeV)), e- 2.81 MeV)
+       evidence [record:high]: A 134.0 cm chain entering 4.9 cm from the z face and ending 19.4 cm from the x (anode) face, in_fv 1 and accepted by the chain. The Bragg is as clean as any in my chunk and, crucially, it peaks AT the fit's last point rather than before it: 5.4e4 plateau from s=100 back to s=40, 6.5-8.5e4 at s=15-35, 8.5-9.0e4 at s=8-12, 9.9-1.05e5 at s=3-8, 1.077e5 at s=3.3 and 1.135e5 at s=2.6, and 1.442e5 at th
+
+  perpendicular: usable tier0 17 tier1 0; visually skipped 1
+  PICK perpendicular 039253_17/110  ratio 0.90 muon 85 cm | Michel ke_best 20.4 region 26.3 kink 102 len 10.0 conn 1 dis 0.0 ncl 1 pieces 1 gammas 0 dots 0 | traj sf 140 rows holes 0 dev1 0.0% ; tf 166 rows dev1 0.0% wig1 0.0% | src record:high (pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json)
+       stop (320.7, 301.7, 75.0)  PF mu- 206 MeV(mu- 37 MeV(e- 20 MeV))
+       evidence [record:high]: 85.8 cm chain entering 0.2 cm from the x face and stopping 19.2 cm inside it. The profile follows the solid muon curve from about 20 cm in: ~5.5e4 plateau out past 40 cm, 6.5-7e4 at 12-18, 8.0-9.0e4 at 3-8 and 1.05e5 and 1.20e5 in the last centimetre and a half, with the maximum at the fit's own last point, so the pin stays put. An arm of three pieces leaves that same point at a large angle -- the
+  ALT  perpendicular 039253_11/118  ratio 0.87 muon 40 cm | Michel ke_best 9.1 region 24.6 kink 65 len 6.7 conn 1 dis 0.0 ncl 1 pieces 1 gammas 1 dots 0 | traj sf 76 rows holes 0 dev1 0.0% ; tf 84 rows dev1 2.4% wig1 0.0% | src owner (pdvd_stm_michel_own103v_verdicts.json)
+       stop (305.0, 259.6, 245.9)  PF mu- 124 MeV(e- 9.09 MeV)
+       evidence [record:owner]: 
+
+  dots: usable tier0 12 tier1 1; visually skipped 1
+  PICK dots          039252_17/40   ratio 1.05 muon 37 cm | Michel ke_best 5.7 region 11.7 kink -1 len 2.5 conn 0 dis 9.8 ncl 1 pieces 1 gammas 0 dots 1 | traj sf 56 rows holes 0 dev1 0.0% ; tf 67 rows dev1 0.0% wig1 0.0% | src new_agent:high (pdvd_stm_michel_smx11_verdicts.json)
+       stop (-38.1, 117.0, 28.2)  PF mu- 102 MeV(mu- 33 MeV(gamma 5.74 MeV(e- 5.74 MeV)))
+       evidence [record:high]: 37 cm track in the bottom volume. The lower end of the chain (entry) is at x=-4.7, right at the cathode face, so the muon presumably crossed the cathode from the top volume, its upper part sitting in another cluster. It stops at (-38.1, 117.0, 28.2), 35 cm below the cathode, 27 cm from the z wall, 52 cm from the y=0 seam and 122 cm from the z seam. dx=-33 of a 35 cm chord (-0.95), so the fit end i
+  ALT  dots          039349_52/48   ratio 1.04 muon 39 cm | Michel ke_best 0.0 region 7.3 kink -1 len 0.0 conn 0 dis -1.0 ncl 0 pieces 0 gammas 0 dots 0 | traj sf 64 rows holes 0 dev1 0.0% ; tf 69 rows dev1 0.0% wig1 0.0% | src record:high (pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json)
+       stop (305.5, 66.6, 225.8)  PF mu- 120 MeV(gamma 3.34 MeV(e- 3.34 MeV))
+       evidence [record:high]: Short one, 38.9 cm, and a whole object - the wide and stop views show a single continuous spine from the entry circle to the star with no companion cluster and nothing that reads as a broken-off piece. It enters 0.4 cm through the anode face and stops 34.5 cm from that same anode face, contained by the numbers. Undershoot screen: no forward piece at the stop at all (n_stop_arms 0), so that failure
+
+  bare: usable tier0 8 tier1 3; visually skipped 0
+  PICK bare          039253_4/78    ratio 1.39 muon 207 cm | Michel ke_best 0.0 region 1.1 kink -1 len 0.0 conn 0 dis -1.0 ncl 0 pieces 0 gammas 0 dots 0 | traj sf 325 rows holes 0 dev1 0.3% ; tf 350 rows dev1 0.0% wig1 0.0% | src record:high (pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json)
+       stop (153.9, -288.6, 82.6)  PF mu- 431 MeV(mu- 82 MeV)
+       evidence [record:high]: A 214.6 cm chain, 498.8 MeV by range with MCS agreeing at 467.7 (amb 0.09), entering 1.0 cm from the x face at the anode and ending 47.7 cm from the nearest (y) wall, in_fv 1; the chain accepts it as an STM. The dQ/dx panel is as clean as the best in this chunk: a 4.5-5.5e4 plateau from s=100 back to s=15 scattering about the flat solid muon curve, then a monotone climb that follows the curve all 
+  ALT  bare          039349_8/52    ratio 1.15 muon 201 cm | Michel ke_best 0.0 region 2.2 kink -1 len 0.0 conn 0 dis -1.0 ncl 0 pieces 0 gammas 0 dots 0 | traj sf 309 rows holes 0 dev1 0.0% ; tf 360 rows dev1 0.3% wig1 1.1% | src record:high (pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json)
+       stop (204.4, 10.1, 217.7)  PF mu- 119 MeV(mu- 38 MeV(mu- 368 MeV, e- 2.87 MeV), e- 4.87 MeV)
+       evidence [record:high]: 206 cm of chain over a 195 cm chord, entering 0.1 cm from the anode x face at x 339.9 and stopping at (204.7, 10.3, 217.5), which is 80.9 cm from the nearest wall, 135 cm from the anode and 205 cm from the cathode plane, so the stop is deeply contained in every direction. The dQ/dx profile is the cleanest Bragg in this chunk: a 4.2-5.5e4 plateau from s = 100 in to about s = 40, then a steady climb
+
+wrote /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/scan/d97r2/picks.tsv 20 rows
+wrote /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/figs/97r2_picks_dqdx_rr.png
+wrote /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/figs/97r2_picks_traj_a.png
+wrote /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/figs/97r2_picks_traj_b.png

@@ -1,5 +1,347 @@
 # doc pdvd/97 — STM and STM+Michel selection in PDHD and PDVD: the procedure, Bee showcase events and the numbers for the video
 
+## Round 2 (2026-09-16): the PDVD set rebuilt on the post-flip production, 10 events
+
+**The owner's request (2026-09-16):** trajectory and dQ/dx fitting have improved since round 1, so refresh this doc:
+- pick good STM + Michel candidates, not necessarily round 1's;
+- show good track trajectories and different Michel-electron situations, from PDVD;
+- make new Bee links, and write instructions for them.
+
+**Owner choices** (asked before any pick was made):
+- PDVD only;
+- all four Michel situations offered: turn angle, detached, Michel + gamma / pieces, energy extremes;
+- one no-Michel contrast each: dots and bare.
+
+**Status.** Information and display only. No code or config was changed, and no arm was re-run.
+- **Source.** Every Bee event is a verbatim copy of the production `mabc-pr.zip` of `d103vflip`; all 250 members were
+  checked sha256-identical to their source.
+- **Why this arm.** `d103vflip` is the proof arm of the PDVD trajectory flip (doc pdvd/103 §14, toolkit `8fc6070e`):
+  the retile samples with `charge_stepped`, and the fit adds `fit_weight_pow` 1.5 and `assoc_cont_center` 1 (docs
+  101–102).
+- **Still production.** Its 120 zips are member-for-member sha256-identical to those of `d113vbase`, which ran toolkit
+  HEAD `d2777286` with doc 113's knob off. Checked for this round: 120 / 120.
+- **Round 1** (§0–§5 below) is kept for the record. Its PDVD set is superseded. Its PDHD set is pre-flip and was not
+  rebuilt.
+
+**Answers in one screen:**
+- **Bee set:** https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/list/
+  - 10 events: 8 Michel situations and 2 no-Michel contrasts (§R2).
+  - Verified: `event/list/` links events 0–9, and every event's `mc` and `track_fit-global` download at exactly the zip
+    member's size, 20 / 20 (`scan/d97r2/bee_sets.txt`).
+- **"Good trajectory" is a gate, not a hope** (§R1). It is measured on the candidate's own rows:
+  - 0 Bee holes in `stm_fit`;
+  - ≤ 5 % of rows more than 1 cm off the charge ridge, on both fits;
+  - ≤ 5 % zig-zag rows on `track_fit`.
+
+  Worst values across the 10 picks: 0 holes, 2.9 % off-ridge, 0.4 % zig-zag.
+- **How to show them:** §R3 covers the Bee controls, checked against the deployed viewer. §R4 goes event by event.
+- **Numbers:** the grades the flips were applied on are in §R5. Round 1's §3 tables are pre-flip and are labelled so.
+
+### R0. Repro
+
+```bash
+IMG=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img; X=$IMG/pdvd/docs/nf_sp_img_clus/scripts
+# 1. picks, read-only on d103vflip and the committed records
+#    -> scan/d97r2/picks.{txt,tsv}, figs/97r2_picks_{dqdx_rr,traj_a,traj_b}.png
+python3 $X/d97r2_video_picks.py \
+   --skip 039252_13/70,039252_9/103,039253_6/40,039349_10/66,039349_23/56,039349_51/23,039349_53/48,039349_58/55,039349_59/60 \
+   > $IMG/pdvd/docs/scan/d97r2/picks.txt; echo rc=$?         # rc=0: every class has a pick and a runner-up
+python3 $X/d97r2_stop_closeup.py; echo rc=$?                   # -> figs/97r2_picks_stop_closeup.png
+python3 $X/d97r2_view_hints.py > $IMG/pdvd/docs/scan/d97r2/view_hints.txt; echo rc=$?   # (+ view_hints.tsv)
+# 2. the Bee zip, with a per-member sha256 check against production
+bash $X/d97r2_build_bee.sh; echo rc=$?     # -> /home/xqian/tmp/d97r2/bee-d97r2-pdvd.zip, scan/d97r2/bee-d97r2-pdvd.index.txt
+# 3. upload (owner request), then the presence / size check
+(mkdir -p /home/xqian/tmp/d97r2/up && cd /home/xqian/tmp/d97r2/up && \
+   bash $IMG/pdvd/upload-to-bee.sh /home/xqian/tmp/d97r2/bee-d97r2-pdvd.zip)
+python3 $X/d97r2_bee_verify.py https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/list/ \
+   --uploaded "2026-09-16 (owner request)"; echo rc=$?         # -> scan/d97r2/bee_sets.txt
+# 4. d103vflip is still production: every zip member identical to d113vbase (toolkit HEAD d2777286, knob off)
+python3 -c 'import glob,hashlib,zipfile as Z
+h=lambda p:{n:hashlib.sha256(Z.ZipFile(p).read(n)).digest() for n in Z.ZipFile(p).namelist()}
+g=glob.glob("'$IMG'/pdvd/work/*_d103vflip/mabc-pr.zip"); print(sum(h(a)==h(a.replace("d103vflip","d113vbase")) for a in g),"/",len(g))'
+```
+
+### R1. How the events were chosen (`scripts/d97r2_video_picks.py`)
+
+The script header is the rule. Its sha256 was recorded before the first run and again at amendment A1
+(`scan/d97r2/rule.sha256`).
+
+**Truth.** The folded PDVD precedence the flip was graded on (doc 103 §13) is own103v2 > own103v >
+p99rwon_carried_corrected > smx11, read through `d113_grade.truth`.
+- **8 of the 10 picks** carry labels scanned on the pre-flip arm `p98vonq` and carried by geometry onto the production
+  pctrees (doc 100 round 2's carry, `geometry ok`).
+- **The detached and dots picks** come from the verdict-blind `smx11` scan, displayed on `d103v1`, which is identical
+  to `d103vflip`.
+- **So a quoted scanner sentence describes the display that scanner saw.** Its lengths and MeV can differ from the
+  production numbers in the tables.
+
+**Gates on every pick.** The per-class counts are in `scan/d97r2/picks.txt`.
+
+| gate | rule |
+|---|---|
+| hand | verdict and `michel_kind` as the class needs |
+| Q4 | the chain's Bragg-path accept: `is_stm` 1 and `topology_cleared_bits` 0 |
+| Q5 | `michel_found` 1 for a Michel class, 0 for a contrast |
+| situation | the class definition below, read from the **chain** (`T_stm_michel`) |
+| Q6, Q7, Q9 | the zip holds `mc`, `track_fit`, `stm_fit` and `clustering`; the PF subtree holds only mu- / e- / gamma; `michel_ke_best` and every EM node ≤ 52.8 MeV |
+| Q8 | the PF shows the class at the stop: Michel radius 15 cm, gamma radius 50 cm, as in round 1 |
+| **TRAJ** | on the candidate's own rows in the production zip, split into runs at jumps > 3 cm: (a) `stm_fit` has 0 Bee holes (≥ 3 consecutive q < 0 rows; Bee skips q < 0, doc 110 §2); (b) `stm_fit` and `track_fit` each have ≤ 5 % of rows with ridge offset > 1 cm (doc 111's P1 definition); (c) `track_fit` has ≤ 5 % of rows with chord wiggle > 1 cm (doc 110 §5). **Never relaxed.** |
+| Q2 | owner source or `high` confidence → tier 0. Tier 1 (any scanner source) is the only relaxation, as in round 1. |
+
+**Classes, in the pre-registered fill order (rarest first).** A key used by an earlier class, as pick or runner-up, is
+not reused. The last column counts the items that pass every gate before that exclusion; tier 0 in brackets.
+
+| class | hand | chain situation | Q8 near the stop | pass (tier 0) |
+|---|---|---|---|---|
+| detached | STM_MICHEL | `michel_conn_type` 2: nothing graph-connected at the stop; the chain bridges to the nearest piece | a Michel-near EM object | 8 (8) |
+| backward | STM_MICHEL, attached | attached, `michel_kink_deg` ≥ 120 | exactly one EM object, Michel-near, not a gamma | 5 (4) |
+| multicluster | STM_MICHEL | `michel_n_clusters` ≥ 2 | a Michel-near EM object | 16 (14) |
+| energetic | STM_MICHEL | 35 ≤ `michel_ke_best` ≤ 52.8 MeV | a Michel-near EM object | 16 (14) |
+| soft | STM_MICHEL | `michel_ke_best` < 15 MeV | a Michel-near EM object | 17 (15) |
+| forward | STM_MICHEL, attached | attached, kink < 60° | as backward | 8 (8) |
+| gamma | STM_MICHEL, both | `n_michel_gammas` ≥ 1 | round 1's "both" rule | 7 (7) |
+| perpendicular | STM_MICHEL, attached | attached, 60° ≤ kink < 120° | as backward | 17 (17) |
+| dots | STM_ONLY, detached dots | `michel_found` 0 | a gamma node near | 13 (12) |
+| bare | STM_ONLY, none | `michel_found` 0 | no EM object near | 11 (8) |
+
+**Ranking:** tier, then the chain's Bragg ratio (contrast / expected contrast), then owner source, then fewer mu- nodes.
+Rank 1 goes to Bee; rank 2 is a recorded runner-up.
+
+**The visual check is the arbiter, and it moved the picks twice.** Every panel was judged by the agent. The owner has
+not reviewed these picks. The panels are dQ/dx vs residual range, the trajectory over the charge, and a ±15 cm
+close-up of the stop.
+- **Round 1 → 2, Bragg rise not clear at the stop:**
+  - peak then drop, or no rise: `039349_53/48`, `039349_10/66`, `039252_9/103`, `039252_13/70`;
+  - deep dips on the approach: `039349_59/60`, `039349_58/55`;
+  - weak rise with dips: `039253_6/40`.
+- **Amendment A1** (dated, written before round 2): a pick must show its class's situation at the stop.
+  - Detached #1 `039349_23/56` drew its Michel as a near-collinear continuation inside the muon's own cluster, with no
+    visible gap (`figs/97r2_closeup_round1.png`).
+- **Round 2 → 3:** soft #1 `039349_51/23` was skipped under A1. Its 2.2 cm Michel is not visible at the stop
+  (`figs/97r2_picks_stop_closeup_round2.png`).
+- **Kept for the record:** `scan/d97r2/picks_round{1,2}.*` and `figs/97r2_picks_*_round{1,2}.png`.
+
+![](figs/97r2_picks_dqdx_rr.png)
+*dQ/dx vs residual range on the chain's muon points (role 1), per class: pick (red) and runner-up (orange). Black is the
+chain's own `dqdx_ref`.*
+
+![](figs/97r2_picks_stop_closeup.png)
+*The ten picks at their stops, ±15 cm, in the three projections. Grey is clustering charge; dots are `track_fit` rows,
+coloured by cluster. The red x is the chain's stop and the magenta + its Michel start.*
+
+The whole-muon trajectory panels for picks and runner-ups are `figs/97r2_picks_traj_a.png` and `figs/97r2_picks_traj_b.png`.
+
+### R2. The PDVD set — production `d103vflip`
+
+**Set:** https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/list/
+
+**Column notes:**
+- **Michel, chain's reading:**
+  - kink, length, pieces, clusters and gammas come from `T_stm_michel`;
+  - reach, and event/0's turn angle (its chain kink is unmeasured), come from `scan/d97r2/view_hints.tsv`;
+  - energy is `michel_ke_best` (the dQ/dx sum) / the region estimator (round 1 §1.3, item 6).
+- **Trajectory:** `stm_fit` holes / off-ridge rows > 1 cm; `track_fit` off-ridge rows / zig-zag rows.
+- **Volume:** PDVD's top volume is x > 0, the bottom x < 0; the cathode is at x = 0.
+
+| Bee | situation | run_evt / cluster | vol. | hand label (source) | muon | Bragg ratio | Michel, chain's reading | trajectory | PF near the stop |
+|---|---|---|---|---|---|---|---|---|---|
+| [event/0](https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/0/) | **detached** | 039349_1 / 62 | top | STM_MICHEL attached (smx11 agent, high) | 182 cm | 0.96 | bridged across 3.0 cm, reach 23 cm, turns back 128°; 36.9 / 24.9 MeV | 0 / 0.0 %; 2.0 % / 0.0 % | `gamma 36 MeV → e-` pseudo-carrier at the stop |
+| [event/1](https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/1/) | **backward** | 039349_5 / 54 | top | STM_MICHEL attached (record, high) | 137 cm | 1.12 | attached, kink 121°, 3 pieces, reach 9 cm; 43.6 / 32.2 MeV | 0 / 0.0 %; 0.8 % / 0.0 % | `e- 43 MeV` |
+| [event/2](https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/2/) | **multicluster** | 039349_9 / 50 | top | STM_MICHEL both (record, high) | 224 cm | 0.96 | attached, kink 78°, 3 pieces from 2 clusters, 1 gamma collected; 28.2 / 25.1 MeV | 0 / 0.6 %; 0.0 % / 0.0 % | `e- 28 MeV` (one node for both clusters) |
+| [event/3](https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/3/) | **energetic** | 039253_3 / 67 | top | STM_MICHEL attached (owner, smx4) | 158 cm | 1.12 | attached, kink 47°, reach 14 cm; **50.2** / 32.7 MeV | 0 / 0.0 %; 0.7 % / 0.0 % | `e- 50 MeV` |
+| [event/4](https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/4/) | **soft** | 039349_47 / 32 | bottom | STM_MICHEL attached (record, high) | 98 cm | 0.92 | attached, kink 59°, 4 cm; **9.6** / 19.0 MeV | 0 / 0.0 %; 0.0 % / 0.0 % | `e- 9.64 MeV` |
+| [event/5](https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/5/) | **forward** | 039349_56 / 38 | top | STM_MICHEL attached (owner, smx4) | 208 cm | 0.91 | attached, kink **48°**, 10 cm; 33.5 / 39.7 MeV | 0 / 0.0 %; 0.0 % / 0.0 % | `e- 33 MeV` |
+| [event/6](https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/6/) | **gamma** | 039349_67 / 78 | top | STM_MICHEL both (record, high) | 148 cm | 1.02 | attached, kink 39°, 7 cm, **2 gammas collected**; 20.9 / 25.2 MeV | 0 / 2.9 %; 1.8 % / 0.4 % | `e- 20 MeV` at the stop; `e- 4.17 MeV` 41 cm out |
+| [event/7](https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/7/) | **perpendicular** | 039253_17 / 110 | top | STM_MICHEL attached (record, high) | 85 cm | 0.90 | attached, kink **102°**, 10 cm; 20.4 / 26.3 MeV | 0 / 0.0 %; 0.0 % / 0.0 % | `e- 20 MeV` |
+| [event/8](https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/8/) | **dots** (contrast) | 039252_17 / 40 | bottom | STM_ONLY detached dots (smx11 agent, high) | 37 cm | 1.05 | no Michel; a 2.5 cm, 5.7 MeV piece 9.8 cm out, which the chain declines as a Michel | 0 / 0.0 %; 0.0 % / 0.0 % | `gamma 5.74 MeV → e-` pseudo-carrier |
+| [event/9](https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/9/) | **bare** (contrast) | 039253_4 / 78 | top | STM_ONLY none (record, high) | 207 cm | **1.39** | nothing at the stop; region energy 1.1 MeV | 0 / 0.3 %; 0.0 % / 0.0 % | none |
+
+**Runner-ups (not uploaded):** detached `039349_48/64`, backward `039349_17/24`, multicluster `039349_54/58`, energetic
+`039252_7/92`, soft `039349_12/52`, forward `039253_2/32`, gamma `039253_5/32`, perpendicular `039253_11/118`, dots
+`039349_52/48`, bare `039349_8/52`.
+- They pass every gate, and their dQ/dx and ±40 cm trajectory panels were looked at.
+- They were not close-up checked.
+
+**Repeats from round 1:** only event/9. It is the same muon as round 1's PDVD event/7: `039253_4/80` on `p96vprod`,
+stop (153.9, −288.7, 82.6) against today's (153.9, −288.6, 82.6). The cluster id differs between the two pctree
+lineages.
+
+### R3. Viewing in Bee — the controls
+
+These were checked against the deployed viewer, not against the local Bee source docs: its bundle
+`/twister/static/js/bee/dist/bee.js` and the event page's "List of Hotkeys", both fetched on 2026-09-16.
+
+**Before you start:** open an event link. `?` shows the hotkey list.
+
+**3-D Imaging folder, the layers.** `1`–`9` select a reco layer, `Esc` unselects, `=` / `-` change opacity, and `+` / `_`
+change point size.
+- `clustering`: all charge, t0-corrected. The context.
+- `track_fit`: the chain's PR fit of the muon and the Michel, coloured by charge.
+  - Rows with q < 0 are clamped to 0, so this layer never has holes.
+  - **The Bragg rise is the colour change over the last few cm.**
+- `stm_fit`: the tagger's own fit.
+  - It is unclamped, so Bee drops every row whose charge is below 10 ke (q < 0; doc 110 §2).
+  - Every pick here has 0 holes by construction (TRAJ).
+- `shower_track`: per point, shower (q 15000) or track (q 0).
+- `vertices`: the PR vertices. The main vertex (q 15000) is the muon's entry (round 1 §1.3, item 2).
+- Also in the set, and best left off for the video:
+  - `stm`: the STM-tagged clusters' charge;
+  - `steiner_graph` / `steiner_terminals`: the cloud the trajectory seed walks (docs 111–112);
+  - the channel dead areas (Dead Area folder).
+
+**Monte Carlo folder (`m` toggles it): the particle-flow tree**, i.e. the PR graph (round 1 §1.5).
+- Ticking a node's checkbox draws that node in 3-D, a line from its start to its end with a sphere at its start.
+- Tick the `e-` or `gamma` node to put a marker on the Michel or the dot.
+- The inherited cosmetics of round 1 §1.5 still apply: the root reads `reco nu 0.0 MeV`, and the candidate sits in a
+  `nu` slot.
+
+**Camera:**
+- `x` is Front (YZ), `y` Top (XZ), `z` Side (XY); `r` resets.
+- `Shift+Up` / `Shift+Down` zoom.
+- The Camera folder's `Origin X/Y/Z (cm)` set the rotation pivot: type the stop from §R4. Double-clicking a point also
+  moves the pivot there.
+- A single click on a point shows its (x, y, z) and cluster id in the status bar. Use it to confirm you are on the
+  candidate's cluster.
+
+**Box of Interest folder (`b` toggles Box Mode):** `x/y/z min/max` crop the display. §R4 gives a ±30 cm box around each
+stop.
+
+### R4. Per event: where to look and what to say
+
+Coordinates, boxes and the suggested view key come from `scan/d97r2/view_hints.tsv` (`d97r2_view_hints.py`).
+- **The suggested key** is the one whose projection shows the turn at the stop largest.
+- **Turn angles** are measured between the muon's last 3–15 cm and the Michel's points. For the attached picks they
+  agree with the chain's kink within 5°.
+- **Quotes** are from the committed hand record.
+
+- **event/0 — detached** (039349_1/62). Stop (199.0, −169.1, 142.7), top volume. Box x 169..229, y −199..−139,
+  z 113..173. Key `y`.
+  - **What to show:** the muon arrives mostly along z, descending, and stops. 3 cm away a 23 cm electron leaves upward
+    in x, turning back 128°. Nothing graph-connects it to the stop, so the chain bridges the gap, and the PF draws it as
+    `gamma 36 MeV → e-`.
+  - **Scanner (blind):** "a 23 cm arm … starts 3 cm from the stop vertex and leaves at a large angle … going up in x
+    while the muon was coming down".
+  - **Caveats:**
+    - The scanner notes the stop is 0.7 cm from a CRU seam (y = −168.5) and 7 cm from another, so the gap may be the
+      seam.
+    - The rubric kind is `attached`; "bridged" is the chain's reading.
+    - The rise is in the last ~3 cm only ("ragged … but the end does climb").
+    - The energy estimators disagree: 36.9 vs 24.9 MeV.
+- **event/1 — backward** (039349_5/54). Stop (99.4, −73.7, 251.6). Box 69..129, −104..−44, 222..282. Key `y`.
+  - **What to show:** a hook. The electron turns back 121° from the muon's direction and reaches 9 cm. Bragg ratio 1.12.
+  - **Scanner:** "A kinked arm leaves within 2-4 cm of the stop … a second particle, the Michel". The scanner's "departs at a
+    clear angle (roughly 60-90 deg) from the muon line" was read from the line in 2-D views, not from the direction, so
+    it does not contradict the 121° turn.
+  - **Caveat:** the chain builds this Michel from 3 pieces, and the energy estimators read 43.6 vs 32.2 MeV.
+- **event/2 — Michel in two clusters** (039349_9/50). Stop (118.3, −291.3, 240.1). Box 88..148, −321..−261, 210..270.
+  Key `y`.
+  - **What to show:** the Michel leaves at 78° and continues into a second 3-D cluster, reaching 12 cm in 3 pieces. The
+    chain assembles both clusters, and the PF draws them as one `e- 28 MeV`.
+  - **Scanner:** "The profile hugs the muon reference curve all the way to 1.5e5 -- as clean a Bragg as this sample has".
+  - **Hand kind `both`:** gamma dots 42 and 52 cm out.
+- **event/3 — energetic** (039253_3/67). Stop (182.6, −237.9, 215.5). Box 153..213, −268..−208, 186..246. Key `y`.
+  - **What to show:** a 13 cm electron at 47°, and a clean rise to ~190 ke/cm (Bragg ratio 1.12). Owner-labelled
+    (smx4, no text).
+  - **Say:** "the dQ/dx sum reads 50 MeV, near the 52.8 MeV endpoint". Do not say "a 50 MeV electron": the region
+    estimator reads 32.7 MeV, and neither is calibrated against truth.
+- **event/4 — soft** (039349_47/32). Stop (−324.1, 182.8, 233.7), bottom volume, 16 cm from the anode. Box
+  −354..−294, 153..213, 204..264. Key `z`.
+  - **What to show:** a 4 cm, 9.6 MeV electron at 59°. Zoom in: it is short.
+  - **Scanner:** "a textbook Bragg … a short blue arm leaving the amber band at the star vertex at a wide angle …
+    attached, no gap". That display read the arm as 5.4 cm and 12.7 MeV.
+  - **Caveat:** the dQ/dx panel has a short dip about 22 cm before the stop.
+- **event/5 — forward** (039349_56/38). Stop (183.0, −19.8, 210.4). Box 153..213, −50..10, 180..240. Key `y`.
+  - **What to show:** the muon comes down and a 10 cm, 33.5 MeV electron carries on at only 48°. This is the case the
+    chain's continuation test must separate from a muon still going (round 1 §1.3, item 5). Owner-labelled (smx4).
+- **event/6 — Michel + gammas** (039349_67/78). Stop (318.6, 92.6, 112.0), 21 cm below the top anode. Box 289..349,
+  63..123, 82..142. Key `x`.
+  - **What to show:** a 7 cm, 20.9 MeV Michel at 39°, plus the gamma pieces the chain collected in its 50 cm ring. The
+    PF shows `e- 20 MeV` at the stop and `e- 4.17 MeV` 41 cm out.
+  - **Scanner:** "two detached 2-point specks … at 29.1 cm … and … at 48.5 cm … clustered on the decay side … Michel plus
+    gammas gives kind both".
+  - **Caveats:**
+    - The specks are tiny: raise the point size (`+`).
+    - This event has the set's worst trajectory numbers (2.9 % of `stm_fit` rows > 1 cm off the ridge), still inside
+      the gate.
+- **event/7 — perpendicular** (039253_17/110). Stop (320.7, 301.7, 75.0). Box 291..351, 272..332, 45..105. Key `y`.
+  - **What to show:** the textbook picture. An 85 cm muon with a clean rise, and a 10 cm electron at 102°.
+  - **Scanner:** "the amber muon body ends at the star and a separate teal-green arm runs off it sideways".
+- **event/8 — dots, no Michel** (039252_17/40). Stop (−38.1, 117.0, 28.2), bottom volume, just below the cathode (x = 0).
+  Box −68..−8, 87..147, −2..58. Key `y`.
+  - **What to show:** a 37 cm muon (it crossed the cathode; its upper part is another cluster) with a rise to ~210
+    ke/cm. A 2.5 cm, 5.7 MeV piece sits 9.8 cm away across a gap. The chain declines it as a Michel
+    (`michel_found` 0), and the PF draws it as `gamma 5.74 MeV → e-`.
+  - **Scanner:** "separated from the end by a visible charge-free gap … A detached compact piece at about 10 cm with a
+    clean gap reads as a dot: gamma."
+  - **Caveat, in the scanner's own note:** the piece "is on the michel/gamma attachment boundary … As michel it would
+    make this STM_MICHEL/attached".
+- **event/9 — bare, no Michel** (039253_4/78). Stop (153.9, −288.6, 82.6). Box 124..184, −319..−259, 53..113. Key `z`.
+  - **What to show:** nothing at the stop (region energy 1.1 MeV), and the best Bragg ratio of the set (1.39).
+    Consistent with μ⁻ capture.
+  - **Scanner:** "the highest two points in the entire profile are the two nearest the origin … no arm, no dot, no
+    speck".
+
+### R5. Numbers after the flips
+
+**Round 1's §3 tables were measured before the trajectory flips**: PDVD on `p93vprod` / `p96vprod`, PDHD on `h28prod`.
+The table below gives the grades the flips were applied on.
+
+| detector | metric | before (A0) | after (A1 = production) | source |
+|---|---|---|---|---|
+| PDVD | `is_stm` purity | 0.980 (239 TP / 5 FP) | **0.982** (266 / 5) | `figs/103_own103v2_pdvd.txt`:41 |
+| PDVD | `is_stm` efficiency | 0.611 (239 / 391) | **0.680** (266 / 391) | :41 |
+| PDVD | Michel purity | 0.924 (157 / 13) | **0.940** (171 / 11) | :45 |
+| PDVD | Michel efficiency | 0.657 (157 / 239) | **0.715** (171 / 239) | :45 |
+| PDHD | `is_stm` purity | 0.975 | **0.959** | doc 108 §1.1 (:51) |
+| PDHD | `is_stm` efficiency | 0.626 | **0.616** | :52 |
+| PDHD | Michel purity | 0.914 | **0.880** | :53 |
+| PDHD | Michel efficiency | 0.604 | **0.689** | :54 |
+
+**Caveats:**
+- **Population.** It is the judged items that are candidates of either arm (doc 103's union population, on the folded
+  records). That is a different population and record than §3's (doc pdhd/26 on smx27 / smx1a…smx9). The efficiency
+  denominators include hand stoppers only one arm hands on, so they are lower than §3's. **Do not compare numbers
+  across the two tables.**
+- **PDVD.** The production arm `d103vflip` equals the graded `d103v1` on all 198 branches of `T_stm_michel` (doc 103
+  §14.2). The reading is D1 (doc 103 §13.2).
+- **PDHD.** `d108hflip` reproduces `d102hcs` on all four STM trees (doc 108 §3). The Michel purity change of −0.035 is a
+  D2 that the owner overrode (doc 108 §1.1).
+- **Not restated after the flips:**
+  - the Michel energy distributions (§3.3);
+  - dQ/dx vs residual range (§3.4). On PDHD the flip moved the absolute stopping-muon dQ/dx scale (`plateau_med` +3.8 %
+    at p50, doc 108 §1.2).
+
+### R6. What round 2 does not claim
+
+- **The ten events are illustrations, not a sample.** They were chosen for trajectory quality, a situation visible at
+  the stop, and a clean PF.
+- **The situation labels are the chain's reading.** Connection type, kink, clusters, gammas and energy come from the
+  chain, not from hand truth; the hand record gives only verdict + `michel_kind`. The detached pick's hand kind is
+  `attached`.
+- **The visual skips were the agent's judgement,** recorded above with reasons. The owner has not reviewed the ten picks.
+- **No energy is calibrated.** On these picks the two estimators differ by up to 17.5 MeV (event/3).
+- **Scanner quotes describe the display that scanner saw:** the pre-flip `p98vonq` for 8 of the 10.
+- **Bee numbers events by upload order.** `scan/d97r2/bee-d97r2-pdvd.index.txt` is the map.
+
+### R7. Files (round 2)
+
+| path | what |
+|---|---|
+| `scripts/d97r2_video_picks.py` | the rule, including amendment A1, and the pick / figure code; imports round 1's PF helpers without changing them |
+| `scripts/d97r2_stop_closeup.py` | the ±15 cm stop close-ups |
+| `scripts/d97r2_view_hints.py` | stop, box, suggested view key, turn angle, PF near the stop |
+| `scripts/d97r2_build_bee.sh` | builds the zip from `picks.tsv` rank 1 and checks every member against production |
+| `scripts/d97r2_bee_verify.py` | the uploaded set's event list and layer sizes against the zip |
+| `../scan/d97r2/picks.{txt,tsv}` | final picks (round 3); `picks_round{1,2}.*` are the earlier rounds |
+| `../scan/d97r2/rule.sha256` | the rule's sha256 before the first run and at A1 |
+| `../scan/d97r2/view_hints.{txt,tsv}` | the per-event hints of §R4 |
+| `../scan/d97r2/bee-d97r2-pdvd.index.txt`, `bee_sets.txt` | Bee event index; the uploaded set URL and its size check |
+| `figs/97r2_picks_{dqdx_rr,traj_a,traj_b,stop_closeup}.png` | the visual checks (+ `_round{1,2}`), and `97r2_closeup_round1.png` behind A1 |
+
+---
+
+**Round 1 (2026-09-13) follows. It is unchanged except for the round-2 flags in its status, §0, §2.2, §2.3 and §3.**
+
 **The owner's request (2026-09-13):** a video illustrating stopping-muon (STM) and STM+Michel identification in PDHD
 and PDVD. The request asked for:
 1. the general reconstruction and selection steps, with code citations;
@@ -17,6 +359,9 @@ Owner choices: one Bee set per detector, 2 events per class, and a fourth class,
 - Every Bee event is a verbatim copy of the production `mabc-pr.zip`: PDHD `h28prod` (doc pdhd/28), PDVD `p96vprod`
   (doc pdvd/96). Each member was checked sha256-identical to its source.
 - The doc lives in `nf_sp_img_clus/` because the STM/Michel series (docs pdvd/25–96) lives there.
+- **Round-2 flag (2026-09-16):** both sets are pre-flip.
+  - PDVD: superseded by §R2.
+  - PDHD: not rebuilt, by owner choice. Its source arm `h28prod` is no longer on disk.
 
 **Answers in one screen:**
 - **PF (item 3):** already inside production. Both production chains run `CheckSTM_Michel`, which publishes the PR graph
@@ -31,6 +376,7 @@ Owner choices: one Bee set per detector, 2 events per class, and a fourth class,
 ```bash
 IMG=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img; X=$IMG/pdvd/docs/nf_sp_img_clus/scripts
 # 1. picks (read-only on the arms and the committed hand records) -> scan/d97/picks.{txt,tsv}, figs/97_picks_dqdx_rr.png
+# round-2 flag (2026-09-16): pdhd/work/*_h28prod is no longer on disk, so steps 1-2 cannot be re-run for PDHD as written
 python3 $X/d97_video_picks.py \
    --skip pdhd:028084_26/109,pdhd:029107_3/107,pdhd:029107_26/88,pdhd:028084_26/115,pdhd:028084_17/97,pdhd:028084_18/104 \
    > $IMG/pdvd/docs/scan/d97/picks.txt; echo rc=$?      # rc=3 by design: PDHD bare has 1 of 2 (sec 2.1)
@@ -236,6 +582,9 @@ column says who wrote them.
 
 ### 2.2 PDHD — production `h28prod`
 
+**Round-2 flag (2026-09-16):** this set is **pre-flip**. `h28prod` predates doc 108's PDHD trajectory flip. It was not
+rebuilt, by owner choice, and its source arm is no longer on disk.
+
 **Set:** https://www.phy.bnl.gov/twister/bee/set/c75d14ee-07ae-4ebb-bcaf-1cb2b8451a55/event/list/
 
 The set is verified: its `event/list/` lists events 0–6, and every event's `mc` and `track_fit-global` download at exactly the zip member's
@@ -278,6 +627,9 @@ What to show, from the hand-scan evidence:
 
 ### 2.3 PDVD — production `p96vprod`
 
+**Round-2 flag (2026-09-16): superseded by §R2.** This set shows the pre-flip PDVD trajectory: `p96vprod` predates doc
+103's flip.
+
 **Set:** https://www.phy.bnl.gov/twister/bee/set/b2c9c178-7515-4f47-8796-b2698a652dea/event/list/
 
 The set is verified: its `event/list/` lists events 0–7, and every event's `mc` and `track_fit-global` download at exactly the zip member's
@@ -319,6 +671,9 @@ What to show:
 ---
 
 ## 3. Numbers for the video
+
+**Round-2 flag (2026-09-16): every number in this section is pre-flip.** The grades the flips were applied on are in
+§R5, on a different population, so they must not be compared number for number.
 
 Everything below is quoted from committed docs. The populations are the chain's own candidate pools with hand truth;
 neither efficiency is absolute (row "scope" of each table). PDHD = APA0-strict on record `smx27`, production arms. PDVD =

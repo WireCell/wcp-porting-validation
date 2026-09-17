@@ -1,0 +1,12 @@
+# doc pdvd/97 round 2 -- Bee set pdvd, production arm d103vflip, built 2026-09-16T18:13:58-07:00
+# bee_idx	class	key (run_evt/cluster)	source zip	layers (nclusters)
+0	detached	039349_1/62	039349_1_d103vflip/mabc-pr.zip	clustering=165 mc shower_track=8 steiner_graph=4 steiner_terminals=4 stm=4 stm_fit=4 track_fit=8 vertices=8
+1	backward	039349_5/54	039349_5_d103vflip/mabc-pr.zip	clustering=276 mc shower_track=13 steiner_graph=5 steiner_terminals=5 stm=5 stm_fit=5 track_fit=13 vertices=13
+2	multicluster	039349_9/50	039349_9_d103vflip/mabc-pr.zip	clustering=189 mc shower_track=12 steiner_graph=4 steiner_terminals=4 stm=4 stm_fit=4 track_fit=12 vertices=12
+3	energetic	039253_3/67	039253_3_d103vflip/mabc-pr.zip	clustering=269 mc shower_track=14 steiner_graph=5 steiner_terminals=5 stm=5 stm_fit=5 track_fit=14 vertices=14
+4	soft	039349_47/32	039349_47_d103vflip/mabc-pr.zip	clustering=258 mc shower_track=8 steiner_graph=5 steiner_terminals=5 stm=5 stm_fit=5 track_fit=8 vertices=8
+5	forward	039349_56/38	039349_56_d103vflip/mabc-pr.zip	clustering=259 mc shower_track=8 steiner_graph=7 steiner_terminals=7 stm=7 stm_fit=7 track_fit=8 vertices=8
+6	gamma	039349_67/78	039349_67_d103vflip/mabc-pr.zip	clustering=247 mc shower_track=6 steiner_graph=4 steiner_terminals=4 stm=4 stm_fit=4 track_fit=7 vertices=7
+7	perpendicular	039253_17/110	039253_17_d103vflip/mabc-pr.zip	clustering=659 mc shower_track=13 steiner_graph=7 steiner_terminals=7 stm=7 stm_fit=7 track_fit=13 vertices=13
+8	dots	039252_17/40	039252_17_d103vflip/mabc-pr.zip	clustering=650 mc shower_track=15 steiner_graph=3 steiner_terminals=3 stm=3 stm_fit=3 track_fit=15 vertices=15
+9	bare	039253_4/78	039253_4_d103vflip/mabc-pr.zip	clustering=554 mc shower_track=10 steiner_graph=4 steiner_terminals=4 stm=4 stm_fit=4 track_fit=10 vertices=10

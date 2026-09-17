@@ -1,0 +1,29 @@
+# doc pdvd/97 round 2 -- Bee showcase set (built by scripts/d97r2_build_bee.sh from production d103vflip;
+# every member sha256-identical to the production zips; checked by scripts/d97r2_bee_verify.py)
+# det   arm        events  uploaded      url
+pdvd    d103vflip  10      2026-09-16 (owner request)  https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/list/
+
+# event/list/: http 200; linked events [0]..[9] (10); zip events 10 -> OK
+# per event: layer route downloaded, size compared with the zip member (a missing layer also returns 200)
+# event  class          key             layer             http  size_download  zip_member_size  ok
+0      detached       039349_1/62     mc                200   2334           2334             yes
+0      detached       039349_1/62     track_fit-global  200   36061          36061            yes
+1      backward       039349_5/54     mc                200   2440           2440             yes
+1      backward       039349_5/54     track_fit-global  200   59329          59329            yes
+2      multicluster   039349_9/50     mc                200   1542           1542             yes
+2      multicluster   039349_9/50     track_fit-global  200   33690          33690            yes
+3      energetic      039253_3/67     mc                200   2597           2597             yes
+3      energetic      039253_3/67     track_fit-global  200   54441          54441            yes
+4      soft           039349_47/32    mc                200   2338           2338             yes
+4      soft           039349_47/32    track_fit-global  200   48770          48770            yes
+5      forward        039349_56/38    mc                200   4991           4991             yes
+5      forward        039349_56/38    track_fit-global  200   119223         119223           yes
+6      gamma          039349_67/78    mc                200   2204           2204             yes
+6      gamma          039349_67/78    track_fit-global  200   39659          39659            yes
+7      perpendicular  039253_17/110   mc                200   5889           5889             yes
+7      perpendicular  039253_17/110   track_fit-global  200   83226          83226            yes
+8      dots           039252_17/40    mc                200   2285           2285             yes
+8      dots           039252_17/40    track_fit-global  200   15904          15904            yes
+9      bare           039253_4/78     mc                200   2851           2851             yes
+9      bare           039253_4/78     track_fit-global  200   52185          52185            yes
+# 20/20 layer sizes match; overall PASS
