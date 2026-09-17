@@ -93,7 +93,7 @@ not reused. The last column counts the items that pass every gate before that ex
 
 | class | hand | chain situation | Q8 near the stop | pass (tier 0) |
 |---|---|---|---|---|
-| detached | STM_MICHEL | `michel_conn_type` 2: nothing graph-connected at the stop; the chain bridges to the nearest piece | a Michel-near EM object | 8 (8) |
+| detached (captioned **bridged**) | STM_MICHEL | `michel_conn_type` 2: nothing graph-connected at the stop; the chain bridges to the nearest piece. The 8 hand kinds are `attached` 5 and `both` 3: the rubric has no kind for a detached Michel (its `detached dots` is an STM_ONLY kind), so this situation is the chain's reading only | a Michel-near EM object | 8 (8) |
 | backward | STM_MICHEL, attached | attached, `michel_kink_deg` ≥ 120 | exactly one EM object, Michel-near, not a gamma | 5 (4) |
 | multicluster | STM_MICHEL | `michel_n_clusters` ≥ 2 | a Michel-near EM object | 16 (14) |
 | energetic | STM_MICHEL | 35 ≤ `michel_ke_best` ≤ 52.8 MeV | a Michel-near EM object | 16 (14) |
@@ -145,7 +145,7 @@ The whole-muon trajectory panels for picks and runner-ups are `figs/97r2_picks_t
 
 | Bee | situation | run_evt / cluster | vol. | hand label (source) | muon | Bragg ratio | Michel, chain's reading | trajectory | PF near the stop |
 |---|---|---|---|---|---|---|---|---|---|
-| [event/0](https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/0/) | **detached** | 039349_1 / 62 | top | STM_MICHEL attached (smx11 agent, high) | 182 cm | 0.96 | bridged across 3.0 cm, reach 23 cm, turns back 128°; 36.9 / 24.9 MeV | 0 / 0.0 %; 2.0 % / 0.0 % | `gamma 36 MeV → e-` pseudo-carrier at the stop |
+| [event/0](https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/0/) | **bridged** (class `detached`) | 039349_1 / 62 | top | STM_MICHEL attached (smx11 agent, high) | 182 cm | 0.96 | bridged across 3.0 cm, reach 23 cm, turns back 128°; 36.9 / 24.9 MeV | 0 / 0.0 %; 2.0 % / 0.0 % | `gamma 36 MeV → e-` pseudo-carrier at the stop |
 | [event/1](https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/1/) | **backward** | 039349_5 / 54 | top | STM_MICHEL attached (record, high) | 137 cm | 1.12 | attached, kink 121°, 3 pieces, reach 9 cm; 43.6 / 32.2 MeV | 0 / 0.0 %; 0.8 % / 0.0 % | `e- 43 MeV` |
 | [event/2](https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/2/) | **multicluster** | 039349_9 / 50 | top | STM_MICHEL both (record, high) | 224 cm | 0.96 | attached, kink 78°, 3 pieces from 2 clusters, 1 gamma collected; 28.2 / 25.1 MeV | 0 / 0.6 %; 0.0 % / 0.0 % | `e- 28 MeV` (one node for both clusters) |
 | [event/3](https://www.phy.bnl.gov/twister/bee/set/d6066b4f-b81a-42c4-bb5f-2bb4765b3429/event/3/) | **energetic** | 039253_3 / 67 | top | STM_MICHEL attached (owner, smx4) | 158 cm | 1.12 | attached, kink 47°, reach 14 cm; **50.2** / 32.7 MeV | 0 / 0.0 %; 0.7 % / 0.0 % | `e- 50 MeV` |
@@ -214,7 +214,7 @@ Coordinates, boxes and the suggested view key come from `scan/d97r2/view_hints.t
   agree with the chain's kink within 5°.
 - **Quotes** are from the committed hand record.
 
-- **event/0 — detached** (039349_1/62). Stop (199.0, −169.1, 142.7), top volume. Box x 169..229, y −199..−139,
+- **event/0 — bridged Michel** (class `detached`; 039349_1/62). Stop (199.0, −169.1, 142.7), top volume. Box x 169..229, y −199..−139,
   z 113..173. Key `y`.
   - **What to show:** the muon arrives mostly along z, descending, and stops. 3 cm away a 23 cm electron leaves upward
     in x, turning back 128°. Nothing graph-connects it to the stop, so the chain bridges the gap, and the PF draws it as
@@ -224,7 +224,8 @@ Coordinates, boxes and the suggested view key come from `scan/d97r2/view_hints.t
   - **Caveats:**
     - The scanner notes the stop is 0.7 cm from a CRU seam (y = −168.5) and 7 cm from another, so the gap may be the
       seam.
-    - The rubric kind is `attached`; "bridged" is the chain's reading.
+    - The rubric kind is `attached`. The hand rubric has no kind for a detached Michel, so "bridged" is the chain's
+      reading only.
     - The rise is in the last ~3 cm only ("ragged … but the end does climb").
     - The energy estimators disagree: 36.9 vs 24.9 MeV.
 - **event/1 — backward** (039349_5/54). Stop (99.4, −73.7, 251.6). Box 69..129, −104..−44, 222..282. Key `y`.
@@ -316,8 +317,9 @@ The table below gives the grades the flips were applied on.
 - **The ten events are illustrations, not a sample.** They were chosen for trajectory quality, a situation visible at
   the stop, and a clean PF.
 - **The situation labels are the chain's reading.** Connection type, kink, clusters, gammas and energy come from the
-  chain, not from hand truth; the hand record gives only verdict + `michel_kind`. The detached pick's hand kind is
-  `attached`.
+  chain, not from hand truth; the hand record gives only verdict + `michel_kind`. The `detached` class is the chain's
+  bridge (`michel_conn_type` 2), which no hand kind expresses (its 8 candidates are `attached` 5, `both` 3), so event/0
+  is captioned "bridged".
 - **The visual skips were the agent's judgement,** recorded above with reasons. The owner has not reviewed the ten picks.
 - **No energy is calibrated.** On these picks the two estimators differ by up to 17.5 MeV (event/3).
 - **Scanner quotes describe the display that scanner saw:** the pre-flip `p98vonq` for 8 of the 10.
