@@ -1,42 +1,58 @@
-# 111 — cleanup round D 2026-09-16: keep production's inputs and outputs, retire the intermediate test arms
+# 111 — cleanup rounds D–G 2026-09-16: keep production's inputs and outputs, retire the intermediate test arms, compress the cold records
 
-**Status: EXECUTED.** `/home/xqian` free went from **214 G** before the round to **449 G** after its
-last step. About 10 G of that rise came from outside the round (§13).
-- **Round E, same evening (§15): EXECUTED.** On the owner's *"clean up a bit the pdvd/work
-  directory"*, the closed doc pdvd/111 and 113 study arms were released: 975 dirs, 9.80 GiB.
-  - `pdvd/work` went from 115 G to 105 G, and free space to **459 G**.
-  - The doc-113 session's two follow-up arms and `d111vst` stay.
-- **Round F (§16): EXECUTED.** On the owner's yes, the same studies' arms were released from pdhd and
-  sbnd: 511 + 4 dirs, 8.00 GiB.
-  - `pdhd/work` went from 69 G to 61 G, and free space to **466 G**.
-  - `d113hbase`, `d113hnone`, `d111hst` and doc 113's sbnd gate pair stay.
-- **Round G (§17): EXECUTED. Compression, not deletion.** On the owner's per-class choice, 8569 calib
-  dumps, run logs and GPU-memory CSVs in 26 cold pdvd arms became verified `.zst` files.
-  - They went from 27.33 GiB to 3.72 GiB. `pdvd/work` went from 105 G to 81 G, and free space to
-    **490 G**.
-  - Restore: `restore_compress_20260916f.py --confirm <arm>`.
-- **sbnd_xin and pdvd `work/`:** 2211 dirs, 138.4 GiB, released by this session on 2026-09-16.
-  - Both ran behind a frozen record layer, a confirm-time re-plan and a stub run with a causal
-    negative control (§9).
-  - Free went from 214 G to 354 G.
-- **pdhd `work/` and `~/tmp`:** released by the owner at 17:22–17:30 (§10). The session's permission
-  gate had refused the pdhd deletion.
-  - pdhd: 848 dirs, 7.98 GiB.
-  - `~/tmp`: 9672 units, 29.63 GiB, plus 3 registered worktrees.
-  - An earlier owner run at 13:53 was refused by INTERLOCK 3 while the peer's `d113h*` arms were
-    running, and deleted nothing.
-- **Owner follow-up, same day (§14):** two file-level releases inside kept production arms.
-  - pdvd: `p98von`'s 960 SP frame archives, 39.07 GiB.
-  - sbnd: the mcp1k/mcp2k `d102m` icluster npz, 12756 files and 29.34 GiB, plus their 12000 in-arm
-    links.
-- **After every step:**
-  - broken symlinks are 0 / 0 / 0 in the three trees;
-  - every planned keep dir is on disk;
-  - the sbnd sentinel suite is unchanged at 21 PASS / 0 FAIL / 2 OPEN / 7 INERT.
-- **One cited path was restored (§8).** The sweep released `~/tmp/d102/cfg`.
-  - Doc pdvd/113 cites that dir for its G1 compiled-config proof. The doc was pushed after the
-    pinned remote head.
-  - Its four configs were recompiled byte-identical to the freeze's SHA-256 and put back.
+**Status: EXECUTED (rounds D, E, F, G and the §14 follow-up, all 2026-09-16).**
+
+| | before round D (§1) | after round G (2026-09-16 ~19:00) |
+|---|---|---|
+| `/home/xqian` free | 224 G (214 G when the deletions started) | **490 G** |
+| `pdvd/work` | 190 G | **81 G** |
+| `pdhd/work` | 73 G | **61 G** |
+| sbnd_xin | 175 G | **53 G** |
+| `~/tmp` | 88 G | **64 G** |
+
+About 10 G of the rise in free space came from outside these rounds (§13.1).
+
+In the order they ran:
+1. **Round D, sbnd_xin and pdvd `work/` (§2–§10):** 2211 dirs, 138.4 GiB, released by this session.
+   - Both ran behind a frozen record layer, a confirm-time re-plan and a stub run with a causal
+     negative control (§9).
+   - Free went from 214 G to 354 G.
+2. **Follow-up (§14):** two file-level releases inside kept production arms, on the owner's yes.
+   - pdvd: `p98von`'s 960 SP frame archives, 39.07 GiB.
+   - sbnd: the mcp1k/mcp2k `d102m` icluster npz, 12756 files and 29.34 GiB, plus their 12000 in-arm
+     links.
+   - Free went to 399 G.
+3. **Round D, `pdhd/work` and `~/tmp` (§8, §10):** released by the owner at 17:22–17:30. The session's
+   permission gate had refused the pdhd deletion.
+   - pdhd: 848 dirs, 7.98 GiB. `~/tmp`: 9672 units, 29.63 GiB, plus 3 registered worktrees.
+   - An earlier owner run at 13:53 was refused by INTERLOCK 3 while the peer's `d113h*` arms were
+     running, and deleted nothing.
+   - Free went to 449 G.
+4. **Round E, `pdvd/work` (§15):** on *"clean up a bit the pdvd/work directory"*, the closed doc pdvd/111
+   and 113 study arms were released: 975 dirs, 9.80 GiB.
+   - The doc-113 session's two follow-up arms and `d111vst` stay.
+   - Free went to 459 G.
+5. **Round F, `pdhd/work` and sbnd (§16):** the same studies' arms, 511 + 4 dirs, 8.00 GiB.
+   - `d113hbase`, `d113hnone`, `d111hst` and doc 113's sbnd gate pair stay.
+   - Free went to 466 G.
+6. **Round G, `pdvd/work` (§17): compression, not deletion.** On the owner's per-class choice, 8569
+   calib dumps, run logs and GPU-memory CSVs in 26 cold arms (hand-scan sources and substrate) became
+   verified `.zst` files.
+   - 27.33 GiB became 3.72 GiB. Free went to 490 G.
+
+**After every step:**
+- broken symlinks are 0 / 0 / 0 in the three trees;
+- every planned keep dir is on disk;
+- the sbnd sentinel suite is unchanged at 21 PASS / 0 FAIL / 2 OPEN / 7 INERT.
+
+**Two rules this leaves behind.**
+- **Restore a compressed pdvd arm before any script reads it:**
+  `python3 pdhd/scripts/retire/restore_compress_20260916f.py --confirm <family>`, about a minute per
+  120-event arm.
+  - Most census scripts glob-loop and skip a missing file silently.
+  - The 26 families are listed in §17. Production, `p101q` and the held arms were not compressed.
+- **`~/tmp/d102/cfg` is PROTECTED now (§8, §15).** The round-D sweep released it while doc pdvd/113
+  cited it. Its four G1 configs were recompiled byte-identical to the freeze's SHA-256 and put back.
 
 ## 0. Repro
 
@@ -382,7 +398,8 @@ sweep really reads the suffixed file.
 - ~~**sbnd production imaging inputs**~~ **RETIRED on the owner's yes (§14).** *Original item:*
   `icluster-apa*.npz` inside `work-mcp1k-d102m` / `work-mcp2k-d102m`, 29.3 GiB (doc 106 §12).
 - **Hand-scan sources**: the set grew by 15 arms this round (§4): 24 G in pdvd and 3.0 G in pdhd by
-  `du`. Kept per the owner's 09-10 instruction.
+  `du`. Kept per the owner's 09-10 instruction. In pdvd, their calib dumps and logs are now compressed
+  (§17); restore before reopening a scan.
 - **`~/tmp/h28/libpin_h28` (1.76 GiB)** survives value-first only because a doc names `p96vprod` (a
   scan source) next to it. The association is lexical, not physical.
 - **`~/tmp/d15_oldprep` (0.71 GiB)**: its children are named `prep-*`, so round scratch keeps them as
@@ -394,7 +411,20 @@ sweep really reads the suffixed file.
     pushed in between, could not protect `d102/cfg`.
   - The fix: re-fetch before the re-census, or refuse a unit whose KEEP reason changed from age to FREE
     unless a fresh citation check passes.
-  - `d102/cfg` also belongs in pdvd `PROTECTED.txt` if later rounds keep writing proofs there.
+  - ~~`d102/cfg` also belongs in pdvd `PROTECTED.txt`~~ **done in §15.**
+- **After the doc-113 session's two pending hand scans** (21 PDHD Michels, 29 PDVD false positives), the
+  last `d111*`/`d113*` arms become releasable:
+  - pdvd `d113vbase`/`d113vnone`/`d111vst`, pdhd `d113hbase`/`d113hnone`/`d111hst`, and the sbnd gate
+    pair (§15–§16);
+  - with them `~/tmp/d113` (8.3 G) and `~/tmp/d111` (7.0 G).
+  - `d111vst`/`d111hst` stay as long as docs 112/113's Repro should run as written.
+- **`pdhd/work` (61 G) holds the same kind of cold arms** as pdvd's (hand-scan sources and old
+  substrate). §17's compression would apply there too, but it has not been measured and needs the
+  owner's per-class choice.
+- **`archive_records_*.py`'s HEAVY regex must treat `\.zst$` as heavy** before the next arm release
+  (§17). Otherwise compressed calib dumps are carried into the record tar.
+- **Still on disk from §14:** the sbnd `d102m` group-mode SP frames `g<N>/frames-dnn.tar.bz2` (3.9 G) and
+  the ncpi0/nuecc48 icluster npz (0.7 G).
 
 ## 13. Post-state
 
