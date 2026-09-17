@@ -1,0 +1,4 @@
+/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-d111snew
+/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-d111sold
+/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-d111snew
+/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-d111sold

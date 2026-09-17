@@ -1,0 +1,22 @@
+== INTERLOCK A: re-planning before deleting (peer-session guard)
+   OK: all interlocks still PASS; the tier file of every tree being
+   run (pdhd sbnd) is unchanged.
+==================================================================
+== pdhd   tier 1   file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdhd_20260916e.txt
+   lines 511 | present 511 | already gone 0 | 7.84 GiB
+   record gate: 511/511 targets have a manifest in /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/../../../sbnd/sbnd_xin/archive/records/cleanup-20260916e/pdhd-tier1
+   DELETING...
+   done, rc=0
+==================================================================
+== sbnd   tier 1   file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_sbnd_20260916e.txt
+   lines 4 | present 4 | already gone 0 | .15 GiB
+   record gate: 4/4 targets have a manifest in /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/../../../sbnd/sbnd_xin/archive/records/cleanup-20260916e/sbnd-tier1
+   DELETING...
+   done, rc=0
+
+POST-STATE CHECK.  interlock 4 recorded the PRE-existing broken-symlink
+count per tree (prebroken_<tree>_20260916e.txt); this number only means
+something compared against that.
+   pdhd: 0 broken symlinks
+   pdvd: 0 broken symlinks
+   sbnd/sbnd_xin: 0 broken symlinks

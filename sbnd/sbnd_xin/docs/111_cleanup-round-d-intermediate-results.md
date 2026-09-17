@@ -6,6 +6,10 @@ last step. About 10 G of that rise came from outside the round (§13).
   directory"*, the closed doc pdvd/111 and 113 study arms were released: 975 dirs, 9.80 GiB.
   - `pdvd/work` went from 115 G to 105 G, and free space to **459 G**.
   - The doc-113 session's two follow-up arms and `d111vst` stay.
+- **Round F (§16): EXECUTED.** On the owner's yes, the same studies' arms were released from pdhd and
+  sbnd: 511 + 4 dirs, 8.00 GiB.
+  - `pdhd/work` went from 69 G to 61 G, and free space to **466 G**.
+  - `d113hbase`, `d113hnone`, `d111hst` and doc 113's sbnd gate pair stay.
 - **sbnd_xin and pdvd `work/`:** 2211 dirs, 138.4 GiB, released by this session on 2026-09-16.
   - Both ran behind a frozen record layer, a confirm-time re-plan and a stub run with a causal
     negative control (§9).
@@ -622,3 +626,104 @@ run on pdvd only.
 | `tracking-{stm,pr}.root`, `mabc-*.zip` | ~12 | scan-facing outputs (ROOT trees, Bee zips) |
 | `wct_{clus,pr,img}_*.log` | ~5.6 | 120 committed pdvd docs and scripts name `wct_pr_*` logs (census and scan tools read them by name); gzip would break them |
 | `gpu_mem_*.csv` in `keep`/`p98von` | 0.83 | the only pure run-time trace; a candidate if the owner wants it |
+
+## 16. Round F: the same studies' arms in `pdhd/work` and sbnd_xin (EXECUTED)
+
+```bash
+D=/home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire; cd $D     # remote_head_20260916e.txt = ee91071b
+python3 scan_arms_20260916e.py --json=scan_arms_20260916e.json       # scan set unchanged
+python3 toks_20260916e.py && python3 cit_20260916e.py toks_20260916e.txt cit_20260916e.json   # 6681 tokens -> 605 cited
+python3 plan_20260916e.py pdhd sbnd   # -> plan_20260916e.out: pdhd 511 dirs 7.84 GiB, sbnd 4 dirs 0.16 GiB, interlock failures NONE
+python3 archive_records_20260916e.py 1   # 515/515 manifests, 45 M (archive_t1_20260916e.log)
+./retire_20260916e.sh 1 pdhd sbnd        # dry run, rc=0 (retire_dry_20260916e.log)
+CONFIRM=yes ./retire_20260916e.sh 1 pdhd sbnd   # EXECUTED by the owner, retire_confirm_20260916e.log, rc=0
+(cd ../../../sbnd/sbnd_xin && python3 scripts/pr127_sentinels.py --arms 'work-*-d102mpr')   # 21/0/2/7 (sentinels_post_20260916e.txt)
+```
+
+**The instruction.** The owner, answering §15's recommended next step (*"pdhd and sbnd still hold
+this same round's doc 111/113 test arms … If you want those gone too"*): *"yes, please go ahead
+removing those."*
+
+**The peer's answer.** The doc-113 session, now named `pdvd-doc-97-refresh`, replied by message:
+- **Keep in pdhd:**
+  - `d113hbase` and `d113hnone`, which the pending hand scan of the 21 PDHD Michels lost in `none`
+    reads;
+  - `d111hst`, named in docs 112/113's Repro and the `d112_*` scripts' `--arm`. Doc 112's logs are
+    in `~/tmp/d111/arm_d111hst`.
+- **Keep in sbnd:** `work-mcp{1k,2k}-d113snew` and `work-mcp{1k,2k}-d111ssnew`, the two sides of doc
+  113's G3 gate (`figs/113_gate_sbnd.txt`).
+- **Not needed:** everything else.
+- **Its flag:** check whether a doc 111 figure names `d111snew`/`d111sold` before releasing them.
+  - They are doc 111's own SBND gate sides: round 1 compared `snew` with `sold`, round 2 `ssnew` with
+    `sold`.
+  - The verdicts are committed (`figs/111_gate_off_sbnd.txt`, `figs/111s_gate_sbnd.txt`), the same
+    standing as docs 109–110's gate arms released in round D. They are released.
+- **New prefixes:** none. Its current task (doc 97 round 2) reads production `pdvd/work/*_d103vflip`
+  only.
+
+**The planner** is `plan_20260916e.py`, round E's planner with only the pdhd and sbnd configs changed.
+- The `d111`/`d113` hold is lifted in both trees; `d112` stays held.
+- `keep_arms` gain the five kept arms above.
+- Liveness is read against `ee91071b`.
+
+| tree | released families | dirs | GiB (set-relative) |
+|---|---|---|---|
+| pdhd | `d111h{off,sr6,sr10,sr15,tr}` 61 each; `d113h{base2,foot,nopaint}` 61 each | 488 | |
+| pdhd | `d111h{A0,A1,K,S,sr10tr,stsmk}` 1 each; `d111hoff5` 5; `d111shoff1` 1; `d111shoff{5,5b}` 5 each; `d113hstep1` 1 | 23 | |
+| pdhd | total | **511** | **7.84** |
+| sbnd | `work-mcp{1k,2k}-d111snew`, `work-mcp{1k,2k}-d111sold` | **4** | **0.16** |
+
+`d111shoff*` were not in the 683-dir count the owner said yes to, because a `*_d111h*` glob does not
+match them.
+- They are doc 111 round 2's PDHD off arms, the counterparts of pdvd `d111svoff5` released in §15.
+- The peer said everything outside its keep list can go.
+- The plan summary shown to the owner before the delete ran names them.
+
+**Gates and controls.**
+- **Interlocks:** all pass in both trees, with 0 live writers and 0 tree-scoped procs.
+  - All hand-scan sources and production are kept.
+  - INTERLOCK 14 finds 0 uncited families. INTERLOCK 16 saw 2 uncommitted tokens, neither resolving
+    in these trees.
+- **Outside links:** a walk of `~/tmp` (depth 4), `pdhd`, `sbnd_xin` and `pdvd/work` found **0** symlinks
+  resolving into a released dir.
+- **Record layer:** 515/515 manifests (`archive/records/cleanup-20260916e`, 45 M). A direct check found a
+  non-empty manifest for every target.
+- **No stub run this round.** The session's permission classifier refused the stubbed `CONFIRM=yes`
+  practice run, and it was not retried. Instead:
+  - a dry run: rc=0, 511 + 4 present, 0 already gone;
+  - a diff showing `retire_20260916e.sh` differs from round E's driver only in the 7 stamp lines.
+    Round E's driver passed the stub run and the rc=14 withheld-manifest control (§15).
+- **Execution:** the owner ran `CONFIRM=yes ./retire_20260916e.sh 1 pdhd sbnd`.
+  - The re-plan was unchanged (`plan_20260916e.confirm.out`: interlock failures NONE).
+  - Record gates 511/511 and 4/4, both deletes rc=0.
+
+**Post-state.**
+
+| | before | after |
+|---|---|---|
+| `pdhd/work` (`du`) | 69 G | **61 G** |
+| sbnd_xin (`du`) | 53 G | 53 G |
+| `/home/xqian` free | 459 G | **466 G** |
+
+- **Release complete:** 0 of 511 and 0 of 4 targets are left. Of the `d111h*`/`d111sh*`/`d113h*`
+  families only `d111hst`, `d113hbase` and `d113hnone` remain, at 61 dirs each.
+- **Keeps intact:** all 1544 pdhd and 52 sbnd keep dirs are on disk.
+  - Production: `d108hflip` 61, `d102hcs` 61, `d109hstm` 5.
+  - `d101hnew` 61 and substrate `d51hclus` 61.
+  - The four sbnd gate-pair dirs.
+- **Broken symlinks** are 0 / 0 / 0.
+- **sbnd sentinel suite:** 21 PASS / 0 FAIL / 2 OPEN / 7 INERT, unchanged.
+- **PROTECTED:** pdhd `PROTECTED.txt` now carries `d113hbase d113hnone` and `d111hst`; sbnd's carries the
+  `d113snew`/`d111ssnew` gate pair.
+
+**Costs.**
+- **Doc pdvd/111's PDHD lever and trace arms and doc pdvd/113's PDHD L1/L2 levels and base2 repeat** can
+  be read from the committed figs but not regenerated without re-running.
+- **Doc 111's two SBND gates** (`snew`/`ssnew` vs `sold`) cannot be re-checked.
+
+After rounds D–F, the only `d111*`/`d113*` arms left in the work trees are the named keeps:
+- pdvd: `d113vbase`, `d113vnone`, `d111vst`;
+- pdhd: `d113hbase`, `d113hnone`, `d111hst`;
+- sbnd: `work-mcp{1k,2k}-d113snew`, `work-mcp{1k,2k}-d111ssnew`.
+
+`~/tmp/d111` and `~/tmp/d113` were not in scope and are untouched.

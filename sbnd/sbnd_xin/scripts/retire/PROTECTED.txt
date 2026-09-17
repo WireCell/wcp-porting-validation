@@ -848,6 +848,9 @@ ref/ products/	the generation records and the published score tables; not work d
 # ORDER IS NOT OPTIONAL: materialise_20260908.py must run first, or the five
 # PROTECTED arms that still borrow from grp0825 lose their imaging.
 
+# --- added 2026-09-16 (doc sbnd_xin/111 sec 16, round F): the d111s*/d113s* release kept doc 113's gate pair ---
+work-mcp1k-d113snew work-mcp2k-d113snew work-mcp1k-d111ssnew work-mcp2k-d111ssnew	both sides of doc pdvd/113's G3 SBND gate (figs/113_gate_sbnd.txt: d111_sbnd_gate.py --old d111ssnew --new d113snew, BYTE-IDENTICAL, 16 events); kept so the gate can be re-checked (doc-113 session, message 2026-09-16).  work-*-d111snew/d111sold (doc 111's own gate sides) were released; their verdicts are figs/111_gate_off_sbnd.txt and figs/111s_gate_sbnd.txt.	doc pdvd/113 sec 2 G3
+
 # ================= RETIRED =================
 
 # 2026-09-13 round C (doc 106): RELEASED on the owner's instruction --
