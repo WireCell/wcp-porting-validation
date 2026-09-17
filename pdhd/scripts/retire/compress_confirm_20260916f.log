@@ -1,0 +1,10 @@
+== INTERLOCK A: re-planning before compressing
+   OK: gates pass, target list unchanged
+== pdvd/work cold-file compression: 8569 files
+   record gate: 8569/8569 files have a manifest row with the current size
+   COMPRESSING 8569 files, 27.33 GiB, 24 jobs ...
+   status: {'done': 8569}
+   compressed 27.33 GiB -> 3.72 GiB, saved 23.60 GiB
+   worker rc=0
+POST-STATE: originals left 0 | .zst present 8569 | broken symlinks pdvd 0
+            free 490G | pdvd/work 81G

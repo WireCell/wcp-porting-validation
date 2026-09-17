@@ -1,0 +1,4 @@
+== pdvd/work cold-file compression: 8569 files
+   REFUSING: 1 of 8569 listed files have no manifest row or moved in size (e.g. /home/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039349_27_p98vonq/wct_clus_039349_27.log) -- the freeze is incomplete.
+   worker rc=14
+DRY RUN.  Re-run with CONFIRM=yes to execute.

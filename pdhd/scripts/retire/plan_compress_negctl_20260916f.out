@@ -1,0 +1,11 @@
+  PASS  C5: 26 cold families, none held: d08pv30off d08pv30on d101vkf d102vcsall d102vocs d27fresh d39r2prov d41prov d51vclus d53v d67v d68a3 d68d4 keep p100bx p100bxp p100c p85vprod p85vwh p88v5fr p88vprod p90vprod p96vprod p98vonq p99rwon p99wflip
+  calib    3101 files   22.85 GiB
+  csv       120 files    0.83 GiB
+  log      5348 files    3.65 GiB
+  total    8569 files   27.33 GiB
+  PASS  C1: regular single-name files (0 not; [])
+  FAIL  C2: no symlink resolves onto a target (2; [('/home/xqian/tmp/cleanup-20260916f/planted_rel', '/home/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039349_3_p98vonq/wct_clus_039349_3.log'), ('/home/xqian/tmp/cleanup-20260916f/planted_abs', '/home/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039252_10_d68d4/wct_pr_039252_10.log')])
+  PASS  C3: no open target (none), 0 pdvd reco procs
+  PASS  C4: none written in the last hour (0), no .zst yet (0)
+  list: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/files_compress_pdvd_20260916f.negctl.txt
+gate failures: ['C2']

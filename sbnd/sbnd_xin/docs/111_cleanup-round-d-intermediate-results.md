@@ -10,6 +10,11 @@ last step. About 10 G of that rise came from outside the round (§13).
   sbnd: 511 + 4 dirs, 8.00 GiB.
   - `pdhd/work` went from 69 G to 61 G, and free space to **466 G**.
   - `d113hbase`, `d113hnone`, `d111hst` and doc 113's sbnd gate pair stay.
+- **Round G (§17): EXECUTED. Compression, not deletion.** On the owner's per-class choice, 8569 calib
+  dumps, run logs and GPU-memory CSVs in 26 cold pdvd arms became verified `.zst` files.
+  - They went from 27.33 GiB to 3.72 GiB. `pdvd/work` went from 105 G to 81 G, and free space to
+    **490 G**.
+  - Restore: `restore_compress_20260916f.py --confirm <arm>`.
 - **sbnd_xin and pdvd `work/`:** 2211 dirs, 138.4 GiB, released by this session on 2026-09-16.
   - Both ran behind a frozen record layer, a confirm-time re-plan and a stub run with a causal
     negative control (§9).
@@ -627,6 +632,11 @@ run on pdvd only.
 | `wct_{clus,pr,img}_*.log` | ~5.6 | 120 committed pdvd docs and scripts name `wct_pr_*` logs (census and scan tools read them by name); gzip would break them |
 | `gpu_mem_*.csv` in `keep`/`p98von` | 0.83 | the only pure run-time trace; a candidate if the owner wants it |
 
+**Superseded the same evening by §17.** The owner asked to compress rather than delete. The calib-dump,
+log and CSV rows above were compressed in the cold arms (hand-scan sources and substrate), not in
+production, `p101q` or the held arms. The "gzip would break them" cost stands: those arms must be
+restored before a name-based reader runs on them.
+
 ## 16. Round F: the same studies' arms in `pdhd/work` and sbnd_xin (EXECUTED)
 
 ```bash
@@ -727,3 +737,136 @@ After rounds D–F, the only `d111*`/`d113*` arms left in the work trees are the
 - sbnd: `work-mcp{1k,2k}-d113snew`, `work-mcp{1k,2k}-d111ssnew`.
 
 `~/tmp/d111` and `~/tmp/d113` were not in scope and are untouched.
+
+## 17. Round G: compress, not delete, the cold file classes in `pdvd/work` (EXECUTED)
+
+```bash
+D=/home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire; cd $D
+python3 compress_sample_20260916f.py          # ratio per class
+python3 compress_eligible_20260916f.py        # bytes per arm category + link checks
+python3 plan_compress_20260916f.py            # gates C1-C5: 8569 files, 27.33 GiB, gate failures NONE
+PLAN_SUFFIX=negctl python3 plan_compress_20260916f.py   # with 2 planted links in ~/tmp/cleanup-20260916f: FAIL C2, rc=1
+python3 plan_compress_20260916f.py --hash     # SHA-256 manifest, 8569 rows (freeze_compress_20260916f.log)
+./compress_files_20260916f.sh                 # dry run: record gate 8569/8569, rc=0
+MAN_OVERRIDE=<manifest minus one row> ./compress_files_20260916f.sh   # rc=14 (compress_negctl_20260916f.log)
+CONFIRM=yes ./compress_files_20260916f.sh     # EXECUTED by the owner: 8569 done, 27.33 -> 3.72 GiB, rc=0
+python3 restore_compress_20260916f.py --confirm <family ...> | --all    # the undo, per arm family
+```
+
+**The instruction.** The owner, 2026-09-16: *"The pdvd/work directory is still sizable, I wonder instead
+of deleting things, we can compress some not useful information, and save disk further? Some of the older
+information may not be needed immediately?"*
+
+**What compresses** (zstd, a 12-file sample per class):
+
+| class | files in `pdvd/work` | zstd -3 | zstd -19 | solid per-arm tar, -19 --long |
+|---|---|---|---|---|
+| `calib-pr-evt*.json` | 3695 | 4.67× | 6.90× | 7.11× (24 files) |
+| `calib-evt*.json` | 1200 | 4.62× | 6.16× | 6.57× |
+| `wct_pr_*.log` / `wct_clus_*.log` | 3781 / 1320 | 13–14× | 18.5× | 26.1× |
+| `gpu_mem_*.csv` | 240 | 15× | 25× | — |
+| `tracking-*.root`, `mabc*.zip`, `pctree*.tar.gz`, `clusters-apa*.tar.gz`, `magnify*.root` | — | 1.00–1.14× | 1.01–1.44× | — |
+
+- **ROOT, zip and tar.gz are already compressed and are left alone.**
+- **Per-file, not per-arm.** A solid per-arm archive gains 0.2× on calib dumps, and it would lose
+  per-event random access and make one bad byte cost a whole arm.
+- **ext4 has no transparent compression.** Renaming to `.zst` is the only in-place option.
+
+**Scope, chosen by the owner class by class** (all four offered were chosen):
+- `gpu_mem_*.csv`, `wct_*.log`, `calib-pr-evt*.json` and `calib-evt*.json`;
+- in the **cold** arms only: the 23 pdvd hand-scan sources (`scan_arms_20260916e.json`) minus the
+  held `d103v0`/`d103v1`, plus the substrate arms `d27fresh`, `keep`, `d51vclus`, `d41prov` and
+  `d39r2prov`. That is 26 families.
+
+Not touched, by assertion (gate C5):
+- production `d103vflip d103vprod1 q29flip q29stm p100flip pvdimg p98von`;
+- OPEN `p101q`;
+- the doc-113 session's arms and holds `d113vbase d113vnone d111vst d103v0 d103v1 d101vnew`;
+- the bare dirs.
+
+Those arms still hold about 11 GiB of compressible bytes, left uncompressed because they are read now.
+
+**The reader cost, measured before asking.**
+- **How many readers:** committed pdvd scripts name `calib-pr-evt` (56), `calib-evt` (70), `wct_pr_`
+  (105), `wct_clus_` (4) and `gpu_mem_` (1, the SP runner that writes them).
+- **How they fail:** almost all find files by `glob(".../calib-pr-evt*.json")`.
+  - Scripts that index `[0]` fail loudly (IndexError).
+  - The census loops (`sorted(glob(...))`, `if os.path.isfile(...)`) **skip a missing file silently**,
+    so they report fewer or zero events.
+- **The rule:** restore an arm before any name-based reader runs on it. The owner was told this before
+  choosing.
+
+**Machinery** (stamp `20260916f`).
+- **`plan_compress_20260916f.py`:** gates C1–C5 and the manifest `(path, size, mtime, sha256)` in
+  `archive/records/cleanup-20260916f/pdvd-compress.manifest.tsv`.
+  - C1: regular, single-name files.
+  - C2: no symlink under `pdvd`, `pdhd`, `sbnd_xin`, `qlport` or `~/tmp` (depth 4) resolves onto a target,
+    by inode.
+  - C3: no open fd, and no pdvd reco process.
+  - C4: nothing written in the last hour, and no `.zst` yet.
+  - C5: the held families are excluded.
+- **`compress_files_20260916f.sh` + `compress_worker_20260916f.py`:**
+  1. Under CONFIRM, a re-plan whose list must be unchanged (rc 10/11).
+  2. A record gate: every file has a manifest row with its current size (rc 14).
+  3. Then, per file, 24 in parallel:
+     - `zstd -19 -T1` into `<file>.zst.tmp`;
+     - decompress as a stream, and require size and SHA-256 equal to the manifest;
+     - only then set the manifest mtime, rename to `<file>.zst` and remove `<file>`.
+  4. On any mismatch the `.tmp` is removed and the original stays (rc 20).
+- **`restore_compress_20260916f.py`:** the inverse. It decompresses to `.tmp`, requires the manifest
+  size and SHA-256, sets the mtime, renames and removes the `.zst`.
+
+**Controls, each causal.**
+
+| control | result |
+|---|---|
+| C2: an absolute and a relative symlink planted in `~/tmp/cleanup-20260916f` onto two targets | FAIL naming both, rc=1 (`plan_compress_negctl_20260916f.out`); links removed |
+| record gate: manifest copy with one row withheld (`039349_27_p98vonq/wct_clus_039349_27.log`) | `REFUSING: 1 of 8569 …`, rc=14 (`compress_negctl_20260916f.log`) |
+| verify gate: 10 real files copied to the scratchpad (calib-pr, calib-evt, logs, CSVs), manifest with one SHA-256 corrupted | 9 done, 1 `verify-failed`, rc=20; that original kept, no `.zst`/`.tmp` left |
+| round trip: `restore_compress_20260916f.py --confirm` on those 9 | 9 restored, rc=0; every file `cmp`-identical to its pdvd original **and** equal mtime |
+
+(A first scratch run was invalid, not failed: two sampled files shared a basename and overwrote each other
+in the copy. It was redone with per-arm subdirectories, and the real list has no duplicate paths.)
+
+**Execution.** The owner ran `CONFIRM=yes ./compress_files_20260916f.sh`.
+- Re-plan: gates NONE, list unchanged.
+- Record gate 8569/8569; status `{'done': 8569}`; **27.33 GiB → 3.72 GiB, saved 23.60 GiB**; rc=0.
+
+| class | files | before | after (measured `.zst` sizes) | ratio |
+|---|---|---|---|---|
+| calib dumps | 3101 | 22.85 GiB | 3.506 GiB | 6.52× |
+| run logs | 5348 | 3.65 GiB | 0.187 GiB | 19.49× |
+| GPU-memory CSVs | 120 | 0.83 GiB | 0.031 GiB | 26.60× |
+| **total** | **8569** | **27.33 GiB** | **3.724 GiB** | |
+
+**Post-state.**
+
+| | before | after |
+|---|---|---|
+| `pdvd/work` (`du`) | 105 G | **81 G** |
+| `/home/xqian` free | 466 G | **490 G** |
+
+- **Originals:** 0 of 8569 left, 8569 `.zst` present, 0 `.zst.tmp` strays.
+- **Independent spot check:** 60 random manifest rows. Every `.zst` decompresses to the manifest size and
+  SHA-256, carries the manifest mtime, and its original is absent.
+- **Held arms untouched:** all 14 production, OPEN and held families have 0 `.zst`, with calib dumps
+  and logs at full count.
+- **Dirs and links:** all 4384 planned pdvd keep dirs are present, and broken symlinks in pdvd are 0.
+
+**Using a compressed arm.**
+- Restore one family: `python3 pdhd/scripts/retire/restore_compress_20260916f.py --confirm p85vprod`.
+  A 120-event arm takes about a minute.
+- Restore everything: `--all`, about 27 GiB back on disk.
+- Without restoring, a single file reads as `zstd -dc <file>.zst`.
+- **The manifest is the restore key.** It lives in `archive/records/cleanup-20260916f/`, which is local
+  and not in git. A copy is committed as `pdhd/scripts/retire/manifest_pdvd-compress_20260916f.tsv.gz`;
+  if the local one is lost, use `gunzip -c` on it and pass `--manifest`.
+
+**For the next round's machinery.**
+- **`archive_records_*.py`'s `HEAVY` regex** (`^calib(-pr)?-evt.*\.json$`, `.*\.tar\.bz2$`, …) does not
+  match `*.json.zst` or `*.log.zst`.
+  - A future arm release that includes a compressed arm would carry those files into the record tar as
+    "non-heavy".
+  - The next stamp's copy must treat `\.zst$` as heavy (hashed, not carried).
+- **The compressed arms are still the keeps they were.** The keep planner walks dirs and families, not
+  file names, so a compressed scan source stays a scan source.
