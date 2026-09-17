@@ -1,0 +1,73 @@
+# live_tokens: reference 1ef0e67f7044, 96 untracked + 4 modified path(s) under DOCROOTS
+
+==============================================================================
+== pdhd   (/home/xqian/toolkit-dev/wcp-porting-img/pdhd/work)
+==============================================================================
+  PASS  INTERLOCK 1: substrate present (all present)
+  PASS  INTERLOCK 2: no kept symlink resolves into a releasing dir (0 would dangle)
+  PASS  INTERLOCK 3: no live writer (0 of 122 sampled dirs moved, 0 tree-scoped wire-cell procs)
+  PASS  INTERLOCK 4: pre-existing broken symlinks recorded: 0 (the post-state number only means something against this)
+  PASS  INTERLOCK 5: PROTECTED.txt clear of the release (clear)
+  PASS  INTERLOCK 7: no record/label dir in the release (clear)
+  PASS  INTERLOCK 8: no target is itself a symlink (clear)
+  PASS  INTERLOCK 9: manifests name 1 arms, 0 exist, 0 in the release (none)
+  PASS  INTERLOCK 11: every substrate/production/scan name resolves (all resolve)
+  PASS  INTERLOCK 13: hand-scan sources kept: ['d05mON', 'd08cap10', 'd08goff', 'd101hkf', 'd102hcs', 'd102hocs', 'd53h', 'h18b', 'h18s', 'h23conf', 'h25base', 'h25k', 'h25kr', 'h25r', 'h25va', 'h25vb', 'p82bhoff', 'p82hoff', 'stm0']
+  PASS  INTERLOCK 14: 2 uncited families in the release; each maps to a committed doc by round number (0 do not: none)
+  PASS  INTERLOCK 15: nothing released is named by an uncommitted record (clear)
+  PASS  INTERLOCK 16: live-by-uncommitted-record: 33 tokens from 45 file(s); 11 resolve in this tree (['d101hkf', 'd101hnew', 'd102hcs', 'd102hocs', 'd108hflip', 'd111hst', 'd113hbase', 'd113hbase2'])
+  set-relative: FREED 7.97 GiB (every link inside the release); 0.00 GiB shared with a kept link frees nothing
+
+  universe 2903 dirs | KEEP 2055 = 54.09 GiB | RELEASE 848 = 7.99 GiB | out-of-scope (untouched) 109
+  --- RELEASE ---   arm                       dirs      GiB  cited
+                    d105hdiag                   61     1.01     16
+                    h28wl                       61     0.94     55
+                    d101hold                    61     0.94      6
+                    h100b                       61     0.94     14
+                    h28prod                     61     0.94    121
+                    h28off                      61     0.94     58
+                    h100a                       61     0.94     10
+                    d16hnu                      61     0.89     76
+                    d102cs                       1     0.15      8
+                    d102dbg                      1     0.08     10
+                    d101                        18     0.03    290
+                    d101cnew2                    1     0.02      6
+                    d101cold2                    1     0.02      6
+                    d102                        18     0.02    228
+                    d101smoff                    1     0.02     12
+                    d101smkf                     1     0.02     15
+                    d102brep                    18     0.01      9
+                    d102b                       18     0.01     18
+                    d102ocs                     18     0.01      7
+                    d102cs2                     18     0.01      5
+                    d102o                       18     0.01     10
+                    d102cs1                     18     0.01      9
+                    d102cs3                     18     0.01      5
+                    d101kc                      18     0.01     11
+                    d101ks                      18     0.01     12
+                    d101brep                    18     0.01      5
+                    d101b                       18     0.01     21
+                    d101koff                    18     0.01     22
+                    d101kf                      18     0.01     24
+                    d102lcs2                    18     0.01      5
+                    d102lcs3                    18     0.01      5
+                    d102locs                    18     0.01      8
+                    d102lcs1                    18     0.01      9
+                    d101pilot                    2     0.00      2
+                    d101p3                       1     0.00      1
+                    h28cfg                       1     0.00     24
+                    h28cfg0                      1     0.00     21
+                    h28cfgT                      1     0.00     24
+                    h28cfgoff                    1     0.00     19
+                    d101p2                       1     0.00      0
+                    d101p0                       1     0.00      1
+                    d101p1                       1     0.00      0
+                    d101cnew                     1     0.00      4
+                    d101cold                     1     0.00      4
+  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdhd_20260916.confirm.txt  (848 lines, 7.99 GiB)
+
+==============================================================================
+GRAND TOTAL release 7.99 GiB
+interlock failures: NONE
+
+This script retired nothing.  Review the tier files, then run the retire driver (CONFIRM=yes).

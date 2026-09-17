@@ -1,24 +1,29 @@
 # 111 — cleanup round D 2026-09-16: keep production's inputs and outputs, retire the intermediate test arms
 
-**Status: PARTLY EXECUTED.**
-- **Owner follow-up, same day (§14): EXECUTED.** Two file-level releases inside kept production arms:
-  - pdvd: `p98von`'s 960 SP frame archives, 39.07 GiB;
-  - sbnd: the mcp1k/mcp2k `d102m` icluster npz, 12756 files and 29.34 GiB, plus their 12000 in-arm
-    links.
-  - Free space went to **399 G**. Broken symlinks are still 0 / 0. Sentinels are still 21/0/2/7.
-- **Done:** sbnd_xin and pdvd `work/` were released on 2026-09-16: 2211 dirs, 138.4 GiB.
+**Status: EXECUTED.** `/home/xqian` free went from **214 G** before the round to **449 G** after its
+last step. About 10 G of that rise came from outside the round (§13).
+- **sbnd_xin and pdvd `work/`:** 2211 dirs, 138.4 GiB, released by this session on 2026-09-16.
   - Both ran behind a frozen record layer, a confirm-time re-plan and a stub run with a causal
     negative control (§9).
-  - `/home/xqian` free went from **214 G to 354 G**.
-  - Broken symlinks are still 0 / 0 / 0.
-  - Every kept arm is whole.
-  - The sbnd sentinel suite is unchanged at 21 PASS / 0 FAIL / 2 OPEN / 7 INERT.
-- **Staged, not run:** the pdhd `work/` release (848 dirs, 7.97 GiB) and the `~/tmp` sweep
-  (9632 units, 29.62 GiB, plus 3 registered worktrees).
-  - The pdhd deletion was refused twice by the session's permission gate, after the other two trees
-    ran. The second attempt was the bare command. The session stopped there.
-  - The sweep's own order guard refuses to run until the pdhd release is done (rc=4, §9).
-  - The commands are in §10.
+  - Free went from 214 G to 354 G.
+- **pdhd `work/` and `~/tmp`:** released by the owner at 17:22–17:30 (§10). The session's permission
+  gate had refused the pdhd deletion.
+  - pdhd: 848 dirs, 7.98 GiB.
+  - `~/tmp`: 9672 units, 29.63 GiB, plus 3 registered worktrees.
+  - An earlier owner run at 13:53 was refused by INTERLOCK 3 while the peer's `d113h*` arms were
+    running, and deleted nothing.
+- **Owner follow-up, same day (§14):** two file-level releases inside kept production arms.
+  - pdvd: `p98von`'s 960 SP frame archives, 39.07 GiB.
+  - sbnd: the mcp1k/mcp2k `d102m` icluster npz, 12756 files and 29.34 GiB, plus their 12000 in-arm
+    links.
+- **After every step:**
+  - broken symlinks are 0 / 0 / 0 in the three trees;
+  - every planned keep dir is on disk;
+  - the sbnd sentinel suite is unchanged at 21 PASS / 0 FAIL / 2 OPEN / 7 INERT.
+- **One cited path was restored (§8).** The sweep released `~/tmp/d102/cfg`.
+  - Doc pdvd/113 cites that dir for its G1 compiled-config proof. The doc was pushed after the
+    pinned remote head.
+  - Its four configs were recompiled byte-identical to the freeze's SHA-256 and put back.
 
 ## 0. Repro
 
@@ -33,6 +38,10 @@ python3 tmp_census_20260916.py        # -> tmp_census_20260916.out: 9632 units, 
 (cd ../../../sbnd/sbnd_xin && python3 scripts/pr127_sentinels.py --arms 'work-*-d102mpr')   # 21 PASS / 0 FAIL / 2 OPEN / 7 INERT
 CONFIRM=yes ./retire_20260916.sh 1 sbnd     # EXECUTED, retire_confirm_sbnd_20260916.log
 CONFIRM=yes ./retire_20260916.sh 1 pdvd     # EXECUTED, retire_confirm_pdvd_20260916.log
+CONFIRM=yes ./retire_20260916.sh 1 pdhd     # EXECUTED by the owner 17:22, retire_confirm_pdhd_20260916.log, plan_20260916.confirm_pdhd.out
+CENSUS_SUFFIX=sweep python3 tmp_census_20260916.py          # 17:25: 9672 units, 29.63 GiB (tmp_census_20260916.sweep.out.gz)
+CENSUS_SUFFIX=sweep CONFIRM=yes ./sweep_tmp_20260916.sh     # EXECUTED 17:29, sweep_confirm_20260916.log, archive_tmp_20260916.log.gz
+cat restore_d102cfg_20260916.log            # sec 8: doc pdvd/113's G1 configs recompiled, SHA-256 == freeze manifest
 ```
 
 ## 1. The instruction
@@ -66,8 +75,8 @@ The growth since round C (doc 106, 2026-09-13) made the round necessary:
 |---|---|---|---|---|---|
 | sbnd_xin | 54 | 61.60 | 132 | **95.86** | EXECUTED |
 | pdvd `work/` | 4758 | 125.79 | 2079 | **42.55** | EXECUTED |
-| pdhd `work/` | 1749 | 49.71 | 848 | **7.97** | staged |
-| `~/tmp` | 835 units | — | 9632 units + 3 worktrees | **29.62** (+1.6) | staged |
+| pdhd `work/` | 1749 | 49.71 | 848 | **7.97** | EXECUTED (owner) |
+| `~/tmp` | 835 units | — | 9632 units + 3 worktrees (9672 at the sweep, §8) | **29.62** (+1.6; 29.63 at the sweep) | EXECUTED (owner) |
 
 "Set-relative" means an inode counts toward the freed bytes only when every one of its hard links is
 inside the release. That matters in `work/` this round: `pvdimg`'s imaging archives are hard links of
@@ -186,7 +195,7 @@ families could not be mapped to a doc, because the round-number grammar was `(d|
 also reads `pr<N>` and `q<N>`: `pr149` maps to `docs/pr/149_*.md` and `q29` to `docs/qlmatch/29_*.md`.
 Both docs are committed, so the families pass on a doc, not on an excuse.
 
-## 8. `~/tmp` (staged)
+## 8. `~/tmp` (EXECUTED)
 
 `tmp_census_20260916.py` is round C's census with five changes:
 
@@ -237,6 +246,45 @@ The largest round-scratch releases:
 | `p98/*` | 0.92 | gain-OFF chain logs |
 | `d38_arms2` | 0.79 | PDVD doc 38 |
 
+**At the sweep (17:25 re-census, 17:29 sweep).**
+- The re-census listed **9672** units, 29.63 GiB, against the plan's 9632. The sweep's own re-census
+  was byte-identical to it (`tmp_tier_20260916.confirm.txt.gz`).
+- No plan-time unit dropped out. All 40 additions had been KEEP at plan time only as "written in the
+  last 2 h" or "transcript written in the last 12 h", and had aged out:
+  - 30 `pr149r2/*` and 8 `pr149/*` logs and score tables (doc pr/149, closed);
+  - an idle session scratchpad (`8c9d4e9c`);
+  - `d102/cfg`.
+- The sweep then ran:
+  - every guard passed;
+  - the record gate saw 9672/9672 manifests (`archive/records/cleanup-20260916/tmp`, 257 M, local);
+  - rm rc=0;
+  - `git worktree remove` for `d101/wcp_wt` (`face213e`), `d104/wt104` (`a27af8e9`) and
+    `d106/wt106` (`282c2948`), each HEAD on the remote;
+  - the empty `d106` container was removed.
+- `~/tmp` went from 96 G to **64 G**.
+- The permanent pins, the peer's `d111`/`d113` pins, `d103/wcp_wt_r3`, `d108` and `h28/libpin_h28`
+  are all present.
+
+**`d102/cfg` was released but is still cited, and was restored.**
+- **The citation.** `d102/cfg` is where `pdvd/docs/nf_sp_img_clus/scripts/d102_compile_pr.sh` writes
+  compiled PR configs. Rounds after 102 kept using it: docs 108, 109, 111 and 113.
+- **Why the census released it.** Its round-scratch class maps a child to its parent dir's round
+  number, which is 102, a committed doc. That mapping is lexical, not what the dir holds.
+- **Why no guard caught it.**
+  - At plan time it survived only on age: the peer was writing its doc 113 proofs into it.
+  - Doc 113 was pushed (`f35e68f1`) after the pinned remote head `1ef0e67f`, so no committed record
+    named the path.
+  - Of the 40 late units, it is the only one any committed `.md`/`.sh`/`.py` at `f35e68f1` names
+    (`git grep`).
+- **The restore.**
+  - Doc 113's G1 row points at `d113knob{off,none}_{pdhd,pdvd}.json`.
+  - They were recompiled with the script's exact `wcsonnet` line and the same `libpin_d102`, and put
+    back.
+  - All four JSONs and their logs match the freeze manifest's SHA-256, and the knob-off md5 prefixes
+    equal doc 113's quoted `a870511c9b22` / `211a49a48229` (`restore_d102cfg_20260916.log`).
+  - The dir's other 70 files are older rounds' proofs, not restored. Their hashes stay in
+    `d102__cfg.manifest.tsv`, and the logs and small JSONs are in `d102__cfg.tar.zst`.
+
 ## 9. Records, stubs and controls
 
 | path | positive run | causal negative control |
@@ -246,24 +294,30 @@ The largest round-scratch releases:
 | `sweep_tmp_20260916.sh`, run out of order | — | before the work release → `REFUSING: 132 sbnd work dir(s) … still on disk`, **rc=4** (`sweep_negctl_order_20260916.log`) |
 | same, freeze broken | guards: 9632 units, none written in the last hour, no process cwd inside, permanent pins intact | `RETIRE_OUT=/proc/nosuch` → `froze 0/9632`, **rc=13**, nothing removed (`sweep_negctl_freeze_20260916.log`, `archive_tmp_negctl_20260916.log.gz`) |
 
-## 10. What ran, and what the owner runs
+## 10. What ran
 
 Ran (2026-09-16):
 
-| step | result |
-|---|---|
-| `CONFIRM=yes ./retire_20260916.sh 1 sbnd` | re-plan unchanged, record gate 132/132, deleted 132 dirs, rc=0 |
-| `CONFIRM=yes ./retire_20260916.sh 1 pdvd` | re-plan unchanged, record gate 2079/2079, deleted 2079 dirs, rc=0 |
-| `CONFIRM=yes ./retire_20260916.sh 1 pdhd` | **not run**: the session's permission gate refused it twice (the second time as the bare command) |
+| step | by | result |
+|---|---|---|
+| `CONFIRM=yes ./retire_20260916.sh 1 sbnd` | session | re-plan unchanged, record gate 132/132, deleted 132 dirs, rc=0 |
+| `CONFIRM=yes ./retire_20260916.sh 1 pdvd` | session | re-plan unchanged, record gate 2079/2079, deleted 2079 dirs, rc=0 |
+| `CONFIRM=yes ./retire_20260916.sh 1 pdhd` | — | the session's permission gate refused it five times, including after the owner's explicit go-ahead; it was handed back |
+| same, 13:53 | owner | **refused, nothing deleted.** The re-plan failed `INTERLOCK 3: no live writer (0 of 122 sampled dirs moved, 16 tree-scoped wire-cell procs)`: the peer's `d113hfoot/hnone/hnopaint/hbase2` arms were running in `pdhd/work` until 14:04. They are held and not in the release, but the guard is tree-scoped by design. rc=10; the sweep behind it stopped on its order guard |
+| `PLAN_SUFFIX=check1500 python3 plan_20260916.py pdhd`, 15:05 | session | a check-only re-plan (`PLAN_SUFFIX=check1500`, outputs removed) with no procs running: interlock failures NONE, tier byte-identical, 848 dirs |
+| same, 17:22 | owner | INTERLOCK A re-plan unchanged (`plan_20260916.confirm_pdhd.out`), record gate 848/848, deleted, rc=0; broken symlinks 0 / 0 / 0 |
+| `CENSUS_SUFFIX=sweep python3 tmp_census_20260916.py`, 17:25 | owner | 9672 units, 29.63 GiB, rc=0 (§8) |
+| `CENSUS_SUFFIX=sweep CONFIRM=yes ./sweep_tmp_20260916.sh`, 17:29 | owner | re-census unchanged, record gate 9672/9672, removed, 3 worktrees removed, pins intact, rc=0; free 449 G |
+| `pr127_sentinels.py --arms 'work-*-d102mpr'`, 17:30 | session | 21 PASS / 0 FAIL / 2 OPEN / 7 INERT (`sentinels_post_sweep_20260916.txt`) |
 
-The owner runs, in this order:
+The commands as the owner ran them:
 
 ```bash
 D=/home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire; cd $D
-CONFIRM=yes ./retire_20260916.sh 1 pdhd        # expect: re-plan unchanged, record gate 848/848, rc=0
+CONFIRM=yes ./retire_20260916.sh 1 pdhd        # re-plan unchanged, record gate 848/848, rc=0
 CENSUS_SUFFIX=sweep python3 tmp_census_20260916.py            # re-census right before the sweep: session ages move the list
 CENSUS_SUFFIX=sweep CONFIRM=yes ./sweep_tmp_20260916.sh       # work-release gate, re-census gate, freeze, record gate, rm, git worktree remove
-(cd ../../../sbnd/sbnd_xin && python3 scripts/pr127_sentinels.py --arms 'work-*-d102mpr')   # expect 21/0/2/7
+(cd ../../../sbnd/sbnd_xin && python3 scripts/pr127_sentinels.py --arms 'work-*-d102mpr')   # 21/0/2/7
 ```
 
 **`CENSUS_SUFFIX` is not optional.** The census writes `tmp_tier_20260916.txt`,
@@ -299,8 +353,11 @@ sweep really reads the suffixed file.
 - **Doc pdvd/99's OFF side and doc 29's lever arms can be read but not regenerated.**
   - `p98voff` held the gain-OFF SP frames; they regenerate from raw with the doc 99 §9 recipe.
   - Each lever arm's compiled config is in its record tar.
-- **Doc pdhd/28's flip loses its evidence arms** (`h28prod/wl/off`), once pdhd runs. `d101hnew` still
-  carries the pre-doc-108 production on `T_stm_michel`.
+- **Doc pdhd/28's flip has lost its evidence arms** (`h28prod/wl/off`, released with pdhd). `d101hnew`
+  still carries the pre-doc-108 production on `T_stm_michel`.
+- **Compiled-config proofs of docs 102–111 in `~/tmp/d102/cfg`** are gone except doc 113's four
+  (restored, §8). Each is a deterministic `wcsonnet` compile, checkable against
+  `d102__cfg.manifest.tsv`.
 - **Docs 109–110's gate arms** are gone. The gates' verdicts are the committed `109_logs`/`110_logs`.
 
 ## 12. Open for the owner
@@ -318,8 +375,47 @@ sweep really reads the suffixed file.
 - **`~/tmp/d15_oldprep` (0.71 GiB)**: its children are named `prep-*`, so round scratch keeps them as
   scan-facing. The prep class does not judge them (it reads `prep_*`).
 - **`pdhd/l1sp_wf_v9`, 11 G**: still no regeneration path.
+- **For the next round's machinery (§8):** a unit that survives the plan only on age must be re-judged
+  against the pushed remote head *at sweep time*.
+  - The `~/tmp` sweep's re-census read liveness and citations against the pinned head, so doc 113,
+    pushed in between, could not protect `d102/cfg`.
+  - The fix: re-fetch before the re-census, or refuse a unit whose KEEP reason changed from age to FREE
+    unless a fresh citation check passes.
+  - `d102/cfg` also belongs in pdvd `PROTECTED.txt` if later rounds keep writing proofs there.
 
-## 13. Post-state (sbnd + pdvd)
+## 13. Post-state
+
+### 13.1 pdhd and `~/tmp` (the owner's run, 17:22–17:30)
+
+| | before (15:09) | after |
+|---|---|---|
+| pdhd `work/` | 77 G | **69 G** |
+| `~/tmp` | 96 G | **64 G** |
+| `/home/xqian` free | 409 G | **449 G** |
+
+The 409 G "before" is 10 G above §14's 399 G. That rise came from outside this round: `pdvd/work` went
+from 121 G to 115 G with no step of this round running.
+
+- **Nothing released is left:** 0 of the 848 tier dirs are on disk. `h28prod`, `h28wl`, `h28off`,
+  `h100a/b`, `d105hdiag`, `d16hnu`, `d101hold` and `d101cnew` are at 0 dirs.
+- **All 1749 planned keep dirs are on disk.**
+  - Production: `d108hflip` 61, `d102hcs` 61, `d109hstm` 5.
+  - OFF side: `d101hnew` 61.
+  - Substrate: `d51hclus` 61, `d09` 61, `stm0` 30.
+  - Hand-scan sources at their planned counts: 61 each; `d08cap10`/`d08goff` 30; `d05mON` 6.
+  - The peer's `d111h*` (377) and `d113h*` (306) are untouched.
+- **Broken symlinks are 0 / 0 / 0** in pdhd, pdvd and sbnd_xin (the driver's post-state check).
+- **`~/tmp` holds 285 dangling symlinks, none of them made by this round.** Each was resolved by
+  target, and none points into the sweep's tier or into any round-D work tier:
+  - 239 point at work arms that were already gone;
+  - 40 sit inside `sbnd-cfg-organize` and `layoutcheck-166650-a`, neither in any tier, and point at
+    files missing from those same dirs;
+  - 6 are others: 3 inside the peer's worktree `d103/wcp_wt_r3`; 1 onto a toolkit cfg file; 2
+    relative links (`../../../Woodpecker/`, `../../upload-to-bee.sh`).
+- **sbnd sentinel suite: 21 PASS / 0 FAIL / 2 OPEN / 7 INERT**, identical to every earlier reading
+  (`sentinels_post_sweep_20260916.txt`).
+
+### 13.2 sbnd + pdvd (this session, 13:39–13:40)
 
 | | before (13:0x) | after |
 |---|---|---|

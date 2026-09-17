@@ -1,0 +1,3 @@
+/home/xqian/tmp/d101/wcp_wt
+/home/xqian/tmp/d104/wt104
+/home/xqian/tmp/d106/wt106

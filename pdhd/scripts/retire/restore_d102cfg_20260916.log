@@ -1,0 +1,18 @@
+# doc 111 sec 8: ~/tmp/d102/cfg was released by the 17:29 sweep; doc pdvd/113 (pushed after the pinned head) cites
+# /home/xqian/tmp/d102/cfg/d113knob{off,none}_{pdhd,pdvd}.json for its G1 compiled-config proof.  Recompiled 2026-09-16 17:33
+# with pdvd/docs/nf_sp_img_clus/scripts/d102_compile_pr.sh's exact wcsonnet line (toolkit cfg at d2777286, libpin_d102),
+# -o into the session scratchpad, input/output_dir args kept at ~/tmp/d102/cfg; knob none adds -S retile_mode='none'.
+# Checked against the freeze's manifest /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/archive/records/cleanup-20260916/tmp/d102__cfg.manifest.tsv:
+d113knobnone_pdhd.json: OK
+d113knobnone_pdhd.log: OK
+d113knobnone_pdvd.json: OK
+d113knobnone_pdvd.log: OK
+d113knoboff_pdhd.json: OK
+d113knoboff_pdhd.log: OK
+d113knoboff_pdvd.json: OK
+d113knoboff_pdvd.log: OK
+# md5 prefixes (doc 113 G1 quotes a870511c9b22 / 211a49a48229 for knob off):
+4336287d46f4  /home/xqian/tmp/d102/cfg/d113knobnone_pdhd.json
+c0770c9eebd8  /home/xqian/tmp/d102/cfg/d113knobnone_pdvd.json
+a870511c9b22  /home/xqian/tmp/d102/cfg/d113knoboff_pdhd.json
+211a49a48229  /home/xqian/tmp/d102/cfg/d113knoboff_pdvd.json
