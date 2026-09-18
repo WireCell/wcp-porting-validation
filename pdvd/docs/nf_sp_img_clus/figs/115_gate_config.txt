@@ -1,0 +1,14 @@
+pdhd d115knoboff rc=0 md5=a870511c9b22
+pdhd d115knobbw rc=0 md5=09db65dd89a0
+pdhd d115knobbwp rc=0 md5=cd270f37b57a
+pdhd d115knobboth rc=0 md5=f179759c5c5d
+pdvd d115knoboff rc=0 md5=211a49a48229
+pdvd d115knobbw rc=0 md5=522a223c3ff9
+pdvd d115knobbwp rc=0 md5=d408ef8504e4
+pdvd d115knobboth rc=0 md5=8317efbdb30d
+pdhd d115knobbw vs off: 2 differences: {('CreateSteinerGraph', 'prrefresh'): ['base_weight_blank_alpha(added)'], ('CreateSteinerGraph', 'pr'): ['base_weight_blank_alpha(added)']}
+pdhd d115knobbwp vs off: 4 differences: {('CreateSteinerGraph', 'prrefresh'): ['base_weight_blank_alpha(added)', 'base_weight_scope(added)'], ('CreateSteinerGraph', 'pr'): ['base_weight_blank_alpha(added)', 'base_weight_scope(added)']}
+pdhd d115knobboth vs off: 4 differences: {('CreateSteinerGraph', 'prrefresh'): ['base_weight_blank_alpha(added)', 'terminal_blank_plane_mode(added)'], ('CreateSteinerGraph', 'pr'): ['base_weight_blank_alpha(added)', 'terminal_blank_plane_mode(added)']}
+pdvd d115knobbw vs off: 2 differences: {('CreateSteinerGraph', 'prrefresh'): ['base_weight_blank_alpha(added)'], ('CreateSteinerGraph', 'pr'): ['base_weight_blank_alpha(added)']}
+pdvd d115knobbwp vs off: 4 differences: {('CreateSteinerGraph', 'prrefresh'): ['base_weight_blank_alpha(added)', 'base_weight_scope(added)'], ('CreateSteinerGraph', 'pr'): ['base_weight_blank_alpha(added)', 'base_weight_scope(added)']}
+pdvd d115knobboth vs off: 4 differences: {('CreateSteinerGraph', 'prrefresh'): ['base_weight_blank_alpha(added)', 'terminal_blank_plane_mode(added)'], ('CreateSteinerGraph', 'pr'): ['base_weight_blank_alpha(added)', 'terminal_blank_plane_mode(added)']}

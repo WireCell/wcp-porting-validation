@@ -1,0 +1,14 @@
+# doc pdvd/113 compare (pdvd): base d115voff vs arm d115vbwp1; common events 120
+## (a) persisted STM fits (event, cluster, pass)
+common records 1842; only in base 5, only in arm 5; clusters with fits only in base 2, only in arm 1
+length ratio arm/base: median 1.001; truncated (< 0.9) 0.81 % (15); extended (> 1.1) 1.30 % (24)
+## (c) STM candidates (T_stm_michel)
+candidates base 563, arm 534; only in base 89 (is_stm 1: 25), only in arm 60 (is_stm 1: 22)
+common: is_stm 1->0 27, 0->1 30; michel_found 1->0 30, 0->1 20
+net is_stm tags arm - base: +0
+## (c') gap jumping: base is_stm tags by whether the BASE Steiner graph of the cluster has a vertex on a dead channel, and the share the arm loses (Gc)
+  base tags dead     257; lost in the arm  49 (19.1 %)
+  base tags nodead    25; lost in the arm   3 (12.0 %)
+  base tags nowalk     0; lost in the arm   0 (0.0 %)
+  lost, by dead-channel vertex / ctpc-mst bridge on the base rough seed: dead/bridged 25, dead/unbridged 24, nodead/unbridged 3
+  lost tags whose base graph touches a dead channel: 039252_12/96, 039252_13/70, 039252_14/38, 039252_3/112, 039252_4/55, 039252_6/40, 039252_7/91, 039253_11/117, 039253_13/69, 039253_15/29, 039253_17/88, 039253_2/78, 039253_3/61, 039253_8/27, 039253_8/28, 039253_8/67, 039253_8/83, 039349_10/66, 039349_16/42, 039349_20/34, 039349_20/78, 039349_20/81, 039349_28/19, 039349_30/54, 039349_33/54, 039349_37/38, 039349_38/68, 039349_40/48, 039349_41/58, 039349_43/48, 039349_48/64, 039349_50/44, 039349_53/28, 039349_53/44, 039349_60/40, 039349_60/49, 039349_62/57, 039349_62/69, 039349_64/75, 039349_65/41, 039349_69/23, 039349_70/52, 039349_72/39, 039349_76/32, 039349_82/25, 039349_82/42, 039349_82/48, 039349_82/61, 039349_9/40

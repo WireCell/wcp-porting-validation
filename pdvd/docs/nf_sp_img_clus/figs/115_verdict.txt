@@ -1,0 +1,200 @@
+## pdhd: base d115hoff -- S1 off 9.87 %, far 4.00 %, wig 4.43 %, h1 seed max 1.97 cm, fit max 1.77 cm; DETOUR 504 stretches 12.4 m
+### pdhd P3 (d115hp3)
+  S1   FAIL      seed > 1 cm off 9.87 -> 8.37 % (-15.2 %, bar -20 %)
+  P1   FAIL      fit rows > 1 cm 7.80 -> 7.22 % (-7.4 %, bar -15 %)
+  U1   PASS      DETOUR length 12.4 -> 7.5 m (-39.5 %, bar -30 %); stretches 504 -> 289
+  R2D  FAIL      W-plane rows > 1 wire off the measured cell 3.12 -> 3.06 % (-2.0 %, bar -10 %); rows off in >= 1 live plane (exact slice) 9.09 -> 8.69 %
+  P5   PASS      h1 seed max 0.68 cm (bar 1.2)
+  P5f  PASS      h1 fit max 1.77 -> 0.47 cm (bar base + 0.2)
+  D1   PASS      median f_low 0.0556 -> 0.0483 (bar <= base); paired better 115 worse 75
+  D2   PASS      median shape rms 0.2985 -> 0.2826 (bar base + 0.01); paired better 135 worse 106
+  D3   PASS      k_pop 0.9992 -> 0.9992 (-0.00 %, bar +-2 %); chi2 1653.4 -> 1636.3
+  D4   PASS      Bee holes / 10 m 8.57 -> 7.79 (bar <= base)
+  W    PASS      seed wiggle 4.43 -> 4.45 % (bar x1.1)
+  P2   PASS      off-charge rows (+-1 wire) 8.09 -> 7.89 %
+  P4   PASS      coverage 96.16 -> 96.57 %
+  P6'  PASS      clean-record rows > 1 cm 0.13 %
+  Ga   PASS      truncated fits 1.39 % (bar 4.48 %)
+  Gb   PASS      seed > 5 cm off 4.00 -> 4.02 % (bar x1.1)
+  Gc   PASS      dead-touching tags lost 20/83 = 24.1 % vs other 13/46 = 28.3 % (bars <= 38.3 and <= 35.2)
+  Gd   PASS      clusters losing every fit 3 (bar 19)
+  C    PASS      runner: complete 60, incomplete 1 ['029107_17_d115hp3'], rc 0; events 61, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs the OFF arm 1.000 (bar 1.2)
+  G2   PASS      RESULT PASS: 61 / 61 common events identical; failures 0
+  G3   PASS      RESULT PASS: 61 / 61 common events identical; failures 0
+  T    reported  tags (d113_grade, NOT gating this round): UNDECIDED
+### pdhd BW2 (d115hbw2)
+  S1   FAIL      seed > 1 cm off 9.87 -> 8.96 % (-9.2 %, bar -20 %)
+  P1   FAIL      fit rows > 1 cm 7.79 -> 7.52 % (-3.5 %, bar -15 %)
+  U1   FAIL      DETOUR length 12.4 -> 9.9 m (-20.2 %, bar -30 %); stretches 504 -> 380
+  R2D  FAIL      W-plane rows > 1 wire off the measured cell 3.13 -> 3.03 % (-3.2 %, bar -10 %); rows off in >= 1 live plane (exact slice) 9.08 -> 8.86 %
+  P5   FAIL      h1 seed max 1.63 cm (bar 1.2)
+  P5f  PASS      h1 fit max 1.77 -> 1.59 cm (bar base + 0.2)
+  D1   PASS      median f_low 0.0563 -> 0.0539 (bar <= base); paired better 99 worse 96
+  D2   PASS      median shape rms 0.2854 -> 0.2785 (bar base + 0.01); paired better 127 worse 111
+  D3   PASS      k_pop 1.0033 -> 1.0039 (+0.06 %, bar +-2 %); chi2 1444.8 -> 1401.5
+  D4   FAIL      Bee holes / 10 m 8.61 -> 8.71 (bar <= base)
+  W    PASS      seed wiggle 4.43 -> 4.54 % (bar x1.1)
+  P2   PASS      off-charge rows (+-1 wire) 8.08 -> 8.05 %
+  P4   PASS      coverage 96.64 -> 96.94 %
+  P6'  PASS      clean-record rows > 1 cm 0.21 %
+  Ga   PASS      truncated fits 1.39 % (bar 4.48 %)
+  Gb   PASS      seed > 5 cm off 4.00 -> 4.02 % (bar x1.1)
+  Gc   PASS      dead-touching tags lost 20/83 = 24.1 % vs other 13/46 = 28.3 % (bars <= 38.3 and <= 35.2)
+  Gd   PASS      clusters losing every fit 1 (bar 19)
+  C    PASS      runner: complete 61, incomplete 0 [], rc 0; events 61, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs the OFF arm 1.068 (bar 1.2)
+  G2   PASS      RESULT PASS: 61 / 61 common events identical; failures 0
+  G3   PASS      RESULT PASS: 61 / 61 common events identical; failures 0
+  T    reported  tags (d113_grade, NOT gating this round): FAIL
+### pdhd BWP1 (d115hbwp1)
+  S1   FAIL      seed > 1 cm off 9.87 -> 8.32 % (-15.8 %, bar -20 %)
+  P1   FAIL      fit rows > 1 cm 7.79 -> 7.20 % (-7.6 %, bar -15 %)
+  U1   PASS      DETOUR length 12.4 -> 6.1 m (-50.8 %, bar -30 %); stretches 504 -> 240
+  R2D  FAIL      W-plane rows > 1 wire off the measured cell 3.13 -> 3.03 % (-2.9 %, bar -10 %); rows off in >= 1 live plane (exact slice) 9.08 -> 8.54 %
+  P5   PASS      h1 seed max 0.68 cm (bar 1.2)
+  P5f  PASS      h1 fit max 1.77 -> 0.48 cm (bar base + 0.2)
+  D1   PASS      median f_low 0.0571 -> 0.0487 (bar <= base); paired better 114 worse 96
+  D2   PASS      median shape rms 0.2934 -> 0.2959 (bar base + 0.01); paired better 130 worse 117
+  D3   PASS      k_pop 0.9991 -> 1.0003 (+0.12 %, bar +-2 %); chi2 1644.0 -> 1605.6
+  D4   PASS      Bee holes / 10 m 8.61 -> 8.05 (bar <= base)
+  W    FAIL      seed wiggle 4.43 -> 5.07 % (bar x1.1)
+  P2   PASS      off-charge rows (+-1 wire) 8.08 -> 7.79 %
+  P4   PASS      coverage 96.39 -> 96.61 %
+  P6'  PASS      clean-record rows > 1 cm 0.22 %
+  Ga   PASS      truncated fits 1.74 % (bar 4.48 %)
+  Gb   PASS      seed > 5 cm off 4.00 -> 4.12 % (bar x1.1)
+  Gc   PASS      dead-touching tags lost 17/83 = 20.5 % vs other 13/46 = 28.3 % (bars <= 38.3 and <= 35.2)
+  Gd   PASS      clusters losing every fit 4 (bar 19)
+  C    PASS      runner: complete 60, incomplete 1 ['029107_17_d115hbwp1'], rc 0; events 61, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs the OFF arm 1.025 (bar 1.2)
+  G2   PASS      RESULT PASS: 61 / 61 common events identical; failures 0
+  G3   PASS      RESULT PASS: 61 / 61 common events identical; failures 0
+  T    reported  tags (d113_grade, NOT gating this round): FAIL
+### pdhd P3BW2 (d115hp3bw2)
+  S1   FAIL      seed > 1 cm off 9.87 -> 8.34 % (-15.5 %, bar -20 %)
+  P1   FAIL      fit rows > 1 cm 7.79 -> 7.25 % (-6.9 %, bar -15 %)
+  U1   PASS      DETOUR length 12.4 -> 7.1 m (-42.7 %, bar -30 %); stretches 504 -> 263
+  R2D  FAIL      W-plane rows > 1 wire off the measured cell 3.12 -> 3.01 % (-3.6 %, bar -10 %); rows off in >= 1 live plane (exact slice) 9.07 -> 8.57 %
+  P5   PASS      h1 seed max 0.68 cm (bar 1.2)
+  P5f  PASS      h1 fit max 1.77 -> 0.47 cm (bar base + 0.2)
+  D1   PASS      median f_low 0.0529 -> 0.0430 (bar <= base); paired better 116 worse 92
+  D2   PASS      median shape rms 0.2863 -> 0.2740 (bar base + 0.01); paired better 132 worse 115
+  D3   PASS      k_pop 0.9993 -> 0.9996 (+0.03 %, bar +-2 %); chi2 1500.2 -> 1224.6
+  D4   PASS      Bee holes / 10 m 8.56 -> 8.13 (bar <= base)
+  W    PASS      seed wiggle 4.43 -> 4.60 % (bar x1.1)
+  P2   PASS      off-charge rows (+-1 wire) 8.08 -> 7.83 %
+  P4   PASS      coverage 95.92 -> 96.28 %
+  P6'  PASS      clean-record rows > 1 cm 0.18 %
+  Ga   PASS      truncated fits 1.39 % (bar 4.48 %)
+  Gb   PASS      seed > 5 cm off 4.00 -> 3.95 % (bar x1.1)
+  Gc   PASS      dead-touching tags lost 17/83 = 20.5 % vs other 14/46 = 30.4 % (bars <= 40.4 and <= 35.2)
+  Gd   PASS      clusters losing every fit 5 (bar 19)
+  C    PASS      runner: complete 61, incomplete 0 [], rc 0; events 61, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs the OFF arm 1.000 (bar 1.2)
+  G2   PASS      RESULT PASS: 61 / 61 common events identical; failures 0
+  G3   PASS      RESULT PASS: 61 / 61 common events identical; failures 0
+  T    reported  tags (d113_grade, NOT gating this round): FAIL
+## pdvd: base d115voff -- S1 off 7.82 %, far 2.31 %, wig 9.71 %, v3 seed max 1.64 cm, fit max 0.91 cm; DETOUR 367 stretches 8.2 m
+### pdvd P3 (d115vp3)
+  S1   FAIL      seed > 1 cm off 7.82 -> 7.35 % (-6.1 %, bar -20 %)
+  P1   FAIL      fit rows > 1 cm 5.09 -> 4.99 % (-2.0 %, bar -15 %)
+  U1   FAIL      DETOUR length 8.2 -> 7.2 m (-12.2 %, bar -30 %); stretches 367 -> 318
+  R2D  FAIL      W-plane rows > 1 wire off the measured cell 1.73 -> 1.71 % (-1.2 %, bar -10 %); rows off in >= 1 live plane (exact slice) 11.58 -> 11.49 %
+  P5   FAIL      v3 seed max 1.64 cm (bar 1.2)
+  P5f  FAIL      v3 fit max 0.91 -> 1.14 cm (bar base + 0.2)
+  D1   FAIL      median f_low 0.0157 -> 0.0158 (bar <= base); paired better 176 worse 191
+  D2   PASS      median shape rms 0.1697 -> 0.1668 (bar base + 0.01); paired better 247 worse 221
+  D3   PASS      k_pop 1.0262 -> 1.0257 (-0.05 %, bar +-2 %); chi2 981.5 -> 1027.7
+  D4   PASS      Bee holes / 10 m 5.90 -> 5.74 (bar <= base)
+  W    PASS      seed wiggle 9.71 -> 9.51 % (bar x1.1)
+  P2   PASS      off-charge rows (+-1 wire) 10.56 -> 10.55 %
+  P4   PASS      coverage 96.65 -> 96.96 %
+  P6'  PASS      clean-record rows > 1 cm 0.12 %
+  Ga   PASS      truncated fits 0.76 % (bar 3.37 %)
+  Gb   PASS      seed > 5 cm off 2.31 -> 2.24 % (bar x1.1)
+  Gc   PASS      dead-touching tags lost 40/257 = 15.6 % vs other 2/25 = 8.0 % (bars <= 18.0 and <= 30.1)
+  Gd   PASS      clusters losing every fit 1 (bar 9)
+  C    PASS      runner: complete 120, incomplete 0 [], rc 0; events 120, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs the OFF arm 1.013 (bar 1.2)
+  G2   PASS      RESULT PASS: 120 / 120 common events identical; failures 0
+  G3   PASS      RESULT PASS: 120 / 120 common events identical; failures 0
+  T    reported  tags (d113_grade, NOT gating this round): FAIL
+### pdvd BW2 (d115vbw2)
+  S1   FAIL      seed > 1 cm off 7.82 -> 7.32 % (-6.5 %, bar -20 %)
+  P1   FAIL      fit rows > 1 cm 5.07 -> 5.02 % (-1.0 %, bar -15 %)
+  U1   PASS      DETOUR length 8.2 -> 5.7 m (-30.5 %, bar -30 %); stretches 367 -> 267
+  R2D  FAIL      W-plane rows > 1 wire off the measured cell 1.73 -> 1.65 % (-4.4 %, bar -10 %); rows off in >= 1 live plane (exact slice) 11.53 -> 11.41 %
+  P5   FAIL      v3 seed max 1.53 cm (bar 1.2)
+  P5f  PASS      v3 fit max 0.91 -> 0.54 cm (bar base + 0.2)
+  D1   PASS      median f_low 0.0161 -> 0.0154 (bar <= base); paired better 210 worse 185
+  D2   PASS      median shape rms 0.1665 -> 0.1585 (bar base + 0.01); paired better 225 worse 259
+  D3   PASS      k_pop 1.0255 -> 1.0257 (+0.01 %, bar +-2 %); chi2 983.0 -> 1101.2
+  D4   PASS      Bee holes / 10 m 5.89 -> 5.70 (bar <= base)
+  W    PASS      seed wiggle 9.71 -> 9.90 % (bar x1.1)
+  P2   PASS      off-charge rows (+-1 wire) 10.52 -> 10.48 %
+  P4   PASS      coverage 97.06 -> 96.99 %
+  P6'  PASS      clean-record rows > 1 cm 0.13 %
+  Ga   PASS      truncated fits 0.76 % (bar 3.37 %)
+  Gb   PASS      seed > 5 cm off 2.31 -> 2.26 % (bar x1.1)
+  Gc   PASS      dead-touching tags lost 47/257 = 18.3 % vs other 3/25 = 12.0 % (bars <= 22.0 and <= 30.1)
+  Gd   PASS      clusters losing every fit 1 (bar 9)
+  C    PASS      runner: complete 120, incomplete 0 [], rc 0; events 120, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs the OFF arm 1.044 (bar 1.2)
+  G2   PASS      RESULT PASS: 120 / 120 common events identical; failures 0
+  G3   PASS      RESULT PASS: 120 / 120 common events identical; failures 0
+  T    reported  tags (d113_grade, NOT gating this round): FAIL
+### pdvd BWP1 (d115vbwp1)
+  S1   FAIL      seed > 1 cm off 7.82 -> 6.61 % (-15.5 %, bar -20 %)
+  P1   FAIL      fit rows > 1 cm 5.09 -> 4.94 % (-2.9 %, bar -15 %)
+  U1   PASS      DETOUR length 8.2 -> 5.5 m (-32.9 %, bar -30 %); stretches 367 -> 250
+  R2D  FAIL      W-plane rows > 1 wire off the measured cell 1.72 -> 1.58 % (-8.6 %, bar -10 %); rows off in >= 1 live plane (exact slice) 11.56 -> 11.25 %
+  P5   FAIL      v3 seed max 1.32 cm (bar 1.2)
+  P5f  PASS      v3 fit max 0.91 -> 0.54 cm (bar base + 0.2)
+  D1   PASS      median f_low 0.0159 -> 0.0152 (bar <= base); paired better 184 worse 187
+  D2   PASS      median shape rms 0.1643 -> 0.1613 (bar base + 0.01); paired better 230 worse 233
+  D3   PASS      k_pop 1.0259 -> 1.0243 (-0.15 %, bar +-2 %); chi2 849.6 -> 871.4
+  D4   FAIL      Bee holes / 10 m 5.89 -> 5.94 (bar <= base)
+  W    FAIL      seed wiggle 9.71 -> 11.45 % (bar x1.1)
+  P2   PASS      off-charge rows (+-1 wire) 10.54 -> 10.38 %
+  P4   PASS      coverage 96.21 -> 97.01 %
+  P6'  PASS      clean-record rows > 1 cm 0.14 %
+  Ga   PASS      truncated fits 0.81 % (bar 3.37 %)
+  Gb   PASS      seed > 5 cm off 2.31 -> 2.17 % (bar x1.1)
+  Gc   PASS      dead-touching tags lost 49/257 = 19.1 % vs other 3/25 = 12.0 % (bars <= 22.0 and <= 30.1)
+  Gd   PASS      clusters losing every fit 2 (bar 9)
+  C    PASS      runner: complete 120, incomplete 0 [], rc 0; events 120, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs the OFF arm 1.036 (bar 1.2)
+  G2   PASS      RESULT PASS: 120 / 120 common events identical; failures 0
+  G3   PASS      RESULT PASS: 120 / 120 common events identical; failures 0
+  T    reported  tags (d113_grade, NOT gating this round): FAIL
+### pdvd P3BW2 (d115vp3bw2)
+  S1   FAIL      seed > 1 cm off 7.82 -> 7.25 % (-7.3 %, bar -20 %)
+  P1   FAIL      fit rows > 1 cm 5.09 -> 4.99 % (-2.0 %, bar -15 %)
+  U1   FAIL      DETOUR length 8.2 -> 6.0 m (-26.8 %, bar -30 %); stretches 367 -> 282
+  R2D  FAIL      W-plane rows > 1 wire off the measured cell 1.72 -> 1.63 % (-5.3 %, bar -10 %); rows off in >= 1 live plane (exact slice) 11.56 -> 11.43 %
+  P5   FAIL      v3 seed max 1.53 cm (bar 1.2)
+  P5f  PASS      v3 fit max 0.91 -> 1.07 cm (bar base + 0.2)
+  D1   PASS      median f_low 0.0160 -> 0.0146 (bar <= base); paired better 188 worse 175
+  D2   PASS      median shape rms 0.1632 -> 0.1526 (bar base + 0.01); paired better 235 worse 226
+  D3   PASS      k_pop 1.0275 -> 1.0273 (-0.02 %, bar +-2 %); chi2 855.0 -> 823.4
+  D4   PASS      Bee holes / 10 m 5.89 -> 5.80 (bar <= base)
+  W    PASS      seed wiggle 9.71 -> 9.96 % (bar x1.1)
+  P2   PASS      off-charge rows (+-1 wire) 10.55 -> 10.53 %
+  P4   PASS      coverage 96.70 -> 96.80 %
+  P6'  PASS      clean-record rows > 1 cm 0.18 %
+  Ga   PASS      truncated fits 0.71 % (bar 3.37 %)
+  Gb   PASS      seed > 5 cm off 2.31 -> 2.26 % (bar x1.1)
+  Gc   PASS      dead-touching tags lost 45/257 = 17.5 % vs other 3/25 = 12.0 % (bars <= 22.0 and <= 30.1)
+  Gd   PASS      clusters losing every fit 1 (bar 9)
+  C    PASS      runner: complete 120, incomplete 0 [], rc 0; events 120, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs the OFF arm 1.000 (bar 1.2)
+  G2   PASS      RESULT PASS: 120 / 120 common events identical; failures 0
+  G3   PASS      RESULT PASS: 120 / 120 common events identical; failures 0
+  T    reported  tags (d113_grade, NOT gating this round): FAIL
+
+## verdict per level (both detectors; FIX = S1 P1 U1 R2D P5 P5f D1 D2 D3 D4, NO NEW ISSUES = the rest)
+  P3: FAIL  failing pdhd:S1, pdhd:P1, pdhd:R2D, pdvd:S1, pdvd:P1, pdvd:U1, pdvd:R2D, pdvd:P5, pdvd:P5f, pdvd:D1
+  BW2: FAIL  failing pdhd:S1, pdhd:P1, pdhd:U1, pdhd:R2D, pdhd:P5, pdhd:D4, pdvd:S1, pdvd:P1, pdvd:R2D, pdvd:P5
+  BWP1: FAIL  failing pdhd:S1, pdhd:P1, pdhd:R2D, pdhd:W, pdvd:S1, pdvd:P1, pdvd:R2D, pdvd:P5, pdvd:D4, pdvd:W
+  P3BW2: FAIL  failing pdhd:S1, pdhd:P1, pdhd:R2D, pdvd:S1, pdvd:P1, pdvd:U1, pdvd:R2D, pdvd:P5

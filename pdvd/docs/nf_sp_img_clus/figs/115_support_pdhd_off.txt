@@ -1,0 +1,30 @@
+# doc pdvd/114 support census: det=pdhd arm=d115hoff events=61 (missing 0, no image 0); records 1158 (unmatched 0, no image 7, used 1151)
+# thresholds: THR 1.0 cm, HOP 2.0, BALL_PAD 5.0, NEAR 1.5, COVER_SHARE 0.5, DEAD_SHARE 0.5, FIT_SHARE 0.8, MIN_ROWS 2, DEAD_R 1.5
+
+## rows
+- rows 385424 (2501.9 m); UNSUPPORTED (off-charge in >= 1 live plane and > 1.0 cm from the ridge or from every image point) 21994 (5.7 %, 174.4 m); JITTER (off-charge but within 1.0 cm of both) 6302 (1.6 %); WIDE (on charge everywhere, > 1.0 cm off the ridge) 7197 (1.9 %)
+- per plane U/V/W: off-charge 19191 / 19801 / 19083; dead at the row 1189 / 1844 / 1341
+- check (doc 111 sec 4.1): rows > 1.0 cm off the ridge 30090 (7.8 %); unsupported among them 68.6 %, among the rest 0.4 %
+- rows > 1.0 cm from every image point of ANY cluster 22112 (5.7 %); unsupported among them 87.1 %; rows > 1.0 cm from the own-id image but within 1.0 cm of another id's 2410 (0.6 %)
+
+## stretches (>= 2 consecutive unsupported rows)
+- stretches 1582 (single-row runs not counted: 835); rows 21159; length 168.3 m
+
+| class | stretches | share | rows | length (m) | length share | with a blank-plane seed vertex | open-ended | detour routes with an on-image alternative | mean on-image / seed cost |
+|---|---|---|---|---|---|---|---|---|---|
+| GAP-dead | 26 | 1.6 % | 190 | 1.5 | 0.9 % | 65.4 % | 1 | - | - |
+| GAP-short | 353 | 22.3 % | 1710 | 11.3 | 6.7 % | 81.0 % | 9 | - | - |
+| GAP-live | 591 | 37.4 % | 16784 | 139.1 | 82.6 % | 70.7 % | 5 | - | - |
+| XID | 25 | 1.6 % | 182 | 1.1 | 0.7 % | 84.0 % | 0 | - | - |
+| D-crawl | 104 | 6.6 % | 452 | 2.8 | 1.6 % | 90.4 % | 0 | 16 of 102 | 1.65 |
+| D-blank-term | 255 | 16.1 % | 1011 | 6.3 | 3.7 % | 100.0 % | 0 | 76 of 255 | 1.73 |
+| D-blank-int | 110 | 7.0 % | 412 | 2.6 | 1.5 % | 100.0 % | 0 | 36 of 110 | 1.60 |
+| D-3live | 35 | 2.2 % | 128 | 0.8 | 0.5 % | 0.0 % | 0 | 13 of 35 | 1.52 |
+| FIT | 83 | 5.2 % | 290 | 2.8 | 1.7 % | 2.4 % | 17 | - | - |
+
+| group | stretches | share | length (m) | length share |
+|---|---|---|---|---|
+| GAP | 970 | 61.3 % | 152.0 | 90.3 % |
+| DETOUR | 504 | 31.9 % | 12.4 | 7.4 % |
+| FIT | 83 | 5.2 % | 2.8 | 1.7 % |
+| XID | 25 | 1.6 % | 1.1 | 0.7 % |

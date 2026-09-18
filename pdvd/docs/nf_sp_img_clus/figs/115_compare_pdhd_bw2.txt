@@ -1,0 +1,14 @@
+# doc pdvd/113 compare (pdhd): base d115hoff vs arm d115hbw2; common events 61
+## (a) persisted STM fits (event, cluster, pass)
+common records 1153; only in base 5, only in arm 8; clusters with fits only in base 1, only in arm 4
+length ratio arm/base: median 1.000; truncated (< 0.9) 1.39 % (16); extended (> 1.1) 3.12 % (36)
+## (c) STM candidates (T_stm_michel)
+candidates base 333, arm 327; only in base 56 (is_stm 1: 18), only in arm 50 (is_stm 1: 13)
+common: is_stm 1->0 15, 0->1 19; michel_found 1->0 20, 0->1 21
+net is_stm tags arm - base: -1
+## (c') gap jumping: base is_stm tags by whether the BASE Steiner graph of the cluster has a vertex on a dead channel, and the share the arm loses (Gc)
+  base tags dead      83; lost in the arm  20 (24.1 %)
+  base tags nodead    46; lost in the arm  13 (28.3 %)
+  base tags nowalk     0; lost in the arm   0 (0.0 %)
+  lost, by dead-channel vertex / ctpc-mst bridge on the base rough seed: dead/bridged 6, dead/unbridged 14, nodead/bridged 2, nodead/unbridged 11
+  lost tags whose base graph touches a dead channel: 028084_12/46, 028084_17/35, 028084_2/40, 028084_21/27, 028084_25/84, 028084_26/94, 029107_1/85, 029107_11/86, 029107_14/23, 029107_14/106, 029107_15/118, 029107_17/33, 029107_17/49, 029107_17/116, 029107_19/30, 029107_2/64, 029107_24/19, 029107_28/109, 029107_4/123, 029107_7/47

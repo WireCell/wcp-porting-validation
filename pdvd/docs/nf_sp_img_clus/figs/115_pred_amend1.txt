@@ -1,0 +1,12 @@
+doc pdvd/115 -- AMENDMENT 1 of figs/115_pred.txt (recorded 2026-09-18 12:00, before any knob-on arm produced output).
+
+Arm TAGS only; no clause, bar, level or prediction changes.  The first launch of the wave-1 arms (d115?bwa, d115?bwb,
+11:56) went out with the launcher's TLA table still holding the placeholders __BWA__ / __BWB__ (an editing slip
+after the sizing selection), so every event failed at config compile and the four tags hold only the pctree
+symlinks the runner stages (no wire-cell output, no trace).  d111_run_arms.sh refuses an existing tag (M13) and
+nothing under work/ is deleted, so the levels are re-tagged by their content:
+    BWA   -> BW2    d115?bw2     -S steiner_base_weight_blank_alpha=2.0                          (alpha 2, scope tree)
+    BWB   -> BWP1   d115?bwp1    -S steiner_base_weight_blank_alpha=1.0 -S steiner_base_weight_scope='tree+path'
+    P3BWA -> P3BW2  d115?p3bw2   -S steiner_blank_plane_mode='prefer3' -S steiner_base_weight_blank_alpha=2.0
+The empty d115?bwa / d115?bwb event dirs are left in place for the owner to remove.  All four levels of a detector
+are launched together at JOBS 4 (32 processes) instead of in two waves; R still uses the OFF arm (JOBS 12).

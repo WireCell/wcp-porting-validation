@@ -36,7 +36,8 @@ class SteinerBlock:
 
     def __init__(self, ident, call, order, header):
         self.ident, self.call, self.order, self.header = ident, call, order, header
-        self._R, self._V, self._E, self._B = [], [], [], []
+        self._R, self._V, self._E, self._B, self._A = [], [], [], [], []
+        self.W = None      # doc 115: (alpha, scope, routed) from the STGW line
 
     def finish(self):
         # doc 114: STGR carries 7 fields (docs 111-113) or 14 (blob index, wire index and charge
@@ -67,8 +68,28 @@ class SteinerBlock:
         self.edge_index = {}
         for k, (s, t) in enumerate(zip(self.E_s, self.E_t)):
             self.edge_index[(min(s, t), max(s, t))] = k
-        del self._R, self._V, self._E, self._B
+        # doc 115: the BASE graph's full edge list (STGA, only under WCT_STEINER_BASE_DUMP): point indices of the
+        # retiled cloud (STGR order), geometric weight (cm) and provenance code as in E_base.
+        if len(self._A):
+            # raw lines ("STGA <ident> <a> <b> <w> <prov>", single spaces): ~13 edges per point, so parsed in one go
+            import io
+            import pandas as pd
+            df = pd.read_csv(io.StringIO("".join(self._A)), sep=" ", header=None, usecols=[2, 3, 4, 5],
+                             names=["a", "b", "w", "prov"], dtype={"a": np.int64, "b": np.int64, "w": float, "prov": str})
+            self.A_s = df["a"].to_numpy(); self.A_t = df["b"].to_numpy(); self.A_w = df["w"].to_numpy()
+            self.A_base = df["prov"].map(BASE_CODE).to_numpy().astype(int)
+        else:
+            self.A_s = self.A_t = self.A_w = self.A_base = None
+        del self._R, self._V, self._E, self._B, self._A
         return self
+
+    def base_csr(self, w=None):
+        """symmetric weight matrix of the dumped BASE graph (STGA), over the retiled-cloud point indices."""
+        if self.A_s is None:
+            raise ValueError(f"ident {self.ident}: no STGA base-graph dump")
+        w = self.A_w if w is None else w
+        n = len(self.R)
+        return csr_matrix((np.r_[w, w], (np.r_[self.A_s, self.A_t], np.r_[self.A_t, self.A_s])), shape=(n, n))
 
     def csr(self, w=None):
         """symmetric weight matrix; boost never holds a parallel edge (add_edge is guarded), so no duplicates."""
@@ -101,12 +122,13 @@ class SteinerBlock:
 SPLICE = re.compile(r"\[\d\d:\d\d:\d\d\.\d{3}\]")
 
 
-def parse_trace(path, want_stg=True):
+def parse_trace(path, want_stg=True, want_base=False):
     """-> dict(stg=[SteinerBlock], rp=[(order, ident, kind, from, to, npath)], blocks=[path blocks], repaired=n).
 
     stdout and stderr share the per-event log.  A spdlog stderr line ("[hh:mm:ss.mmm] I [clus] ...") can land in the
     middle of a buffered dump line; the dump line then continues on the next line.  Such a line is cut at the timestamp
-    and rejoined with its continuation (counted in `repaired`)."""
+    and rejoined with its continuation (counted in `repaired`).  want_base=True keeps the STGA base-graph edge lines
+    (doc 115, WCT_STEINER_BASE_DUMP; ~13 lines per point, so off by default)."""
     stg, rp, blocks, cur = [], [], [], {}
     sb = None
     fill = None
@@ -134,6 +156,12 @@ def parse_trace(path, want_stg=True):
             elif c == "STGB" and sb is not None:
                 f = line.split()
                 sb._B.append(tuple(int(x) for x in f[2:16]))
+            elif c == "STGA":
+                if want_base and sb is not None:
+                    sb._A.append(line)
+            elif c == "STGW" and sb is not None:
+                f = line.split()
+                sb.W = (float(f[2]), f[3], int(f[4]))
             elif c == "STGV" and sb is not None:
                 f = line.split()
                 sb._V.append((int(f[2]), float(f[3]), float(f[4]), float(f[5]), int(f[6]), int(f[7]), int(f[8]),

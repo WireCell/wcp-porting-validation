@@ -1,0 +1,2 @@
+=== SBND PR (d115snew vs d114sold): 16 event dirs, 80 files compared; branches ignored: ['Trun.toolkit_git', 'Trun.wcp_git']
+    VERDICT: BYTE-IDENTICAL

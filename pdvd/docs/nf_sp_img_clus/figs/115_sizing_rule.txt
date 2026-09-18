@@ -1,0 +1,39 @@
+doc pdvd/115 -- PRE-REGISTERED sizing bar for the charge-aware base-graph pricing (base_weight_blank_alpha,
+base_weight_scope), decided BEFORE the offline replay (scripts/d115_base_replay.py) is run on the base-graph dumps
+(WCT_STEINER_BASE_DUMP, arms d115hbd / d115vbd: 10 events per detector on the doc-115 pin, knob OFF).  Written
+2026-09-18 after the knob build's OFF proofs (doctest 442/442, compiled configs unchanged) and before any replay or
+knob-on arm.  Its sha256 is recorded in figs/115_sizing_rule.sha256.
+
+LEVER: every base-graph edge weight w -> w * (1 + alpha * 0.5 * (nz(s) + nz(t))), nz = planes at charge exactly 0 at
+the endpoint (0..3, dead planes count), applied before the Voronoi step of create_enhanced_steiner_graph.  Scope
+"tree": the priced graph drives the Voronoi and the bridge selection, the reduced graph keeps the geometric length
+times the production charge factor.  Scope "tree+path": the priced length also enters the reduced graph.
+
+REPLAY (per cluster with a persisted STM record, per distinct rough walk): the base graph from STGA, the dumped
+terminal set from STGV; scipy multi-source Dijkstra (the Voronoi), the per-terminal-pair cheapest bridge in the
+dumped edge order (the C++ keeps the FIRST minimum), the back-walk along the predecessors -> the tree edge set; the
+reduced graph = tree edges with weight (geometric | priced) x (0.8 + 0.4 * mean Q0/(Q+Q0)), Q from calc_charge_wcp
+(disable_dead_mix_cell = false, the production edge_charge_forward_dead_mix = true) computed offline from STGR, plus
+the same-blob post-pass edges (raw distance, pairs with a terminal, same STGR blob); then the rough walk on that
+graph, scored against the image ridge exactly as d113_steiner_census.py scores the C++ seed (d111s_replay.score).
+
+CHECK (alpha = 0 must reproduce the C++): the replayed tree-edge set against the dumped STGE path/connect edges (share
+of dumped edges reproduced and of replayed edges dumped, both >= 99 % on both detectors or the replay is not used),
+and the replayed walk cost against the dumped graph's walk cost (equal on >= 99 % of walks).
+
+LEVELS: alpha in {0.25, 0.5, 1, 2} x scope in {tree, tree+path}; alpha = 0 is the base.
+
+METRICS, per level vs alpha = 0, per detector (walk-length weighted over the replayed walks):
+  Q1  S1 = seed length > 1 cm off the image ridge, share of seed length: relative drop >= 20 %.
+  Q2  gap safety: far (> 5 cm off) share <= 1.10 x base, AND on the doc-114 catalogue GAP stretches (classes
+      GAP-dead / GAP-short / GAP-live of figs/114_support_<det>_stretches.tsv, restricted to the replayed records)
+      the seed length inside the stretch ball (radius L/2 + 5 cm around the stretch midpoint) changes by more than
+      20 % or the walk becomes unreachable on <= 5 % of them (a bridge abandoned shows as a detour or a break).
+  Q3  seed wiggle (1.2 cm resample, > 0.5 cm off the neighbours' chord) <= 1.10 x base.
+  Q4  seed image-charge coverage (1.5 cm) >= base - 1.0 point.
+  Reported: interiors (non-terminal tree vertices) by zero-plane class (0 / 1 / 2+) and their > 1 cm off-ridge share;
+  the h1 / v3 window seed max; tree vertex and edge counts.
+
+SELECTION: per scope, the SMALLEST alpha that passes Q1-Q4 on both detectors is built (bwA = scope tree, bwB = scope
+tree+path).  If no alpha of a scope passes, that scope's best alpha by Q1 among those passing Q2 is built and named
+as such (the arm then tests a level the sizing did not qualify).  Nothing else is built in this round.

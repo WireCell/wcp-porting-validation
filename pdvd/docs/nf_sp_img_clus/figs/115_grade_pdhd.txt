@@ -1,0 +1,54 @@
+# doc pdvd/113 grade (pdhd); truth sources in precedence order (items taken): [('pdhd_stm_michel_own103h2_verdicts.json', 24), ('pdhd_stm_michel_own103h_verdicts.json', 27), ('pdhd_stm_michel_smx27_verdicts.json', 296), ('pdhd_stm_michel_smx28_verdicts.json', 97)]
+# cells: A0=d115hoff, P3=d115hp3, BW2=d115hbw2, BWP1=d115hbwp1, P3BW2=d115hp3bw2; base A0; bar A_x - A0 >= -0.02
+population 338 (fixed 248); Michel population 185 (excluded 1); unlabelled candidates of any cell 54
+  unlabelled candidates of A0: 20; is_stm 1 0, michel_found 1 1
+  unlabelled candidates of P3: 39; is_stm 1 3, michel_found 1 8
+  unlabelled candidates of BW2: 37; is_stm 1 3, michel_found 1 5
+  unlabelled candidates of BWP1: 34; is_stm 1 5, michel_found 1 7
+  unlabelled candidates of P3BW2: 37; is_stm 1 2, michel_found 1 6
+
+== is_stm
+  A0  d115hoff      TP 117 FP   5 FN  69 TN  147 | purity 0.959 [0.941, 0.977] efficiency 0.629 [0.591, 0.665]
+  P3  d115hp3       TP 112 FP   4 FN  74 TN  148 | purity 0.966 [0.948, 0.982] efficiency 0.602 [0.564, 0.636]
+  BW2 d115hbw2      TP 113 FP   8 FN  73 TN  144 | purity 0.934 [0.910, 0.955] efficiency 0.608 [0.568, 0.642]
+  BWP1 d115hbwp1     TP 116 FP   7 FN  70 TN  145 | purity 0.943 [0.921, 0.965] efficiency 0.624 [0.587, 0.658]
+  P3BW2 d115hp3bw2    TP 111 FP   7 FN  75 TN  145 | purity 0.941 [0.917, 0.963] efficiency 0.597 [0.558, 0.633]
+
+== michel_found
+  A0  d115hoff      TP  73 FP  10 FN  31 TN   71 | purity 0.880 [0.845, 0.917] efficiency 0.702 [0.658, 0.745]
+  P3  d115hp3       TP  75 FP  10 FN  29 TN   71 | purity 0.882 [0.850, 0.919] efficiency 0.721 [0.673, 0.763]
+  BW2 d115hbw2      TP  70 FP  11 FN  34 TN   70 | purity 0.864 [0.827, 0.901] efficiency 0.673 [0.629, 0.717]
+  BWP1 d115hbwp1     TP  73 FP  14 FN  31 TN   67 | purity 0.839 [0.800, 0.881] efficiency 0.702 [0.660, 0.745]
+  P3BW2 d115hp3bw2    TP  71 FP  13 FN  33 TN   68 | purity 0.845 [0.807, 0.886] efficiency 0.683 [0.637, 0.725]
+
+== reading per cell vs A0 (labelled; NEG / POS bounds for the unlabelled)
+  P3  is_stm       purity    : +0.007  (NEG -0.018, POS +0.007)  PASS
+  P3  is_stm       efficiency: -0.027  (NEG -0.027, POS -0.008)  UNDECIDED
+  P3  michel_found purity    : +0.003  (NEG +0.003, POS +0.012)  PASS
+  P3  michel_found efficiency: +0.019  (NEG +0.019, POS +0.057)  PASS
+  P3  T -> UNDECIDED
+  BW2 is_stm       purity    : -0.025  (NEG -0.048, POS -0.024)  FAIL
+  BW2 is_stm       efficiency: -0.022  (NEG -0.022, POS -0.004)  UNDECIDED
+  BW2 michel_found purity    : -0.015  (NEG -0.015, POS -0.009)  PASS
+  BW2 michel_found efficiency: -0.029  (NEG -0.029, POS +0.006)  UNDECIDED
+  BW2 T -> FAIL
+  BWP1 is_stm       purity    : -0.016  (NEG -0.053, POS -0.014)  UNDECIDED
+  BWP1 is_stm       efficiency: -0.005  (NEG -0.005, POS +0.017)  PASS
+  BWP1 michel_found purity    : -0.040  (NEG -0.040, POS -0.030)  FAIL
+  BWP1 michel_found efficiency: +0.000  (NEG +0.000, POS +0.038)  PASS
+  BWP1 T -> FAIL
+  P3BW2 is_stm       purity    : -0.018  (NEG -0.034, POS -0.017)  UNDECIDED
+  P3BW2 is_stm       efficiency: -0.032  (NEG -0.032, POS -0.017)  UNDECIDED
+  P3BW2 michel_found purity    : -0.034  (NEG -0.034, POS -0.025)  FAIL
+  P3BW2 michel_found efficiency: -0.019  (NEG -0.019, POS +0.019)  PASS
+  P3BW2 T -> FAIL
+
+== candidates on one side only, vs A0, by hand class
+  P3 only: 45 {'stopper': 11, 'non-stopper': 12, 'unjudged': 2, 'unlabelled': 20}
+  A0 only (vs P3): 46 {'stopper': 18, 'non-stopper': 22, 'unjudged': 5, 'unlabelled': 1}
+  BW2 only: 50 {'stopper': 13, 'non-stopper': 15, 'unjudged': 5, 'unlabelled': 17}
+  A0 only (vs BW2): 56 {'stopper': 24, 'non-stopper': 26, 'unjudged': 6, 'unlabelled': 0}
+  BWP1 only: 47 {'stopper': 11, 'non-stopper': 13, 'unjudged': 7, 'unlabelled': 16}
+  A0 only (vs BWP1): 46 {'stopper': 19, 'non-stopper': 19, 'unjudged': 6, 'unlabelled': 2}
+  P3BW2 only: 53 {'stopper': 12, 'non-stopper': 20, 'unjudged': 3, 'unlabelled': 18}
+  A0 only (vs P3BW2): 46 {'stopper': 18, 'non-stopper': 21, 'unjudged': 6, 'unlabelled': 1}

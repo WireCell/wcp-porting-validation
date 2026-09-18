@@ -1,0 +1,22 @@
+doc pdvd/115 -- AMENDMENT 1 of figs/115_sizing_rule.txt (recorded 2026-09-18 after the first single-event replay test
+on PDHD 028084_11 of d115hbd, BEFORE the sizing table was produced on either detector).
+
+CHECK as written: the replayed tree-edge set at alpha = 0 must reproduce >= 99 % of the dumped STGE path/connect edges
+(and vice versa), and the replayed walk cost must equal the dumped graph's on >= 99 % of walks.
+
+Measured on the test event (18 clusters with walks, 52,349 dumped tree edges): 96.11 % of the dumped edges are
+replayed (95.22 % of the replayed edges are dumped); the weights on the common edges agree to a median relative
+1e-7 (the STGR charge print precision); the walk cost differs on 17 of 18 walks, by 0.02-0.08 %.
+
+Cause: the multi-source Dijkstra runs on a LATTICE (drift step x wire pitch), where many vertices are at exactly
+equal distance from two terminals, and the tree depends on which terminal such a vertex is assigned to.  Two replays
+of the same graph with the weights perturbed by a relative 1e-9 (two random seeds) agree with each other on only
+90.2 % of their tree edges, and each agrees with the C++ tree on 90.6 %; the unperturbed replay (scipy's
+deterministic heap order) agrees with the C++ tree on 96.1 %.  The 99 % bar therefore asks for more than the
+construction defines; the replay reproduces the C++ tree to within the tie ambiguity, and better than a re-run of
+the construction with any other tie order would.
+
+CHECK as amended: at alpha = 0, (a) the replayed tree-edge agreement with the dumped tree must be >= the agreement
+between two tie-perturbed replays (the tie floor, reported alongside), and (b) the replayed walk cost must be within
+0.5 % of the dumped graph's walk cost on >= 95 % of walks.  Q1-Q4 are unchanged: every level is compared with the
+alpha = 0 REPLAY (same construction, same tie order), so the tie noise enters every level alike.

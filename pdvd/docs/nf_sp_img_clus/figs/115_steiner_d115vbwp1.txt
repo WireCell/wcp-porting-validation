@@ -1,0 +1,11 @@
+# doc pdvd/113 Steiner census: det=pdvd arm=d115vbwp1 events 120 (missing 0: [])
+S1 seed (rough walks replayed on the dumped graph): walks 1847 (skipped 0, unreachable 0), length 4464.8 m, > 1 cm off 6.61 %, > 5 cm off 2.17 %, wiggle 11.45 %, image coverage 50.03 %
+graphs of STM clusters: 1810; retiled points 13622232; vertices 3917203; edges 8932938; bridge edges (ctpc/mst) 6100 (487.5 m); edges >= 5 cm 1780763
+non-extreme terminals 672312, > 1 cm off 96524 (14.4 %)
+  3live      481917 ( 71.7 % of terminals), off   43820 (  9.1 % of the class;  45.4 % of off terminals)
+  1blank     119462 ( 17.8 % of terminals), off   37015 ( 31.0 % of the class;  38.3 % of off terminals)
+  1dead       70933 ( 10.6 % of terminals), off   15689 ( 22.1 % of the class;  16.3 % of off terminals)
+  2blank+         0 (  0.0 % of terminals), off       0 (  0.0 % of the class;   0.0 % of off terminals)
+whole event: Steiner blocks 34034, retiled points 37659098, vertices 10471858, edges 23843206
+CreateSteinerGraph WARN lines: {'no_points': 12, 'no_graph': 6473, 'empty_pc': 0}
+spots, seed max ridge offset in the window per walk (cm): v1 1.03; v2 1.13; v3 1.32

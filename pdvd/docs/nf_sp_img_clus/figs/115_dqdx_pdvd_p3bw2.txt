@@ -1,0 +1,32 @@
+# doc pdvd/115 dQ/dx compare: det=pdvd base=d115voff arm=d115vp3bw2 events=120 status=0 min_npts=10 low_thr=21586 e/cm (0.4 x plateau 53966); common accepted passes 465
+
+| metric | base | arm |
+|---|---|---|
+| live points | 116067 | 116134 |
+| k_pop (scale vs the muon table) | 1.0275 | 1.0273 |
+| chi2 over populated rr bins (3 % floor) | 855.02 | 823.39 |
+| populated bins | 11 | 11 |
+| median f_low (charge completeness; lower is better) | 0.0160 | 0.0146 |
+| median per-track shape rms (lower is better) | 0.1632 | 0.1526 |
+| median per-track k | 1.0067 | 1.0142 |
+| median Bragg contrast | 1.408 | 1.445 |
+| share of rows with q < 0 | 0.0418 | 0.0415 |
+| Bee holes per 10 m | 5.409 | 4.976 |
+
+| rr bin (cm) | base ratio | arm ratio | base n | arm n |
+|---|---|---|---|---|
+| 0-1 | 0.4468 +- 0.0211 | 0.4507 +- 0.0211 | 946 | 939 |
+| 1-2 | 0.6654 +- 0.0302 | 0.6958 +- 0.0310 | 718 | 726 |
+| 2-3 | 0.8258 +- 0.0322 | 0.8021 +- 0.0316 | 712 | 698 |
+| 3-5 | 0.9151 +- 0.0303 | 0.9178 +- 0.0302 | 1395 | 1397 |
+| 5-7 | 0.9608 +- 0.0310 | 0.9729 +- 0.0311 | 1417 | 1407 |
+| 7-10 | 0.9993 +- 0.0311 | 0.9947 +- 0.0309 | 2108 | 2108 |
+| 10-15 | 1.0252 +- 0.0312 | 1.0172 +- 0.0310 | 3480 | 3461 |
+| 15-20 | 1.0327 +- 0.0314 | 1.0285 +- 0.0312 | 3436 | 3415 |
+| 20-30 | 1.0269 +- 0.0310 | 1.0264 +- 0.0310 | 6625 | 6665 |
+| 30-40 | 1.0318 +- 0.0311 | 1.0326 +- 0.0311 | 6370 | 6359 |
+| 40-60 | 1.0217 +- 0.0307 | 1.0213 +- 0.0307 | 11960 | 11910 |
+
+paired f_low (arm - base) on 465 tracks: better 188, worse 175, same 102; median +0.0000
+paired shape (arm - base) on 462 tracks: better 235, worse 226, same 1; median -0.0002
+paired contrast (arm - base) on 432 tracks: better 223, worse 209, same 0; median +0.0052

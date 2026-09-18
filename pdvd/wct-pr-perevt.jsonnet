@@ -192,6 +192,12 @@ function(
     // PDVD_PR_TLA="-S steiner_blank_plane_mode='prefer3'".
     steiner_blank_plane_mode = null,
     steiner_blank_plane_radius_cm = null,
+    // doc pdvd/115: CreateSteinerGraph charge-aware pricing of the Steiner BASE graph before the
+    // Voronoi step.  null => keys omitted => production (C++ 0 / "tree"), byte-identical.  alpha > 0
+    // multiplies each base edge weight by 1 + alpha * 0.5 * (nz(s) + nz(t)); scope 'tree' |
+    // 'tree+path'.  Set as code: PDVD_PR_TLA="-S steiner_base_weight_blank_alpha=1.0".
+    steiner_base_weight_blank_alpha = null,
+    steiner_base_weight_scope = null,
     // PR visitors to run, by name (see clus_pr's cm_by_name in
     // cfg/pgrapher/experiment/sbnd/clus.jsonnet).  The default IS the SBND
     // production tagger chain (run_full1k_nusel.sh with -unmerge-assoc), so a
@@ -4620,6 +4626,8 @@ function(
                              steiner_terminal_min_separation=steiner_terminal_min_sep_cm * wc.cm,
                              steiner_blank_plane_mode=steiner_blank_plane_mode,   // doc pdvd/114
                              steiner_blank_plane_radius=(if steiner_blank_plane_radius_cm == null then null else steiner_blank_plane_radius_cm * wc.cm),
+                             steiner_base_weight_blank_alpha=steiner_base_weight_blank_alpha,   // doc pdvd/115
+                             steiner_base_weight_scope=steiner_base_weight_scope,
                              steiner_skip_flags=steiner_skip_flags,
                              protect_graph_name=protect_graph_name,
                              protect_skip_convicted=protect_skip_convicted,

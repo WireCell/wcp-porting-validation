@@ -1,0 +1,94 @@
+doc pdvd/115 -- PRE-REGISTERED evaluation rule for the base_weight_blank_alpha arms (charge-aware pricing of the
+Steiner BASE graph before the Voronoi step), graded TOGETHER with doc 114's terminal knob (prefer3) and their
+combination, on the track trajectory and the dQ/dx fit result.  Written 2026-09-18 after the knob-off gates of the
+build (doctest 442/442; compiled configs unchanged; PDHD 61/61, PDVD 120/120, SBND 16 evt, uBooNE 35 evt) and the
+OFFLINE sizing (figs/115_sizing_rule.txt + amendment 1, figs/115_replay_{pdhd,pdvd}.txt, figs/115_sizing_verdict.txt),
+BEFORE any knob-on arm ran.  Its sha256 is recorded in figs/115_pred.sha256 before the first knob-on arm starts.
+
+QUESTION (owner, 2026-09-18): try the interiors lever -- a charge-aware base-graph weight before the Voronoi step --
+and evaluate whether the previous round's knob (terminal_blank_plane_mode = prefer3, doc 114) and this round's knob
+help the track trajectory (2-D measurement vs the projected 3-D trajectory; 3-D trajectory vs the 3-D image) and the
+dQ/dx fit result.  The STM / Michel tag efficiencies are REPORTED, not gating: they will need a retune in a later
+session.  Gap jumping must be kept (the owner's standing constraint, docs 112-114).
+
+LEVERS (both C++ default OFF = byte-identical; gates in the doc):
+  CreateSteinerGraph base_weight_blank_alpha (+ base_weight_scope), jsonnet TLAs steiner_base_weight_blank_alpha,
+  steiner_base_weight_scope: every base-graph edge weight w -> w * (1 + alpha * 0.5 * (nz(s) + nz(t))), nz = planes at
+  charge exactly 0 at the endpoint (0..3, dead planes count), before the Voronoi step of create_enhanced_steiner_graph.
+  Scope "tree": the priced graph drives the Voronoi and the bridge selection; the reduced graph keeps the geometric
+  length x the production charge factor.  "tree+path": the priced length also enters the reduced graph.
+  CreateSteinerGraph terminal_blank_plane_mode = prefer3 (doc 114): a blob's zero-plane terminal candidates are dropped
+  when the blob holds a three-plane candidate.
+
+LEVELS (arms per detector; all on pin /home/xqian/tmp/d115/libpin_d115, clus md5 2efa7fa09325, production -nu
+-stm-fit chain, WCT_STM_PATH_DEBUG=1 WCT_STEINER_GRAPH_DUMP=1, pctrees of the production arms):
+  base   d115?off   the knob-OFF control, run before this rule (the dump-extension gate; == d114?base, G2 below)
+  P3     d115?p3    -S steiner_blank_plane_mode='prefer3'                       (doc 114's knob, re-run on this pin)
+  BWA    d115?bwa   -S steiner_base_weight_blank_alpha=2.0                  (scope tree; the sizing's pick)
+  BWB    d115?bwb   -S steiner_base_weight_blank_alpha=1.0 -S steiner_base_weight_scope='tree+path'
+  P3BWA  d115?p3bwa both knobs: prefer3 + alpha 2.0 (scope tree)
+  PDHD 61 events (SRC d108hflip), PDVD 120 events (SRC d103vflip).  Wave 1: bwa bwb at JOBS 5 on both detectors;
+  wave 2: p3 p3bwa at JOBS 8.  R uses the OFF arm's per-event wall (run at JOBS 12, so R is reported with that caveat).
+
+PREDICTIONS (stated before measuring; not gating):
+  * offline sizing (figs/115_replay_*.txt): NO level qualified (figs/115_sizing_verdict.txt): the replayed seed off-ridge length falls
+    9.0 % (PDHD) / 5.0 % (PDVD) under BWA (alpha 2, scope tree) and 17.1 % / 11.0 % under BWB (alpha 1, tree+path),
+    against the sizing's 20 %; BWB also raises the seed wiggle by 20 % (its Q3 fails).  Both are built as the
+    rule's fallback, so the PREDICTION is that S1 FAILS its -20 % bar on both levels and W fails under BWB; the
+    arms measure what the sizing cannot -- the fit (P1, U1, R2D) and the dQ/dx (D1-D4), which may move more than
+    the seed because the interiors the lever removes are the ones the fit's association window is anchored on;
+  * replayed spots: h1 1.97 -> 1.63 (BWA) / 0.69 (BWB); v3 1.64 -> 1.53 / 1.33: P5 is predicted to pass at h1 under
+    BWB only and to fail at v3 under both;
+  * the tree loses about a third of its two-blank interiors (PDHD 63,270 -> 41,145; PDVD 93,049 -> 60,542) and a
+    fifth of its one-blank ones, while the three-plane interiors rise ~10 %;
+  * v3 (two-blank interiors) moves under BWA/BWB where it did not under P3; h1 moves under every level;
+  * P3BWA is at least as good as either knob alone on S1 / P1 / U1; the tags churn as in doc 114.
+
+METRICS, per level vs d115?off, both detectors.
+
+FIX, trajectory -- all required:
+  S1   Steiner seed length > 1 cm off the image ridge (d113_steiner_census.py "> 1 cm off"): relative drop >= 20 %.
+  P1   STM fit rows with ridge offset > 1 cm (d111_eval.py P1): relative drop >= 15 %.
+  U1   doc-114 catalogue DETOUR length (d114_support_census.py, the DETOUR roll-up row, metres): relative drop >= 30 %.
+  R2D  2-D measurement vs the projected trajectory (d115_proj_resid.py): share of W-plane live rows whose fractional
+       projected wire is > 1 wire from the cluster's nearest charged cell on the row's slice: relative drop >= 10 %.
+  P5   the Steiner SEED's ridge-offset max in the spot window <= 1.2 cm at h1 (PDHD 029107_16 cl108) and at v3
+       (PDVD 039349_20 cl25).  No seed through the window = FAIL.
+  P5f  the FIT's ridge-offset max in the spot window (d113_spot_figs.py tsv) <= base + 0.2 cm at h1 and v3.
+FIX, dQ/dx -- all required (no-regression form; "helps" is read off the paired counts and reported):
+  D1   median per-track f_low (share of live pre-kink points below 0.40 x the muon plateau, d115_dqdx_compare.py on the
+       common accepted passes) <= base.
+  D2   median per-track shape rms (muon hypothesis) <= base + 0.01.
+  D3   k_pop within +-2 % of base.
+  D4   Bee holes per 10 m (d111_eval.py P3) <= base.
+
+NO NEW ISSUES -- all required:
+  W    seed wiggle <= 1.10 x base;  P2 off-charge rows (+-1 wire) <= base;  P4 image coverage >= base - 1.0 point;
+  P6'  clean-record share > 1 cm <= 1.0 %.
+  Ga   truncation (d113_compare.py (a)): share of common STM fit records with length arm/base < 0.9 <= 4.48 % (PDHD),
+       3.37 % (PDVD).
+  Gb   far deviations (> 5 cm off): arm share <= 1.10 x base.
+  Gc   gap jumping (d113_compare.py (c')): base is_stm tags whose BASE Steiner graph has a vertex on a dead channel --
+       the share the arm loses <= the share among the other base tags + 10 points AND <= 30.2 + 5 (PDHD), 25.1 + 5 (PDVD).
+  Gd   clusters that lose every STM fit <= 19 (PDHD), 9 (PDVD).
+  C    completeness: wire-cell rc 0 and the three output files for every event.
+  R    median per-event PR wall arm / d115?off <= 1.20.
+  G2   d115?off == d114?base on every event (d111_identity_gate.py): the knob build's OFF path is byte-identical.
+  G3   d115?p3 == d114?p3 on every event: the prior knob's path is untouched by this build.
+
+REPORTED, never gating: d113_grade.py tags (is_stm / michel_found purity and efficiency, bounded both ways),
+  candidate churn, terminal and interior class shares, the support-census class table (GAP / DETOUR / FIT), the
+  spot figures, the dQ/dx ratio-to-reference curves, the U / V plane residual shares (known systematics), dQ/dx median.
+
+VERDICT per level: PASS when every FIX and NO-NEW-ISSUE clause passes on both detectors; else FAIL naming the clauses
+  (there is no UNDECIDED this round: T is not gating).  Recommendation: among the passing levels the one with the
+  largest U1 + R2D gain; else none.  Whatever the verdict the C++ defaults stay 0 / "wcp" and no production config
+  changes in this round: a flip is the owner's decision.
+
+BASE (d115?off, equal to d114?base): 
+  PDHD (d115hoff == d114hbase 61/61)  S1 9.87 %, far 4.00 %, wig 4.43 %, cov 59.19 % (1151 walks, 2820.3 m); h1 seed max 1.97 cm,
+        fit max 1.77 cm (doc 113/114); DETOUR 504 stretches 12.4 m (of 168.3 m unsupported); doc-114 P1 7.80 %, P2 8.09 %.
+  PDVD (d115voff == d114vbase 120/120) S1 7.82 %, far 2.31 %, wig 9.71 %, cov 49.51 % (1847 walks, 4367.9 m); v3 seed max 1.64 cm,
+        fit max 0.91 cm; DETOUR 367 stretches 8.2 m (of 153.7 m unsupported); doc-114 P1 5.09 %, P2 10.56 %.
+  R2D, D1-D4 bases are measured by the clause scripts on the OFF arm (first run in this round; the instruments were
+  checked against themselves on doc-114 arms: zero differences).
