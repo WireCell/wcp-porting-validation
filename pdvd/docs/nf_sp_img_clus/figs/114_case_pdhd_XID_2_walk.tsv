@@ -1,0 +1,28 @@
+i	arc_cm	vid	off_cm	role	class	blank	qu	qv	qw	dead_uvw	q_dump	q_rms_ok	in_src	in_base	in_len	in_w	near_onridge_term_cm	stretch	cell_u	cell_v	cell_w	blank_dw	blank_dt	band_u	band_v	band_w
+94	-13.27	407	0.35	terminal	3live	-	5530	4886	26740	000	16015	1	-	-	-	-	0.00		-1	-1	1/1					4
+95	-12.69	409	0.36	terminal	3live	-	6027	9181	11140	000	9032	1	connect	closely_other	0.58	0.574	0.00		-1	-1	1/1					6
+96	-11.89	417	0.51	terminal	3live	-	5694	20336	912	000	12204	1	connect	closely_other	0.80	0.796	0.00		-1	-1	1/1					4
+97	-11.09	422	0.83	interior	3live	-	8290	4764	321	000	5523	1	path	closely_other	0.80	0.815	0.80		-1	-1	1/1					5
+98	-8.63	421	0.31	terminal	3live	-	8290	1431	20548	000	12819	1	sbt	none	2.46	2.463	0.00		-1	-1	1/1					5
+99	-7.69	430	0.73	interior	1blank	U	0	13230	6069	000	10293	1	path	closely_other	0.94	0.924	0.94		-1	-1	1/1					5
+100	-6.87	429	0.74	interior	1blank	U	0	1133	15129	000	10728	1	path	closely_same	0.82	0.817	1.52		-1	-1	1/1					5
+101	-3.72	442	1.49	terminal	3live	-	15507	792	14938	000	12440	1	connect	closely_other	3.15	3.104	1.68	S0	-1	-1	1/1					6
+102	-3.02	454	1.69	interior	3live	-	26143	6003	327	000	15488	1	path	closely_other	0.69	0.670	1.47	S0	-1	-1	0/0					0
+103	-2.37	457	1.94	interior	1blank	W	29409	7994	0	000	21550	1	path	closely_other	0.65	0.617	2.07	S0	-1	-1	0/0	0.4	-3.0			0
+104	-1.78	462	2.30	interior	1blank	W	16461	11194	0	000	14076	1	path	closely_other	0.58	0.553	2.64	S0	-1	-1	0/0	-0.0	-4.0			0
+105	-1.29	461	2.50	interior	3live	-	16461	4954	463	000	9928	1	path	closely_same	0.49	0.484	3.10	S0	-1	-1	0/0					0
+106	-0.49	467	3.07	interior	1blank	W	6945	15357	0	000	11918	1	path	closely_other	0.80	0.793	3.79	S0	-1	-1	0/0	0.2	-6.0			0
+107	0.00	466	1.31	interior	1blank	W	6945	15101	0	000	11753	1	path	closely_same	0.49	0.484	4.24	S0	-1	-1	0/0	-4.2	4.0			0
+108	0.36	472	1.09	interior	1blank	W	6892	13810	0	000	10913	1	path	closely_other	0.36	0.357	4.53	S0	-1	-1	0/0	-4.0	3.0			0
+109	2.70	473	1.77	interior	3live	-	1020	2364	13	000	1486	1	connect	closely_same	2.34	2.502	3.01	S0	-1	-1	0/0					0
+110	4.68	484	1.18	interior	3live	-	6045	11	2567	000	3792	1	path	closely_other	1.98	2.211	1.09	S0	-1	-1	0/0					0
+111	5.76	477	0.89	terminal	1blank	V	10112	0	23752	000	18254	1	path	closely_other	1.08	1.102	0.00		-1	-1	0/0					0
+112	6.25	476	0.88	interior	1blank	V	10112	0	16605	000	13747	1	path	closely_same	0.49	0.470	0.49		-1	-1	0/0					0
+113	7.39	491	0.46	terminal	1blank	V	8891	0	17676	000	13991	1	connect	closely_other	1.13	1.098	0.00		-1	-1	1/1					4
+114	8.08	517	0.76	interior	3live	-	8382	1175	1788	000	4995	1	path	closely_other	0.69	0.705	0.69		-1	-1	1/1					6
+115	8.67	537	0.72	interior	3live	-	2081	1684	1358	000	1733	1	path	closely_other	0.58	0.646	1.07		-1	-1	0/0					0
+116	12.83	529	0.75	terminal	1blank	U	0	16601	16759	000	16680	1	sbt	none	4.16	4.162	0.00		-1	-1	0/0					0
+117	18.88	519	3.04	interior	1blank	W	463	1538	0	000	1136	1	sbt	none	6.05	6.054	2.81	S1	-1	-1	0/0	1.2	1.0			0
+118	20.05	540	2.51	interior	1blank	W	35	4598	0	000	3251	1	path	closely_other	1.17	1.321	3.93	S1	-1	-1	0/0	0.0	1.0			5
+119	21.19	571	2.47	interior	3live	-	560	26636	1143	000	15396	1	connect	closely_other	1.14	1.174	4.31	S1	-1	-1	1/1					4
+120	22.73	589	1.44	interior	3live	-	372	28097	1138	000	16237	1	path	closely_other	1.54	1.472	2.87	S1	-1	-1	1/1					6

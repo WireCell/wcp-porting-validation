@@ -1,0 +1,5 @@
+i	arc_cm	vid	off_cm	role	class	blank	qu	qv	qw	dead_uvw	q_dump	q_rms_ok	in_src	in_base	in_len	in_w	near_onridge_term_cm	stretch	cell_u	cell_v	cell_w	blank_dw	blank_dt	band_u	band_v	band_w
+277	-19.38	2002	2.86	interior	1blank	W	5268	2087	0	000	4007	1	-	-	-	-	2.83	S0	-1	-1	0/0	-2.0	3.0			5
+278	-18.06	1958	3.84	interior	1blank	W	5913	601	0	000	4202	1	path	closely_other	1.32	1.429	3.96	S0	-1	-1	0/0	5.0	-0.0			7
+279	-17.40	1909	4.42	interior	1blank	W	5480	14390	0	000	10888	1	path	closely_other	0.66	0.683	4.57	S0	-1	-1	0/0	4.0	-0.0			24
+280	0.00	1929	0.00	terminal	3live	-	4204	2023	5140	000	4008	1	sbt	none	17.40	17.400	0.00		-1	-1	1/1					24

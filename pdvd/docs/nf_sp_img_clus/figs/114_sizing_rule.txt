@@ -1,0 +1,36 @@
+doc pdvd/114 -- the bar for the offline lever sizing (d114_terminal_rule.py), written before the arm-wide sizing ran.
+
+Population: every cluster with a persisted STM record and a Steiner dump in d114hbase (PDHD 61 events) and
+d114vbase (PDVD 120 events).  Baseline = the offline replay of Phase 1 under today's rule (wcp), not the dumped
+terminals, so that Phases 2/3/3b do not enter the comparison.  On-ridge = ridge offset <= 1 cm (d111_stage_attrib.Ridge).
+
+A candidate rule QUALIFIES for the build (Part D) when, on BOTH detectors:
+  Q1  it removes >= 50 % of the baseline's off-ridge 1blank peaks (off_1blank column, relative to wcp);
+  Q2  on-ridge peaks removed WITHOUT a replacement peak within 1.5 cm are <= 10 % of the baseline's on-ridge peaks;
+  Q3  peaks inside the catalogue's GAP stretches (any GAP-* class, within 2 cm of the stretch's fitted rows) fall by
+      <= 5 % relative to the baseline (the gap-jumping population is kept);
+  Q4  the largest peak-free run per fitted record (p90) grows by <= 1 cm.
+If more than one rule qualifies, the one with the smallest Q2 cost is built; ties go to the simpler rule
+(rank3 < nearby < rank3+nearby).  If none qualifies, no knob is built this round and the doc reports the sizing.
+The rules and radii are the ones in RULES of d114_terminal_rule.py: wcp, rank3, prefer3, nearby1.0, nearby1.5,
+nearby2.0, deadonly, rank3+nearby1.5, prefer3+nearby1.0, prefer3+nearby1.5.  No other rule or radius is added after
+the sizing has run.  Record: the list was fixed after a one-event smoke test of the replay on PDHD 028084_0
+(d114hbase), which showed rank3 alone moves few one-blank peaks because the peak finder suppresses only ADJACENT
+candidates; prefer3 was added for that reason before any arm-wide number existed.
+
+Amendment 1 (2026-09-18T09:27, before any arm-wide sizing): Q4's run metric counts peaks within R_RUN of the FITTED
+polyline.  Where the fit itself rides an off-image chord, an on-image replacement peak can lie > 2 cm from it and be
+missed, which would score the intended fix as a coverage loss.  R_RUN is set to 3 cm (from 2 cm) for that reason.
+
+Amendment 2 (2026-09-18T09:31, before any arm-wide sizing; the PDHD census was running, the sizing had not started):
+prefer3 and nearby<R> test "a plane at charge exactly 0" (dead or painted alike), which is what the C++ knob can test
+without a dead-registry lookup; deadonly keeps the dead-aware definition.  Inside a dead region every candidate has
+a zero plane, so neither rule drops anything there; at its edge a candidate may yield to a three-plane neighbour.
+
+Amendment 3 (2026-09-18T10:05, AFTER the first arm-wide sizing had run -- recorded as such).  As written, Q3 counts
+the peaks within 2 cm of a GAP stretch's FITTED rows.  Those rows follow today's two-plane terminals, so a rule that
+replaces such a terminal by a three-plane point of the same blob a few wires away is scored as a loss although the
+gap is still bridged.  Every rule that passed Q1 failed that count (PDHD -14 to -49 %, PDVD -5 to -45 %); the
+count is kept in the table and reported.  Q3' replaces it as the gate: for each GAP stretch the largest run of the
+anchor-to-anchor polyline with no peak within 3 cm (R_RUN) is measured base vs rule, and a rule fails when it grows
+by > 2 cm on more than 5 % of the GAP stretches on either detector.  Q1, Q2 and Q4 are unchanged.

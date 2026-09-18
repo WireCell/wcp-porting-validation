@@ -3,7 +3,9 @@
 
 Trace lines read (stdout of a d111_run_arms.sh arm, gzipped per event):
   STGC <ident> <call> nret=.. nbase_v=.. nbase_e=.. ncomp_closely=.. ncomp_ctpc=.. ncomp_base=.. nterm=.. nextreme=.. nsv=.. nse=.. classify=..
-  STGR <ident> <x> <y> <z> <slice> <qu> <qv> <qw>                 the retiled cloud (SteinerGrapher.cxx steiner_graph_dump)
+  STGR <ident> <x> <y> <z> <slice> <qu> <qv> <qw> [<bi> <wu> <wv> <ww> <uu> <uv> <uw>]   the retiled cloud (SteinerGrapher.cxx
+        steiner_graph_dump); the bracketed seven are doc 114's appended fields (blob major index, wire index, charge unc per plane)
+  STGB <ident> <bi> <apa> <face> <slice> <umin> <umax> <vmin> <vmax> <wmin> <wmax> <max_type> <min_type> <max_int> <min_int>  (doc 114)
   STGV <ident> <i> <x> <y> <z> <old> <term> <extreme> <q> <m02> <m61>
   STGE <ident> <s> <t> <len> <w> <src> <base> <base_w> <n ok3 ok2 ok1 live1 @0.2cm/ch0> <n ok3 ok2 ok1 live1 @0.6cm/ch1>
   STMRP <ident> <rough|crawl1|crawl2> <from> <to> <npath>          TaggerCheckSTM do_rough_path / adjust_rough_path
@@ -34,11 +36,22 @@ class SteinerBlock:
 
     def __init__(self, ident, call, order, header):
         self.ident, self.call, self.order, self.header = ident, call, order, header
-        self._R, self._V, self._E = [], [], []
+        self._R, self._V, self._E, self._B = [], [], [], []
 
     def finish(self):
-        R = np.array(self._R, float).reshape(-1, 7)
+        # doc 114: STGR carries 7 fields (docs 111-113) or 14 (blob index, wire index and charge
+        # uncertainty per plane appended last); STGB is the per-blob line (doc 114 only).
+        R = np.array(self._R, float)
+        ncol = len(self._R[0]) if len(self._R) else 7
+        R = R.reshape(-1, ncol)
         self.R = R[:, 0:3]; self.R_slice = R[:, 3].astype(int); self.R_q = R[:, 4:7]
+        if ncol == 14:
+            self.R_blob = R[:, 7].astype(int); self.R_w = R[:, 8:11].astype(int); self.R_unc = R[:, 11:14]
+        else:
+            self.R_blob = self.R_w = self.R_unc = None
+        B = np.array(self._B, float).reshape(-1, 14)
+        # bi apa face slice umin umax vmin vmax wmin wmax max_type min_type max_int min_int
+        self.B = B.astype(int) if len(B) else None
         V = np.array(self._V, float).reshape(-1, 10)
         order = np.argsort(V[:, 0], kind="stable")
         V = V[order]
@@ -54,7 +67,7 @@ class SteinerBlock:
         self.edge_index = {}
         for k, (s, t) in enumerate(zip(self.E_s, self.E_t)):
             self.edge_index[(min(s, t), max(s, t))] = k
-        del self._R, self._V, self._E
+        del self._R, self._V, self._E, self._B
         return self
 
     def csr(self, w=None):
@@ -113,7 +126,14 @@ def parse_trace(path, want_stg=True):
             c = line[:4]
             if c == "STGR" and sb is not None:
                 f = line.split()
-                sb._R.append((float(f[2]), float(f[3]), float(f[4]), int(f[5]), float(f[6]), float(f[7]), float(f[8])))
+                if len(f) >= 16:
+                    sb._R.append((float(f[2]), float(f[3]), float(f[4]), int(f[5]), float(f[6]), float(f[7]), float(f[8]),
+                                  int(f[9]), int(f[10]), int(f[11]), int(f[12]), float(f[13]), float(f[14]), float(f[15])))
+                else:
+                    sb._R.append((float(f[2]), float(f[3]), float(f[4]), int(f[5]), float(f[6]), float(f[7]), float(f[8])))
+            elif c == "STGB" and sb is not None:
+                f = line.split()
+                sb._B.append(tuple(int(x) for x in f[2:16]))
             elif c == "STGV" and sb is not None:
                 f = line.split()
                 sb._V.append((int(f[2]), float(f[3]), float(f[4]), float(f[5]), int(f[6]), int(f[7]), int(f[8]),

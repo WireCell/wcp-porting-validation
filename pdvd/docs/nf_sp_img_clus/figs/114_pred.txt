@@ -1,0 +1,90 @@
+doc pdvd/114 -- PRE-REGISTERED evaluation rule for the terminal_blank_plane_mode arms (a refined Steiner terminal
+admission rule that keeps gap jumping).  Written 2026-09-18 after the knob-off gates of the dump extension, the base
+census and the OFFLINE sizing (figs/114_sizing_rule.txt, its three amendments and figs/114_rule_{pdhd,pdvd}.txt),
+BEFORE any knob-on arm ran.  Its sha256 is recorded in figs/114_pred.sha256 before the first knob-on arm starts.
+
+QUESTION (owner, 2026-09-18): the fitted STM trajectory deviates from the 3-D image because the Steiner seed follows
+terminals that form OFF the main path (doc 112: points with charge on two planes and an empty cell on the third).
+Refine the terminal formation rule so the trajectory follows the image, WITHOUT removing the graph's ability to jump
+gaps (dead channels, signal-processing inefficiency).
+
+LEVER (C++ default "wcp"; knob OFF = byte-identical, gates below):
+  CreateSteinerGraph terminal_blank_plane_mode (+ terminal_blank_plane_radius), jsonnet TLA steiner_blank_plane_mode
+  (+ steiner_blank_plane_radius_cm), applied to each blob's Phase-1 candidate set before the peak search:
+    P3    prefer3            a candidate with a plane at charge 0 is dropped when its blob holds a three-plane candidate
+    P3N   prefer3+nearby 1.0 cm   ... or when a three-plane candidate of the cluster lies within 1.0 cm  <- the pick
+  A blob whose candidates all have a zero plane is never touched (a dead or inefficient region keeps its terminals).
+  P3N is the level the offline sizing selected (Q1-Q4 on both detectors, smallest Q2 cost); P3 is the simpler form,
+  which missed Q1 on PDVD by 3 points (-46.7 % of off-ridge one-blank peaks against a 50 % bar), run for comparison.
+  No other mode or radius is run in this round.
+
+ARMS (production -nu -stm-fit chain, pin /home/xqian/tmp/d114/libpin_d114k (the knob build; its clus md5 is in the
+      arm .out files), dump on WCT_STM_PATH_DEBUG=1 WCT_STEINER_GRAPH_DUMP=1, pctrees of the production arms):
+  PDHD (61 events, SRC d108hflip): base d114hbase (pre-knob pin 7f20bc6b9706, dump extension only; == d113hbase 61/61);
+        d114hoff = knob unset on the knob pin, run CONCURRENTLY with the knob arms (the byte-identity gate of the knob
+        build AND the load control for R; must equal d114hbase); d114hp3 (-S steiner_blank_plane_mode='prefer3');
+        d114hp3n10 (-S steiner_blank_plane_mode='prefer3+nearby' -S steiner_blank_plane_radius_cm=1.0).
+  PDVD (120 events, SRC d103vflip): d114vbase (== d113vbase 120/120); d114voff; d114vp3; d114vp3n10.
+  The three arms of a detector run concurrently at one JOBS (d114_run_levels.sh); d114?off is the only R denominator.
+
+PREDICTIONS (stated before measuring; not gating):
+  * the one-blank share of the non-extreme terminals falls (offline: off-ridge one-blank peaks -70 % PDHD, -51 % PDVD
+    under P3N; -67 % / -47 % under P3), the three-plane share rises;
+  * h1's seed comes back onto the V (offline window: off-ridge terminals 8 -> 2 under P3 / P3N); v3 improves less
+    (7 -> 4): its S1 / S4 stretches are carried by two-blank INTERIORS, which this lever does not reach;
+  * far (> 5 cm) seed deviations do not shrink: they are graph bridges (doc 111 r2, doc 113);
+  * tags churn as in doc 113 (a trajectory change the taggers were not tuned on); the direction is unknown.
+
+METRICS, per knob arm vs its base, both detectors (the doc-113 clause set plus a seed-wiggle clause).
+
+FIX -- all required:
+  S1  Steiner seed length > 1 cm off the image ridge (d113_steiner_census.py "> 1 cm off"; base PDHD 9.87 %, PDVD
+      7.82 %): relative drop >= 25 %.
+  P1  STM fit rows with ridge offset > 1 cm (d111_eval.py P1): relative drop >= 20 %.
+  P5  the Steiner SEED's ridge-offset max in the spot window (d113_steiner_census.py spots line) <= 1.2 cm at h1
+      (PDHD 029107_16 cl108, base 1.97) and at v3 (PDVD 039349_20 cl25, base 1.64).  No seed through the window = FAIL.
+
+NO NEW ISSUES -- all required:
+  T   d113_grade.py (truth pdhd own103h2 > own103h > smx27 > smx28; pdvd own103v2 > own103v > p99rwon_carried_corrected
+      > smx11): is_stm purity, is_stm efficiency, michel_found purity, michel_found efficiency each >= base - 0.020
+      with the unlabelled candidates bounded both ways.  Any metric UNDECIDED -> T is UNDECIDED.
+  W   seed wiggle (d113_steiner_census.py "wig": share of 1.2 cm-resampled seed points > 0.5 cm off their neighbours'
+      chord; base PDHD 4.43 %, PDVD 9.71 %): arm <= 1.10 x base  (doc 111: a jittered seed costs more than it gains).
+  P2  fit rows off-charge in >= 1 plane (d111_eval.py P2): arm share <= base share.
+  P3  Bee holes per 10 m (d111_eval.py P3): arm <= base.
+  P4  image coverage (d111_eval.py P4): arm >= base - 1.0 point.
+  P6' clean-record share > 1 cm (d111_eval.py P6'): <= 1.0 %.
+  P5f the FIT's ridge-offset max in the spot window (d113_spot_figs.py tsv) <= base + 0.2 cm at h1 (base 1.77) and v3
+      (base 0.91).
+  Ga  truncation (d113_compare.py (a)): share of common STM fit records with length arm/base < 0.9 <= the accepted
+      charge_stepped flip's share: PDHD 4.48 %, PDVD 3.37 %.
+  Gb  far deviations (d113_steiner_census.py "> 5 cm off"; base 4.00 % / 2.31 %): arm share <= 1.10 x base share.
+  Gc  gap jumping (d113_compare.py --logd-base, section (c')): base is_stm tags whose BASE Steiner graph has a vertex
+      on a dead channel -- the share the arm loses <= the share it loses among the other base tags + 10 points, AND
+      <= the accepted flip's overall is_stm loss + 5 points (PDHD 35.2 %, PDVD 30.1 %).
+  Gd  clusters that lose every STM fit (d113_compare.py) <= the accepted flip's count: PDHD 19, PDVD 9.
+  C   completeness: wire-cell rc 0 and the three output files for every event (doc 113 amendment 1 reading).
+  R   median per-event PR wall arm / d114?off <= 1.20.
+  G2  d114?off == d114?base on every event (d111_identity_gate.py): the knob build's OFF path is byte-identical.
+      A G2 failure voids the round (the base is not the OFF path) and is reported, not worked around.
+
+REPORTED, never gating: the terminal class shares, the retiled cloud size, bridge edges, the is_stm tags lost split
+  by dead-touching / bridge use, candidate churn, rows > 2 cm, dQ/dx median, peak RSS, CreateSteinerGraph WARN
+  counts, the spot figures, and the doc-114 support census re-run on each knob arm (GAP / DETOUR / FIT stretches).
+
+VERDICT per level: PASS when every FIX and NO-NEW-ISSUE clause passes on both detectors; UNDECIDED when the only
+  non-passing clause is an UNDECIDED T; else FAIL, naming the clauses.  Recommendation: P3N if it passes; else P3 if
+  it passes; else none.  Whatever the verdict the C++ default stays "wcp" and no production config changes in this
+  round: a flip is the owner's decision.
+
+KNOB-OFF GATES (before this rule was frozen): G1 compiled PR config unchanged with the knob unset (PDHD a870511c9b22,
+  PDVD 211a49a48229, d102_compile_pr.sh on the edited cfg tree); with the mode TLA set the only difference is the two
+  keys in the two CreateSteinerGraph nodes.  The runtime OFF gates of the knob build are G2 above (run WITH the knob
+  arms, same pin), plus SBND 16 events and uBooNE 35 events on the knob pin, reported in the doc.
+
+BASE CENSUS (d113_steiner_census.py on d114hbase / d114vbase; equal to doc 113's base rows):
+  PDHD  S1 9.87 %, far 4.00 %, wig 4.43 %, cov 59.19 % (1151 walks, 2820.3 m); terminals 382126: 3live 285334,
+        1blank 81995, 1dead 14797; > 1 cm off 87618 (1blank 52346); bridges 2413; h1 seed max 1.97 cm.
+  PDVD  S1 7.82 %, far 2.31 %, wig 9.71 %, cov 49.51 % (1847 walks, 4367.9 m); terminals 672331: 3live 481925,
+        1blank 119476, 1dead 70930; > 1 cm off 96850 (1blank 37068); bridges 6096; v3 seed max 1.64 cm.
+  Fit side: h1 fit max 1.77 cm, v3 fit max 0.91 cm (doc 113).

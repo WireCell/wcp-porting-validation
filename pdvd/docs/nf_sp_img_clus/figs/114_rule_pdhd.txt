@@ -1,0 +1,32 @@
+# doc pdvd/114 terminal rule replay: det=pdhd arm=d114hbase cut=500 events=61 (missing 0); clusters with a record and a dump 1131 (no dump 0, no image 4); candidate-bearing blobs 463816; GAP stretches seen 970
+# R_NEAR 1.5 cm, R_REP 1.5, R_GAP 2.0, R_RUN 3.0, THR 1.0
+
+## replay check
+- dumped non-extreme terminals 382126; of them replayed Phase-1 peaks 379284 (99.3 %)
+- replayed Phase-1 peaks 607323; of them dumped terminals 379284 (62.5 %); the rest were removed by Phases 2 / 3 / 3b or the replay differs; peaks per candidate-bearing blob 1.309
+
+## dumped terminals by class and side of the ridge (THR 1 cm), and the attribution of the off-ridge ones
+| class | on ridge | off ridge | off share | ranking (an on-ridge 3live candidate in the same blob lost) | ghost blob (none in the blob, one within R_NEAR) | isolated (none within R_NEAR) |
+|---|---|---|---|---|---|---|
+| 3live | 253744 | 31590 | 11.1 % | 11567 (36.6 %) | 14535 (46.0 %) | 5488 (17.4 %) |
+| 1blank | 35380 | 54155 | 60.5 % | 39287 (72.5 %) | 10646 (19.7 %) | 4222 (7.8 %) |
+| 1dead | 5351 | 1906 | 26.3 % | 248 (13.0 %) | 254 (13.3 %) | 1404 (73.7 %) |
+- 3live off-ridge terminals: within 1 cm of an image point 28186, farther 3404
+- 1blank off-ridge terminals, the blank plane's uncertainty: sentinel (1e12, painted or dead) 54155, zero (channel absent from the activity) 0, other 0; on-ridge 1blank: sentinel 35380, zero 0, other 0
+
+## rules, replayed per blob (baseline = the wcp replay)
+| rule | peaks | on ridge | off ridge | off 1blank | removed on / no replacement within R_REP | removed off / no replacement | added | peaks in GAP stretches (base -> rule) | GAP stretches: mean largest peak-free run base -> rule (cm), grown > 2 cm | largest peak-free run per record p50 / p90 (cm) | records whose run grows > 2 cm |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| wcp | 607323 | 390424 | 216899 | 154115 | 0 / 0 | 0 / 0 | 0 | 7729 -> 7729 | 14.06 -> 14.06, 0 of 970 | 3.39 / 29.64 | 0 |
+| rank3 | 590953 | 397992 | 192961 | 125624 | 24031 / 1210 | 29180 / 5911 | 36841 | 7729 -> 7547 | 14.06 -> 14.09, 4 of 970 | 3.43 / 29.64 | 8 |
+| prefer3 | 521510 | 397820 | 123690 | 50830 | 40778 / 4170 | 104077 / 48014 | 59042 | 7729 -> 6508 | 14.06 -> 14.37, 42 of 970 | 3.67 / 29.46 | 48 |
+| nearby1.0 | 607613 | 389747 | 217866 | 148637 | 41218 / 2044 | 51393 / 4898 | 92901 | 7729 -> 7545 | 14.06 -> 14.01, 2 of 970 | 3.39 / 29.46 | 5 |
+| nearby1.5 | 558819 | 392242 | 166577 | 94352 | 47139 / 4227 | 109051 / 25162 | 107686 | 7729 -> 6691 | 14.06 -> 14.09, 8 of 970 | 3.50 / 28.59 | 22 |
+| nearby2.0 | 496392 | 391070 | 105322 | 33133 | 49152 / 6342 | 138330 / 67080 | 76551 | 7729 -> 5722 | 14.06 -> 14.31, 23 of 970 | 3.74 / 30.30 | 44 |
+| deadonly | 464294 | 389461 | 74833 | 0 | 48920 / 8462 | 154119 / 96885 | 60010 | 7729 -> 3868 | 14.06 -> 15.25, 206 of 970 | 4.15 / 31.49 | 174 |
+| rank3+nearby1.5 | 556858 | 393016 | 163842 | 90946 | 47335 / 4286 | 110516 / 25950 | 107386 | 7729 -> 6659 | 14.06 -> 14.10, 8 of 970 | 3.54 / 28.59 | 23 |
+| prefer3+nearby1.0 | 512553 | 394186 | 118367 | 45529 | 45926 / 4698 | 114805 / 50091 | 65961 | 7729 -> 6294 | 14.06 -> 14.35, 40 of 970 | 3.67 / 29.46 | 48 |
+| prefer3+nearby1.5 | 492733 | 391199 | 101534 | 29192 | 48571 / 5857 | 132717 / 62687 | 66698 | 7729 -> 5750 | 14.06 -> 14.42, 45 of 970 | 3.79 / 28.59 | 67 |
+
+## the owner's spot (window terminals on / off the ridge; off 1blank)
+- h1: dumped 14 / 4; wcp 15 / 8 (8); rank3 14 / 7 (7); prefer3 13 / 2 (2); nearby1.0 13 / 9 (9); nearby1.5 13 / 5 (5); nearby2.0 13 / 0 (0); deadonly 13 / 0 (0); rank3+nearby1.5 13 / 5 (5); prefer3+nearby1.0 13 / 2 (2); prefer3+nearby1.5 13 / 1 (1)

@@ -1,0 +1,34 @@
+# doc pdvd/113 grade (pdvd); truth sources in precedence order (items taken): [('pdvd_stm_michel_own103v2_verdicts.json', 24), ('pdvd_stm_michel_own103v_verdicts.json', 40), ('pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json', 610), ('pdvd_stm_michel_smx11_verdicts.json', 204)]
+# cells: A0=d114vbase, P3N=d114vp3n10, P3=d114vp3; base A0; bar A_x - A0 >= -0.02
+population 548 (fixed 361); Michel population 548 (excluded 0); unlabelled candidates of any cell 33
+  unlabelled candidates of A0: 9; is_stm 1 0, michel_found 1 2
+  unlabelled candidates of P3N: 22; is_stm 1 5, michel_found 1 4
+  unlabelled candidates of P3: 21; is_stm 1 3, michel_found 1 3
+
+== is_stm
+  A0  d114vbase     TP 266 FP   5 FN  98 TN  179 | purity 0.982 [0.973, 0.989] efficiency 0.731 [0.707, 0.754]
+  P3N d114vp3n10    TP 268 FP   9 FN  96 TN  175 | purity 0.968 [0.957, 0.977] efficiency 0.736 [0.713, 0.757]
+  P3  d114vp3       TP 263 FP   8 FN 101 TN  176 | purity 0.970 [0.959, 0.980] efficiency 0.723 [0.699, 0.745]
+
+== michel_found
+  A0  d114vbase     TP 171 FP  11 FN  58 TN  308 | purity 0.940 [0.921, 0.956] efficiency 0.747 [0.720, 0.776]
+  P3N d114vp3n10    TP 161 FP  20 FN  68 TN  299 | purity 0.890 [0.867, 0.913] efficiency 0.703 [0.672, 0.731]
+  P3  d114vp3       TP 158 FP  19 FN  71 TN  300 | purity 0.893 [0.870, 0.917] efficiency 0.690 [0.658, 0.722]
+
+== reading per cell vs A0 (labelled; NEG / POS bounds for the unlabelled)
+  P3N is_stm       purity    : -0.014  (NEG -0.031, POS -0.013)  UNDECIDED
+  P3N is_stm       efficiency: +0.005  (NEG +0.005, POS +0.018)  PASS
+  P3N michel_found purity    : -0.050  (NEG -0.059, POS -0.048)  FAIL
+  P3N michel_found efficiency: -0.044  (NEG -0.044, POS -0.031)  FAIL
+  P3N T -> FAIL
+  P3  is_stm       purity    : -0.011  (NEG -0.022, POS -0.011)  UNDECIDED
+  P3  is_stm       efficiency: -0.008  (NEG -0.008, POS +0.000)  PASS
+  P3  michel_found purity    : -0.047  (NEG -0.052, POS -0.046)  FAIL
+  P3  michel_found efficiency: -0.057  (NEG -0.057, POS -0.046)  FAIL
+  P3  T -> FAIL
+
+== candidates on one side only, vs A0, by hand class
+  P3N only: 59 {'stopper': 23, 'non-stopper': 14, 'unjudged': 6, 'unlabelled': 16}
+  A0 only (vs P3N): 79 {'stopper': 31, 'non-stopper': 35, 'unjudged': 10, 'unlabelled': 3}
+  P3 only: 54 {'stopper': 21, 'non-stopper': 13, 'unjudged': 5, 'unlabelled': 15}
+  A0 only (vs P3): 78 {'stopper': 35, 'non-stopper': 29, 'unjudged': 11, 'unlabelled': 3}

@@ -1,0 +1,16 @@
+i	arc_cm	vid	off_cm	role	class	blank	qu	qv	qw	dead_uvw	q_dump	q_rms_ok	in_src	in_base	in_len	in_w	near_onridge_term_cm	stretch	cell_u	cell_v	cell_w	blank_dw	blank_dt	band_u	band_v	band_w
+37	-8.86	160	1.42	interior	3live	-	23733	6090	237	000	14147	1	-	-	-	-	1.93	S0	-1	-1	0/0					0
+38	-7.80	140	0.95	interior	3live	-	47523	20581	18373	000	31726	1	path	closely_other	1.06	0.990	1.06		-1	-1	0/0					0
+39	-6.73	120	0.56	terminal	3live	-	55755	14784	16505	000	34639	1	path	closely_other	1.06	0.949	0.00		-1	-1	1/1					6
+40	-6.04	107	0.35	terminal	3live	-	63131	25354	23141	000	41489	1	connect	closely_other	0.70	0.617	0.00		-1	-1	1/1					12
+41	-5.45	109	0.45	interior	3live	-	63131	25354	16178	000	40374	1	path	closely_same	0.59	0.517	0.59		-1	-1	1/1					12
+42	-3.11	113	0.53	interior	3live	-	64356	27501	7621	000	40645	1	connect	closely_same	2.34	2.055	0.66		-1	-1	1/1					12
+43	-2.45	101	0.41	terminal	3live	-	66652	39158	41459	000	50645	1	path	closely_other	0.66	0.575	0.00		-1	-1	0/0					6
+44	-0.66	103	1.50	interior	3live	-	6866	857	4229	000	4682	1	path	closely_same	1.79	1.736	1.79	S1	-1	-1	0/0					6
+45	0.00	100	2.15	interior	3live	-	5917	282	311	000	3425	1	path	closely_other	0.66	0.715	2.36	S1	-1	-1	1/1					6
+46	77.14	98	0.17	interior	3live	-	28555	143	282	000	16487	1	connect	ctpc	77.14	79.033	4.87		-1	-1	1/1					7
+47	78.70	99	1.09	terminal	3live	-	4635	2011	11788	000	7405	1	path	closely_other	1.56	1.544	3.89	S2	-1	-1	0/0					0
+48	81.15	96	0.57	interior	3live	-	23651	377	4866	000	13943	1	connect	closely_other	2.44	2.439	1.49		-1	-1	1/1					8
+49	82.64	97	0.72	terminal	3live	-	7245	2015	711	000	4361	1	path	closely_other	1.49	1.527	0.00		-1	-1	1/1					8
+50	83.32	91	0.27	interior	3live	-	25079	37941	10777	000	26985	1	connect	closely_other	0.68	0.677	0.45		-1	-1	1/1					6
+51	83.77	87	0.03	terminal	3live	-	28038	67474	22751	000	44183	1	path	closely_other	0.45	0.400	0.00		-1	-1	1/1					5

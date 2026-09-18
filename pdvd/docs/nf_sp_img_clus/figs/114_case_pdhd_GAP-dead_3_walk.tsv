@@ -1,0 +1,23 @@
+i	arc_cm	vid	off_cm	role	class	blank	qu	qv	qw	dead_uvw	q_dump	q_rms_ok	in_src	in_base	in_len	in_w	near_onridge_term_cm	stretch	cell_u	cell_v	cell_w	blank_dw	blank_dt	band_u	band_v	band_w
+0	-4.96	37	0.56	terminal	1blank	V	6324	0	6441	000	6383	1	-	-	-	-	0.00		-1	-1	0/0					0
+1	-4.39	36	0.63	interior	1blank	V	2135	0	5631	000	4258	1	path	closely_other	0.58	0.613	0.58		-1	-1	0/0					0
+2	-3.59	35	1.34	interior	1blank	V	7084	0	7683	000	7390	1	path	closely_other	0.80	0.844	1.36	S0	-1	-1	0/0					0
+3	-3.00	34	1.83	interior	1blank	V	4030	0	5712	000	4943	1	path	closely_other	0.58	0.613	1.94	S0	-1	-1	0/0					0
+4	-2.36	33	2.45	interior	2blank+	VW	12083	0	0	000	0	1	path	closely_other	0.64	0.730	2.48	S0	-1	-1	0/0					0
+5	-1.88	31	2.88	interior	2blank+	VW	12936	0	0	000	0	1	path	closely_other	0.48	0.575	2.95	S0	-1	-1	0/0					0
+6	-1.38	32	3.14	interior	2blank+	VW	6068	0	0	000	0	1	path	closely_same	0.49	0.591	3.30	S0	-1	-1	0/0					0
+7	-0.80	30	3.68	interior	2blank+	VW	4910	0	0	000	0	1	path	closely_other	0.58	0.702	3.88	S0	-1	-1	0/0					0
+8	0.00	26	4.46	interior	2blank+	VW	11056	0	0	000	0	1	path	closely_other	0.80	0.960	4.66	S0	-1	-1	0/0					0
+9	0.89	21	4.56	interior	2blank+	VW	16665	0	0	000	0	1	connect	closely_other	0.89	1.065	4.71	S0	-1	-1	0/0					0
+10	1.20	19	4.32	interior	2blank+	VW	20475	0	0	000	0	1	path	closely_other	0.32	0.378	4.51	S0	-1	-1	0/0					0
+11	1.93	17	3.62	interior	2blank+	VW	11743	0	0	000	0	1	path	closely_other	0.73	0.872	3.84	S0	-1	-1	0/0					0
+12	2.49	16	3.08	interior	2blank+	VW	8769	0	0	000	0	1	path	closely_other	0.56	0.670	3.29	S0	-1	-1	0/0					0
+13	3.31	14	1.63	interior	2blank+	VW	4955	0	0	000	0	1	path	closely_other	0.82	0.984	2.52	S0	-1	-1	0/0					0
+14	3.89	12	1.15	interior	2blank+	VW	7169	0	0	000	0	1	path	closely_other	0.58	0.702	1.95	S0	-1	-1	0/0					0
+15	4.69	10	0.70	interior	1blank	V	2983	0	2946	000	2965	1	path	closely_other	0.80	0.923	1.27		-1	-1	0/0					0
+16	5.71	3	0.13	extreme	1dead	V	914	0	3157	010	2324	1	path	closely_other	1.02	1.137	0.58		-1	-1	1/1					1
+17	6.20	4	0.55	extreme	1dead	V	7487	0	3157	010	5746	1	connect	closely_same	0.49	0.537	0.31		-1	-1	1/1					1
+18	6.52	7	0.55	terminal	1dead	V	11174	0	3526	010	8285	1	connect	closely_other	0.32	0.327	0.00		-1	-1	0/0					0
+19	6.83	11	0.55	interior	1dead	V	9356	0	2946	010	6936	1	path	closely_other	0.32	0.324	0.31		-1	-1	0/0					0
+20	7.46	13	0.55	interior	2blank+	VW	858	0	0	010	0	1	path	closely_other	0.63	0.705	0.95		-1	-1	0/0					0
+21	8.19	15	0.22	interior	2blank+	VW	403	0	0	010	0	1	path	closely_other	0.73	0.871	1.62		-1	-1	0/0					0

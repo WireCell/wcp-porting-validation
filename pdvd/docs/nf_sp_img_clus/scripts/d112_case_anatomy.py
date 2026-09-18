@@ -64,6 +64,15 @@ PLANE = "UVW"
 THR = 1.0
 
 
+def logd_for(arm):
+    """doc 114: the dump dir of an arm -- /home/xqian/tmp/d111 for the doc-111/112 arms (unchanged), else the round dir
+    named by the arm's prefix (d113*, d114*, ...)."""
+    d = f"/home/xqian/tmp/d111/arm_{arm}"
+    if os.path.isdir(d):
+        return d
+    return f"/home/xqian/tmp/{arm[:4]}/arm_{arm}"
+
+
 def walk_masked(sb, a, b, w, mask):
     M = csr_matrix((np.r_[w[mask], w[mask]], (np.r_[sb.E_s[mask], sb.E_t[mask]], np.r_[sb.E_t[mask], sb.E_s[mask]])),
                    shape=(sb.nv, sb.nv))
@@ -128,7 +137,7 @@ def one_case(case, out, L):
     name, det, ev, cl, click, R, arm = case
     click = np.array(click)
     d = f"{C.IMG}/{det}/work/{ev}_{arm}"
-    tr = C.parse_trace(f"/home/xqian/tmp/d111/arm_{arm}/evt_{ev}.log.gz")
+    tr = C.parse_trace(f"{logd_for(arm)}/evt_{ev}.log.gz")
     t = uproot.open(f"{d}/tracking-stm.root")["T_rec_charge"].arrays(
         ["x", "y", "z", "cluster_id", "pass", "pu", "pv", "pw", "pt"], library="np")
     img = A.bee_layer(f"{d}/mabc-pr.zip", "clustering-global")

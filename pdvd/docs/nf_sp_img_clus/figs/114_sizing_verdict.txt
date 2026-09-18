@@ -1,0 +1,23 @@
+# doc pdvd/114 -- the frozen sizing bar (figs/114_sizing_rule.txt + amendments) read off figs/114_rule_{pdhd,pdvd}.txt
+| rule | det | Q1 off-1blank peaks (bar <= -50 %) | Q2 on-ridge removed, no replacement (bar <= 10 %) | Q3 (as written) peaks in GAP stretches | Q3' GAP stretches whose run grows > 2 cm (bar <= 5 %) | Q4 p90 run (bar <= +1 cm) | verdict |
+|---|---|---|---|---|---|---|---|
+| rank3 | pdhd | -18.5 % | 0.3 % | -2.4 % | 4 of 970 = 0.4 % | 29.64 -> 29.64 (+0.00) | FAIL |
+| prefer3 | pdhd | -67.0 % | 1.1 % | -15.8 % | 42 of 970 = 4.3 % | 29.64 -> 29.46 (-0.18) | PASS |
+| nearby1.0 | pdhd | -3.6 % | 0.5 % | -2.4 % | 2 of 970 = 0.2 % | 29.64 -> 29.46 (-0.18) | FAIL |
+| nearby1.5 | pdhd | -38.8 % | 1.1 % | -13.4 % | 8 of 970 = 0.8 % | 29.64 -> 28.59 (-1.05) | FAIL |
+| nearby2.0 | pdhd | -78.5 % | 1.6 % | -26.0 % | 23 of 970 = 2.4 % | 29.64 -> 30.30 (+0.66) | PASS |
+| deadonly | pdhd | -100.0 % | 2.2 % | -50.0 % | 206 of 970 = 21.2 % | 29.64 -> 31.49 (+1.85) | FAIL |
+| rank3+nearby1.5 | pdhd | -41.0 % | 1.1 % | -13.8 % | 8 of 970 = 0.8 % | 29.64 -> 28.59 (-1.05) | FAIL |
+| prefer3+nearby1.0 | pdhd | -70.5 % | 1.2 % | -18.6 % | 40 of 970 = 4.1 % | 29.64 -> 29.46 (-0.18) | PASS |
+| prefer3+nearby1.5 | pdhd | -81.1 % | 1.5 % | -25.6 % | 45 of 970 = 4.6 % | 29.64 -> 28.59 (-1.05) | PASS |
+| rank3 | pdvd | -18.8 % | 0.2 % | -0.2 % | 2 of 1612 = 0.1 % | 17.23 -> 17.23 (+0.00) | FAIL |
+| prefer3 | pdvd | -46.7 % | 0.6 % | -5.1 % | 30 of 1612 = 1.9 % | 17.23 -> 17.24 (+0.01) | FAIL |
+| nearby1.0 | pdvd | -14.4 % | 0.4 % | -6.5 % | 3 of 1612 = 0.2 % | 17.23 -> 17.16 (-0.07) | FAIL |
+| nearby1.5 | pdvd | -40.9 % | 0.7 % | -14.6 % | 4 of 1612 = 0.2 % | 17.23 -> 17.23 (+0.00) | FAIL |
+| nearby2.0 | pdvd | -66.8 % | 1.3 % | -23.7 % | 11 of 1612 = 0.7 % | 17.23 -> 17.61 (+0.38) | PASS |
+| deadonly | pdvd | -100.0 % | 1.8 % | -46.2 % | 236 of 1612 = 14.6 % | 17.23 -> 18.14 (+0.91) | FAIL |
+| rank3+nearby1.5 | pdvd | -46.7 % | 0.7 % | -14.6 % | 5 of 1612 = 0.3 % | 17.23 -> 17.29 (+0.06) | FAIL |
+| prefer3+nearby1.0 | pdvd | -51.1 % | 0.7 % | -11.4 % | 31 of 1612 = 1.9 % | 17.23 -> 17.29 (+0.06) | PASS |
+| prefer3+nearby1.5 | pdvd | -65.5 % | 0.9 % | -18.8 % | 32 of 1612 = 2.0 % | 17.23 -> 17.72 (+0.49) | PASS |
+
+qualifying on both detectors: ['nearby2.0', 'prefer3+nearby1.0', 'prefer3+nearby1.5']

@@ -1,0 +1,78 @@
+## pdhd: base d114hbase -- S1 off 9.87 %, far 4.00 %, h1 seed max 1.97 cm
+### pdhd P3N (d114hp3n10)
+  S1   FAIL      seed > 1 cm off 9.87 -> 8.32 % (-15.7 %, bar -25 %)
+  P1   FAIL      fit rows > 1 cm 7.76 -> 7.16 % (-7.7 %, bar -20 %)
+  P5   PASS      h1 seed max 0.68 cm (bar 1.2)
+  T    FAIL      grade FAIL
+  W    PASS      seed wiggle 4.43 -> 4.45 % (bar x1.10)
+  P2   PASS      off-charge rows 8.03 -> 7.81 %
+  P3   PASS      Bee holes / 10 m 8.48 -> 7.87
+  P4   PASS      coverage 96.12 -> 96.44 %
+  P6'  PASS      clean-record rows > 1 cm 0.18 %
+  P5f  PASS      h1 fit max 1.77 -> 0.47 cm
+  Ga   PASS      truncated fits 1.91 % (bar 4.48 %)
+  Gb   PASS      seed > 5 cm off 4.00 -> 4.04 % (bar x1.10)
+  Gc   PASS      dead-touching tags lost 18/83 = 21.7 % vs other 13/46 = 28.3 % (bars <= 38.3 and <= 35.2)
+  Gd   PASS      clusters losing every fit 5 (bar 19)
+  C    PASS      runner: complete 61, incomplete 0 [], rc 0; events 61, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs the concurrent OFF arm 0.936
+  G2   PASS      RESULT PASS: 61 / 61 common events identical; failures 0
+### pdhd P3 (d114hp3)
+  S1   FAIL      seed > 1 cm off 9.87 -> 8.37 % (-15.2 %, bar -25 %)
+  P1   FAIL      fit rows > 1 cm 7.80 -> 7.22 % (-7.4 %, bar -20 %)
+  P5   PASS      h1 seed max 0.68 cm (bar 1.2)
+  T    UNDECIDED grade UNDECIDED
+  W    PASS      seed wiggle 4.43 -> 4.45 % (bar x1.10)
+  P2   PASS      off-charge rows 8.09 -> 7.89 %
+  P3   PASS      Bee holes / 10 m 8.57 -> 7.79
+  P4   PASS      coverage 96.16 -> 96.57 %
+  P6'  PASS      clean-record rows > 1 cm 0.13 %
+  P5f  PASS      h1 fit max 1.77 -> 0.47 cm
+  Ga   PASS      truncated fits 1.39 % (bar 4.48 %)
+  Gb   PASS      seed > 5 cm off 4.00 -> 4.02 % (bar x1.10)
+  Gc   PASS      dead-touching tags lost 20/83 = 24.1 % vs other 13/46 = 28.3 % (bars <= 38.3 and <= 35.2)
+  Gd   PASS      clusters losing every fit 3 (bar 19)
+  C    PASS      runner: complete 60, incomplete 1 ['029107_17_d114hp3'], rc 0; events 61, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs the concurrent OFF arm 0.969
+  G2   PASS      RESULT PASS: 61 / 61 common events identical; failures 0
+## pdvd: base d114vbase -- S1 off 7.82 %, far 2.31 %, v3 seed max 1.64 cm
+### pdvd P3N (d114vp3n10)
+  S1   FAIL      seed > 1 cm off 7.82 -> 7.39 % (-5.5 %, bar -25 %)
+  P1   FAIL      fit rows > 1 cm 5.08 -> 4.97 % (-2.2 %, bar -20 %)
+  P5   FAIL      v3 seed max 1.53 cm (bar 1.2)
+  T    FAIL      grade FAIL
+  W    PASS      seed wiggle 9.71 -> 10.05 % (bar x1.10)
+  P2   FAIL      off-charge rows 10.52 -> 10.54 %
+  P3   PASS      Bee holes / 10 m 5.89 -> 5.76
+  P4   PASS      coverage 96.62 -> 96.91 %
+  P6'  PASS      clean-record rows > 1 cm 0.14 %
+  P5f  FAIL      v3 fit max 0.91 -> 1.14 cm
+  Ga   PASS      truncated fits 0.76 % (bar 3.37 %)
+  Gb   PASS      seed > 5 cm off 2.31 -> 2.35 % (bar x1.10)
+  Gc   PASS      dead-touching tags lost 43/257 = 16.7 % vs other 6/25 = 24.0 % (bars <= 34.0 and <= 30.1)
+  Gd   PASS      clusters losing every fit 2 (bar 9)
+  C    PASS      runner: complete 120, incomplete 0 [], rc 0; events 120, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs the concurrent OFF arm 0.988
+  G2   PASS      RESULT PASS: 120 / 120 common events identical; failures 0
+### pdvd P3 (d114vp3)
+  S1   FAIL      seed > 1 cm off 7.82 -> 7.35 % (-6.1 %, bar -25 %)
+  P1   FAIL      fit rows > 1 cm 5.09 -> 4.99 % (-2.0 %, bar -20 %)
+  P5   FAIL      v3 seed max 1.64 cm (bar 1.2)
+  T    FAIL      grade FAIL
+  W    PASS      seed wiggle 9.71 -> 9.51 % (bar x1.10)
+  P2   PASS      off-charge rows 10.56 -> 10.55 %
+  P3   PASS      Bee holes / 10 m 5.90 -> 5.74
+  P4   PASS      coverage 96.65 -> 96.96 %
+  P6'  PASS      clean-record rows > 1 cm 0.12 %
+  P5f  FAIL      v3 fit max 0.91 -> 1.14 cm
+  Ga   PASS      truncated fits 0.76 % (bar 3.37 %)
+  Gb   PASS      seed > 5 cm off 2.31 -> 2.24 % (bar x1.10)
+  Gc   PASS      dead-touching tags lost 40/257 = 15.6 % vs other 2/25 = 8.0 % (bars <= 18.0 and <= 30.1)
+  Gd   PASS      clusters losing every fit 1 (bar 9)
+  C    PASS      runner: complete 120, incomplete 0 [], rc 0; events 120, failure lines 0, events missing an output 0 []
+  R    PASS      median wall ratio vs the concurrent OFF arm 1.000
+  G2   PASS      RESULT PASS: 120 / 120 common events identical; failures 0
+
+## verdict per level (both detectors)
+  P3N: FAIL  failing pdhd:S1, pdhd:P1, pdhd:T, pdvd:S1, pdvd:P1, pdvd:P5, pdvd:T, pdvd:P2, pdvd:P5f
+  P3: FAIL  failing pdhd:S1, pdhd:P1, pdvd:S1, pdvd:P1, pdvd:P5, pdvd:T, pdvd:P5f  undecided pdhd:T

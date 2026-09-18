@@ -1,0 +1,15 @@
+i	arc_cm	vid	off_cm	role	class	blank	qu	qv	qw	dead_uvw	q_dump	q_rms_ok	in_src	in_base	in_len	in_w	near_onridge_term_cm	stretch	cell_u	cell_v	cell_w	blank_dw	blank_dt	band_u	band_v	band_w
+13	0.00	70	0.98	interior	1blank	W	10518	12067	0	000	11319	1	-	-	-	-	2.19		-1	-1	0/0	0.0	4.0			0
+14	1.02	65	1.04	interior	1blank	W	5799	8884	0	000	7502	1	path	closely_other	1.02	1.027	1.43	S0	-1	-1	0/0	0.0	6.0			0
+15	2.45	66	0.31	terminal	1dead	W	10033	15143	0	001	12844	1	path	closely_same	1.43	1.436	0.00		-1	-1	0/0					0
+16	3.25	67	0.07	interior	1dead	W	12484	8884	0	001	10835	1	path	closely_same	0.80	0.787	0.80		-1	-1	0/0					0
+17	4.27	62	0.29	interior	1dead	W	1902	4141	0	001	3222	1	connect	closely_other	1.02	1.067	0.83		-1	-1	0/0					0
+18	5.10	58	0.42	terminal	1dead	W	3374	1674	0	001	2663	1	path	closely_other	0.83	0.918	0.00		-1	-1	0/0					0
+19	5.73	54	0.35	terminal	1dead	W	4948	6888	0	001	5997	1	connect	closely_other	0.63	0.683	0.00		-1	-1	0/0					0
+20	6.36	51	0.24	terminal	1dead	W	4896	15034	0	001	11180	1	connect	closely_other	0.63	0.643	0.00		-1	-1	0/0					0
+21	6.99	49	0.14	terminal	1dead	W	7576	17073	0	001	13208	1	connect	closely_other	0.63	0.618	0.00		-1	-1	0/0					0
+22	7.62	46	0.08	terminal	1dead	W	7533	10969	0	001	9409	1	connect	closely_other	0.63	0.624	0.00		-1	-1	0/0					0
+23	8.25	45	0.41	terminal	1dead	W	8910	4191	0	001	6963	1	connect	closely_other	0.63	0.644	0.00		-1	-1	0/0					0
+24	9.27	44	0.11	terminal	1dead	W	1603	7302	0	001	5286	1	connect	closely_other	1.02	1.068	0.00		-1	-1	0/0					0
+25	10.51	43	0.07	interior	1dead	W	373	11532	0	001	8159	1	path	closely_other	1.24	1.287	1.24		-1	-1	0/0					0
+26	10.82	42	0.30	interior	1dead	W	153	6682	0	001	4726	1	path	closely_other	0.32	0.330	1.42		-1	-1	0/0					0

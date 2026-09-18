@@ -1,0 +1,22 @@
+# doc pdvd/111 Phase C eval (pdhd): base A=d114hoff  arm B=d114hp3n10; common events 61
+records only in A 8, only in B 10 (tag churn; excluded)
+
+| metric | A (base) | B (arm) | B/A - 1 |
+|---|---|---|---|
+| common records / rows / length (m) | 1143 / 384167 / 2494.1 | 1143 / 383904 / 2491.6 | |
+| P1 rows ridge offset > 1 cm | 7.76 % (29815) | 7.16 % (27495) | -7.7 % |
+| rows ridge offset > 2 cm | 4.75 % (18232) | 4.77 % (18297) | +0.4 % |
+| P2 rows off-charge (>= 1 plane, +-1 wire) | 8.03 % (30847) | 7.81 % (29997) | -2.7 % |
+| rows q < 0 (Bee-dropped) | 5.26 % (20211) | 5.03 % (19299) | -4.4 % |
+| rows chord wiggle > 1 cm | 0.40 % (1534) | 0.36 % (1367) | -10.8 % |
+| P3 Bee holes (>= 3 rows q<0) per 10 m | 8.48 (2114) | 7.87 (1962) | -7.1 % |
+| P4 image coverage (charge within 1.5 cm) | 96.12 % | 96.44 % | +0.32 pt |
+| P6' clean records (base max offset <= 1 cm): rows > 1 cm | 0.00 % (63069 rows) | 0.18 % (63146 rows) | |
+| R median per-event wall ratio B/A | | 0.936 (61 events) | |
+| dQ/dx median (ke/cm, row dQ over its step) | 56.2 | 56.3 | +0.2 % |
+
+## P5 spots: ridge-offset max / p90 (cm), q<0 rows, rows in window, pass
+| spot | A | B |
+|---|---|---|
+| h1 | 1.77 / 1.54, q<0 10, n 37, pass 0 | 0.47 / 0.42, q<0 0, n 39, pass 0 |
+| h2 | 2.55 / 1.26, q<0 5, n 85, pass 0 | 2.11 / 1.29, q<0 14, n 88, pass 0 |
