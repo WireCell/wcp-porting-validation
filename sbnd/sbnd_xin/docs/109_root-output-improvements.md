@@ -112,6 +112,9 @@ scripts/d109r3_dedup_arm.sh d109r3ddon2  ~/tmp/d109r3-libsnap/new2 SBND_NO_DL=1 
 python3 scripts/d109r3_dedup_census.py d109r3ddoff2 d109r3ddon2               > docs/109_logs/r3/dedup_census.txt
 python3 scripts/d109_gate.py d109r3ddoff d109r3ddoff2 --samples ncpi0 mcp1k mcp2k > docs/109_logs/r3/gate_new_vs_new2_dedupoff.txt
 python3 scripts/d109_root_checks.py d109r3ddon2 --samples ncpi0 mcp1k mcp2k   > docs/109_logs/r3/checks_d109r3ddon2.txt
+# 5b. the flip question (sec 8.7.2): same-flash pairs joined to the Bee truth,
+#     on a sample big enough to contain the case where the rule must choose.
+python3 scripts/d109r3_flashpair_truth.py sbnd_mc_data                        > docs/109_logs/r3/flashpair_truth_13216.txt
 # 6. the production flip: compiled configs and the new reference
 scripts/cfg/compile_consumers.sh <toolkit>/cfg ~/tmp/d109r3-cfg/C
 scripts/cfg/cmp_consumers.sh ~/tmp/d109r3-cfg/A ~/tmp/d109r3-cfg/C   # 20/21; prod_prjob.json only
@@ -631,7 +634,7 @@ stage B re-runnable). Rates are per T_tagger row unless stated.
 | 2 — empty/fake candidate | 160 rows | 62 rows | the ROW is **labelled** by doc 109 `has_vertex == 0` and the markers are sharpened here (8.4); the row is not suppressed, and the **upstream cause — why a 0.8 cm cluster is a candidate at all — is NOT fixed (8.10)** |
 | 3 — `T_rec_charge` cluster_id −1 | 344 files all −1, 12 mixed | 89 files all −1, 0 mixed | **broken** — **fixed here** |
 | 4 — two candidates, one fake | 98 two-row events | 25 two-row events | cases 2 + 3 together, so the same split: the `-1` is fixed, the fake row is labelled but kept (8.10) |
-| 5 — same ν on both sides | 22 events | 12 events | **labelled** by `flash_group`; dedup built OFF and measured (8.7) |
+| 5 — same ν on both sides | 22 events | 12 events | **labelled** by `flash_group`; dedup built OFF, measured, and **recommended against** — on the one event of 22 where it must choose it drops the true neutrino (8.7.2) |
 
 Supporting counts, local sample: `T_proj_data` absent in 1 675 files; a candidate with an
 empty `T_rec_charge` in 43; `nue_score` at its −15 default on 1 260 of 1 460 rows; the
@@ -845,9 +848,43 @@ such rows, one per drop. Content checks C1–C17 on the dedup-on arm: **0 failur
 
 **Caveat for the flip decision.** 12 events is a small sample and all of them happen to be
 the easy case. The knob is a *ranking* rule ("keep the longest"), not a *quality* rule ("keep
-the one with a vertex"); nothing measured here says what it would do on an event where the
-shorter candidate is the real neutrino. That is the question a flip has to answer, and it is
-left open deliberately.
+the one with a vertex"); nothing in the 25-event census says what it would do on an event
+where the shorter candidate is the real neutrino.
+
+#### 8.7.2 That question, answered on the colleague's 13 216 files: **do not flip**
+
+The local 3 067 has no event where the rule must make a real choice, but the colleague's
+sample does. Scanning all 13 216 files for same-`flash_group` both-TPC pairs and joining each
+to the Bee truth (`data/0/0-mc.json`):
+
+| | events |
+|---|---|
+| same-flash both-TPC pairs | **22** |
+| … one row is a vertex-less placeholder (the rule's choice is free) | **21** |
+| … **both rows are real reconstructions** (the rule must choose) | **1** |
+| … of those, the rule **keeps** the truth-nearest row | **0** |
+| … of those, the rule **drops** the truth-nearest row | **1** |
+
+The one event is **r472 s36 e40 — the colleague's own case-5 slide**:
+
+```
+row0  gid 1000006  tpc 1  L=391.4 cm  Enu 1313.7 MeV  numu +3.43   d(truth) = 143.7 cm   <- longest, KEPT
+row1  gid       5  tpc 0  L=104.2 cm  Enu  849.4 MeV  numu +1.12   d(truth) =   1.2 cm   <- the neutrino, DROPPED
+truth: 1 numu RES CC, Etot 2766.6 MeV, vertex (-10.4684, -193.253, 9.18667)
+```
+
+**The premise is wrong, not just the tiebreak.** `group_flashes` proves the two *flashes* are
+one; it says nothing about the two *clusters*. Here they are 143 cm apart — a beam neutrino in
+the E drift volume and an in-time cosmic in the W one, sharing one physical flash. Collapsing
+them is not deduplication, it is deletion. Note the numu BDT would not rescue it either: the
+cosmic scores **higher** (+3.43 vs +1.12).
+
+**Recommendation: leave `nu_dedup_flash_group` OFF.** 21 of its 22 opportunities are just
+removing vertex-less placeholder rows, which `has_vertex == 0` already marks without deleting
+anything (8.4), and the 22nd is the case it gets wrong. If a same-flash collapse is wanted
+later, the rule should be a *quality* predicate that **refuses ambiguity** — drop a
+same-group row only when it has no vertex, and keep both when both have one. That handles
+21/22 and declines the 22nd instead of guessing. It is not built here.
 
 ### 8.8 Gates
 

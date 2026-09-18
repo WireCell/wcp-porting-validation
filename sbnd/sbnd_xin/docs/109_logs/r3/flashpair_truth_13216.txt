@@ -1,0 +1,11 @@
+scanned 13216 files; same-flash both-TPC pair events: 22
+
+  r472_s36_e40: !! DROPS truth
+     row0 gid  1000006 tpc1 L=  391.4cm Enu= 1313.7 numu=+3.43 d_truth=  143.7cm  <-longest
+     row1 gid        5 tpc0 L=  104.2cm Enu=  849.4 numu=+1.12 d_truth=    1.2cm  <-truth
+        truth: 1 numu RES CC Etot 2766.6 MeV Edep 1765.1 MeV T 1.443 us
+
+== totals
+  both rows reconstructed                      1
+  dedup DROPS the truth-nearest row            1
+  one row is a vertex-less placeholder         21
