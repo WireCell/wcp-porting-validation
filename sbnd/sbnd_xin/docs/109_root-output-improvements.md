@@ -18,6 +18,18 @@ SBND production job, keeping the C++ and jsonnet defaults OFF; push the toolkit 
   - new production reference `ref/prod-2026-09-14` (PASS 21/21, every drift attributed);
   - `ref/prod-2026-09-08` removed;
   - no toolkit code change.
+- **Rev 3 (2026-09-17, sec 8): the five defects a colleague's first look reported.**
+  - **Toolkit:** `apply-pointcloud` `3ecb110d` (code, tests, knobs default OFF) and
+    `12798c4f` (SBND production flip). Reference `ref/prod-2026-09-17`, PASS 21/21.
+  - The scanned files **predate doc 109**; two of the five cases are already answerable at
+    HEAD, two were not.
+  - **`T_rec_charge` now joins to the candidate that owns its points** — the old
+    `cluster_id` was a `Flags::main_cluster` scan that returned `-1` on a demoted-main
+    candidate and the pre-swap cluster on a vertex-moved row. `nu_index` and
+    `point_cluster_id` added; `T_rec_charge`/`T_proj_data` no longer vanish.
+    Knob `rec_charge_provenance` / jsonnet `root_point_ids`, default OFF, **SBND production ON**.
+  - **`nu_dedup_flash_group` built default OFF and measured, NOT flipped** (sec 8.7).
+  - Vertex-less rows are **marked, not suppressed** (owner's call, sec 8.4).
 
 ## Repro block
 
@@ -62,6 +74,48 @@ PR_EXTRA_STAGES=pr_display setarch x86_64 -R ./run_pr_chain_batch.sh work-nuecc4
 PR_EXTRA_STAGES=pr_display setarch x86_64 -R ./run_pr_chain_batch.sh work-mcp1k-d102m  work-mcp1k-d109prod  data <3 no-row events>
 python3 scripts/d109_root_checks.py d109prod --samples nuecc48 mcp1k  > docs/109_logs/checks_d109prod_smoke.txt
 # 6. rev 2 -- group mode, the base-binary control, the new production reference: sec 7.4
+```
+
+```bash
+# ---- rev 3 (sec 8) ----------------------------------------------------------
+cd wcp-porting-img/sbnd/sbnd_xin
+# 0. pins (docs/109_logs/r3/libsnap.md5).  base = toolkit d2777286 unmodified;
+#    new = rev 3 first build; new2 = new + the Group B std::move fix (sec 8.7)
+#    and == the installed local/lib.  ~/tmp/d109r3-libsnap/{base,new,new2}
+#    cfg trees: ~/tmp/d109r3-cfg/pristine/cfg (git archive d2777286), .../new/cfg
+# 1. compiled-config gate, knobs off (21 consumers)
+scripts/cfg/compile_consumers.sh ~/tmp/d109r3-cfg/pristine/cfg ~/tmp/d109r3-cfg/A
+scripts/cfg/compile_consumers.sh <toolkit>/cfg                 ~/tmp/d109r3-cfg/B
+scripts/cfg/cmp_consumers.sh ~/tmp/d109r3-cfg/A ~/tmp/d109r3-cfg/B   # 21/21 identical
+# 2. unit tests
+<toolkit>/build/clus/wcdoctest-clus ; <toolkit>/build/root/wcdoctest-root
+# 3. Group A arms on the doc 109 manifest (nuecc48 48 + ncpi0 19 + first 200 mcp1k)
+scripts/d109_arms.sh d109r3h   ~/tmp/d109r3-libsnap/base SBND_NO_DL=1 SBND_ROOT_OUTPUT=1 PR_JOBS=14 PR_CFG_TREE=~/tmp/d109r3-cfg/pristine/cfg
+scripts/d109_arms.sh d109r3off ~/tmp/d109r3-libsnap/new  SBND_NO_DL=1 SBND_ROOT_OUTPUT=1 SBND_ROOT_POINT_IDS=0 SBND_NU_DEDUP_FLASH_GROUP=0 PR_JOBS=14 PR_CFG_TREE=~/tmp/d109r3-cfg/new/cfg
+scripts/d109_arms.sh d109r3on  ~/tmp/d109r3-libsnap/new  SBND_NO_DL=1 SBND_ROOT_OUTPUT=1 SBND_ROOT_POINT_IDS=1 SBND_NU_DEDUP_FLASH_GROUP=0 PR_JOBS=14 PR_CFG_TREE=~/tmp/d109r3-cfg/new/cfg
+# 4. Group A gates.  Trun.cfg_tree: the two arms read DIFFERENT pinned cfg paths
+#    by construction (sec 8.8.3).  Trun.op_config_sha256: the knob changes the
+#    compiled job, so the operating-point hash SHOULD move (sec 8.8.4).
+python3 scripts/d109_gate.py d109r3h   d109r3off --allow Trun.cfg_tree                                 > docs/109_logs/r3/gate_head_vs_off.txt
+python3 scripts/d109_gate.py d109r3off d109r3on  --allow T_rec_charge.cluster_id Trun.op_config_sha256 > docs/109_logs/r3/gate_off_vs_on.txt
+python3 scripts/d109_root_checks.py d109r3on                                  > docs/109_logs/r3/checks_d109r3on.txt
+# 4b. case 1 (the vertex-moved row) needs the PRODUCTION vertex: the geometric
+#     arms above have zero moved rows, so they cannot grade it.  Content-only.
+scripts/d109r3_dl_arm.sh d109r3dlon ~/tmp/d109r3-libsnap/new2
+python3 scripts/d109_root_checks.py d109r3dlon --samples nuecc48              > docs/109_logs/r3/checks_d109r3dlon.txt
+# 4c. the pin split: new2 must be new on the Group A path
+scripts/d109_arms.sh d109r3on2 ... (nuecc48 only, same env as d109r3on, pin new2)
+python3 scripts/d109_gate.py d109r3on d109r3on2 --samples nuecc48             > docs/109_logs/r3/gate_on_vs_on2_nuecc48.txt
+# 5. the nu_dedup_flash_group census: the 25 multi-candidate events of the 3067
+scripts/d109r3_dedup_arm.sh d109r3ddoff2 ~/tmp/d109r3-libsnap/new2 SBND_NO_DL=1 SBND_ROOT_OUTPUT=1 SBND_ROOT_POINT_IDS=1 SBND_NU_DEDUP_FLASH_GROUP=0 PR_JOBS=6
+scripts/d109r3_dedup_arm.sh d109r3ddon2  ~/tmp/d109r3-libsnap/new2 SBND_NO_DL=1 SBND_ROOT_OUTPUT=1 SBND_ROOT_POINT_IDS=1 SBND_NU_DEDUP_FLASH_GROUP=1 PR_JOBS=6
+python3 scripts/d109r3_dedup_census.py d109r3ddoff2 d109r3ddon2               > docs/109_logs/r3/dedup_census.txt
+python3 scripts/d109_gate.py d109r3ddoff d109r3ddoff2 --samples ncpi0 mcp1k mcp2k > docs/109_logs/r3/gate_new_vs_new2_dedupoff.txt
+python3 scripts/d109_root_checks.py d109r3ddon2 --samples ncpi0 mcp1k mcp2k   > docs/109_logs/r3/checks_d109r3ddon2.txt
+# 6. the production flip: compiled configs and the new reference
+scripts/cfg/compile_consumers.sh <toolkit>/cfg ~/tmp/d109r3-cfg/C
+scripts/cfg/cmp_consumers.sh ~/tmp/d109r3-cfg/A ~/tmp/d109r3-cfg/C   # 20/21; prod_prjob.json only
+scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-17               # PASS 21/21
 ```
 
 ---
@@ -539,3 +593,483 @@ python3 scripts/d109_root_checks.py d109dlgrp > docs/109_logs/r2/checks_d109dlgr
 # the reference: see ref/prod-2026-09-14/README.md "Reproduce"
 scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-14                       # PASS 21/21
 ```
+
+---
+
+## 8. Revision 3 (2026-09-17): the five defects a first look at `pr_tracking*.root` found
+
+**Owner ask (2026-09-17):** a colleague scanned the SBND `pr_tracking*.root` files and
+reported five failure classes in `presentations/20260917_MV_firstlook.pdf` (slides 19–23).
+"Carefully analyse the issues, find the examples in my 3000 data events, make improvements
+on the toolkit processing chain to fix them, update the md file, commit and push. For cases
+with no good example, do your best and note them."
+
+**The first finding is about the files, not the code.** The scanned sample
+(`sbnd_xin/sbnd_mc_data` → `/nfs/data/1/xqian/sbnd_data/run/tracking-pr`, 13 216 files
+written 2026-09-09/10) **predates doc 109**: its `Trun` has five branches, and there is no
+`T_bundle`, `T_flash`, `sel_cluster_id`, `has_vertex` or `flash_group`. Two of the five cases
+are already answerable at HEAD and only needed to be named. Two are **not**, and a doc 109
+production file still on disk proves it. One is a physics question this round measures but
+does not settle.
+
+**Status:**
+- **Group A (output only) implemented, gated, SBND production ON.** `rec_charge_provenance`
+  / jsonnet `root_point_ids`.
+- **Group B (`nu_dedup_flash_group`) built default OFF and measured. NOT flipped** — it
+  removes `T_tagger` rows, so the flip is a separate owner decision (sec 8.7).
+- **Vertex-less rows are marked, never suppressed** (owner's call, sec 8.4).
+
+### 8.1 The five cases, measured
+
+Every case was counted twice: on the colleague's 13 216 files, and on the local 3067-event
+sample (`work-{nuecc48,ncpi0,mcp1k,mcp2k}-d102mpr`, whose stage-A inputs `…-d102m` make
+stage B re-runnable). Rates are per T_tagger row unless stated.
+
+| Case (slide) | colleague's 13 216 | local 3 067 | verdict at HEAD |
+|---|---|---|---|
+| 1 — main clusterID changes | 488 of 6 236 rows | 122 of 1 460 rows | **labelled** by doc 109 (`sel_cluster_id`, `vertex_moved_cluster`), but `T_rec_charge` still does not join — **fixed here** |
+| 2 — empty/fake candidate | 160 rows | 62 rows | **labelled** by doc 109 `has_vertex == 0`; markers sharpened here, rows not suppressed |
+| 3 — `T_rec_charge` cluster_id −1 | 344 files all −1, 12 mixed | 89 files all −1, 0 mixed | **broken** — **fixed here** |
+| 4 — two candidates, one fake | 98 two-row events | 25 two-row events | cases 2 + 3 together |
+| 5 — same ν on both sides | 22 events | 12 events | **labelled** by `flash_group`; dedup built OFF and measured (8.7) |
+
+Supporting counts, local sample: `T_proj_data` absent in 1 675 files; a candidate with an
+empty `T_rec_charge` in 43; `nue_score` at its −15 default on 1 260 of 1 460 rows; the
+selected activity is a *demoted* main on 57 rows.
+
+### 8.2 Case 1 and 3 are one bug, and doc 109's own output shows it
+
+`T_tagger.cluster_id` and `T_kine.cluster_id` come from the **main-cluster pointer**
+(`TaggerCheckNeutrino.cxx`, `tagger_info.cluster_id = main_cluster->get_cluster_id()`).
+`T_rec_charge.cluster_id` did not: it was `reco_mother_cluster_id`, one event-level id
+stamped on every row and found by **scanning the candidate's PR graph for
+`Flags::main_cluster`** (`SbndPrMagnifyTrackingVisitor.cxx`, `mother_cluster_id = -1` then
+two scans). The scan cannot reproduce the pointer in three measured situations, and the
+local 97 `-1` rows (in 89 files) split cleanly between them:
+
+| route | local rows | what happened |
+|---|---|---|
+| A — the selected activity is a **demoted main** | 57 | `ClusteringUnmergeBundle` clears `Flags::main_cluster` on every split-off part and deliberately never restores it; `TaggerCheckNeutrino`'s own restore guards have destructed by the time the writer runs. No cluster in the graph carries the flag ⇒ `-1`. `T_bundle.reason == 1` names exactly this case, and the log line `is a demoted main` appears in exactly 57 of the 3067 event logs. |
+| B — the flagged main contributes **no segment and no vertex** to that candidate's graph | 16 | the rows that exist came from companions only ⇒ `-1`. |
+| swap + selected not flagged | 24 | both at once. |
+
+And when the scan *did* find a flag, on a **vertex-moved** row it found the **pre-swap**
+cluster — so the points carried an id that is not the row's `cluster_id`. Across the
+colleague's sample the 488 swap rows carry their points under the *selected* id (341) or
+under `-1` (147): **never** under the id `T_tagger` reports.
+
+**The measurement that settles it** — doc 109's own production smoke files, knobs ON, still
+on disk:
+
+```
+work-nuecc48-d109prod/pr_evt137238   T_tagger.cluster_id=144  sel_cluster_id=7
+                                     vertex_moved_cluster=1   has_vertex=1
+                                     T_rec_charge.cluster_id = [7]     <-- 144 absent
+work-nuecc48-d109prod/pr_evt269774   cluster_id=87  sel=13    T_rec_charge = [13]
+work-mcp1k-d146sv25/pr_evt313847     cluster_id=19            T_rec_charge = [-1]
+```
+
+So on exactly the "moved rows" doc 109 added `vertex_moved_cluster` for, the 3-D points were
+not joinable to the candidate. Doc 109's checks C1–C13 never looked at `T_rec_charge`.
+
+### 8.3 What rev 3 changes in the file (`root_point_ids`)
+
+One switch, `rec_charge_provenance` (C++) / `root_point_ids` (jsonnet `pr()`), on
+`SbndPrMagnifyTrackingVisitor`. Default OFF; key omitted from the compiled config when off.
+
+| change | why |
+|---|---|
+| `T_rec_charge.cluster_id` now comes from the candidate's own `TrackFitting` (`TaggerInfo::cluster_id`) | the same pointer-derived value `T_tagger`/`T_kine` carry, so the join holds on every row. Subsumes routes A and B **and** the swap. The flag scan is kept as the knob-off path and as the fallback when the info is unset. |
+| **`nu_index`** added to `T_rec_charge` | the colleague's explicit "no nu_index — one tree for the whole event". Points are now attributable per candidate rather than inferred. |
+| **`point_cluster_id`** added | the row's own cluster, under an honest name. It is the value `ndf` has been carrying; `ndf` is left exactly as it is because `wire-cell-sbnd-magnify-tracking-convert` blocks tracks on `std::round(ndf)`. |
+| `T_rec_charge` and `T_proj_data` are booked **even when empty** | the tree set stopped varying for a non-semantic reason (see 8.5). |
+
+**Deliberately not changed.** `real_cluster_id` and `sub_cluster_id` are bound to the *same
+address* and are therefore always identical — a legacy-format compatibility decision with a
+comment saying so (M15). A correctly named branch was added instead of redefining them.
+
+### 8.4 Cases 2 and 4: the vertex-less row is marked, not suppressed
+
+The whole placeholder signature — `kine_reco_Enu` 0, vertex (0,0,0), `neutrino_type` 0,
+`nue_score` −15.000, `numu_score` −1.942 — has **one** cause: `final_main_vertex == nullptr`.
+Every tagger, the kinematics fill and the `neutrino_type` bitmask sit inside
+`if (final_main_vertex)`, and the row is published unconditionally afterwards. `−15` is a
+literal default; `−1.942` is the numu forest's output on an all-defaults feature vector, i.e.
+a real evaluation carrying no information.
+
+**The owner's call for this round is markers only.** What the file already answers, and how:
+
+| question | read | note |
+|---|---|---|
+| is this row a vertex-less placeholder? | `T_tagger.has_vertex == 0` | added by doc 109; `(0,0,0)` is a real point on SBND's cathode, so never test the vertex |
+| did the nue BDT actually run? | `T_tagger.br_filled == 1` | **already in the file** — no code change was needed, only this note. `br_filled` is set deep inside `nue_tagger`, after a shower is found; a vertex with no shower returns earlier. That is why 1 260 of 1 460 local rows read −15 and it is **not** a defect |
+| how many 3-D points did this candidate get? | `sum(T_rec_charge.nu_index == i)` | new in rev 3; a placeholder reads 0 |
+
+No redundant branch was added for the last one: `nu_index` makes it a one-line derivation.
+
+*Why the tiny cluster was selected at all* is a separate, selection-level question — the
+length floor (`nu_per_bundle_min_length = 15 cm`) exempts the legacy event-wide winner, and
+that exemption fires in 462 of the 1000 mcp1k event logs. It is **not** touched here.
+
+### 8.5 The varying tree count ("7 trees" vs "8 trees")
+
+The colleague's checker reported 7 or 8 trees depending on the event. Local census, before:
+
+| trees | files | meaning |
+|---|---|---|
+| `T_bad_ch T_cluster T_proj Trun` (4) | 1 632 | no neutrino candidate at all |
+| all 8 | 1 392 | a candidate with fit points |
+| 7 (no `T_proj_data`) | 43 | a candidate whose `fitted_charge_2d` was empty |
+
+(That census is of the pre-doc-109 local arm, which is why `T_bundle`/`T_flash` do not
+appear in it.)
+
+`T_proj_data` and `T_rec_charge` were skipped by early returns rather than written empty.
+With `root_point_ids` on — and doc 109's `root_nu_record`, which SBND production also runs —
+both are always booked, so the file has **10 trees when a candidate was written and 8 when
+none was**:
+
+```
+always   T_bad_ch  Trun  T_cluster  T_proj  T_proj_data  T_rec_charge  T_bundle  T_flash
++ when a candidate exists            T_tagger  T_kine
+```
+
+The one remaining difference is exactly "`T_tagger`/`T_kine` exist ⟺ a candidate exists",
+which `T_bundle.reason` already explains bundle by bundle. `T_proj` stays the deliberately
+empty compatibility tree it has always been.
+
+**Reader-side consequence.** A script that used `"T_rec_charge" in f` or `"T_proj_data" in f`
+as a proxy for "this event has a neutrino candidate" now sees the tree and must read
+`T_tagger` instead (or test `num_entries`). Two consumers were checked and are unaffected
+because they also require `T_kine` (`scripts/mcs80_pull.py`,
+`mcs_upstream/dumper/harvest_sbnd_clouds.py`); one past one-off census,
+`scripts/analysis/pr40/pr40r7_census.py`, uses `T_rec_charge` presence alone and would now
+reach an empty array on a no-candidate event. It is not re-run by anything and is left
+untouched here. `wire-cell-sbnd-magnify-tracking-convert` reads the tree through a `TChain`
+and loops on `GetEntries()`, so an empty tree is the same no-op as an absent one.
+
+### 8.6 Reading it after rev 3
+
+```python
+import uproot, numpy as np
+f = uproot.open("pr_evt<ID>/tracking-pr.root")
+rc = f["T_rec_charge"].arrays(["nu_index", "cluster_id", "point_cluster_id", "x", "y", "z", "q"],
+                              library="np")
+t  = f["T_tagger"].arrays(["nu_index", "cluster_id", "sel_cluster_id", "vertex_moved_cluster",
+                           "has_vertex", "br_filled", "flash_group"], library="np")
+for i in t["nu_index"]:                      # the points of candidate i
+    pts = rc["nu_index"] == i
+    assert set(rc["cluster_id"][pts]) <= {t["cluster_id"][i]}
+    print(i, "points:", pts.sum(), "from clusters", sorted(set(rc["point_cluster_id"][pts])))
+```
+
+| Question | Read |
+|---|---|
+| which candidate owns these 3-D points? | `T_rec_charge.nu_index` |
+| which cluster is the row's PR result on? | `T_rec_charge.cluster_id` = `T_tagger.cluster_id`, now always |
+| which cluster did *this point* come from? | `T_rec_charge.point_cluster_id` |
+| did the overall vertex move the main? | `T_tagger.vertex_moved_cluster`, with `sel_cluster_id` |
+| is the row a vertex-less placeholder? | `T_tagger.has_vertex == 0` |
+| did the nue BDT run, or is −15 its default? | `T_tagger.br_filled` |
+| are two rows one physical flash? | same `T_tagger.flash_group` |
+
+### 8.7 Case 5: `nu_dedup_flash_group`, built and measured, not flipped
+
+One physical beam flash is seen by **both** SBND drift volumes and arrives as two `opflash`
+gids a few ns apart — e.g. r472 s36 e40, gid 5 on TPC 0 at 1.577 µs and gid 1000006 on TPC 1
+at 1.583 µs. Bundles are keyed on the **raw gid**, so each side builds its own `NuCandidate`,
+each gets a full PR pass, and the event gets two neutrino rows for one flash. In that event
+the truth has a single interaction and only one of the two rows sits on it.
+
+`group_flashes()` has known which gids are one flash since doc 109 — the answer was written
+to `T_bundle`/`T_flash`/`T_tagger.flash_group` and **never read back into a decision**
+(`TaggerCheckNeutrino.cxx`: "Observation only: nothing below reads the census back into a
+decision"). `nu_dedup_flash_group` reads it: after the longest-first ordering, candidates
+sharing a `flash_group` collapse to the first, which is the longest — the same candidate the
+row ordering already puts in slot 0. The dropped bundle keeps its `T_bundle` row with the new
+reason code **6 `kDedupFlashGroup`**, so the event still explains itself, and `nu_index` is
+dense over the survivors.
+
+The rule itself is `PR::dedup_flash_groups()` in `NuBundleCensus.cxx`, unit-tested in
+`clus/test/doctest_nu_bundle_census.cxx` (the r472 pair, disjoint groups, a partially known
+map, a transitive three-way group, and the empty/one-candidate no-ops).
+
+**This knob moves the selection** — it removes `T_tagger` rows — so it ships **default OFF**
+and is **not flipped**. The doc 109 manifest cannot measure it (it holds almost no
+multi-candidate events), so the census runs on the **25 events of the 3067-event sample that
+have two or more candidates** — the only events the knob can touch
+(`scripts/d109r3_dedup_arm.sh`, `scripts/d109r3_dedup_census.py`).
+
+**A bug the census caught, worth recording.** The first build of this knob moved every
+candidate into a `kept` vector but reassigned `candidates = std::move(kept)` only
+`if (!dropped.empty())`. On an event where the knob found nothing to drop, `candidates` was
+therefore left holding **moved-from shells**: each candidate kept its `main` pointer but lost
+its `others` (the companions) and `acts`. The knob-off path and the byte gates were untouched
+— the whole block is inside `if (m_nu_dedup_flash_group …)` — so nothing in Group A could
+have caught it. What caught it was `d109r3_dedup_census.py`'s **"changed surviving rows"**
+check on ncpi0 18625, an event whose two rows are in *different* flash groups and so should
+have been bit-identical: its reco Enu moved 1448.6 → 693.5 MeV and 174.1 → 105.0 MeV. The
+assignment is now unconditional, and the census re-ran on the fixed build.
+
+This is why the census compares *surviving* rows as well as counting dropped ones: a dedup
+knob that silently perturbs the events it does **not** dedup would otherwise look like a
+clean result.
+
+#### 8.7.1 What the knob does, measured (`d109r3ddoff2` vs `d109r3ddon2`, 25 events)
+
+| | |
+|---|---|
+| events compared | 25 (every multi-candidate event of the 3 067) |
+| T_tagger rows, knob off → on | **50 → 38** |
+| events with a dropped row | **12** |
+| rows dropped | 12 |
+| **dropped rows with NO vertex (placeholder)** | **12** |
+| **dropped rows with a vertex** | **0** |
+| rows added, or surviving rows changed | **0 / 0** |
+
+**Every row the knob removes is a vertex-less placeholder** — `has_vertex 0`, reco Enu 0,
+vertex (0,0,0), `numu_score` −1.942 — i.e. the *same* rows case 2/4 is about. On this sample
+"longest wins" and "has the vertex" never diverge: the real candidate is always the longer
+one. Two examples:
+
+```
+mcp1k 174422  dropped gid 1000003 (tpc 1, group 5, t0 0.6829 us) sel cluster 8   has_vertex 0
+              kept    gid 5       (tpc 0, group 5, t0 0.6787 us) sel cluster 18, 92.8 cm
+mcp2k 90751   dropped gid 1       (tpc 0, group 1, t0 0.2404 us) sel cluster 5   has_vertex 0
+```
+
+The 13 events that keep both rows are the ones whose two candidates are in **different**
+flash groups — genuinely distinct interactions — and they are untouched (ncpi0 18625 among
+them). Every dropped bundle keeps its `T_bundle` row with `reason 6` and `nu_index -1`: 12
+such rows, one per drop. Content checks C1–C17 on the dedup-on arm: **0 failures**.
+
+**Caveat for the flip decision.** 12 events is a small sample and all of them happen to be
+the easy case. The knob is a *ranking* rule ("keep the longest"), not a *quality* rule ("keep
+the one with a vertex"); nothing measured here says what it would do on an event where the
+shorter candidate is the real neutrino. That is the question a flip has to answer, and it is
+left open deliberately.
+
+### 8.8 Gates
+
+**Pins.** Two builds were graded, because a bug in the *Group B* knob (8.7) was found after
+the Group A arms had already run:
+
+| pin | libraries | `libWireCellClus.so` / `libWireCellRoot.so` md5 |
+|---|---|---|
+| `base` | toolkit `d2777286` unmodified (HEAD before this round) | `6d97984e` / `88f0822e` |
+| `new` | rev 3 code, first build | `21bcd462` / `d5d378a8` |
+| `new2` | `new` + the Group B `std::move` fix | `e5ed8064` / `d5d378a8` (root unchanged) |
+
+`new` → `new2` touches only lines inside `if (m_nu_dedup_flash_group …)`, and that is
+**measured, not argued**: with the dedup knob off the two pins are byte-identical (8.8.4).
+
+Arms, all under `setarch x86_64 -R` with `SBND_NO_DL=1` (M4) and `PR_CFG_TREE` pinned:
+
+| label | pin | env | events |
+|---|---|---|---|
+| `d109r3h` | `base` | `SBND_ROOT_OUTPUT=1`, pristine cfg | 267 |
+| `d109r3off` | `new` | + `SBND_ROOT_POINT_IDS=0 SBND_NU_DEDUP_FLASH_GROUP=0` | 267 |
+| `d109r3on` | `new` | + `SBND_ROOT_POINT_IDS=1 SBND_NU_DEDUP_FLASH_GROUP=0` | 267 |
+| `d109r3on2` | `new2` | as `d109r3on` | 48 (nuecc48) |
+| `d109r3ddoff2` / `d109r3ddon2` | `new2` | Group A on, dedup off / on | 25 each |
+| `d109r3dlon` | `new2` | Group A on, **DL vertex ON** (no `SBND_NO_DL`) | 48 (nuecc48) |
+
+All arms rc=0 on every event, and `d109r3dlon` has **0** `DL vertex failed` lines — a silent
+fallback to the geometric vertex would make 8.8.7 meaningless, so it is counted, not assumed.
+Every log quoted below is under `docs/109_logs/r3/`.
+
+#### 8.8.1 Compiled configuration
+
+- **Knobs off:** `cmp_consumers.sh` of pristine `d2777286` against this round is
+  **21/21 byte-identical** (SBND production PR job, bare PR job, lar 1-step, standalone Q/L,
+  PDHD, PDVD, sim checks, uBooNE).
+- **Compiled-config proof, knobs on** (M6): the production PR job compiled with
+  `--tla-code root_point_ids=true --tla-code nu_dedup_flash_group=true` differs from the
+  knobs-off compile by **exactly two keys and nothing else**:
+  ```
+  605a606 >   "nu_dedup_flash_group": true,
+  809a811 >   "rec_charge_provenance": true,
+  ```
+
+#### 8.8.2 Unit tests
+
+`wcdoctest-clus` 434/434 (1 skipped, pre-existing), `wcdoctest-root` 8/8. New: the four
+`dedup_flash_groups` cases in `doctest_nu_bundle_census.cxx`, and the `rec_charge_provenance`
+/ `nu_dedup_flash_group` default-off assertions.
+
+#### 8.8.3 Byte gate, knobs off vs HEAD — **PASS on 267/267**
+
+| output | result |
+|---|---|
+| `mabc-pr.zip` (member content) | 267/267 same |
+| `pctree-pr-evt<ID>.tar.gz` (member content) | 267/267 same |
+| `nusel-evt<ID>.tsv` | 267/267 same |
+| `calib-pr-evt<ID>.json` (161 written) | same |
+| `tracking-pr.root` | **233 055 branches identical**, 0 failing events |
+
+The one allowed difference is `Trun.cfg_tree` on all 267 files: it is the doc 109 provenance
+string recording **which pinned cfg tree path the arm read**, and the two arms point at
+different paths by construction. Their *contents* are byte-identical where it matters — that
+is what 8.8.1's 21/21 proves. (Doc 109 rev 1 did not hit this, because its base binary
+predated `root_provenance` and wrote no such branch at all.)
+
+#### 8.8.4 Byte gate, knobs off vs on — **PASS**
+
+Allowed, and why each is right rather than tolerated:
+
+| allowance | files | why |
+|---|---|---|
+| `T_rec_charge.cluster_id` | see below | the column this round fixes |
+| `Trun.op_config_sha256` | all | the two arms compile the job with different TLAs, so the operating point genuinely differs — the provenance hash is doing its job |
+
+Added: `T_rec_charge.nu_index` and `T_rec_charge.point_cluster_id`. `mabc-pr.zip`, the
+pctree, nusel and the calib dump are **identical**, so nothing the reconstruction produces
+moves.
+
+**On nuecc48, `cluster_id` changes in only 1 of 48 files — and that is the gate telling the
+truth about its own blind spot.** These arms run the geometric vertex (`SBND_NO_DL=1`, M4),
+and doc 109 sec 4.4 already measured that the geometric vertex produces **zero**
+`vertex_moved_cluster = 1` rows on nuecc48 (the 3 moved rows there need the DL vertex). So
+the byte-gate arms exercise the demoted-main route (case 3) and **cannot** exercise the
+vertex-move route (case 1). The one changed file is `116962`, whose selected activity is a
+demoted main:
+
+```
+nuecc48 116962   T_bundle.reason = 1 (selected demoted), T_tagger.cluster_id = 21
+  knob off   T_rec_charge  466 rows, cluster_id = [-1]
+  knob on    T_rec_charge  466 rows, cluster_id = [21],
+                           point_cluster_id = [21, 22, 52, 53, 54, 55]
+```
+
+Same row count, same points; only the id they carry changed, and `point_cluster_id` now says
+the candidate is cluster 21 plus five companions. Case 1 is covered separately in 8.8.7 with
+a DL-vertex arm, which is not bit-stable and is therefore graded on content, not bytes.
+
+**Over all 267 events:**
+
+| | |
+|---|---|
+| `T_rec_charge.cluster_id` changed | **7** files |
+| `T_rec_charge` ADDED (the empty-tree path) | **106** files — exactly the no-candidate events |
+| `T_proj_data` ADDED | **108** files — the 106, plus 2 whose `fitted_charge_2d` was empty |
+| `nu_index`, `point_cluster_id` ADDED | every file with the tree |
+| `mabc-pr.zip` / pctree / nusel / calib | **identical**, 267/267 |
+| branches compared | 233 055, **0 failing events** |
+
+#### 8.8.5 `new` vs `new2` with the dedup knob off
+
+The Group B fix must not touch the Group A path, and it does not: gating `d109r3ddoff`
+(`new`) against `d109r3ddoff2` (`new2`) with the same env over the 25 multi-candidate events
+— **PASS**, all **34 825** branches identical, and `mabc-pr.zip`, `pctree-pr`, nusel and the
+calib dump the same on all 25. The nuecc48 arm pair `d109r3on` (`new`) vs `d109r3on2`
+(`new2`) repeats this on the full Group A configuration (8.8.8).
+
+#### 8.8.6 Content checks C1–C17 on `d109r3on` — **0 failures, 267 events**
+
+C14–C17 are new in rev 3: the tree set is constant, no `cluster_id` is `-1`, `nu_index` names
+a real candidate, every candidate's rows carry exactly its `T_tagger.cluster_id`, and
+`point_cluster_id == round(ndf)` with every value a cluster `T_cluster` knows.
+
+| measurement | nuecc48 | ncpi0 | mcp1k |
+|---|---|---|---|
+| files with `T_rec_charge` **and** `T_proj_data` | 48/48 | 19/19 | **200/200** |
+| events with no `T_tagger` | 0 | 0 | 106 |
+| … `T_rec_charge` rows on those events | — | — | **0** |
+| candidates with rows / with 0 rows | 48 / 0 | 20 / 0 | 92 / **3** |
+| candidates whose points are **all** from companions | 0 | 0 | **2** |
+
+The 106 no-candidate events now carry an empty `T_rec_charge` and an empty-row
+`T_proj_data` — that is the 8.5 claim **measured**, not read off the source. The 3 candidates
+with 0 rows are the vertex-less placeholders of case 2/4, and the 2 "all from companions"
+candidates are route B of 8.2, which used to be indistinguishable from route A because both
+read `-1`.
+
+#### 8.8.7 Case 1, the vertex-moved rows: the DL-vertex arm
+
+The byte-gate arms run the geometric vertex and produce **no** moved rows (8.8.4), so case 1
+needs the production vertex. `d109r3dlon` is nuecc48 on pin `new2` with the DL vertex ON and
+the Group A knob on. The DL vertex is not bit-stable (M4), so this arm is graded on
+**content**, and the "before" is doc 109's own production smoke, which ran the same vertex
+mode at the pre-rev-3 code:
+
+| event | before (doc 109 prod smoke, DL) | after (`d109r3dlon`, DL) |
+|---|---|---|
+| nuecc48 **137238** | `cluster_id` 144, `sel_cluster_id` 7, moved — `T_rec_charge = [7]`, 566 rows | **`T_rec_charge = [144]`**, 566 rows, `point_cluster_id = 7, 38, 39, 40, 41, 42` |
+| nuecc48 **269774** | `cluster_id` 87, `sel` 13, moved — `T_rec_charge = [13]`, 1 248 rows | **`[87]`**, 1 248 rows, `point_cluster_id = 13, 19, 29, 30, 31, 32` |
+| nuecc48 **52672** | — | `cluster_id` 82, `sel` 9, moved — **`[82]`**, 551 rows, `point_cluster_id = 9, 13, …` |
+
+Same row counts, same points. The rows now join to the candidate that owns them, and nothing
+was lost: the cluster the points *came from* — the pre-swap selected cluster 7 / 13 / 9 — is
+still in the file, in `point_cluster_id`, where it belongs.
+
+#### 8.8.8 `new` vs `new2` on the full Group A configuration
+
+`d109r3on` (`new`) vs `d109r3on2` (`new2`), identical env, nuecc48: **PASS**, **66 864
+branches identical**, every archive the same, and **no allowance of any kind** — not even
+`op_config_sha256` or `cfg_tree`, because both arms compile the same job from the same tree.
+Together with 8.8.5 this makes the pin split a measured fact: **every Group A number in this
+section is reproducible on the committed code.**
+
+### 8.9 Production
+
+**The flip (owner's word, 2026-09-17):** `sbnd/wct-pr-perevt.jsonnet` sets
+`root_point_ids = true`. The C++ default (`rec_charge_provenance`) and the `pr()` default
+stay **false**, so the lar 1-step chain, PDHD, PDVD and uBooNE do not move.
+`nu_dedup_flash_group` stays **false everywhere** (8.7).
+
+**Compiled-config proof.**
+- `cmp_consumers.sh` pristine `d2777286` vs the flipped tree: **20 of 21 artifacts
+  byte-identical**; only `prod_prjob.json` differs.
+- `prod_prjob.json` gains **exactly one key and nothing else**:
+  ```
+  809a810 >   "rec_charge_provenance": true,
+  ```
+
+**Production reference: `ref/prod-2026-09-17`, cut at `12798c4f`, PASS 21/21.**
+- `prod_cfg_gate.py --ref ref/prod-2026-09-14` at the **unmodified** HEAD `d2777286` is
+  **PASS 21/21** — unlike rev 1 there is **no inherited drift to attribute** here, so the
+  flip moves exactly one artifact by exactly one key. The gate names it:
+  ```
+  DRIFT     : prod_prjob.json
+  SBND PR job, key by key (reference -> current tree):
+    ADDED   [24].data.rec_charge_provenance = True
+  ```
+  Component `[24]` is `SbndPrMagnifyTrackingVisitor`. Generation record with every key named:
+  `ref/prod-2026-09-17/README.md`.
+- **`ref/prod-2026-09-14` is kept.** Nothing in this round makes it stale as a record, and
+  removing a generation is its own decision.
+
+### 8.10 Not fixed in rev 3, and why
+
+- **Case 3's *mixed* shape has no local example.** The colleague's slide 21 shows
+  `T_rec_charge cluster_ids [-1, 9]` — one candidate's points correct, the other's `-1`. That
+  needs a two-candidate event in which **both** candidates produce points and only one is a
+  demoted main. It occurs in 12 of the colleague's 13 216 files and in **0 of the local
+  3 067**, because the local sample has only 25 two-row events against their 98. It is the
+  same code path and the same single `mother_cluster_id` assignment as the all-`-1` shape, of
+  which there are 89 local examples. What *is* verified locally is each half of it:
+  the all-`-1` shape becoming correct (174422 `[-1] -> [18]`, 280466 `[-1] -> [15]`), and a
+  two-candidate event in which **both** candidates carry points getting one id each
+  (**286681**, `[3, 10]` with 877 and 65 rows, unchanged by the knob because it was already
+  healthy). The mixed shape is those two facts in one event. Stated here rather than claimed
+  as verified on a local example.
+- **Why a 0.8 cm cluster becomes a neutrino candidate** (the upstream half of cases 2/4).
+  `nu_per_bundle_min_length = 15 cm` has an explicit exemption for the legacy event-wide
+  winner, and that exemption fires in 462 of the 1 000 mcp1k event logs. Narrowing it is a
+  selection change with its own gate and its own owner decision; rev 3 only makes the
+  resulting row unmistakable. **Open.**
+- **`real_cluster_id` / `sub_cluster_id` are still the same value.** They are bound to one
+  address behind a legacy-format comment. Redefining either would silently change a column
+  readers already consume (M15); a correctly named branch was added instead.
+- **`ndf` still carries the per-point cluster id.** `wire-cell-sbnd-magnify-tracking-convert`
+  blocks tracks on `std::round(ndf)`. `point_cluster_id` now carries the same value under an
+  honest name; `ndf` is left alone so the convert app and every recorded arm keep working.
+- **`T_tagger`/`T_kine` still appear only when a candidate exists.** Booking them empty means
+  touching `UbooneTaggerOutputVisitor`'s ~1 000-branch schema, which PDHD and PDVD also use.
+  The presence test is meaningful ("a candidate was written") and `T_bundle.reason` explains
+  each bundle, so it is left as is.
+- **`nue_score == -15` is not a defect** (8.4). `br_filled` distinguishes "never scored" from
+  "scored as background" and is already in the file.
+- **`nu_dedup_flash_group` is not flipped** (8.7).
+- **Unchanged from rev 1:** the one-file-name-per-process limitation of the two writers, and
+  the 80 ns flash-t0 merge bookkeeping issue (doc pr/94 sec 9.8).

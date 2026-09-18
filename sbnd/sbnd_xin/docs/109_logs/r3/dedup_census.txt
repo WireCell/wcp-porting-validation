@@ -1,0 +1,35 @@
+== ncpi0: 1 events in both arms
+== mcp1k: 8 events in both arms
+  pr_evt174422: 2 -> 1 row(s)
+     dropped gid 1000003 (tpc 1, group 5, t0 0.6829 us) sel cluster 8 has_vertex 0 Enu 0.0 MeV numu -1.942 vtx (0.0, 0.0, 0.0)
+  pr_evt280466: 2 -> 1 row(s)
+     dropped gid 1000000 (tpc 1, group 2, t0 0.6763 us) sel cluster 8 has_vertex 0 Enu 0.0 MeV numu -1.942 vtx (0.0, 0.0, 0.0)
+  pr_evt317939: 2 -> 1 row(s)
+     dropped gid 1000013 (tpc 1, group 1, t0 1.2141 us) sel cluster 17 has_vertex 0 Enu 0.0 MeV numu -1.942 vtx (0.0, 0.0, 0.0)
+  pr_evt409634: 2 -> 1 row(s)
+     dropped gid 10 (tpc 0, group 10, t0 1.0809 us) sel cluster 9 has_vertex 0 Enu 0.0 MeV numu -1.942 vtx (0.0, 0.0, 0.0)
+  pr_evt62583: 2 -> 1 row(s)
+     dropped gid 1000009 (tpc 1, group 3, t0 0.8538 us) sel cluster 12 has_vertex 0 Enu 0.0 MeV numu -1.942 vtx (0.0, 0.0, 0.0)
+== mcp2k: 16 events in both arms
+  pr_evt167612: 2 -> 1 row(s)
+     dropped gid 3 (tpc 0, group 3, t0 0.6443 us) sel cluster 7 has_vertex 0 Enu 0.0 MeV numu -1.942 vtx (0.0, 0.0, 0.0)
+  pr_evt294174: 2 -> 1 row(s)
+     dropped gid 7 (tpc 0, group 7, t0 0.8764 us) sel cluster 5 has_vertex 0 Enu 0.0 MeV numu -1.942 vtx (0.0, 0.0, 0.0)
+  pr_evt407798: 2 -> 1 row(s)
+     dropped gid 6 (tpc 0, group 6, t0 1.5063 us) sel cluster 4 has_vertex 0 Enu 0.0 MeV numu -1.942 vtx (0.0, 0.0, 0.0)
+  pr_evt72275: 2 -> 1 row(s)
+     dropped gid 10 (tpc 0, group 10, t0 1.8558 us) sel cluster 2 has_vertex 0 Enu 0.0 MeV numu -1.942 vtx (0.0, 0.0, 0.0)
+  pr_evt73038: 2 -> 1 row(s)
+     dropped gid 14 (tpc 0, group 14, t0 0.9676 us) sel cluster 1 has_vertex 0 Enu 0.0 MeV numu -1.942 vtx (0.0, 0.0, 0.0)
+  pr_evt78032: 2 -> 1 row(s)
+     dropped gid 1000003 (tpc 1, group 1, t0 0.7308 us) sel cluster 9 has_vertex 0 Enu 0.0 MeV numu -1.942 vtx (0.0, 0.0, 0.0)
+  pr_evt90751: 2 -> 1 row(s)
+     dropped gid 1 (tpc 0, group 1, t0 0.2404 us) sel cluster 5 has_vertex 0 Enu 0.0 MeV numu -1.942 vtx (0.0, 0.0, 0.0)
+== totals
+  dropped rows with NO vertex (placeholder)      12
+  dropped rows with a vertex                     0
+  events compared                                25
+  events with a dropped row                      12
+  rows dropped                                   12
+  rows off                                       50
+  rows on                                        38

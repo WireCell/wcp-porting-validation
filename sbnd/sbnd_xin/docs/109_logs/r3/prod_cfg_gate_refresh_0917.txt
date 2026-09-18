@@ -1,0 +1,10 @@
+reference : ref/prod-2026-09-17
+cfg tree  : /nfs/data/1/xqian/toolkit-dev/toolkit/cfg
+compiling : /home/xqian/tmp/prodcfg-_fm139ky
+checked   : 21 artifacts
+DRIFT     : prod_prjob.json
+
+SBND PR job, key by key (reference -> current tree):
+  ADDED   [24].data.rec_charge_provenance = True
+
+REFRESHED prod-2026-09-17 -- record in the round doc WHICH knob moved and on whose word.

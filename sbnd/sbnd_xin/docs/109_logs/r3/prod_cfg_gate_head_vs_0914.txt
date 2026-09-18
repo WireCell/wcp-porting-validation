@@ -1,0 +1,5 @@
+reference : ref/prod-2026-09-14
+cfg tree  : /home/xqian/tmp/d109r3-cfg/pristine/cfg
+compiling : /home/xqian/tmp/prodcfg-5wlux2oh
+checked   : 21 artifacts
+PASS -- the compiled operating point matches prod-2026-09-14

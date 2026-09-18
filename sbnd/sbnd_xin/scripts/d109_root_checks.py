@@ -25,6 +25,16 @@ Checks (per T_tagger row unless stated):
   C11 T_flash rows sharing a flash_group: different TPCs, time span < flash_pair_dt_us
       (for pairs); group id == min gid
   C12 Trun provenance strings present and non-empty (wct_version, op_config_sha256)
+
+sbnd_xin/docs/109 rev 3 (only run when the rev-3 branches are present, so this
+script still grades a doc-109-only arm):
+  C14 T_rec_charge and T_proj_data exist in EVERY file, candidate or not
+  C15 every T_rec_charge row has cluster_id >= 0, and nu_index in [0, n_tagger)
+  C16 the rows of candidate i carry exactly cluster_id == T_tagger.cluster_id[i]
+      -- i.e. the points JOIN to the row that owns them, which is what the
+      pre-rev-3 file could not do on a vertex-moved or demoted-main candidate
+  C17 point_cluster_id == round(ndf) on every row (same quantity, honest name),
+      and every point_cluster_id is a cluster T_cluster knows
 """
 import argparse
 import collections
@@ -37,7 +47,11 @@ import uproot
 
 SX = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 REASON = {0: "selected main", 1: "selected demoted", 2: "all cosmic", 3: "length floor",
-          4: "stm_only", 5: "no eligible"}
+          4: "stm_only", 5: "no eligible",
+          # sbnd_xin/docs/109 rev 3: a candidate WAS selected, then dropped because another
+          # bundle of the same flash_group (one physical flash seen by both TPCs) kept a
+          # longer one.  Only ever appears with nu_dedup_flash_group on.
+          6: "dedup flash group"}
 
 
 def arr(t, names):
@@ -56,6 +70,20 @@ def check_event(path):
 
     f = uproot.open(path)
     names = {k.split(";")[0] for k in f.keys()}
+
+    # ---- sbnd_xin/docs/109 rev 3 ----------------------------------------- #
+    # rev3 = the rec_charge_provenance knob was on for this arm.  Detected from
+    # the file so a doc-109-only arm still grades C1-C12 and skips C14-C17.
+    rev3 = "T_rec_charge" in names and "point_cluster_id" in {k.split(";")[0] for k in f["T_rec_charge"].keys()}
+    if rev3:
+        stats["rev3 files"] += 1
+        # C14: the tree set no longer varies for a non-semantic reason.
+        for tn in ("T_rec_charge", "T_proj_data"):
+            if tn not in names:
+                bad("C14 missing tree", tn)
+        stats["T_rec_charge present"] += int("T_rec_charge" in names)
+        stats["T_proj_data present"] += int("T_proj_data" in names)
+
     tr = f["Trun"]
     run = int(tr["runNo"].array(library="np")[0])
     sub = int(tr["subRunNo"].array(library="np")[0])
@@ -160,6 +188,11 @@ def check_event(path):
         stats[f"no-row why: {why}"] += 1
         stats["no-row events with in-window flash(es)"] += int(np.sum(F["in_window"]) > 0)
         stats["no-row events with nogid clusters"] += int(R["nu_n_in_window_nogid"] > 0)
+        if rev3 and "T_rec_charge" in names:
+            n = f["T_rec_charge"].num_entries
+            stats["no-row events: T_rec_charge rows"] += n
+            if n:
+                bad("C15 rows with no candidate", (path, n))
         return c, stats, notes
 
     T = arr(f["T_tagger"], ["run", "subrun", "event", "cluster_id", "matched_flash_gid", "nu_index",
@@ -245,6 +278,55 @@ def check_event(path):
     for i in range(len(K["nu_index"])):
         if int(K["nu_index"][i]) != int(T["nu_index"][i]) or int(K["cluster_id"][i]) != int(T["cluster_id"][i]):
             bad("C4 T_kine pairing", i)
+    # ---- sbnd_xin/docs/109 rev 3: C15 / C16 / C17 ------------------------ #
+    if rev3 and "T_rec_charge" in names:
+        RC = arr(f["T_rec_charge"], ["cluster_id", "nu_index", "point_cluster_id", "ndf"])
+        nrc = len(RC["cluster_id"])
+        stats["T_rec_charge rows"] += nrc
+        if nrc:
+            # C15: no -1 survives, and nu_index names a real candidate.
+            nneg = int(np.sum(RC["cluster_id"] < 0))
+            if nneg:
+                bad("C15 cluster_id still -1", (path, nneg))
+            bad_ni = [int(x) for x in RC["nu_index"] if not (0 <= int(x) < ntag)]
+            if bad_ni:
+                bad("C15 nu_index out of range", (path, sorted(set(bad_ni))[:4], ntag))
+            # C17: point_cluster_id is what ndf carries, and it is a real cluster.
+            nd = np.rint(RC["ndf"]).astype(int)
+            nmis = int(np.sum(nd != RC["point_cluster_id"]))
+            if nmis:
+                bad("C17 point_cluster_id != round(ndf)", (path, nmis))
+            for pcid in sorted({int(x) for x in RC["point_cluster_id"]}):
+                if pcid not in cl_row:
+                    bad("C17 point cluster not in T_cluster", (path, pcid))
+        # C16: the join.  Every candidate's rows carry exactly its cluster_id.
+        for i in range(ntag):
+            sel = RC["nu_index"] == i if nrc else np.zeros(0, dtype=bool)
+            ids = sorted({int(x) for x in RC["cluster_id"][sel]}) if nrc else []
+            want = int(T["cluster_id"][i])
+            if not ids:
+                # A candidate with no vertex writes no points; that is the
+                # placeholder row, and has_vertex already says so.
+                stats["candidates with 0 T_rec_charge rows"] += 1
+                if int(T["has_vertex"][i]) == 1:
+                    bad("C16 vertex but no points", (path, i, want))
+                continue
+            stats["candidates with T_rec_charge rows"] += 1
+            if ids != [want]:
+                bad("C16 points do not join to the row", (path, i, want, ids))
+            if int(T["vertex_moved_cluster"][i]) == 1:
+                stats["vertex-moved rows whose points join"] += int(ids == [want])
+            # Honest accounting: cluster_id is now a per-candidate constant, so
+            # C16 is a fallback check (it fails only if TaggerInfo::cluster_id
+            # was unset and the old flag scan ran).  point_cluster_id is what
+            # says where the points actually came from -- in particular whether
+            # the candidate's OWN main contributed any (the "route B" shape
+            # behind part of the old -1: main flagged, but absent from the
+            # candidate's graph, so the rows came only from companions).
+            own = {int(x) for x in RC["point_cluster_id"][sel]}
+            stats["candidates whose main contributes points"] += int(want in own)
+            stats["candidates whose points are ALL from companions"] += int(want not in own)
+
     if ntag == 2:
         g = [int(x) for x in T["flash_group"]]
         stats["two-row events"] += 1

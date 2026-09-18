@@ -1,0 +1,37 @@
+== nuecc48 (d109r3dlon): 48 files
+  T_bundle reason 0 selected main                                47
+  T_bundle reason 1 selected demoted                             1
+  T_bundle reason 2 all cosmic                                   2
+  T_bundle reason 3 length floor                                 4
+  T_cluster beam_flash=1                                         2021
+  T_cluster fc=1                                                 432
+  T_cluster rows                                                 4392
+  T_cluster stm=1                                                0
+  T_cluster tgm=1                                                14
+  T_proj_data present                                            48
+  T_rec_charge present                                           48
+  T_rec_charge rows                                              36968
+  candidates whose main contributes points                       48
+  candidates whose points are ALL from companions                0
+  candidates with T_rec_charge rows                              48
+  census filled                                                  48
+  cluster gid rows                                               4389
+  events                                                         48
+  flash groups of 2                                              555
+  flash_tpc == gid//1e6                                          4389
+  flashes                                                        1367
+  flashes in window                                              92
+  in-window flash groups per event=1                             43
+  in-window flash groups per event=2                             5
+  rev3 files                                                     48
+  roster role 0                                                  67
+  roster role 1                                                  184
+  roster role 2                                                  1742
+  roster role-1 entries also in PR pass                          183
+  rows                                                           48
+  rows has_vertex=1                                              48
+  rows vertex_moved_cluster=1                                    3
+  vertex-moved rows whose points join                            3
+== check failures (0 expected everywhere)
+  none
+=== OVERALL: PASS

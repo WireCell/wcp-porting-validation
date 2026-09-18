@@ -297,6 +297,26 @@ case "${SBND_ROOT_OUTPUT:-}" in
     1) CATH_TLA+=(--tla-code "root_nu_record=true" --tla-code "root_cluster_flags=true" --tla-code "root_provenance=true") ;;
     0) CATH_TLA+=(--tla-code "root_nu_record=false" --tla-code "root_cluster_flags=false" --tla-code "root_provenance=false") ;;
 esac
+# sbnd_xin/docs/109 rev 3: T_rec_charge joinable to its candidate -- cluster_id
+# from the candidate's own TaggerInfo instead of a main_cluster flag scan, plus
+# nu_index / point_cluster_id, plus T_rec_charge and T_proj_data booked even
+# when empty.  Own tri-state rather than riding SBND_ROOT_OUTPUT, so a byte gate
+# can vary EXACTLY this knob (and so the doc 109 arms stay reproducible
+# verbatim).  Unset = no TLA = the job default.
+# Env: SBND_ROOT_POINT_IDS=<0|1>.
+case "${SBND_ROOT_POINT_IDS:-}" in
+    1) CATH_TLA+=(--tla-code "root_point_ids=true") ;;
+    0) CATH_TLA+=(--tla-code "root_point_ids=false") ;;
+esac
+# sbnd_xin/docs/109 rev 3: collapse the two neutrino candidates one physical
+# beam flash makes when both drift volumes see it (same flash_group), keeping
+# the longest selected activity.  This REMOVES T_tagger rows, so it is a
+# selection-moving knob, default OFF and not flipped in production.
+# Env: SBND_NU_DEDUP_FLASH_GROUP=<0|1>.
+case "${SBND_NU_DEDUP_FLASH_GROUP:-}" in
+    1) CATH_TLA+=(--tla-code "nu_dedup_flash_group=true") ;;
+    0) CATH_TLA+=(--tla-code "nu_dedup_flash_group=false") ;;
+esac
 # doc 80 sec 7.5: cathode excised half-band (cm); 0 = excision off (the
 # sign-check arm).  EMPTY = no TLA = the job default 5.
 [ -n "${SBND_MCS_CATHODE_XCUT:-}" ] && CATH_TLA+=(--tla-code "mcs_cathode_xcut=${SBND_MCS_CATHODE_XCUT}")

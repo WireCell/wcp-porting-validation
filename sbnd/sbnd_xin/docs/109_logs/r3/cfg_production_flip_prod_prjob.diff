@@ -1,0 +1,3 @@
+=== prod_prjob.json: pre-flip vs post-flip (the ONLY artifact the flip changes) ===
+809a810
+>    "rec_charge_provenance": true,

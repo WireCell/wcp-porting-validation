@@ -1,0 +1,13 @@
+# doc 109 rev 3 pins (md5 of the two libraries every arm loaded)
+## base = toolkit d2777286 unmodified
+6d97984ebbbaabe877fd869c74273e60  libWireCellClus.so
+88f0822e3b80a6bf0c57bd27276d9fbf  libWireCellRoot.so
+## new = rev 3 first build (Group A arms d109r3off / d109r3on)
+21bcd462219f2f6ba60eeff444700872  libWireCellClus.so
+d5d378a8e7588a9bc1262231fe02316e  libWireCellRoot.so
+## new2 = new + the Group B std::move fix (all other arms; == installed local/lib)
+e5ed80641749e23ccae6ede95ec604f8  libWireCellClus.so
+d5d378a8e7588a9bc1262231fe02316e  libWireCellRoot.so
+## installed local/lib at the commit
+e5ed80641749e23ccae6ede95ec604f8  /nfs/data/1/xqian/toolkit-dev/local/lib/libWireCellClus.so
+d5d378a8e7588a9bc1262231fe02316e  /nfs/data/1/xqian/toolkit-dev/local/lib/libWireCellRoot.so
