@@ -36,6 +36,8 @@ rebase-scan
 work/
 work-*/
 workarea
+# doc pdhd/08 sec 9.2: per-event exit-code markers written by pdvd/docs/scripts/run_d08_pdvd30.sh
+pdvd/.d08marks/
 
 # doc 91: compiled MCS dumper binaries -- source is tracked alongside them
 sbnd/sbnd_xin/mcs_upstream/dumper/mcs_dump
