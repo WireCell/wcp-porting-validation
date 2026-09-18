@@ -317,6 +317,16 @@ case "${SBND_NU_DEDUP_FLASH_GROUP:-}" in
     1) CATH_TLA+=(--tla-code "nu_dedup_flash_group=true") ;;
     0) CATH_TLA+=(--tla-code "nu_dedup_flash_group=false") ;;
 esac
+# sbnd_xin/docs/109 rev 4: MERGE the two in-window bundles one physical beam
+# flash makes when both drift volumes see it, but only when their charge meets
+# at the cathode (one interaction split at x = 0); bundles that share the light
+# and not the cathode (two neutrinos) stay two candidates.  Own tri-state so a
+# gate can vary exactly this knob.  Unset = no TLA = the job default.
+# Env: SBND_NU_BUNDLE_FLASH_GROUP=<0|1>.
+case "${SBND_NU_BUNDLE_FLASH_GROUP:-}" in
+    1) CATH_TLA+=(--tla-code "nu_bundle_flash_group=true") ;;
+    0) CATH_TLA+=(--tla-code "nu_bundle_flash_group=false") ;;
+esac
 # doc 80 sec 7.5: cathode excised half-band (cm); 0 = excision off (the
 # sign-check arm).  EMPTY = no TLA = the job default 5.
 [ -n "${SBND_MCS_CATHODE_XCUT:-}" ] && CATH_TLA+=(--tla-code "mcs_cathode_xcut=${SBND_MCS_CATHODE_XCUT}")

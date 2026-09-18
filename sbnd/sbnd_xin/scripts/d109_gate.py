@@ -16,7 +16,7 @@ Per event (pr_evt<ID> present in both arms):
 Usage:
   scripts/d109_gate.py <labelA> <labelB> [--samples nuecc48 ncpi0 mcp1k]
                        [--allow T_cluster.tgm ...] [--prefix T_tagger.act_cluster_id ...]
-                       [--jobs 24]
+                       [--events <file of ids>] [--jobs 24]
 Exit 0 = every event PASSes (additions and allowed changes are reported, not failed).
 """
 import argparse
@@ -170,13 +170,24 @@ def main():
     ap.add_argument("--allow", nargs="*", default=[])
     ap.add_argument("--prefix", nargs="*", default=[])
     ap.add_argument("--jobs", type=int, default=24)
+    # sbnd_xin/docs/109 rev 4: restrict the comparison to the events listed in
+    # a file (one id per line), so an arm that ran MORE events than the other
+    # (e.g. the byte-gate manifest plus a knob's eligible events) can still be
+    # gated on the common manifest instead of failing on "event sets differ".
+    ap.add_argument("--events", default=None, help="file of event ids to compare (applies to every sample)")
     a = ap.parse_args()
+    only = None
+    if a.events:
+        only = {ln.strip() for ln in open(a.events) if ln.strip()}
     total = collections.Counter()
     failed = []
     for s in a.samples:
         ra, rb = f"{SX}/work-{s}-{a.labelA}", f"{SX}/work-{s}-{a.labelB}"
         ea = {os.path.basename(d)[6:] for d in glob.glob(f"{ra}/pr_evt*")}
         eb = {os.path.basename(d)[6:] for d in glob.glob(f"{rb}/pr_evt*")}
+        if only is not None:
+            ea &= only
+            eb &= only
         if ea != eb:
             print(f"{s}: FAIL event sets differ: only A {sorted(ea - eb)[:5]} only B {sorted(eb - ea)[:5]}")
             failed.append((s, "event set"))
