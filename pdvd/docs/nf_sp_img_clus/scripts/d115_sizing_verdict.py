@@ -12,8 +12,9 @@ Q1, Q2_FAR, Q2_GAP, Q3, Q4 = -0.20, 1.10, 0.05, 1.10, 1.0
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--figs", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "figs"))
+    ap.add_argument("--replay-prefix", default="115_replay_", help="doc 115 round 2: 115r2_replay_ (prediction table only)")
     a = ap.parse_args()
-    R = {det: json.load(open(f"{a.figs}/115_replay_{det}.json")) for det in ("pdhd", "pdvd")}
+    R = {det: json.load(open(f"{a.figs}/{a.replay_prefix}{det}.json")) for det in ("pdhd", "pdvd")}
     levels = [l for l in R["pdhd"]["levels"] if l != "0:tree"]
     out = []
     for det in R:

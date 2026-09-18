@@ -1,0 +1,9 @@
+# doc pdvd/115 base-graph replay: det=pdvd arm=d115vbd events=10 levels=0:tree,0.25:tree+path,0.5:tree+path,1:tree+path
+# CHECK alpha=0: clusters 200 (tree edge set exact on 1); dumped tree edges 921455, replayed 928295, common 881426 (95.66 % of dumped, 94.95 % of replayed); walks 207 (skipped 0), walk cost equal 12, differs 195, within 0.5 % 200 (96.6 %)
+
+| level | walks | unreach | seed m | S1 > 1 cm off | rel | far > 5 cm | wig | cov | tree v / e / sbt | interiors nz0 / nz1 / nz2+ (off share) | GAP stretches changed | spots |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 0:tree | 207 | 0 | 504.2 | 12.84 % | +0.0 % | 5.68 % | 8.99 % | 32.34 % | 629328 / 928295 / 730670 | 300507 (22 %) / 142531 (45 %) / 93049 (85 %) | - | v1 1.03, v2 0.98, v3 1.64 |
+| 0.25:tree+path | 207 | 0 | 506.7 | 11.69 % | -9.0 % | 5.67 % | 9.10 % | 32.54 % | 619752 / 916852 / 730298 | 318560 (22 %) / 133275 (47 %) / 74676 (87 %) | 8 / 361 (2.2 %) | v1 1.03, v2 0.98, v3 1.15 |
+| 0.5:tree+path | 207 | 0 | 509.6 | 11.57 % | -9.9 % | 5.64 % | 10.05 % | 32.58 % | 613840 / 909439 / 725574 | 324290 (22 %) / 127569 (47 %) / 68740 (87 %) | 16 / 361 (4.4 %) | v1 1.03, v2 1.13, v3 1.33 |
+| 1:tree+path | 207 | 0 | 514.5 | 11.43 % | -11.0 % | 5.60 % | 10.82 % | 32.74 % | 607904 / 900958 / 719313 | 328800 (22 %) / 122184 (48 %) / 63679 (88 %) | 14 / 361 (3.9 %) | v1 1.03, v2 1.13, v3 1.33 |

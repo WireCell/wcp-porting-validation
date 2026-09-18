@@ -1,0 +1,22 @@
+i	arc_cm	vid	off_cm	role	class	blank	qu	qv	qw	dead_uvw	q_dump	q_rms_ok	in_src	in_base	in_len	in_w	near_onridge_term_cm	stretch	cell_u	cell_v	cell_w	blank_dw	blank_dt	band_u	band_v	band_w
+183	-11.58	262	2.47	interior	3live	-	3035	1463	25789	000	15016	1	-	-	-	-	52.51	S0	-1	-1	0/0					3
+184	-9.56	263	2.80	interior	3live	-	27223	5019	15254	000	18248	1	path	closely_same	2.02	1.921	54.46	S0	-1	-1	0/0					3
+185	-7.53	264	2.52	interior	3live	-	12847	18118	15254	000	15556	1	path	closely_same	2.02	1.918	56.43	S0	-1	-1	0/0					3
+186	-6.52	265	2.41	interior	3live	-	29086	3228	30618	000	24453	1	path	closely_other	1.02	0.954	57.34	S0	-1	-1	0/0					3
+187	-5.28	266	1.95	interior	3live	-	15713	14566	13458	000	14608	1	path	closely_same	1.23	1.159	58.54	S0	-1	-1	0/0					3
+188	-4.26	267	1.84	interior	3live	-	27720	3286	9608	000	17044	1	path	closely_other	1.02	0.973	59.45	S0	-1	-1	0/0					2
+189	-2.24	268	1.38	interior	3live	-	8081	9992	9608	000	9264	1	path	closely_same	2.02	1.976	61.41	S0	-1	-1	0/0					2
+190	-1.68	270	1.37	interior	3live	-	26730	4244	17004	000	18454	1	path	closely_other	0.56	0.549	61.90	S0	-1	-1	0/0					0
+191	-0.88	269	1.26	interior	3live	-	10031	6393	17004	000	11981	1	path	closely_same	0.80	0.769	62.66	S0	-1	-1	0/0					0
+192	0.00	271	1.68	interior	3live	-	10311	3107	4244	000	6683	1	path	closely_other	0.88	0.889	63.52	S0	-1	-1	0/0					2
+193	1.11	272	3.14	interior	3live	-	25449	3638	1741	000	14876	1	path	closely_other	1.11	1.107	64.59	S0	-1	-1	0/0					2
+194	2.16	273	3.21	interior	3live	-	14703	10798	15340	000	13761	1	path	closely_same	1.05	1.012	65.57	S0	-1	-1	0/0					0
+195	3.37	274	3.73	interior	3live	-	22353	3366	32664	000	22934	1	path	closely_other	1.21	1.147	66.68	S0	-1	-1	0/0					0
+196	4.54	275	4.41	interior	3live	-	699	1455	50217	000	29008	1	path	closely_other	1.17	1.067	67.70	S0	-1	-1	0/0					1
+197	6.02	276	4.91	interior	3live	-	699	3814	70790	000	40932	1	path	closely_same	1.48	1.316	69.01	S0	-1	-1	0/0					0
+198	7.50	277	3.44	interior	3live	-	699	18612	9645	000	12110	1	path	closely_same	1.48	1.374	70.33	S0	-1	-1	0/0					0
+199	8.97	278	1.95	interior	3live	-	699	9466	203	000	5481	1	path	closely_same	1.48	1.507	71.65	S0	-1	-1	0/0					0
+200	10.45	279	0.47	interior	3live	-	699	334	4216	000	2475	1	path	closely_same	1.48	1.610	72.98		-1	-1	0/0					0
+201	10.94	280	0.02	interior	3live	-	699	128	95	000	414	1	path	closely_same	0.49	0.568	73.42		-1	-1	0/0					0
+202	11.53	281	0.52	extreme	3live	-	95	36	4443	000	2566	1	path	closely_other	0.58	0.673	73.94		-1	-1	1/1					3
+203	12.02	282	1.01	extreme	3live	-	95	643	4443	000	2592	1	connect	closely_same	0.49	0.551	74.38	S1	-1	-1	1/1					3

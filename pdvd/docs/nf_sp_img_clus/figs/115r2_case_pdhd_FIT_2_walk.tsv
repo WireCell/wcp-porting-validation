@@ -1,0 +1,17 @@
+i	arc_cm	vid	off_cm	role	class	blank	qu	qv	qw	dead_uvw	q_dump	q_rms_ok	in_src	in_base	in_len	in_w	near_onridge_term_cm	stretch	cell_u	cell_v	cell_w	blank_dw	blank_dt	band_u	band_v	band_w
+0	-10.11	9179	0.23	extreme	3live	-	12	1075	2801	000	1732	1	-	-	-	-	1.75		-1	-1	1/1					11
+1	-2.25	9172	1.18	terminal	3live	-	9364	14698	21961	000	16186	1	sbt	none	7.86	7.862	1.27	S0	-1	-1	1/1					11
+2	-1.02	9167	0.86	interior	3live	-	1223	17304	10981	000	11853	1	path	closely_same	1.23	1.194	2.15		-1	-1	1/1					11
+3	0.00	9142	1.01	interior	3live	-	7303	24978	27439	000	21834	1	path	closely_other	1.02	0.972	2.34	S1	-1	-1	1/1					12
+4	1.70	9136	1.24	interior	3live	-	14877	27028	39348	000	28868	1	connect	closely_same	1.70	1.554	2.00	S1	-1	-1	1/1					12
+5	2.69	9133	1.22	interior	3live	-	14877	14667	29350	000	20800	1	path	closely_same	0.99	0.903	1.16	S1	-1	-1	1/1					12
+6	3.03	9114	1.25	terminal	3live	-	29371	34413	27329	000	30516	1	path	closely_other	0.34	0.315	1.06	S1	-1	-1	1/1					12
+7	4.46	9105	1.09	interior	3live	-	29371	9101	35657	000	27184	1	connect	closely_same	1.43	1.295	0.80	S1	-1	-1	1/1					12
+8	5.26	9053	0.96	terminal	3live	-	23428	29559	17030	000	23893	1	path	closely_other	0.80	0.728	0.00		-1	-1	1/1					13
+9	5.85	9022	0.42	interior	3live	-	36374	11552	13535	000	23379	1	path	closely_other	0.59	0.541	0.59		-1	-1	1/1					16
+10	6.67	9021	0.47	terminal	3live	-	36374	34680	21272	000	31508	1	connect	closely_same	0.82	0.746	0.00		-1	-1	1/1					16
+11	7.47	8938	0.50	interior	3live	-	25007	5409	4087	000	14959	1	path	closely_other	0.80	0.740	0.72		-1	-1	1/1					13
+12	8.90	8926	0.13	terminal	3live	-	25007	30200	16033	000	24457	1	connect	closely_same	1.43	1.345	0.00		-1	-1	1/1					13
+13	9.40	8920	0.11	interior	3live	-	28399	27135	12608	000	23817	1	path	closely_same	0.50	0.456	0.50		-1	-1	1/1					13
+14	9.74	8874	0.18	interior	3live	-	37256	19431	13061	000	25405	1	connect	closely_other	0.34	0.315	0.49		-1	-1	1/1					12
+15	10.24	8872	0.15	terminal	3live	-	37256	28182	18987	000	29113	1	path	closely_same	0.49	0.447	0.00		-1	-1	1/1					12

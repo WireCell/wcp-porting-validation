@@ -1,0 +1,25 @@
+# doc pdvd/115 round 2: FIT / D-3live provenance, base figs/115_support_pdvd_off_stretches.tsv vs arm figs/115r2_support_pdvd_p3bwp025_stretches.tsv; join radius max(5.0 cm, mean chord)
+
+## FIT: base 110 stretches 2.95 m; arm 134 stretches 3.56 m
+  arm stretches matched to a base stretch: 93 (by base class: FIT 57 (1.59 m), GAP-short 12 (0.26 m), GAP-live 12 (0.57 m), D-3live 4 (0.07 m), D-blank-int 3 (0.06 m), GAP-dead 3 (0.13 m), D-blank-term 2 (0.03 m))
+  arm stretches NEW (no base stretch of any class at the place): 41, 0.84 m, max ridge offset median 1.47 cm, open-ended 8, >= 3 rows 8
+  base stretches LOST (no arm stretch of any class at the place): 43, 0.91 m
+  top 6 new by length x max ridge offset (event cluster pass rows length_cm max_d_ridge max_d_img max_noff seed_vertices):
+    039253_9 120 0 5756-5757 11.60 2.21 1.01 2 1dead:t/1dead:t/3live:t/3live:i
+    039349_26 62 0 4477-4478 7.61 2.76 1.16 3 3live:t/3live:t
+    039252_14 117 0 6975-6976 11.36 1.57 0.83 3 3live:i/3live:i/3live:t/3live:i
+    039253_5 94 0 4250-4257 5.41 1.61 0.85 1 3live:i/3live:i/3live:t/3live:i/3live:i/3live:t
+    039253_5 94 0 4260-4264 3.26 1.78 0.78 1 3live:i/3live:i/3live:t
+    039349_70 51 0 1932-1935 2.48 1.46 1.45 1 3live:i/3live:i/3live:t/3live:i/3live:t/3live:i
+
+## D-3live: base 40 stretches 0.88 m; arm 50 stretches 1.07 m
+  arm stretches matched to a base stretch: 32 (by base class: D-3live 17 (0.45 m), GAP-short 5 (0.12 m), XID 4 (0.09 m), FIT 2 (0.03 m), GAP-live 1 (0.03 m), D-blank-int 1 (0.02 m), GAP-dead 1 (0.01 m), D-blank-term 1 (0.02 m))
+  arm stretches NEW (no base stretch of any class at the place): 18, 0.31 m, max ridge offset median 1.36 cm, open-ended 0, >= 3 rows 7
+  base stretches LOST (no arm stretch of any class at the place): 13, 0.26 m
+  top 6 new by length x max ridge offset (event cluster pass rows length_cm max_d_ridge max_d_img max_noff seed_vertices):
+    039253_5 94 0 4268-4274 4.53 1.59 1.29 1 3live:t/3live:i/3live:t/3live:i
+    039252_12 116 0 3506-3510 2.94 2.17 1.35 2 3live:t/3live:i/3live:i/3live:i
+    039349_58 74 0 747-749 1.87 2.65 0.39 1 3live:i/3live:i/3live:i
+    039253_16 108 0 3425-3427 1.99 2.42 1.03 2 3live:i/3live:i/3live:i/3live:i
+    039252_17 69 0 2495-2498 2.13 1.43 0.58 2 3live:i/3live:i/3live:i/3live:i/3live:i
+    039252_7 71 0 1902-1904 1.98 1.36 1.08 2 1dead:t/1dead:i/1dead:i

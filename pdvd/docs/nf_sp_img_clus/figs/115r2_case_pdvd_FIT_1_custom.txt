@@ -1,0 +1,4 @@
+d115voff (production): image points 3026, Steiner vertices 0, fit rows 699, rows > 5.0 cm from every image point 0
+d115vp3bwp025 (prefer3+alpha0.25+path): image points 3026, Steiner vertices 0, fit rows 700, rows > 5.0 cm from every image point 0
+d115vp3bwp05 (prefer3+alpha0.5+path): image points 3026, Steiner vertices 0, fit rows 777, rows > 5.0 cm from every image point 53 (x 18.7..92.8, y 143.1..146.6, z 18.1..19.9; nearest image 39.6 cm median, nearest Steiner vertex nan cm median)
+d115vp3bwp1 (prefer3+alpha1+path): image points 3026, Steiner vertices 0, fit rows 779, rows > 5.0 cm from every image point 53 (x 18.7..92.8, y 143.1..146.6, z 18.1..19.9; nearest image 39.6 cm median, nearest Steiner vertex nan cm median)

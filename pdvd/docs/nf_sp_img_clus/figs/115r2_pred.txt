@@ -1,0 +1,100 @@
+doc pdvd/115 ROUND 2 -- PRE-REGISTERED evaluation rule for the tree+path base-graph pricing at alpha 0.25 / 0.5 / 1.0
+COMBINED with doc 114's terminal knob (prefer3), graded on DETOUR-SCOPED clauses with the arm-wide numbers as
+no-regression only.  Written 2026-09-18 after the round-2 sizing replay (figs/115r2_replay_{pdhd,pdvd}.txt,
+figs/115r2_sizing.txt) and BEFORE any round-2 arm ran.  Its sha256 is recorded in figs/115r2_pred.sha256 before the
+first arm starts; the launcher d115r2_run_levels.sh refuses to start otherwise.
+
+QUESTION (owner, 2026-09-18, after round 1): run the tree+path pricing at a smaller alpha (0.25-0.5) combined with
+prefer3, graded on detour-scoped clauses (DETOUR length and sub-classes, the spot fits, f_low and shape) with the
+arm-wide numbers as no-regression only, in order to FINALIZE the track trajectory fit so that the tagger and the PR
+code can be retuned on it in the next sessions.
+
+BUILD: none.  Both knobs exist in toolkit 054b72d0; the doc-115 pin /home/xqian/tmp/d115/libpin_d115 (clus md5
+2efa7fa09325) is reused unchanged, so the round-1 OFF gates stand (doctest 442/442, compiled configs, PDHD 61/61,
+PDVD 120/120, SBND 16 evt, uBooNE 35 evt) and d115?off (== d114?base) is the base of every metric.  The exact TLAs
+are compile-proven before launch (figs/115r2_gate_config.txt: only the three keys of the two CreateSteinerGraph nodes
+differ from the OFF config).
+
+LEVELS (arms per detector, production -nu -stm-fit chain, WCT_STM_PATH_DEBUG=1 WCT_STEINER_GRAPH_DUMP=1, pctrees of
+the production arms; PDHD 61 events SRC d108hflip, PDVD 120 events SRC d103vflip; all six arms launched together at
+JOBS 5):
+  P3BWP025  d115?p3bwp025  -S steiner_blank_plane_mode='prefer3' -S steiner_base_weight_blank_alpha=0.25 -S steiner_base_weight_scope='tree+path'
+  P3BWP05   d115?p3bwp05   -S steiner_blank_plane_mode='prefer3' -S steiner_base_weight_blank_alpha=0.5  -S steiner_base_weight_scope='tree+path'
+  P3BWP1    d115?p3bwp1    -S steiner_blank_plane_mode='prefer3' -S steiner_base_weight_blank_alpha=1.0  -S steiner_base_weight_scope='tree+path'
+  (P3BWP1 is the anchor of the alpha series: round 1's BWP1 pricing plus prefer3.)
+  Round-1 arms d115?p3, d115?bwp1, d115?p3bw2 are re-graded under these clauses as anchors (d115r2_verdict.py --anchors).
+
+SIZING (figs/115r2_sizing.txt, seed-only replay on the 10-event dumps, no prefer3, judged against the tie floor):
+  0.25:tree+path  S1 -16.6 % / -9.0 %,  wiggle x1.091 / x1.012,  far 0.994 / 0.998,  GAP changed 2.1 / 2.2 %,  h1 1.21, v3 1.15
+  0.5:tree+path   S1 -17.5 % / -9.9 %,  wiggle x1.147 / x1.119,  h1 1.26, v3 1.33
+  1:tree+path     S1 -17.1 % / -11.0 %, wiggle x1.199 / x1.204,  h1 0.69, v3 1.33
+  The S1 gain saturates by alpha 0.25 (the priced route is a binary choice per chord); the wiggle grows with alpha.
+  The sizing bar is NOT used for selection this round (the owner fixed the range); the table is the prediction input.
+
+METRICS, per level vs d115?off, both detectors.  Bars from round 1's numbers (figs/115_verdict.txt).
+
+FIX, detour-scoped -- all required:
+  U1   DETOUR length (d114_support_census.py roll-up row, metres): <= base - 30 %.
+  U1b  DETOUR + FIT length (the FIT class = a supported seed the fit left; migration guard): <= base - 20 %.
+  U2   blank-carried detour stretches (D-blank-term + D-blank-int counts): <= base - 40 %.
+  U3   D-crawl stretches <= base (the crawl re-route must not grow).  D-3live is reported.
+  P5f  spot FIT maxima (d113_spot_figs.py, 115r2_spot.tsv): h1 <= 1.0 cm, h2 <= 1.0 cm, v3 <= 0.7 cm (the three fits
+       round 1 showed the levers fix: 0.47, 0.69, 0.54), AND every one of the five spots (h1 h2 v1 v2 v3) <= base + 0.2 cm.
+  D1   median per-track f_low on the common accepted passes (d115_dqdx_compare.py): <= 0.90 x base on PDHD, <= base on
+       PDVD (its median is a quarter of PDHD's and moved -4..-9 % in round 1); AND paired better >= worse.
+  D2   median per-track shape rms <= base (tightened from base + 0.01); AND paired better >= worse.
+  D3   k_pop within +-2 % of base.
+  D4   Bee holes per 10 m (d111_eval.py P3) <= base.
+
+NO REGRESSION, arm-wide -- all required:
+  S1   seed > 1 cm off the ridge <= base;  P1 fit rows > 1 cm <= base;  R2D W-plane rows > 1 wire off the cell <= base
+       (round 1's FIX numbers, demoted: a detour lever cannot move them by 15-20 % without touching the gaps).
+  W    seed wiggle <= 1.10 x base;  P2 off-charge rows (+-1 wire) <= base;  P4 coverage >= base - 1.0 point;
+  P6'  clean-record share > 1 cm <= 1.0 %.
+  Ga   truncated fits (length arm/base < 0.9) <= 4.48 % (PDHD), 3.37 % (PDVD).
+  Gb   far deviations (> 5 cm off) <= 1.10 x base.
+  Gc   gap jumping: dead-touching base tags lost <= other tags + 10 points AND <= 30.2 + 5 (PDHD), 25.1 + 5 (PDVD).
+  Gd   clusters losing every STM fit <= 19 (PDHD), 9 (PDVD).
+  C    completeness: wire-cell rc 0 and the three output files for every event.
+  R    median per-event PR wall arm / d115?off <= 1.20 (the OFF arm ran at JOBS 12; caveat as in round 1).
+  G0   pin clus md5 2efa7fa09325 before launch (the launcher checks) and "pin md5 after" in every runner summary.
+
+REPORTED, never gating: d113_grade.py tags (is_stm / michel_found purity and efficiency, bounded), candidate churn,
+  the seed spot maxima (round 1's P5: v3's seed is out of the lever's reach, sec 6.3), the full class table with the
+  round-1 anchors, the FIT / D-3live provenance (d115r2_adjudicate.py: matched-by-place vs new vs lost, both
+  directions) and the case figures of the new ones on the recommended level, the U / V residual shares, the dQ/dx
+  ratio-to-reference curves, the replay predictions.
+
+VERDICT per level: PASS when every FIX and every NO-REGRESSION clause passes on both detectors; else FAIL naming the
+  clauses by group.
+RECOMMENDATION = the trajectory configuration to carry into the tagger / PR retune session: the smallest-alpha PASSING
+  round-2 level (least wiggle, least departure from production); a larger passing alpha is named as the ALTERNATIVE
+  when it beats it by > 10 points on U1 on both detectors.  If none passes: the level with the fewest failing clauses,
+  named UNQUALIFIED with its failing clauses, and the round says so.  Whatever the verdict the C++ defaults stay
+  0 / "tree" / "wcp" and no production config changes in this round: a flip is the owner's decision.
+
+PREDICTIONS (stated before measuring; not gating):
+  * U1 passes on all three levels on PDHD (P3 alone gave -40 %, BWP1 -51 %); on PDVD it is close to the bar
+    (P3 -12 %, BWP1 -33 %, P3BW2 -27 %): predicted to pass at alpha >= 0.5, borderline at 0.25.
+  * U1b is the hard clause on PDVD: the round-1 anchors under it give BWP1 +0.9 % (FIT 3.0 -> 5.8 m) and P3BW2 -8 %
+    against -20 %; the pricing moves PDVD length from DETOUR into FIT.  Predicted to FAIL on PDVD at alpha 1, and
+    the 0.25 / 0.5 levels are the test of whether a smaller alpha keeps the DETOUR gain without the FIT growth.
+  * U2 passes on PDHD at every alpha (P3BW2 -67 %, BWP1 -65 %); on PDVD the anchors gave -31..-36 %: predicted
+    borderline (the prefer3 term drops D-blank-term to ~51-66, the pricing drops D-blank-int to ~51 at alpha 1).
+  * W (wiggle) fails at alpha 1 (BWP1 +14.6 / +17.9 %; prefer3 does not price the routes, so P3BWP1 is predicted
+    the same), passes at 0.25 (replay x1.09 / x1.01), borderline at 0.5 (x1.15 / x1.12 seed-only, the C++ arm
+    of BWP1 was within 4 points of its replay).
+  * P5f: h1 <= 1.0 at every alpha (prefer3 fixes h1: 0.47); h2 <= 1.0 needs the tree+path route (BWP1 0.69, P3BW2
+    0.70; P3 alone 2.11): predicted to pass at alpha >= 0.5, uncertain at 0.25; v3 <= 0.7 is UNCERTAIN: the pricing
+    alone lowers it (BW2 / BWP1 0.54) while prefer3 raises it (P3 1.14, P3BW2 1.07) -- the combination has not been
+    measured at v3; predicted to fail at every alpha if prefer3's terminal loss dominates.
+  * D1 passes on PDHD at alpha >= 0.5 (P3 -13 %, BWP1 -15 %, P3BW2 -19 %); on PDVD the paired-count condition is
+    the risk (BWP1 184 / 187).  D2 passes where prefer3 is on (P3BW2 both detectors); BWP1 alone failed D2 on PDHD.
+  * The tags move as in round 1 (PDVD Michel efficiency -0.05..-0.09 under the pricing); reported only.
+  * Overall: P3BWP05 or P3BWP025 is predicted to be the fewest-failing level, with pdvd:U1b and v3 the likely
+    residual failures; a clean PASS on both detectors is NOT predicted.
+
+BASE (d115?off, round 1): PDHD DETOUR 504 stretches 12.4 m, FIT 83 / 2.8 m, blank-carried 365, D-crawl 104, S1 9.87 %,
+  wig 4.43 %, spots h1 1.77 / h2 2.54 cm; PDVD DETOUR 367 / 8.2 m, FIT 110 / 3.0 m, blank-carried 221, D-crawl 99,
+  S1 7.82 %, wig 9.71 %, spots v1 0.53 / v2 1.27 / v3 0.91 cm.  D1-D4 and R2D bases are measured per level on the
+  common records by the clause scripts.

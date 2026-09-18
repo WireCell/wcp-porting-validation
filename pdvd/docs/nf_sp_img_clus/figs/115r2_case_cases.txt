@@ -1,0 +1,561 @@
+# case pdhd_D-3live_1: class D-3live, rows 2447-2453 (7), length 4.18 cm, max ridge 1.68 cm, max image 1.34 cm, seed vertices 3live:i/3live:i/3live:i/3live:i/3live:i
+## pdhd_D-3live_1: pdhd 029107_4 cl37 arm d115hp3bwp05; record pass 0, walks crawl1+crawl2 (crawl point vertex 1778)
+- graph: 2138 Steiner vertices, 3543 edges, 434 terminals (+8 extremes); STGC {'nret': 14185, 'nbase_v': 14185, 'nbase_e': 150618, 'ncomp_closely': 23, 'ncomp_ctpc': 1, 'ncomp_base': 1, 'nterm': 442, 'nextreme': 8, 'nsv': 2138, 'nse': 3543, 'classify': 1}
+- check join: 212 of 212 seed points are dumped vertices
+- check anchor: seed max ridge offset in the window 3.35 cm (figs/111s_spot.tsv)
+- check charge identity (dumped q == RMS over nonzero planes): 2138 of 2138 vertices
+
+| stretch | seed points | anchors (vertex, offset) | seed max off | vertices: term 1blank / term other / interior 1blank / interior 2blank+ / interior other | route | cost | length (cm) | cost per cm | smoothed length (cm) | max off (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| S0 | 81-81 | 1042 (0.80) -> 1084 (0.57) | 3.28 | 0 / 0 / 0 / 0 / 1 | seed | 4.079 | 3.00 | 1.359 | 2.96 | 3.35 |
+| | | | | | shortest | 4.079 (1.000x seed) | 3.00 | 1.359 | 2.96 | 3.35 |
+| | | | | | on-image | none | | | | |
+| | | | | | oracle | 4.079 (1.000x seed) | 3.00 | 1.359 | 2.96 | 3.35 |
+| S1 | 86-88 | 1040 (0.97) -> 1171 (0.39) | 1.20 | 0 / 0 / 0 / 0 / 3 | seed | 5.400 | 3.33 | 1.619 | 2.88 | 1.19 |
+| | | | | | shortest | 5.400 (1.000x seed) | 3.33 | 1.619 | 2.88 | 1.19 |
+| | | | | | on-image | none | | | | |
+| | | | | | oracle | 5.400 (1.000x seed) | 3.33 | 1.619 | 2.88 | 1.19 |
+| S2 | 91-93 | 1183 (0.20) -> 1383 (0.78) | 1.34 | 0 / 2 / 0 / 0 / 1 | seed | 5.400 | 3.44 | 1.569 | 3.36 | 1.63 |
+| | | | | | shortest | 5.400 (1.000x seed) | 3.44 | 1.569 | 3.36 | 1.63 |
+| | | | | | on-image | none | | | | |
+| | | | | | oracle | 5.715 (1.058x seed) | 3.76 | 1.518 | 3.39 | 1.63 |
+| S3 | 104-105 | 1456 (0.49) -> 1415 (0.66) | 1.33 | 1 / 0 / 1 / 0 / 0 | seed | 2.288 | 1.75 | 1.311 | 0.89 | 1.21 |
+| | | | | | shortest | 2.288 (1.000x seed) | 1.75 | 1.311 | 0.89 | 1.21 |
+| | | | | | on-image | none | | | | |
+| | | | | | oracle | 2.288 (1.000x seed) | 1.75 | 1.311 | 0.89 | 1.21 |
+| S4 | 109-126 | 1413 (0.67) -> 1059 (0.74) | 2.20 | 0 / 0 / 0 / 0 / 23 | seed | 21.320 | 22.35 | 0.954 | 21.58 | 2.23 |
+| | | | | | shortest | 21.320 (1.000x seed) | 22.35 | 0.954 | 21.58 | 2.23 |
+| | | | | | on-image | none | | | | |
+| | | | | | oracle | 21.320 (1.000x seed) | 22.35 | 0.954 | 21.58 | 2.23 |
+
+- check 2-D projection: vertices within 1.3R projected: 416; local map failed U/V/W 416/416/0; U = mirror of V, gradient (-1.2412, 1.7448) wires/cm, fit rows' pu scatter about it 0.05 wire rms
+- check blank plane = no charge cell: 1blank planes 35, no cell at own wire 35 (100.0 %), none within +-1 wire 22 (62.9 %)
+  - per plane U/V/W, no cell at own wire: 0 of 0 / 0 of 0 / 35 of 35; the 1blank planes of vertices > 1 cm off the ridge: 10 of 10
+- check live plane = charge cell: live planes 334, cell at own wire 153 (45.8 %), within +-1 wire 155 (46.4 %); per plane U/V/W own wire: 0 of 0 / 0 of 0 / 153 of 334
+- charge band width (wires, contiguous cells at the vertex's slice): off-ridge 1blank seed vertices, live planes median 3.0 (n 4), blank plane (nearest band) median nan (n 2); on-ridge 3live seed vertices, all planes median 2.0 (n 15)
+- bound: off-ridge 1blank seed vertices whose blank cell lies within the +-3 (wire, slice) disc of a charge cell of the cluster on that plane: 0 of 0
+
+| window terminals | <= 1 cm | 1-2 cm | > 2 cm |
+|---|---|---|---|
+| terminal 3live | 1 | 1 | 0 |
+| terminal 1blank | 0 | 1 | 0 |
+| terminal 1dead | 18 | 5 | 0 |
+- on-ridge terminals in the window: 19; on the seed: 5
+- off-ridge terminals in the window: 7 (1blank 1); on the seed: 3 (1blank 1)
+
+# case pdhd_D-3live_2: class D-3live, rows 1768-1773 (6), length 3.91 cm, max ridge 1.32 cm, max image 1.29 cm, seed vertices 3live:i/3live:t
+## pdhd_D-3live_2: pdhd 028084_27 cl57 arm d115hp3bwp05; record pass 0, walks rough
+- graph: 2023 Steiner vertices, 6597 edges, 210 terminals (+5 extremes); STGC {'nret': 8267, 'nbase_v': 8267, 'nbase_e': 112029, 'ncomp_closely': 2, 'ncomp_ctpc': 1, 'ncomp_base': 1, 'nterm': 215, 'nextreme': 5, 'nsv': 2023, 'nse': 6597, 'classify': 1}
+- check join: 86 of 86 seed points are dumped vertices
+- check anchor: seed max ridge offset in the window 2.86 cm (figs/111s_spot.tsv)
+- check charge identity (dumped q == RMS over nonzero planes): 2023 of 2023 vertices
+
+| stretch | seed points | anchors (vertex, offset) | seed max off | vertices: term 1blank / term other / interior 1blank / interior 2blank+ / interior other | route | cost | length (cm) | cost per cm | smoothed length (cm) | max off (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| S0 | 80-80 | 1712 (1.00) -> 1695 (0.83) | 3.01 | 0 / 1 / 0 / 0 / 1 | seed | 21.878 | 22.60 | 0.968 | 22.43 | 3.57 |
+| | | | | | shortest | 21.878 (1.000x seed) | 22.60 | 0.968 | 22.43 | 3.57 |
+| | | | | | on-image | none | | | | |
+| | | | | | oracle | 38.092 (1.741x seed) | 35.50 | 1.073 | 28.42 | 3.73 |
+
+- check 2-D projection: vertices within 1.3R projected: 53; local map failed U/V/W 53/53/0; U = mirror of V, gradient (-1.2710, 1.7012) wires/cm, fit rows' pu scatter about it 0.45 wire rms
+- check blank plane = no charge cell: 1blank planes 13, no cell at own wire 13 (100.0 %), none within +-1 wire 9 (69.2 %)
+  - per plane U/V/W, no cell at own wire: 0 of 0 / 0 of 0 / 13 of 13; the 1blank planes of vertices > 1 cm off the ridge: 6 of 6
+- check live plane = charge cell: live planes 38, cell at own wire 26 (68.4 %), within +-1 wire 26 (68.4 %); per plane U/V/W own wire: 0 of 0 / 0 of 0 / 26 of 38
+- charge band width (wires, contiguous cells at the vertex's slice): off-ridge 1blank seed vertices, live planes median n/a (n 0), blank plane (nearest band) median n/a (n 0); on-ridge 3live seed vertices, all planes median 4.0 (n 15)
+- bound: off-ridge 1blank seed vertices whose blank cell lies within the +-3 (wire, slice) disc of a charge cell of the cluster on that plane: 0 of 0
+
+| window terminals | <= 1 cm | 1-2 cm | > 2 cm |
+|---|---|---|---|
+| terminal 3live | 2 | 1 | 0 |
+| extreme 3live | 1 | 1 | 0 |
+| terminal 1blank | 3 | 0 | 0 |
+- on-ridge terminals in the window: 5; on the seed: 2
+- off-ridge terminals in the window: 1 (1blank 0); on the seed: 0 (1blank 0)
+
+# case pdhd_D-3live_3: class D-3live, rows 767-773 (7), length 4.53 cm, max ridge 2.25 cm, max image 0.69 cm, seed vertices 3live:i/3live:i/3live:i/3live:i/3live:i/3live:i
+## pdhd_D-3live_3: pdhd 028084_11 cl34 arm d115hp3bwp05; record pass 0, walks crawl1+crawl2 (crawl point vertex 1)
+- graph: 283 Steiner vertices, 319 edges, 22 terminals (+3 extremes); STGC {'nret': 14360, 'nbase_v': 14360, 'nbase_e': 173133, 'ncomp_closely': 1, 'ncomp_ctpc': 1, 'ncomp_base': 1, 'nterm': 25, 'nextreme': 3, 'nsv': 283, 'nse': 319, 'classify': 1}
+- check join: 204 of 204 seed points are dumped vertices
+- check anchor: seed max ridge offset in the window 5.06 cm (figs/111s_spot.tsv)
+- check charge identity (dumped q == RMS over nonzero planes): 283 of 283 vertices
+
+| stretch | seed points | anchors (vertex, offset) | seed max off | vertices: term 1blank / term other / interior 1blank / interior 2blank+ / interior other | route | cost | length (cm) | cost per cm | smoothed length (cm) | max off (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| S0 | 183-199 | 222 (0.54) -> 279 (0.47) | 4.91 | 0 / 0 / 0 / 0 / 56 | seed | 67.016 | 69.15 | 0.969 | 66.35 | 5.06 |
+| | | | | | shortest | 67.016 (1.000x seed) | 69.15 | 0.969 | 66.35 | 5.06 |
+| | | | | | on-image | none | | | | |
+| | | | | | oracle | 67.016 (1.000x seed) | 69.15 | 0.969 | 66.35 | 5.06 |
+| S1 | 203-203 | 281 (0.52) -> 282 (1.01) | 1.01 | 0 / 0 / 0 / 0 / 1 | seed | 0.551 | 0.49 | 1.118 | 0.49 | 0.89 |
+| | | | | | shortest | 0.551 (1.000x seed) | 0.49 | 1.118 | 0.49 | 0.89 |
+| | | | | | on-image | 0.551 (1.000x seed) | 0.49 | 1.118 | 0.49 | 0.89 |
+| | | | | | oracle | 0.551 (1.000x seed) | 0.49 | 1.118 | 0.49 | 0.89 |
+
+- check 2-D projection: vertices within 1.3R projected: 22; local map failed U/V/W 22/22/0; U = mirror of V, gradient (-1.2264, 1.8693) wires/cm, fit rows' pu scatter about it 0.68 wire rms
+- check blank plane = no charge cell: 1blank planes 0, no cell at own wire 0 (0.0 %), none within +-1 wire 0 (0.0 %)
+  - per plane U/V/W, no cell at own wire: 0 of 0 / 0 of 0 / 0 of 0; the 1blank planes of vertices > 1 cm off the ridge: 0 of 0
+- check live plane = charge cell: live planes 22, cell at own wire 2 (9.1 %), within +-1 wire 2 (9.1 %); per plane U/V/W own wire: 0 of 0 / 0 of 0 / 2 of 22
+- charge band width (wires, contiguous cells at the vertex's slice): off-ridge 1blank seed vertices, live planes median n/a (n 0), blank plane (nearest band) median n/a (n 0); on-ridge 3live seed vertices, all planes median 0.0 (n 9)
+- bound: off-ridge 1blank seed vertices whose blank cell lies within the +-3 (wire, slice) disc of a charge cell of the cluster on that plane: 0 of 0
+
+| window terminals | <= 1 cm | 1-2 cm | > 2 cm |
+|---|---|---|---|
+| extreme 3live | 1 | 1 | 0 |
+- on-ridge terminals in the window: 0; on the seed: 0
+- off-ridge terminals in the window: 0 (1blank 0); on the seed: 0 (1blank 0)
+
+## pdhd_D-3live_3: FAILED IndexError: index 204 is out of bounds for axis 0 with size 204
+# case pdhd_D-3live_4: class D-3live, rows 2584-2587 (4), length 2.69 cm, max ridge 1.32 cm, max image 1.16 cm, seed vertices 3live:t/3live:i/3live:t/3live:i
+## pdhd_D-3live_4: pdhd 029107_2 cl64 arm d115hp3bwp05; record pass 0, walks crawl1+crawl2 (crawl point vertex 215)
+- graph: 2219 Steiner vertices, 4722 edges, 363 terminals (+6 extremes); STGC {'nret': 10932, 'nbase_v': 10932, 'nbase_e': 115984, 'ncomp_closely': 3, 'ncomp_ctpc': 1, 'ncomp_base': 1, 'nterm': 369, 'nextreme': 6, 'nsv': 2219, 'nse': 4722, 'classify': 1}
+- check join: 173 of 173 seed points are dumped vertices
+- check anchor: seed max ridge offset in the window 1.25 cm (figs/111s_spot.tsv)
+- check charge identity (dumped q == RMS over nonzero planes): 2219 of 2219 vertices
+
+| stretch | seed points | anchors (vertex, offset) | seed max off | vertices: term 1blank / term other / interior 1blank / interior 2blank+ / interior other | route | cost | length (cm) | cost per cm | smoothed length (cm) | max off (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+
+- check 2-D projection: vertices within 1.3R projected: 200; local map failed U/V/W 200/200/0; U = mirror of V, gradient (-1.1984, 1.7965) wires/cm, fit rows' pu scatter about it 1.10 wire rms
+- check blank plane = no charge cell: 1blank planes 32, no cell at own wire 32 (100.0 %), none within +-1 wire 13 (40.6 %)
+  - per plane U/V/W, no cell at own wire: 0 of 0 / 0 of 0 / 32 of 32; the 1blank planes of vertices > 1 cm off the ridge: 10 of 10
+- check live plane = charge cell: live planes 165, cell at own wire 145 (87.9 %), within +-1 wire 145 (87.9 %); per plane U/V/W own wire: 0 of 0 / 0 of 0 / 145 of 165
+- charge band width (wires, contiguous cells at the vertex's slice): off-ridge 1blank seed vertices, live planes median n/a (n 0), blank plane (nearest band) median n/a (n 0); on-ridge 3live seed vertices, all planes median 8.0 (n 36)
+- bound: off-ridge 1blank seed vertices whose blank cell lies within the +-3 (wire, slice) disc of a charge cell of the cluster on that plane: 0 of 0
+
+| window terminals | <= 1 cm | 1-2 cm | > 2 cm |
+|---|---|---|---|
+| terminal 3live | 16 | 3 | 0 |
+| extreme 3live | 1 | 0 | 0 |
+| terminal 1blank | 2 | 3 | 0 |
+- on-ridge terminals in the window: 18; on the seed: 5
+- off-ridge terminals in the window: 6 (1blank 3); on the seed: 0 (1blank 0)
+
+# case pdhd_FIT_1: class FIT, rows 4499-4505 (7), length 4.52 cm, max ridge 1.87 cm, max image 1.81 cm, seed vertices 3live:i/1blank:t/3live:t/3live:i
+## pdhd_FIT_1: pdhd 028084_10 cl52 arm d115hp3bwp05; record pass 0, walks crawl1+crawl2 (crawl point vertex 519)
+- graph: 1133 Steiner vertices, 2521 edges, 128 terminals (+5 extremes); STGC {'nret': 8132, 'nbase_v': 8132, 'nbase_e': 81978, 'ncomp_closely': 1, 'ncomp_ctpc': 1, 'ncomp_base': 1, 'nterm': 133, 'nextreme': 5, 'nsv': 1133, 'nse': 2521, 'classify': 1}
+- check join: 175 of 175 seed points are dumped vertices
+- check anchor: seed max ridge offset in the window 1.55 cm (figs/111s_spot.tsv)
+- check charge identity (dumped q == RMS over nonzero planes): 1133 of 1133 vertices
+
+| stretch | seed points | anchors (vertex, offset) | seed max off | vertices: term 1blank / term other / interior 1blank / interior 2blank+ / interior other | route | cost | length (cm) | cost per cm | smoothed length (cm) | max off (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| S0 | 14-14 | 54 (0.70) -> 58 (0.87) | 1.10 | 0 / 0 / 1 / 0 / 0 | seed | 2.237 | 1.72 | 1.304 | 1.46 | 1.04 |
+| | | | | | shortest | 2.237 (1.000x seed) | 1.72 | 1.304 | 1.46 | 1.04 |
+| | | | | | on-image | 2.237 (1.000x seed) | 1.72 | 1.304 | 1.46 | 1.04 |
+| | | | | | oracle | 2.237 (1.000x seed) | 1.72 | 1.304 | 1.46 | 1.04 |
+| S1 | 22-27 | 92 (0.55) -> 157 (0.26) | 1.61 | 2 / 0 / 2 / 0 / 2 | seed | 8.510 | 7.70 | 1.106 | 6.88 | 1.55 |
+| | | | | | shortest | 8.510 (1.000x seed) | 7.70 | 1.106 | 6.88 | 1.55 |
+| | | | | | on-image | 10.116 (1.189x seed) | 8.60 | 1.177 | 7.13 | 0.74 |
+| | | | | | oracle | 10.116 (1.189x seed) | 8.60 | 1.177 | 7.13 | 0.74 |
+
+- check 2-D projection: vertices within 1.3R projected: 216; local map failed U/V/W 216/216/0; U = mirror of V, gradient (-0.9312, 2.1538) wires/cm, fit rows' pu scatter about it 7.94 wire rms
+- check blank plane = no charge cell: 1blank planes 76, no cell at own wire 76 (100.0 %), none within +-1 wire 49 (64.5 %)
+  - per plane U/V/W, no cell at own wire: 0 of 0 / 0 of 0 / 76 of 76; the 1blank planes of vertices > 1 cm off the ridge: 42 of 42
+- check live plane = charge cell: live planes 136, cell at own wire 94 (69.1 %), within +-1 wire 107 (78.7 %); per plane U/V/W own wire: 0 of 0 / 0 of 0 / 94 of 136
+- charge band width (wires, contiguous cells at the vertex's slice): off-ridge 1blank seed vertices, live planes median 5.0 (n 10), blank plane (nearest band) median 2.5 (n 5); on-ridge 3live seed vertices, all planes median 4.0 (n 57)
+- bound: off-ridge 1blank seed vertices whose blank cell lies within the +-3 (wire, slice) disc of a charge cell of the cluster on that plane: 2 of 2
+
+| window terminals | <= 1 cm | 1-2 cm | > 2 cm |
+|---|---|---|---|
+| terminal 3live | 12 | 1 | 0 |
+| terminal 1blank | 11 | 5 | 0 |
+- on-ridge terminals in the window: 23; on the seed: 8
+- off-ridge terminals in the window: 6 (1blank 5); on the seed: 2 (1blank 2)
+
+# case pdhd_FIT_2: class FIT, rows 425-430 (6), length 4.75 cm, max ridge 1.46 cm, max image 0.95 cm, seed vertices 3live:t/3live:i/3live:i/3live:i/3live:i/3live:t
+## pdhd_FIT_2: pdhd 029107_24 cl22 arm d115hp3bwp05; record pass 0, walks crawl1+crawl2 (crawl point vertex 8853)
+- graph: 9223 Steiner vertices, 19695 edges, 1447 terminals (+7 extremes); STGC {'nret': 30033, 'nbase_v': 30033, 'nbase_e': 294808, 'ncomp_closely': 9, 'ncomp_ctpc': 2, 'ncomp_base': 1, 'nterm': 1454, 'nextreme': 7, 'nsv': 9223, 'nse': 19695, 'classify': 1}
+- check join: 449 of 449 seed points are dumped vertices
+- check anchor: seed max ridge offset in the window 1.55 cm (figs/111s_spot.tsv)
+- check charge identity (dumped q == RMS over nonzero planes): 9220 of 9223 vertices
+
+| stretch | seed points | anchors (vertex, offset) | seed max off | vertices: term 1blank / term other / interior 1blank / interior 2blank+ / interior other | route | cost | length (cm) | cost per cm | smoothed length (cm) | max off (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| S0 | 1-1 | 9179 (0.23) -> 9167 (0.86) | 1.18 | 0 / 1 / 0 / 0 / 0 | seed | 9.056 | 9.10 | 0.996 | 9.10 | 1.55 |
+| | | | | | shortest | 9.056 (1.000x seed) | 9.10 | 0.996 | 9.10 | 1.55 |
+| | | | | | on-image | none | | | | |
+| | | | | | oracle | 11.994 (1.324x seed) | 11.88 | 1.009 | 9.55 | 1.25 |
+| S1 | 3-7 | 9167 (0.86) -> 9053 (0.96) | 1.25 | 0 / 1 / 0 / 0 / 4 | seed | 5.767 | 6.28 | 0.918 | 5.53 | 1.48 |
+| | | | | | shortest | 5.767 (1.000x seed) | 6.28 | 0.918 | 5.53 | 1.48 |
+| | | | | | on-image | none | | | | |
+| | | | | | oracle | 12.569 (2.179x seed) | 12.95 | 0.970 | 8.78 | 1.25 |
+
+- check 2-D projection: vertices within 1.3R projected: 632; local map failed U/V/W 632/632/0; U = mirror of V, gradient (-43.2081, -58.5031) wires/cm, fit rows' pu scatter about it 871.86 wire rms
+- check blank plane = no charge cell: 1blank planes 21, no cell at own wire 21 (100.0 %), none within +-1 wire 12 (57.1 %)
+  - per plane U/V/W, no cell at own wire: 0 of 0 / 0 of 0 / 21 of 21; the 1blank planes of vertices > 1 cm off the ridge: 17 of 17
+- check live plane = charge cell: live planes 583, cell at own wire 551 (94.5 %), within +-1 wire 554 (95.0 %); per plane U/V/W own wire: 0 of 0 / 0 of 0 / 551 of 583
+- charge band width (wires, contiguous cells at the vertex's slice): off-ridge 1blank seed vertices, live planes median n/a (n 0), blank plane (nearest band) median n/a (n 0); on-ridge 3live seed vertices, all planes median 13.0 (n 30)
+- bound: off-ridge 1blank seed vertices whose blank cell lies within the +-3 (wire, slice) disc of a charge cell of the cluster on that plane: 0 of 0
+
+| window terminals | <= 1 cm | 1-2 cm | > 2 cm |
+|---|---|---|---|
+| terminal 3live | 33 | 13 | 0 |
+| extreme 3live | 2 | 0 | 0 |
+| terminal 1blank | 2 | 1 | 0 |
+- on-ridge terminals in the window: 35; on the seed: 4
+- off-ridge terminals in the window: 14 (1blank 1); on the seed: 2 (1blank 0)
+
+# case pdhd_FIT_3: class FIT, rows 5709-5715 (7), length 4.22 cm, max ridge 1.49 cm, max image 1.06 cm, seed vertices 3live:i/3live:t
+## pdhd_FIT_3: pdhd 028084_8 cl120 arm d115hp3bwp05; record pass 0, walks crawl1+crawl2 (crawl point vertex 1470)
+- graph: 2762 Steiner vertices, 4673 edges, 443 terminals (+5 extremes); STGC {'nret': 13227, 'nbase_v': 13227, 'nbase_e': 110306, 'ncomp_closely': 3, 'ncomp_ctpc': 2, 'ncomp_base': 1, 'nterm': 448, 'nextreme': 5, 'nsv': 2762, 'nse': 4673, 'classify': 1}
+- check join: 583 of 583 seed points are dumped vertices
+- check anchor: seed max ridge offset in the window 1.29 cm (figs/111s_spot.tsv)
+- check charge identity (dumped q == RMS over nonzero planes): 2760 of 2762 vertices
+
+| stretch | seed points | anchors (vertex, offset) | seed max off | vertices: term 1blank / term other / interior 1blank / interior 2blank+ / interior other | route | cost | length (cm) | cost per cm | smoothed length (cm) | max off (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+
+- check 2-D projection: vertices within 1.3R projected: 387; local map failed U/V/W 387/387/0; U = mirror of V, gradient (-1.2860, 1.8417) wires/cm, fit rows' pu scatter about it 0.91 wire rms
+- check blank plane = no charge cell: 1blank planes 13, no cell at own wire 13 (100.0 %), none within +-1 wire 6 (46.2 %)
+  - per plane U/V/W, no cell at own wire: 0 of 0 / 0 of 0 / 13 of 13; the 1blank planes of vertices > 1 cm off the ridge: 11 of 11
+- check live plane = charge cell: live planes 359, cell at own wire 340 (94.7 %), within +-1 wire 341 (95.0 %); per plane U/V/W own wire: 0 of 0 / 0 of 0 / 340 of 359
+- charge band width (wires, contiguous cells at the vertex's slice): off-ridge 1blank seed vertices, live planes median n/a (n 0), blank plane (nearest band) median n/a (n 0); on-ridge 3live seed vertices, all planes median 5.0 (n 48)
+- bound: off-ridge 1blank seed vertices whose blank cell lies within the +-3 (wire, slice) disc of a charge cell of the cluster on that plane: 0 of 0
+
+| window terminals | <= 1 cm | 1-2 cm | > 2 cm |
+|---|---|---|---|
+| terminal 3live | 29 | 5 | 0 |
+- on-ridge terminals in the window: 29; on the seed: 6
+- off-ridge terminals in the window: 5 (1blank 0); on the seed: 0 (1blank 0)
+
+# case pdhd_FIT_4: class FIT, rows 488-494 (7), length 4.05 cm, max ridge 1.74 cm, max image 0.99 cm, seed vertices 3live:t/3live:t/3live:i/3live:i/3live:i/3live:t
+## pdhd_FIT_4: pdhd 029107_20 cl31 arm d115hp3bwp05; record pass 0, walks crawl1+crawl2 (crawl point vertex 3361)
+- graph: 3376 Steiner vertices, 5931 edges, 491 terminals (+6 extremes); STGC {'nret': 19935, 'nbase_v': 19935, 'nbase_e': 199711, 'ncomp_closely': 4, 'ncomp_ctpc': 1, 'ncomp_base': 1, 'nterm': 497, 'nextreme': 6, 'nsv': 3376, 'nse': 5931, 'classify': 1}
+- check join: 597 of 597 seed points are dumped vertices
+- check anchor: seed max ridge offset in the window 2.03 cm (figs/111s_spot.tsv)
+- check charge identity (dumped q == RMS over nonzero planes): 3376 of 3376 vertices
+
+| stretch | seed points | anchors (vertex, offset) | seed max off | vertices: term 1blank / term other / interior 1blank / interior 2blank+ / interior other | route | cost | length (cm) | cost per cm | smoothed length (cm) | max off (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| S0 | 180-180 | 2389 (0.76) -> 2345 (0.45) | 1.29 | 0 / 0 / 0 / 0 / 1 | seed | 7.231 | 6.09 | 1.188 | 5.86 | 2.03 |
+| | | | | | shortest | 7.231 (1.000x seed) | 6.09 | 1.188 | 5.86 | 2.03 |
+| | | | | | on-image | none | | | | |
+| | | | | | oracle | 11.439 (1.582x seed) | 11.71 | 0.977 | 7.32 | 1.44 |
+| S1 | 185-189 | 2335 (0.35) -> 2304 (0.79) | 1.66 | 0 / 2 / 0 / 0 / 3 | seed | 4.921 | 5.16 | 0.954 | 4.72 | 1.77 |
+| | | | | | shortest | 4.921 (1.000x seed) | 5.16 | 0.954 | 4.72 | 1.77 |
+| | | | | | on-image | none | | | | |
+| | | | | | oracle | 17.917 (3.641x seed) | 19.35 | 0.926 | 14.06 | 1.54 |
+| S2 | 192-193 | 2293 (0.50) -> 2233 (0.58) | 1.76 | 0 / 0 / 0 / 0 / 2 | seed | 2.462 | 2.73 | 0.900 | 2.53 | 1.71 |
+| | | | | | shortest | 2.462 (1.000x seed) | 2.73 | 0.900 | 2.53 | 1.71 |
+| | | | | | on-image | 7.252 (2.945x seed) | 7.90 | 0.918 | 5.53 | 1.02 |
+| | | | | | oracle | 7.252 (2.945x seed) | 7.90 | 0.918 | 5.53 | 1.02 |
+
+- check 2-D projection: vertices within 1.3R projected: 427; local map failed U/V/W 427/427/0; U = mirror of V, gradient (-1.3717, 1.9892) wires/cm, fit rows' pu scatter about it 238.61 wire rms
+- check blank plane = no charge cell: 1blank planes 5, no cell at own wire 5 (100.0 %), none within +-1 wire 2 (40.0 %)
+  - per plane U/V/W, no cell at own wire: 0 of 0 / 0 of 0 / 5 of 5; the 1blank planes of vertices > 1 cm off the ridge: 2 of 2
+- check live plane = charge cell: live planes 409, cell at own wire 224 (54.8 %), within +-1 wire 237 (57.9 %); per plane U/V/W own wire: 0 of 0 / 0 of 0 / 224 of 409
+- charge band width (wires, contiguous cells at the vertex's slice): off-ridge 1blank seed vertices, live planes median n/a (n 0), blank plane (nearest band) median n/a (n 0); on-ridge 3live seed vertices, all planes median 5.0 (n 60)
+- bound: off-ridge 1blank seed vertices whose blank cell lies within the +-3 (wire, slice) disc of a charge cell of the cluster on that plane: 0 of 0
+
+| window terminals | <= 1 cm | 1-2 cm | > 2 cm |
+|---|---|---|---|
+| terminal 3live | 31 | 16 | 0 |
+| terminal 1blank | 0 | 1 | 0 |
+- on-ridge terminals in the window: 31; on the seed: 8
+- off-ridge terminals in the window: 17 (1blank 1); on the seed: 2 (1blank 0)
+
+# case pdvd_D-3live_1: class D-3live, rows 4281-4287 (7), length 4.49 cm, max ridge 1.58 cm, max image 1.29 cm, seed vertices 3live:t/3live:i/3live:t/3live:i
+## pdvd_D-3live_1: pdvd 039253_5 cl94 arm d115vp3bwp05; record pass 0, walks crawl1+crawl2 (crawl point vertex 37995)
+- graph: 60836 Steiner vertices, 242533 edges, 6625 terminals (+6 extremes); STGC {'nret': 138061, 'nbase_v': 138061, 'nbase_e': 1702743, 'ncomp_closely': 43, 'ncomp_ctpc': 3, 'ncomp_base': 3, 'nterm': 6631, 'nextreme': 6, 'nsv': 60836, 'nse': 242533, 'classify': 1}
+- check join: 376 of 376 seed points are dumped vertices
+- check anchor: seed max ridge offset in the window 1.82 cm (figs/111s_spot.tsv)
+- check charge identity (dumped q == RMS over nonzero planes): 60816 of 60836 vertices
+
+| stretch | seed points | anchors (vertex, offset) | seed max off | vertices: term 1blank / term other / interior 1blank / interior 2blank+ / interior other | route | cost | length (cm) | cost per cm | smoothed length (cm) | max off (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| S0 | 38-46 | 34896 (0.83) -> 35798 (0.47) | 1.57 | 0 / 4 / 0 / 0 / 7 | seed | 17.211 | 19.67 | 0.875 | 19.04 | 1.82 |
+| | | | | | shortest | 17.211 (1.000x seed) | 19.67 | 0.875 | 19.04 | 1.82 |
+| | | | | | on-image | 28.845 (1.676x seed) | 30.32 | 0.951 | 25.53 | 1.10 |
+| | | | | | oracle | 28.845 (1.676x seed) | 30.32 | 0.951 | 25.53 | 1.10 |
+
+- check 2-D projection: vertices within 1.3R projected: 5290; local map failed U/V/W 5290/5290/0; U = mirror of V, gradient (1.1235, 0.6767) wires/cm, fit rows' pu scatter about it 0.27 wire rms
+- check blank plane = no charge cell: 1blank planes 209, no cell at own wire 209 (100.0 %), none within +-1 wire 172 (82.3 %)
+  - per plane U/V/W, no cell at own wire: 0 of 0 / 0 of 0 / 209 of 209; the 1blank planes of vertices > 1 cm off the ridge: 159 of 159
+- check live plane = charge cell: live planes 5069, cell at own wire 1759 (34.7 %), within +-1 wire 1775 (35.0 %); per plane U/V/W own wire: 0 of 0 / 0 of 0 / 1759 of 5069
+- charge band width (wires, contiguous cells at the vertex's slice): off-ridge 1blank seed vertices, live planes median n/a (n 0), blank plane (nearest band) median n/a (n 0); on-ridge 3live seed vertices, all planes median 23.0 (n 12)
+- bound: off-ridge 1blank seed vertices whose blank cell lies within the +-3 (wire, slice) disc of a charge cell of the cluster on that plane: 0 of 0
+
+| window terminals | <= 1 cm | 1-2 cm | > 2 cm |
+|---|---|---|---|
+| terminal 3live | 112 | 83 | 2 |
+| terminal 1blank | 1 | 5 | 2 |
+| terminal 1dead | 1 | 3 | 0 |
+- on-ridge terminals in the window: 114; on the seed: 1
+- off-ridge terminals in the window: 95 (1blank 7); on the seed: 3 (1blank 0)
+
+# case pdvd_D-3live_2: class D-3live, rows 3042-3045 (4), length 2.50 cm, max ridge 1.11 cm, max image 1.21 cm, seed vertices 3live:i/3live:i/3live:i/3live:i
+## pdvd_D-3live_2: pdvd 039349_28 cl47 arm d115vp3bwp05; record pass 0, walks crawl1+crawl2 (crawl point vertex 29294)
+- graph: 33267 Steiner vertices, 89902 edges, 2301 terminals (+6 extremes); STGC {'nret': 141481, 'nbase_v': 141481, 'nbase_e': 2767123, 'ncomp_closely': 14, 'ncomp_ctpc': 1, 'ncomp_base': 1, 'nterm': 2307, 'nextreme': 6, 'nsv': 33267, 'nse': 89902, 'classify': 1}
+- check join: 158 of 158 seed points are dumped vertices
+- check anchor: seed max ridge offset in the window 3.30 cm (figs/111s_spot.tsv)
+- check charge identity (dumped q == RMS over nonzero planes): 33238 of 33267 vertices
+
+| stretch | seed points | anchors (vertex, offset) | seed max off | vertices: term 1blank / term other / interior 1blank / interior 2blank+ / interior other | route | cost | length (cm) | cost per cm | smoothed length (cm) | max off (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| S0 | 136-140 | 204 (0.29) -> 160 (0.79) | 3.19 | 0 / 0 / 0 / 0 / 6 | seed | 11.354 | 12.15 | 0.935 | 11.77 | 3.30 |
+| | | | | | shortest | 11.354 (1.000x seed) | 12.15 | 0.935 | 11.77 | 3.30 |
+| | | | | | on-image | none | | | | |
+| | | | | | oracle | 17.013 (1.498x seed) | 14.94 | 1.138 | 13.01 | 2.58 |
+| S1 | 142-142 | 160 (0.79) -> 153 (0.97) | 1.02 | 0 / 0 / 0 / 0 / 1 | seed | 1.672 | 1.81 | 0.921 | 1.79 | 1.02 |
+| | | | | | shortest | 1.672 (1.000x seed) | 1.81 | 0.921 | 1.79 | 1.02 |
+| | | | | | on-image | none | | | | |
+| | | | | | oracle | 1.672 (1.000x seed) | 1.81 | 0.921 | 1.79 | 1.02 |
+| S2 | 147-147 | 135 (0.90) -> 114 (0.84) | 1.28 | 0 / 0 / 0 / 0 / 1 | seed | 2.309 | 2.42 | 0.954 | 2.18 | 1.25 |
+| | | | | | shortest | 2.309 (1.000x seed) | 2.42 | 0.954 | 2.18 | 1.25 |
+| | | | | | on-image | none | | | | |
+| | | | | | oracle | 8.553 (3.704x seed) | 7.13 | 1.199 | 4.50 | 1.06 |
+| S3 | 154-155 | 46 (0.59) -> 31 (0.46) | 1.62 | 0 / 0 / 0 / 1 / 1 | seed | 6.611 | 5.98 | 1.105 | 5.36 | 1.89 |
+| | | | | | shortest | 6.611 (1.000x seed) | 5.98 | 1.105 | 5.36 | 1.89 |
+| | | | | | on-image | 10.332 (1.563x seed) | 8.99 | 1.149 | 6.62 | 0.74 |
+| | | | | | oracle | 10.332 (1.563x seed) | 8.99 | 1.149 | 6.62 | 0.74 |
+
+- check 2-D projection: vertices within 1.3R projected: 252; local map failed U/V/W 252/252/0; U = mirror of V, gradient (1.1096, 0.6741) wires/cm, fit rows' pu scatter about it 0.37 wire rms
+- check blank plane = no charge cell: 1blank planes 18, no cell at own wire 18 (100.0 %), none within +-1 wire 10 (55.6 %)
+  - per plane U/V/W, no cell at own wire: 0 of 0 / 0 of 0 / 18 of 18; the 1blank planes of vertices > 1 cm off the ridge: 10 of 10
+- check live plane = charge cell: live planes 220, cell at own wire 163 (74.1 %), within +-1 wire 176 (80.0 %); per plane U/V/W own wire: 0 of 0 / 0 of 0 / 163 of 220
+- charge band width (wires, contiguous cells at the vertex's slice): off-ridge 1blank seed vertices, live planes median n/a (n 0), blank plane (nearest band) median n/a (n 0); on-ridge 3live seed vertices, all planes median 6.0 (n 33)
+- bound: off-ridge 1blank seed vertices whose blank cell lies within the +-3 (wire, slice) disc of a charge cell of the cluster on that plane: 0 of 0
+
+| window terminals | <= 1 cm | 1-2 cm | > 2 cm |
+|---|---|---|---|
+| terminal 3live | 11 | 3 | 0 |
+| extreme 3live | 1 | 0 | 0 |
+| terminal 1blank | 4 | 3 | 0 |
+| terminal 1dead | 12 | 0 | 0 |
+| extreme 1dead | 1 | 0 | 0 |
+- on-ridge terminals in the window: 27; on the seed: 3
+- off-ridge terminals in the window: 6 (1blank 3); on the seed: 0 (1blank 0)
+
+# case pdvd_D-3live_3: class D-3live, rows 3427-3429 (3), length 1.99 cm, max ridge 2.42 cm, max image 1.03 cm, seed vertices 3live:i/3live:i/3live:i/3live:i
+## pdvd_D-3live_3: pdvd 039253_16 cl108 arm d115vp3bwp05; record pass 0, walks crawl1+crawl2 (crawl point vertex 446)
+- graph: 8065 Steiner vertices, 15407 edges, 1168 terminals (+8 extremes); STGC {'nret': 18294, 'nbase_v': 18294, 'nbase_e': 147157, 'ncomp_closely': 16, 'ncomp_ctpc': 3, 'ncomp_base': 3, 'nterm': 1176, 'nextreme': 8, 'nsv': 8065, 'nse': 15407, 'classify': 1}
+- check join: 281 of 281 seed points are dumped vertices
+- check anchor: seed max ridge offset in the window 2.82 cm (figs/111s_spot.tsv)
+- check charge identity (dumped q == RMS over nonzero planes): 8064 of 8065 vertices
+
+| stretch | seed points | anchors (vertex, offset) | seed max off | vertices: term 1blank / term other / interior 1blank / interior 2blank+ / interior other | route | cost | length (cm) | cost per cm | smoothed length (cm) | max off (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| S0 | 94-111 | 4552 (0.74) -> 5243 (0.57) | 2.78 | 0 / 5 / 0 / 0 / 13 | seed | 10.678 | 11.81 | 0.904 | 10.68 | 2.82 |
+| | | | | | shortest | 10.678 (1.000x seed) | 11.81 | 0.904 | 10.68 | 2.82 |
+| | | | | | on-image | 14.197 (1.330x seed) | 14.75 | 0.962 | 10.86 | 0.96 |
+| | | | | | oracle | 14.197 (1.330x seed) | 14.75 | 0.962 | 10.86 | 0.96 |
+| S1 | 116-116 | 5419 (0.91) -> 5499 (0.81) | 1.18 | 0 / 0 / 0 / 0 / 1 | seed | 0.891 | 1.02 | 0.871 | 0.95 | 1.30 |
+| | | | | | shortest | 0.891 (1.000x seed) | 1.02 | 0.871 | 0.95 | 1.30 |
+| | | | | | on-image | 4.592 (5.156x seed) | 5.22 | 0.880 | 2.97 | 0.87 |
+| | | | | | oracle | 4.592 (5.156x seed) | 5.22 | 0.880 | 2.97 | 0.87 |
+| S2 | 118-118 | 5499 (0.81) -> 5561 (0.80) | 1.11 | 0 / 1 / 0 / 0 / 0 | seed | 0.990 | 1.02 | 0.968 | 0.95 | 1.25 |
+| | | | | | shortest | 0.990 (1.000x seed) | 1.02 | 0.968 | 0.95 | 1.25 |
+| | | | | | on-image | none | | | | |
+| | | | | | oracle | 0.990 (1.000x seed) | 1.02 | 0.968 | 0.95 | 1.25 |
+
+- check 2-D projection: vertices within 1.3R projected: 2262; local map failed U/V/W 2262/2262/0; U = mirror of V, gradient (1.1129, 0.6164) wires/cm, fit rows' pu scatter about it 0.08 wire rms
+- check blank plane = no charge cell: 1blank planes 100, no cell at own wire 100 (100.0 %), none within +-1 wire 44 (44.0 %)
+  - per plane U/V/W, no cell at own wire: 0 of 0 / 0 of 0 / 100 of 100; the 1blank planes of vertices > 1 cm off the ridge: 69 of 69
+- check live plane = charge cell: live planes 2094, cell at own wire 1341 (64.0 %), within +-1 wire 1462 (69.8 %); per plane U/V/W own wire: 0 of 0 / 0 of 0 / 1341 of 2094
+- charge band width (wires, contiguous cells at the vertex's slice): off-ridge 1blank seed vertices, live planes median n/a (n 0), blank plane (nearest band) median n/a (n 0); on-ridge 3live seed vertices, all planes median 5.0 (n 84)
+- bound: off-ridge 1blank seed vertices whose blank cell lies within the +-3 (wire, slice) disc of a charge cell of the cluster on that plane: 0 of 0
+
+| window terminals | <= 1 cm | 1-2 cm | > 2 cm |
+|---|---|---|---|
+| terminal 3live | 149 | 90 | 3 |
+| terminal 1blank | 0 | 5 | 1 |
+| terminal 1dead | 4 | 7 | 1 |
+- on-ridge terminals in the window: 153; on the seed: 13
+- off-ridge terminals in the window: 107 (1blank 6); on the seed: 6 (1blank 0)
+
+# case pdvd_D-3live_4: class D-3live, rows 532-534 (3), length 1.83 cm, max ridge 1.20 cm, max image 1.11 cm, seed vertices 1dead:i/1dead:i
+## pdvd_D-3live_4: pdvd 039349_37 cl38 arm d115vp3bwp05; record pass 0, walks crawl1+crawl2 (crawl point vertex 410)
+- graph: 2148 Steiner vertices, 3446 edges, 435 terminals (+6 extremes); STGC {'nret': 8801, 'nbase_v': 8801, 'nbase_e': 64354, 'ncomp_closely': 2, 'ncomp_ctpc': 1, 'ncomp_base': 1, 'nterm': 441, 'nextreme': 6, 'nsv': 2148, 'nse': 3446, 'classify': 1}
+- check join: 455 of 455 seed points are dumped vertices
+- check anchor: seed max ridge offset in the window 1.80 cm (figs/111s_spot.tsv)
+- check charge identity (dumped q == RMS over nonzero planes): 2148 of 2148 vertices
+
+| stretch | seed points | anchors (vertex, offset) | seed max off | vertices: term 1blank / term other / interior 1blank / interior 2blank+ / interior other | route | cost | length (cm) | cost per cm | smoothed length (cm) | max off (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| S0 | 141-142 | 590 (0.94) -> 607 (0.98) | 1.35 | 2 / 0 / 0 / 0 / 0 | seed | 2.571 | 1.78 | 1.442 | 1.73 | 1.43 |
+| | | | | | shortest | 2.571 (1.000x seed) | 1.78 | 1.442 | 1.73 | 1.43 |
+| | | | | | on-image | 9.936 (3.865x seed) | 7.55 | 1.315 | 4.76 | 0.97 |
+| | | | | | oracle | 9.936 (3.865x seed) | 7.55 | 1.315 | 4.76 | 0.97 |
+| S1 | 176-176 | 772 (0.43) -> 779 (0.68) | 1.22 | 0 / 0 / 1 / 0 / 0 | seed | 2.845 | 2.04 | 1.397 | 1.41 | 1.12 |
+| | | | | | shortest | 2.845 (1.000x seed) | 2.04 | 1.397 | 1.41 | 1.12 |
+| | | | | | on-image | 6.557 (2.305x seed) | 3.91 | 1.679 | 2.25 | 0.58 |
+| | | | | | oracle | 6.557 (2.305x seed) | 3.91 | 1.679 | 2.25 | 0.58 |
+
+- check 2-D projection: vertices within 1.3R projected: 307; local map failed U/V/W 207/207/0; U = mirror of V, gradient (1.0863, 0.6295) wires/cm, fit rows' pu scatter about it 0.43 wire rms
+- check blank plane = no charge cell: 1blank planes 24, no cell at own wire 22 (91.7 %), none within +-1 wire 13 (54.2 %)
+  - per plane U/V/W, no cell at own wire: 1 of 2 / 12 of 13 / 9 of 9; the 1blank planes of vertices > 1 cm off the ridge: 9 of 9
+- check live plane = charge cell: live planes 329, cell at own wire 315 (95.7 %), within +-1 wire 318 (96.7 %); per plane U/V/W own wire: 76 of 78 / 24 of 36 / 215 of 215
+- charge band width (wires, contiguous cells at the vertex's slice): off-ridge 1blank seed vertices, live planes median 3.0 (n 6), blank plane (nearest band) median 1.0 (n 3); on-ridge 3live seed vertices, all planes median 3.0 (n 36)
+- bound: off-ridge 1blank seed vertices whose blank cell lies within the +-3 (wire, slice) disc of a charge cell of the cluster on that plane: 1 of 1
+
+| window terminals | <= 1 cm | 1-2 cm | > 2 cm |
+|---|---|---|---|
+| terminal 3live | 12 | 0 | 0 |
+| terminal 1blank | 5 | 5 | 0 |
+| terminal 1dead | 20 | 1 | 0 |
+- on-ridge terminals in the window: 37; on the seed: 23
+- off-ridge terminals in the window: 6 (1blank 5); on the seed: 2 (1blank 2)
+
+# case pdvd_FIT_1: class FIT, rows 4576-4643 (68), length 179.11 cm, max ridge 3.87 cm, max image 17.78 cm, seed vertices 3live:t/3live:i/3live:t/3live:t/3live:i/3live:t/3live:t/3live:i/3live:i/3live:t/3live:t/3live:t/3live:i/3live:t/3live:i/3live:t/3live:t/3live:t
+## pdvd_FIT_1: no persisted record through the window
+# case pdvd_FIT_2: class FIT, rows 3643-3646 (4), length 2.42 cm, max ridge 2.17 cm, max image 1.39 cm, seed vertices 3live:i/3live:e
+## pdvd_FIT_2: pdvd 039252_8 cl92 arm d115vp3bwp05; record pass 0, walks crawl1+crawl2 (crawl point vertex 7908)
+- graph: 10546 Steiner vertices, 38753 edges, 1926 terminals (+6 extremes); STGC {'nret': 27841, 'nbase_v': 27841, 'nbase_e': 239257, 'ncomp_closely': 44, 'ncomp_ctpc': 6, 'ncomp_base': 5, 'nterm': 1932, 'nextreme': 6, 'nsv': 10546, 'nse': 38753, 'classify': 1}
+- check join: 143 of 143 seed points are dumped vertices
+- check anchor: seed max ridge offset in the window 1.22 cm (figs/111s_spot.tsv)
+- check charge identity (dumped q == RMS over nonzero planes): 10545 of 10546 vertices
+
+| stretch | seed points | anchors (vertex, offset) | seed max off | vertices: term 1blank / term other / interior 1blank / interior 2blank+ / interior other | route | cost | length (cm) | cost per cm | smoothed length (cm) | max off (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+
+- check 2-D projection: vertices within 1.3R projected: 304; local map failed U/V/W 304/304/53; U = mirror of V, gradient (1.1054, 0.6091) wires/cm, fit rows' pu scatter about it 0.50 wire rms
+- check blank plane = no charge cell: 1blank planes 6, no cell at own wire 6 (100.0 %), none within +-1 wire 5 (83.3 %)
+  - per plane U/V/W, no cell at own wire: 0 of 0 / 0 of 0 / 6 of 6; the 1blank planes of vertices > 1 cm off the ridge: 4 of 4
+- check live plane = charge cell: live planes 217, cell at own wire 217 (100.0 %), within +-1 wire 217 (100.0 %); per plane U/V/W own wire: 0 of 0 / 0 of 0 / 217 of 217
+- charge band width (wires, contiguous cells at the vertex's slice): off-ridge 1blank seed vertices, live planes median n/a (n 0), blank plane (nearest band) median n/a (n 0); on-ridge 3live seed vertices, all planes median 30.0 (n 21)
+- bound: off-ridge 1blank seed vertices whose blank cell lies within the +-3 (wire, slice) disc of a charge cell of the cluster on that plane: 0 of 0
+
+| window terminals | <= 1 cm | 1-2 cm | > 2 cm |
+|---|---|---|---|
+| terminal 3live | 11 | 6 | 0 |
+| extreme 3live | 1 | 0 | 0 |
+| terminal 1blank | 1 | 0 | 0 |
+| terminal 1dead | 7 | 3 | 0 |
+- on-ridge terminals in the window: 19; on the seed: 2
+- off-ridge terminals in the window: 9 (1blank 0); on the seed: 0 (1blank 0)
+
+# case pdvd_FIT_3: class FIT, rows 2913-2915 (3), length 2.02 cm, max ridge 1.69 cm, max image 1.18 cm, seed vertices 3live:i/3live:t/3live:i
+## pdvd_FIT_3: pdvd 039349_29 cl53 arm d115vp3bwp05; record pass 0, walks crawl1+crawl2 (crawl point vertex 31)
+- graph: 1930 Steiner vertices, 3180 edges, 377 terminals (+4 extremes); STGC {'nret': 8050, 'nbase_v': 8050, 'nbase_e': 63153, 'ncomp_closely': 1, 'ncomp_ctpc': 1, 'ncomp_base': 1, 'nterm': 381, 'nextreme': 4, 'nsv': 1930, 'nse': 3180, 'classify': 1}
+- check join: 419 of 419 seed points are dumped vertices
+- check anchor: seed max ridge offset in the window 1.17 cm (figs/111s_spot.tsv)
+- check charge identity (dumped q == RMS over nonzero planes): 1929 of 1930 vertices
+
+| stretch | seed points | anchors (vertex, offset) | seed max off | vertices: term 1blank / term other / interior 1blank / interior 2blank+ / interior other | route | cost | length (cm) | cost per cm | smoothed length (cm) | max off (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| S0 | 399-399 | 104 (0.53) -> 94 (0.93) | 1.20 | 0 / 0 / 0 / 0 / 1 | seed | 3.208 | 3.17 | 1.011 | 3.03 | 1.17 |
+| | | | | | shortest | 3.208 (1.000x seed) | 3.17 | 1.011 | 3.03 | 1.17 |
+| | | | | | on-image | 4.358 (1.359x seed) | 3.95 | 1.104 | 3.20 | 0.98 |
+| | | | | | oracle | 4.358 (1.359x seed) | 3.95 | 1.104 | 3.20 | 0.98 |
+| S1 | 401-401 | 94 (0.93) -> 86 (0.26) | 1.03 | 0 / 1 / 0 / 0 / 0 | seed | 1.345 | 1.32 | 1.019 | 0.91 | 0.98 |
+| | | | | | shortest | 1.345 (1.000x seed) | 1.32 | 1.019 | 0.91 | 0.98 |
+| | | | | | on-image | 1.345 (1.000x seed) | 1.32 | 1.019 | 0.91 | 0.98 |
+| | | | | | oracle | 1.345 (1.000x seed) | 1.32 | 1.019 | 0.91 | 0.98 |
+| S2 | 411-411 | 35 (0.31) -> 27 (0.51) spans crawl point | 1.09 | 0 / 0 / 0 / 1 / 0 | seed | 3.215 | 1.83 | 1.759 | 1.07 | 0.98 |
+| | | | | | shortest | 3.215 (1.000x seed) | 1.83 | 1.759 | 1.07 | 0.98 |
+| | | | | | on-image | 3.215 (1.000x seed) | 1.83 | 1.759 | 1.07 | 0.98 |
+| | | | | | oracle | 3.215 (1.000x seed) | 1.83 | 1.759 | 1.07 | 0.98 |
+
+- check 2-D projection: vertices within 1.3R projected: 228; local map failed U/V/W 228/228/0; U = mirror of V, gradient (0.9786, 0.8180) wires/cm, fit rows' pu scatter about it 1.81 wire rms
+- check blank plane = no charge cell: 1blank planes 23, no cell at own wire 23 (100.0 %), none within +-1 wire 9 (39.1 %)
+  - per plane U/V/W, no cell at own wire: 0 of 0 / 0 of 0 / 23 of 23; the 1blank planes of vertices > 1 cm off the ridge: 7 of 7
+- check live plane = charge cell: live planes 162, cell at own wire 155 (95.7 %), within +-1 wire 156 (96.3 %); per plane U/V/W own wire: 0 of 0 / 0 of 0 / 155 of 162
+- charge band width (wires, contiguous cells at the vertex's slice): off-ridge 1blank seed vertices, live planes median n/a (n 0), blank plane (nearest band) median n/a (n 0); on-ridge 3live seed vertices, all planes median 3.0 (n 87)
+- bound: off-ridge 1blank seed vertices whose blank cell lies within the +-3 (wire, slice) disc of a charge cell of the cluster on that plane: 0 of 0
+
+| window terminals | <= 1 cm | 1-2 cm | > 2 cm |
+|---|---|---|---|
+| terminal 3live | 17 | 3 | 0 |
+| extreme 3live | 1 | 2 | 0 |
+| terminal 1blank | 9 | 3 | 0 |
+- on-ridge terminals in the window: 26; on the seed: 15
+- off-ridge terminals in the window: 6 (1blank 3); on the seed: 1 (1blank 0)
+
+# case pdvd_FIT_4: class FIT, rows 4277-4279 (3), length 1.90 cm, max ridge 1.42 cm, max image 1.12 cm, seed vertices 3live:i/3live:i
+## pdvd_FIT_4: pdvd 039252_6 cl92 arm d115vp3bwp05; record pass 0, walks crawl1+crawl2 (crawl point vertex 1257)
+- graph: 3521 Steiner vertices, 8004 edges, 371 terminals (+7 extremes); STGC {'nret': 14146, 'nbase_v': 14146, 'nbase_e': 158975, 'ncomp_closely': 2, 'ncomp_ctpc': 1, 'ncomp_base': 1, 'nterm': 378, 'nextreme': 7, 'nsv': 3521, 'nse': 8004, 'classify': 1}
+- check join: 268 of 268 seed points are dumped vertices
+- check anchor: seed max ridge offset in the window 1.63 cm (figs/111s_spot.tsv)
+- check charge identity (dumped q == RMS over nonzero planes): 3521 of 3521 vertices
+
+| stretch | seed points | anchors (vertex, offset) | seed max off | vertices: term 1blank / term other / interior 1blank / interior 2blank+ / interior other | route | cost | length (cm) | cost per cm | smoothed length (cm) | max off (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| S0 | 57-59 | 1168 (0.99) -> 1257 (0.88) | 1.54 | 0 / 1 / 0 / 0 / 2 | seed | 3.396 | 3.57 | 0.951 | 2.78 | 1.63 |
+| | | | | | shortest | 3.396 (1.000x seed) | 3.57 | 0.951 | 2.78 | 1.63 |
+| | | | | | on-image | none | | | | |
+| | | | | | oracle | 17.609 (5.185x seed) | 15.85 | 1.111 | 11.06 | 1.44 |
+| S1 | 61-61 | 1257 (0.88) -> 1331 (0.75) | 1.33 | 0 / 1 / 0 / 0 / 0 | seed | 3.690 | 3.65 | 1.010 | 3.23 | 1.51 |
+| | | | | | shortest | 3.690 (1.000x seed) | 3.65 | 1.010 | 3.23 | 1.51 |
+| | | | | | on-image | none | | | | |
+| | | | | | oracle | 10.083 (2.733x seed) | 9.60 | 1.050 | 7.78 | 1.08 |
+
+- check 2-D projection: vertices within 1.3R projected: 729; local map failed U/V/W 729/729/0; U = mirror of V, gradient (1.0911, 0.6852) wires/cm, fit rows' pu scatter about it 0.96 wire rms
+- check blank plane = no charge cell: 1blank planes 40, no cell at own wire 40 (100.0 %), none within +-1 wire 34 (85.0 %)
+  - per plane U/V/W, no cell at own wire: 0 of 0 / 0 of 0 / 40 of 40; the 1blank planes of vertices > 1 cm off the ridge: 25 of 25
+- check live plane = charge cell: live planes 673, cell at own wire 648 (96.3 %), within +-1 wire 650 (96.6 %); per plane U/V/W own wire: 0 of 0 / 0 of 0 / 648 of 673
+- charge band width (wires, contiguous cells at the vertex's slice): off-ridge 1blank seed vertices, live planes median n/a (n 0), blank plane (nearest band) median n/a (n 0); on-ridge 3live seed vertices, all planes median 19.0 (n 63)
+- bound: off-ridge 1blank seed vertices whose blank cell lies within the +-3 (wire, slice) disc of a charge cell of the cluster on that plane: 0 of 0
+
+| window terminals | <= 1 cm | 1-2 cm | > 2 cm |
+|---|---|---|---|
+| terminal 3live | 25 | 23 | 0 |
+| terminal 1blank | 1 | 6 | 1 |
+- on-ridge terminals in the window: 26; on the seed: 8
+- off-ridge terminals in the window: 30 (1blank 7); on the seed: 2 (1blank 0)
+
+# case h1: class spot
+## h1: pdhd 029107_16 cl108 arm d115hp3bwp05; record pass 0, walks crawl1+crawl2 (crawl point vertex 908)
+- graph: 1113 Steiner vertices, 2093 edges, 148 terminals (+6 extremes); STGC {'nret': 6521, 'nbase_v': 6521, 'nbase_e': 72072, 'ncomp_closely': 1, 'ncomp_ctpc': 1, 'ncomp_base': 1, 'nterm': 154, 'nextreme': 6, 'nsv': 1113, 'nse': 2093, 'classify': 1}
+- check join: 206 of 206 seed points are dumped vertices
+- check anchor: seed max ridge offset in the window 0.68 cm (figs/111s_spot.tsv)
+- check charge identity (dumped q == RMS over nonzero planes): 1113 of 1113 vertices
+
+| stretch | seed points | anchors (vertex, offset) | seed max off | vertices: term 1blank / term other / interior 1blank / interior 2blank+ / interior other | route | cost | length (cm) | cost per cm | smoothed length (cm) | max off (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+
+- check 2-D projection: vertices within 1.3R projected: 121; local map failed U/V/W 0/0/0; U = mirror of V, gradient (-1.2500, -1.7392) wires/cm, fit rows' pu scatter about it 0.57 wire rms
+- check blank plane = no charge cell: 1blank planes 3, no cell at own wire 3 (100.0 %), none within +-1 wire 2 (66.7 %)
+  - per plane U/V/W, no cell at own wire: 0 of 0 / 0 of 0 / 3 of 3; the 1blank planes of vertices > 1 cm off the ridge: 3 of 3
+- check live plane = charge cell: live planes 360, cell at own wire 359 (99.7 %), within +-1 wire 360 (100.0 %); per plane U/V/W own wire: 120 of 121 / 121 of 121 / 118 of 118
+- charge band width (wires, contiguous cells at the vertex's slice): off-ridge 1blank seed vertices, live planes median n/a (n 0), blank plane (nearest band) median n/a (n 0); on-ridge 3live seed vertices, all planes median 10.0 (n 66)
+- bound: off-ridge 1blank seed vertices whose blank cell lies within the +-3 (wire, slice) disc of a charge cell of the cluster on that plane: 0 of 0
+
+| window terminals | <= 1 cm | 1-2 cm | > 2 cm |
+|---|---|---|---|
+| terminal 3live | 13 | 0 | 0 |
+- on-ridge terminals in the window: 13; on the seed: 8
+- off-ridge terminals in the window: 0 (1blank 0); on the seed: 0 (1blank 0)
+
+# case v3: class spot
+## v3: pdvd 039349_20 cl25 arm d115vp3bwp05; record pass 0, walks rough
+- graph: 855 Steiner vertices, 1376 edges, 175 terminals (+5 extremes); STGC {'nret': 3705, 'nbase_v': 3705, 'nbase_e': 28160, 'ncomp_closely': 1, 'ncomp_ctpc': 1, 'ncomp_base': 1, 'nterm': 180, 'nextreme': 5, 'nsv': 855, 'nse': 1376, 'classify': 1}
+- check join: 191 of 191 seed points are dumped vertices
+- check anchor: seed max ridge offset in the window 1.32 cm (figs/111s_spot.tsv)
+- check charge identity (dumped q == RMS over nonzero planes): 855 of 855 vertices
+
+| stretch | seed points | anchors (vertex, offset) | seed max off | vertices: term 1blank / term other / interior 1blank / interior 2blank+ / interior other | route | cost | length (cm) | cost per cm | smoothed length (cm) | max off (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| S0 | 138-139 | 610 (0.77) -> 620 (0.86) | 1.22 | 0 / 0 / 0 / 2 / 0 | seed | 4.596 | 2.52 | 1.826 | 1.94 | 1.15 |
+| | | | | | shortest | 4.596 (1.000x seed) | 2.52 | 1.826 | 1.94 | 1.15 |
+| | | | | | on-image | 8.436 (1.835x seed) | 6.15 | 1.372 | 3.44 | 0.91 |
+| | | | | | oracle | 8.436 (1.835x seed) | 6.15 | 1.372 | 3.44 | 0.91 |
+| S1 | 149-149 | 648 (0.75) -> 658 (0.89) | 1.17 | 0 / 0 / 1 / 0 / 0 | seed | 2.316 | 1.60 | 1.446 | 1.47 | 1.12 |
+| | | | | | shortest | 2.316 (1.000x seed) | 1.60 | 1.446 | 1.47 | 1.12 |
+| | | | | | on-image | 2.756 (1.190x seed) | 2.27 | 1.214 | 1.55 | 0.79 |
+| | | | | | oracle | 2.756 (1.190x seed) | 2.27 | 1.214 | 1.55 | 0.79 |
+| S2 | 155-155 | 672 (0.42) -> 687 (0.90) | 1.14 | 0 / 0 / 0 / 0 / 1 | seed | 1.445 | 1.52 | 0.948 | 1.29 | 1.01 |
+| | | | | | shortest | 1.445 (1.000x seed) | 1.52 | 0.948 | 1.29 | 1.01 |
+| | | | | | on-image | 1.445 (1.000x seed) | 1.52 | 0.948 | 1.29 | 1.01 |
+| | | | | | oracle | 1.445 (1.000x seed) | 1.52 | 0.948 | 1.29 | 1.01 |
+| S3 | 158-158 | 696 (0.91) -> 708 (0.57) | 1.18 | 0 / 0 / 0 / 0 / 1 | seed | 1.480 | 1.52 | 0.971 | 1.29 | 1.10 |
+| | | | | | shortest | 1.480 (1.000x seed) | 1.52 | 0.971 | 1.29 | 1.10 |
+| | | | | | on-image | 1.672 (1.130x seed) | 1.75 | 0.956 | 1.34 | 1.13 |
+| | | | | | oracle | 1.672 (1.130x seed) | 1.75 | 0.956 | 1.34 | 1.13 |
+| S4 | 176-176 | 770 (0.73) -> 782 (0.60) | 1.41 | 0 / 0 / 1 / 0 / 0 | seed | 3.706 | 2.71 | 1.367 | 1.89 | 1.32 |
+| | | | | | shortest | 3.706 (1.000x seed) | 2.71 | 1.367 | 1.89 | 1.32 |
+| | | | | | on-image | 7.228 (1.950x seed) | 6.70 | 1.078 | 3.93 | 0.90 |
+| | | | | | oracle | 7.228 (1.950x seed) | 6.70 | 1.078 | 3.93 | 0.90 |
+
+- check 2-D projection: vertices within 1.3R projected: 246; local map failed U/V/W 0/0/0; U = mirror of V, gradient (1.1321, -0.6536) wires/cm, fit rows' pu scatter about it 0.58 wire rms
+- check blank plane = no charge cell: 1blank planes 62, no cell at own wire 49 (79.0 %), none within +-1 wire 19 (30.6 %)
+  - per plane U/V/W, no cell at own wire: 20 of 33 / 24 of 24 / 5 of 5; the 1blank planes of vertices > 1 cm off the ridge: 28 of 33
+- check live plane = charge cell: live planes 564, cell at own wire 517 (91.7 %), within +-1 wire 564 (100.0 %); per plane U/V/W own wire: 115 of 162 / 180 of 180 / 222 of 222
+- charge band width (wires, contiguous cells at the vertex's slice): off-ridge 1blank seed vertices, live planes median 2.5 (n 4), blank plane (nearest band) median 2.5 (n 2); on-ridge 3live seed vertices, all planes median 3.0 (n 108)
+- bound: off-ridge 1blank seed vertices whose blank cell lies within the +-3 (wire, slice) disc of a charge cell of the cluster on that plane: 2 of 2
+
+| window terminals | <= 1 cm | 1-2 cm | > 2 cm |
+|---|---|---|---|
+| terminal 3live | 29 | 2 | 0 |
+| terminal 1blank | 5 | 1 | 0 |
+- on-ridge terminals in the window: 34; on the seed: 19
+- off-ridge terminals in the window: 3 (1blank 1); on the seed: 0 (1blank 0)
+

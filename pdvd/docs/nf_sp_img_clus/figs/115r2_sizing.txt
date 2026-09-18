@@ -1,0 +1,18 @@
+## pdhd: events 10; CHECK alpha=0: tree edges 96.09 % of dumped reproduced (amendment 1: judged against the tie floor, PDHD test event 90.2 %), walk cost within 0.5 % on 100.0 % of 225 walks (bar 95 %)
+## pdvd: events 10; CHECK alpha=0: tree edges 95.66 % of dumped reproduced (amendment 1: judged against the tie floor, PDHD test event 90.2 %), walk cost within 0.5 % on 96.6 % of 207 walks (bar 95 %)
+
+| level | det | Q1 S1 rel (bar -20 %) | Q2 far ratio (<= 1.10) | Q2 GAP changed (<= 5 %) | Q3 wig ratio (<= 1.10) | Q4 cov diff (>= -1 pt) | verdict |
+|---|---|---|---|---|---|---|---|
+| 0.25:tree+path | pdhd | -16.6 % FAIL | 0.994 | 2.1 % ok | 1.091 ok | +0.86 ok | FAIL |
+| 0.25:tree+path | pdvd | -9.0 % FAIL | 0.998 | 2.2 % ok | 1.012 ok | +0.19 ok | FAIL |
+| 0.25:tree+path | both | | | | | | no |
+| 0.5:tree+path | pdhd | -17.5 % FAIL | 0.992 | 2.7 % ok | 1.147 FAIL | +0.91 ok | FAIL |
+| 0.5:tree+path | pdvd | -9.9 % FAIL | 0.992 | 4.4 % ok | 1.119 FAIL | +0.24 ok | FAIL |
+| 0.5:tree+path | both | | | | | | no |
+| 1:tree+path | pdhd | -17.1 % FAIL | 0.989 | 2.1 % ok | 1.199 FAIL | +1.01 ok | FAIL |
+| 1:tree+path | pdvd | -11.0 % FAIL | 0.986 | 3.9 % ok | 1.204 FAIL | +0.40 ok | FAIL |
+| 1:tree+path | both | | | | | | no |
+
+## selection (figs/115_sizing_rule.txt): per scope the smallest alpha passing Q1-Q4 on both detectors; else the best alpha by Q1 (mean of the two detectors) among those passing Q2 on both, named as unqualified
+  scope tree: no level passes Q2 on both detectors -> nothing built for this scope
+  scope tree+path: NO level qualifies; best by Q1 among Q2-passing = alpha 1 (mean Q1 -14.0 %; fails Q1, Q3) -> built UNQUALIFIED

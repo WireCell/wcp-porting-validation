@@ -23,7 +23,28 @@ track trajectory and dQ/dx fit results."*
 
 ## Status: the answer
 
-**The question was whether doc 114's terminal knob, this round's base-graph pricing, or both together help the track
+**Round 2 (sec 7, 2026-09-18 — the owner's follow-up):** `tree+path` pricing at α 0.25 / 0.5 / 1 *combined with*
+`prefer3`, graded under a second frozen rule (`figs/115r2_pred.txt`, sha `c953f114…`) whose FIX clauses are
+detour-scoped (DETOUR length, DETOUR + FIT length, the blank-carried sub-classes, the crawl class, the five spot fits,
+`f_low`, shape) and whose arm-wide numbers are no-regression only. No code change; the doc-115 pin.
+
+| level (all `prefer3` + `tree+path`) | DETOUR length H / V | DETOUR + FIT H / V | blank-carried stretches H / V | h1 / h2 / v3 fit | f_low H / V | wiggle H / V | verdict |
+|---|---|---|---|---|---|---|---|
+| base | 12.4 / 8.2 m | 15.2 / 11.2 m | 365 / 221 | 1.77 / 2.55 / 0.91 cm | 0.049 / 0.016 | 4.4 / 9.7 % | |
+| α 0.25 | −52 % / −32 % | −40 % / −18 % | −70 % / −32 % | 0.47 / 0.69 / 1.07 | −5 % / −6 % | +0.1 / +0.9 % | FAIL (H: f_low, shape; V: DETOUR+FIT, blank-carried, v3) |
+| **α 0.5** | −53 % / **−40 %** | −41 % / −4 % | −72 % / −40 % | 0.47 / 0.69 / 1.07 | −10 % / −7 % | +4 / +6 % | FAIL (H: shape +0.004; V: DETOUR+FIT, blank-carried −39.8, v3) |
+| α 1 | **−61 %** / −33 % | −40 % / +6 % | **−81 %** / −43 % | 0.47 / 0.68 / 1.14 | −13 % / +7 % | +10 / **+16 %** | FAIL (V: DETOUR+FIT, v3, f_low, wiggle); **PDHD passes every clause** |
+
+No level passes both detectors. The PDVD DETOUR + FIT miss at α ≥ 0.5 is **one cluster** (039349_61 cl 67): the
+fit grows a 74 cm out-and-back spur along a painted retile stripe in the drift direction (doc 113's ghost class);
+without it α 0.5 reads −19.9 % against −20. v3's fit (1.07) is `prefer3`'s cost at that spot (the pricing alone
+gives 0.54). **Recommendation (sec 7.5): carry `prefer3` + `tree+path` α 0.5 (arms `d115?p3bwp05`) into the tagger /
+PR retune as the working trajectory**; α 1 is the alternative on PDHD alone. The seed-side levers are done: what
+remains is gaps (kept by design) and the fit leaving good seeds. Nothing is flipped.
+
+---
+
+**Round 1.** **The question was whether doc 114's terminal knob, this round's base-graph pricing, or both together help the track
 trajectory and the dQ/dx fit.** Measured on the full sets (PDHD 61 events, PDVD 120) under the rule frozen before
 the arms (`figs/115_pred.txt`, sha `5ca5eedc…`; amendment 1 renames the arm tags only), against this round's
 knob-OFF arms, which equal doc 114's base byte for byte:
@@ -121,6 +142,25 @@ python3 $S/d113_spot_figs.py --out $F/115_spot --logd-root /home/xqian/tmp/d115 
     --arms pdhd=d115hoff:production,d115hp3:prefer3,d115hbw2:alpha2,d115hbwp1:alpha1+path,d115hp3bw2:prefer3+alpha2 \
     --arms pdvd=d115voff:production,d115vp3:prefer3,d115vbw2:alpha2,d115vbwp1:alpha1+path,d115vp3bw2:prefer3+alpha2
 python3 $S/d115_verdict.py > $F/115_verdict.txt
+# --- ROUND 2 (sec 7): no build; the same pin.  The sizing gap, the frozen rule, the six arms, the clause scripts, the verdict
+for x in h:pdhd v:pdvd; do det=${x#*:}; python3 $S/d115_base_replay.py --det $det --arm d115${x%%:*}bd --jobs 4 \
+  --stretches $F/114_support_${det}_stretches.tsv --levels 0:tree,0.25:tree+path,0.5:tree+path,1:tree+path --out $F/115r2_replay_$det; done
+python3 $S/d115_sizing_verdict.py --replay-prefix 115r2_replay_ > $F/115r2_sizing.txt
+for det in pdhd pdvd; do for L in p3bwp025:0.25 p3bwp05:0.5 p3bwp1:1.0; do bash $S/d102_compile_pr.sh $det d115r2_${L%%:*} \
+  -S "steiner_blank_plane_mode='prefer3'" -S steiner_base_weight_blank_alpha=${L#*:} -S "steiner_base_weight_scope='tree+path'"; done; done   # figs/115r2_gate_config.txt
+(cd $F && sha256sum -c 115r2_pred.sha256)     # c953f114...; the launcher refuses without it and checks the pin md5
+DET=pdhd JOBS=5 LEVELS="p3bwp025 p3bwp05 p3bwp1" bash $S/d115r2_run_levels.sh; DET=pdvd JOBS=5 LEVELS="p3bwp025 p3bwp05 p3bwp1" bash $S/d115r2_run_levels.sh
+DET=pdhd bash $S/d115r2_post_arms.sh; DET=pdvd bash $S/d115r2_post_arms.sh
+python3 $S/d113_spot_figs.py --out $F/115r2_spot --logd-root /home/xqian/tmp/d115 \
+    --arms pdhd=d115hoff:production,d115hp3:prefer3,d115hbwp1:alpha1+path,d115hp3bw2:prefer3+alpha2,d115hp3bwp025:prefer3+alpha0.25+path,d115hp3bwp05:prefer3+alpha0.5+path,d115hp3bwp1:prefer3+alpha1+path \
+    --arms pdvd=d115voff:production,d115vp3:prefer3,d115vbwp1:alpha1+path,d115vp3bw2:prefer3+alpha2,d115vp3bwp025:prefer3+alpha0.25+path,d115vp3bwp05:prefer3+alpha0.5+path,d115vp3bwp1:prefer3+alpha1+path
+python3 $S/d115r2_verdict.py --anchors > $F/115r2_verdict.txt
+for det in pdhd pdvd; do for L in p3bwp025 p3bwp05 p3bwp1; do python3 $S/d115r2_adjudicate.py --base $F/115_support_${det}_off_stretches.tsv \
+  --arm $F/115r2_support_${det}_${L}_stretches.tsv --out $F/115r2_newstretch_${det}_$L --top 6; done; done
+python3 $S/d114_case_figs.py --stretches $F/115r2_newstretch_pdhd_p3bwp05_new_stretches.tsv $F/115r2_newstretch_pdvd_p3bwp05_new_stretches.tsv \
+  --arm pdhd=d115hp3bwp05 --arm pdvd=d115vp3bwp05 --classes D-3live,FIT --top 4 --out $F/115r2_case
+python3 $S/d115r2_cluster_fig.py --det pdvd --event 039349_61 --cluster 67 --xr 0 110 --out $F/115r2_case_pdvd_FIT_1_custom \
+  --arms d115voff:production,d115vp3bwp025:prefer3+alpha0.25+path,d115vp3bwp05:prefer3+alpha0.5+path,d115vp3bwp1:prefer3+alpha1+path
 ```
 
 All arms are new tags (M13); their pctrees are symlinks to the production arms' (`d108hflip`, `d103vflip`). Dump
@@ -395,14 +435,15 @@ base tags whose Steiner graph touches a dead channel are lost *less* often than 
 1. **The arm-wide bars.** S1, P1 and R2D are shares of *all* rows / seed length, 90 % of whose unsupported part is
    gap jumps (doc 114); a detour lever cannot move them by 15–20 % without touching the gaps. The next rule should
    gate on the detour-scoped numbers (U1, the DETOUR sub-classes, the spot fits) and on the dQ/dx (D1–D2), and keep
-   S1 / P1 / R2D as no-regression clauses.
+   S1 / P1 / R2D as no-regression clauses. *(Done in round 2, sec 7.)*
 2. **The `tree+path` wiggle.** BWP1 buys its seed gain with 14–18 % more wiggle and a PDVD Bee-hole rise of 1 %;
    the sizing showed α 0.25–0.5 keeps most of the S1 gain with less of it, and that level was not run (the frozen
-   selection took the best-Q1 α).
+   selection took the best-Q1 α). *(Round 2: α 0.25 / 0.5 with `prefer3` keep the wiggle at +0.1…+6 %, sec 7.3.)*
 3. **v3's seed** stays at 1.32–1.53 cm under the pricing although its fit is 0.54 cm: the S1 peak there is carried
    by two-blank interiors that keep no priced alternative inside the window (the image itself is sparse there).
 4. **The `D-3live` and `FIT` growth** under the pricing (sec 5.3) is not adjudicated: whether those are wide-image
-   routes (harmless) or new detours through charged noise needs the doc-114 case figures on the arm.
+   routes (harmless) or new detours through charged noise needs the doc-114 case figures on the arm. *(Round 2,
+   sec 7.4: fourteen of sixteen drawn cases are wide-image; one is a 1.79 m painted-stripe spur on PDVD.)*
 5. **The tags.** Reported only, as the owner directed; the PDVD Michel efficiency moves −0.05 to −0.09 under the
    pricing levels, and the movers are not owner-reviewed (doc 103 showed such sets flip on review).
 6. **The sizing check** reproduces the C++ tree to the tie floor, not exactly (sec 2.1); the levels were compared
@@ -410,6 +451,179 @@ base tags whose Steiner graph touches a dead channel are lost *less* often than 
 7. **Housekeeping.** The output-less `d115?bwa` / `d115?bwb` event dirs of the placeholder launch (sec 5.1) are
    left under `work/` for the owner to remove; the dump arms `d115?bd` (10 events each, base-graph dump on) are
    kept in `/home/xqian/tmp/d115` for the next sizing.
+
+## 7. Round 2 — `tree+path` at α 0.25–0.5 with `prefer3`, graded detour-scoped
+
+**The owner's brief (2026-09-18, after round 1):** run the `tree+path` pricing at a smaller α (0.25–0.5) combined
+with `prefer3`, graded on detour-scoped clauses (DETOUR length and its sub-classes, the spot fits, `f_low` and shape)
+with the arm-wide numbers as no-regression only — the aim being to *finalize the track trajectory fit* so that the
+tagger and the PR code can be retuned on it in the next sessions. No code changes: both knobs exist in `054b72d0`,
+the doc-115 pin (clus md5 `2efa7fa09325`) is reused unchanged, so every round-1 OFF gate stands and `d115?off`
+remains the base.
+
+### 7.1 The levels and the rule
+
+Three arms per detector, all `prefer3` + scope `tree+path`, α **0.25** (`d115?p3bwp025`), **0.5** (`d115?p3bwp05`)
+and **1.0** (`d115?p3bwp1`, the anchor of the series: round 1's BWP1 pricing plus `prefer3`); launched together at
+JOBS 5 after the compiled-config proof (`figs/115r2_gate_config.txt`: each TLA differs from the OFF config only in
+the three keys of the two `CreateSteinerGraph` nodes, with the intended values) and after the rule was frozen
+(`figs/115r2_pred.txt`, sha `c953f114…`; the launcher refuses without the sha and re-checks the pin md5; its
+refusal before the sha existed was exercised: rc 2). The round-1 arms P3, BWP1 and P3BW2 are re-graded under the
+same clauses as anchors (`d115r2_verdict.py --anchors`), so the α series reads against them directly.
+
+FIX, detour-scoped, all required on both detectors: **U1** DETOUR length ≤ base − 30 %; **U1b** DETOUR + FIT length
+≤ base − 20 % (the migration guard: a seed fixed but a fit that then leaves it does not count as a gain); **U2**
+blank-carried detour stretches (`D-blank-term` + `D-blank-int`) ≤ base − 40 %; **U3** `D-crawl` ≤ base; **P5f**
+spot fit maxima h1 ≤ 1.0, h2 ≤ 1.0, v3 ≤ 0.7 cm and every one of the five spots ≤ base + 0.2; **D1** median
+`f_low` ≤ 0.90 × base (PDHD) / ≤ base (PDVD) with paired better ≥ worse; **D2** median shape ≤ base with paired
+better ≥ worse; **D3** `k_pop` ± 2 %; **D4** Bee holes ≤ base. NO REGRESSION, arm-wide: S1, P1, R2D ≤ base (round
+1's FIX numbers demoted), W ≤ 1.10×, P2, P4, P6', Ga–Gd, C, R, and G0 (the pin md5 before and after every arm).
+Reported: the tags, the seed spot maxima, the class table, the FIT / `D-3live` provenance and case figures.
+Recommendation rule: the smallest-α passing level; a larger passing α is the alternative only if it beats it by
+> 10 points on U1 on both detectors; if none passes, the fewest-failing level, named unqualified.
+
+### 7.2 The sizing gap (`figs/115r2_sizing.txt`, `115r2_replay_*`)
+
+α 0.25 `tree+path` had never been replayed. On the same 10-event dumps (seed only, no `prefer3`, judged against the
+tie floor as in sec 2):
+
+| level | S1 seed off-ridge (H / V) | wiggle ratio | far ratio | GAP stretches changed | h1 / v3 seed max |
+|---|---|---|---|---|---|
+| 0.25:tree+path | −16.6 % / −9.0 % | 1.091 / 1.012 | 0.994 / 0.998 | 2.1 / 2.2 % | 1.21 / 1.15 cm |
+| 0.5:tree+path | −17.5 % / −9.9 % | 1.147 / 1.119 | 0.992 / 0.992 | 2.7 / 4.4 % | 1.26 / 1.33 |
+| 1:tree+path | −17.1 % / −11.0 % | 1.199 / 1.204 | 0.989 / 0.986 | 2.1 / 3.9 % | 0.69 / 1.33 |
+
+The seed gain saturates already at α 0.25 (the priced route is a binary choice per chord: once the penalty exceeds
+the geometric saving of the blank short-cut, a larger α changes nothing there), while the wiggle grows with α
+(1.09 → 1.20 on PDHD). This is the prediction input; the sizing bar was not used for selection (the owner fixed the
+range). The frozen predictions (`115r2_pred.txt`): U1 passes everywhere on PDHD and at α ≥ 0.5 on PDVD; **U1b is the
+hard clause on PDVD** (the anchors under it: BWP1 +0.9 % with FIT 3.0 → 5.8 m, P3BW2 −8 %, against −20 %); W fails
+at α 1 and passes at 0.25; h2 ≤ 1.0 needs the priced route (P3 alone leaves 2.11); v3 ≤ 0.7 is uncertain because
+the pricing alone lowers it (0.54) while `prefer3` raises it (1.14, and 1.07 in P3BW2); a clean PASS on both
+detectors was *not* predicted.
+
+### 7.3 Every clause (`figs/115r2_verdict.txt`; H / V; P = pass, **F** = fail)
+
+All six arms complete (PDHD 61, PDVD 120; pin md5 unchanged before and after every arm). Under α 0.5 one event per
+detector (028084_13, 039252_17) has every output written but no STM / Michel candidate tagged — the round-1 pattern
+of 029107_17 — so the runner's candidate-line check flags it; C passes.
+
+| clause | P3BWP025 (α 0.25) | P3BWP05 (α 0.5) | P3BWP1 (α 1) |
+|---|---|---|---|
+| U1 DETOUR length (−30 %) | 5.9 m (−52) / 5.6 m (−32) P/P | 5.8 (−53) / 4.9 (**−40**) P/P | 4.8 (**−61**) / 5.5 (−33) P/P |
+| U1b DETOUR + FIT length (−20 %) | 9.2 (−40) / 9.2 (−17.9) P/**F** | 8.9 (−41) / 10.8 (−3.6) P/**F** | 9.2 (−40) / 11.9 (+6.3) P/**F** |
+| U2 blank-carried stretches (−40 %) | 111 (−70) / 150 (−32) P/**F** | 103 (−72) / 133 (−39.8) P/**F** | 69 (−81) / 127 (−42.5) P/P |
+| U3 D-crawl (≤ base 104 / 99) | 57 / 58 P/P | 44 / 49 P/P | 37 / 47 P/P |
+| P5f spot fits h1, h2 ≤ 1.0; v3 ≤ 0.7; all ≤ base + 0.2 | 0.47, 0.69 / v1 0.52, v2 1.43, **v3 1.07** P/**F** | 0.47, 0.69 / 0.52, 1.43, **1.07** P/**F** | 0.47, 0.68 / 0.52, 1.13, **1.14** P/**F** |
+| D1 median f_low (≤ 0.90× H, ≤ 1× V; paired better ≥ worse) | −5.1 % (111/80) **F** / −6.1 % (203/180) P | **−10.2 %** (112/85) P / −6.7 % (189/189) P | **−12.8 %** (116/85) P / +7.1 % (189/192) **F** |
+| D2 median shape rms (≤ base; paired) | 0.2730 → 0.2753 **F** / 0.1652 → **0.1534** P | 0.2730 → 0.2768 **F** / 0.1660 → 0.1583 P | 0.2839 → 0.2810 P / 0.1665 → 0.1640 P |
+| D3 k_pop (± 2 %); χ² | +0.01 % P / −0.02 % P; 1385 → 1330 / 920 → **771** | −0.09 / −0.06 % P/P; 1257 → 1264 / 861 → 803 | −0.02 / −0.19 % P/P; 1339 → 1281 / 905 → 923 |
+| D4 Bee holes / 10 m (≤ base) | 8.56 → 8.16 / 5.90 → 5.64 P/P | 8.57 → 8.04 / 5.89 → 5.78 P/P | 8.57 → 8.43 / 5.89 → 5.88 P/P |
+| S1 seed off-ridge (≤ base) | −19.2 % / −14.5 % | **−20.1 %** / −15.3 % | −18.9 % / −15.2 % |
+| P1 fit rows > 1 cm (≤ base) | −8.5 % / −4.1 % | −9.0 % / −3.9 % | −8.6 % / −4.5 % |
+| R2D W rows > 1 wire (≤ base) | −4.0 % / −8.5 % | −4.9 % / −9.0 % | −3.8 % / −9.2 % |
+| W wiggle (≤ 1.10×) | +0.1 % / +0.9 % P/P | +4.4 % / +5.8 % P/P | +9.5 % P / **+16.3 % F** |
+| P2, P4, P6', Ga, Gb, Gc, Gd | all pass (Ga 1.57 / 0.76; Gd 7 / 1) | all pass (1.57 / 0.92; 6 / 0) | all pass (1.22 / 0.92; 7 / 2) |
+| C, R, G0 | pass; R 0.975 / 0.968 | pass; 0.971 / 0.957 | pass; 0.953 / 0.983 |
+| T tags (reported) | FAIL / FAIL | UNDECIDED / FAIL | UNDECIDED / FAIL |
+| **verdict** | **FAIL** (H: D1, D2; V: U1b, U2, P5f) | **FAIL** (H: D2; V: U1b, U2, P5f) | **FAIL** (V: U1b, P5f, D1, W) |
+
+The round-1 anchors under the same clauses: P3 fails H: P5f (h2 2.11); V: U1, U1b, U2, P5f, D1 — BWP1 fails H: D2, W; V: U1b,
+U2, D1, D2, D4, W — P3BW2 fails V: U1, U1b, U2, P5f. **No level passes both detectors. On PDHD P3BWP1 passes every
+clause and P3BWP05 misses only the shape median, by 0.004 (paired 123 better / 114 worse: noise level). On PDVD the
+misses are U1b at every α, U2 at α ≤ 0.5 (−39.8 % at α 0.5 against −40), the v3 spot at every α, and at α 1 the wiggle
+and `f_low`.** The rule's fewest-failing level is **P3BWP05**, named UNQUALIFIED (four clauses).
+
+### 7.4 What moved, and where
+
+**The class table** (`figs/115r2_support_*`, stretches; PDHD / PDVD; round-1 anchors for comparison):
+
+| class | base | P3 | BWP1 | P3BW2 | P3BWP025 | P3BWP05 | P3BWP1 |
+|---|---|---|---|---|---|---|---|
+| D-blank-term | 255 / 114 | 57 / 66 | 90 / 91 | 33 / 51 | 37 / 56 | 39 / 56 | 28 / 51 |
+| D-blank-int | 110 / 107 | 121 / 119 | 38 / 51 | 87 / 102 | 74 / 94 | 64 / 77 | 41 / 76 |
+| D-crawl | 104 / 99 | 64 / 77 | 50 / 42 | 61 / 65 | 57 / 58 | 44 / 49 | 37 / 47 |
+| D-3live | 35 / 40 | 43 / 46 | 61 / 60 | 79 / 56 | 63 / 50 | 71 / 56 | 78 / 66 |
+| DETOUR length (m) | 12.4 / 8.2 | 7.5 / 7.2 | 6.1 / 5.5 | 7.1 / 6.0 | 5.9 / 5.6 | 5.8 / 4.9 | 4.8 / 5.5 |
+| FIT stretches | 83 / 110 | 92 / 117 | 107 / 142 | 115 / 131 | 104 / 134 | 100 / 143 | 134 / 147 |
+| FIT length (m) | 2.8 / 3.0 | 3.0 / 3.3 | 4.1 / 5.8 | 3.5 / 4.3 | 3.3 / 3.6 | 3.1 / 5.9 | 4.4 / 6.4 |
+
+The combination does what round 1 predicted: the blank-carried detours fall by 70–81 % on PDHD (both levers add up:
+`prefer3` takes the terminals, 255 → 28–39; the pricing the interiors, 110 → 41–74) and by 32–43 % on PDVD, where
+`D-blank-int` stays at 76–94 (the two-blank interiors of v3's kind keep no priced alternative in a sparse image,
+sec 6.3). The DETOUR length halves on PDHD (−52…−61 %) and falls a third on PDVD. What grows is `D-3live` (35 → 63–78 /
+40 → 50–66: the priced route takes a charged but off-ridge path where the blank chord was) and, on PDVD at α ≥ 0.5,
+the FIT length (3.0 → 5.9 / 6.4 m).
+
+**Provenance of the FIT and `D-3live` stretches** (`figs/115r2_newstretch_<det>_<level>.txt`, matched by place
+between the base and the arm catalogues, both directions). On PDHD at α 0.5 the 100 FIT stretches are 67 matched
+to a base stretch (46 were FIT already, 7 were blank-terminal detours, 5 short gaps, 3 live gaps, 3 blank-interior
+detours) and 33 new, 0.63 m in all, median max ridge offset 1.3 cm; 20 base FIT stretches (0.34 m) are gone. The 71
+`D-3live` stretches are 54 matched (19 were `D-3live`, 14 were blank-terminal and 7 blank-interior detours: the
+seed moved from a blank chord to a charged off-ridge route, the migration the rule expected) and 17 new (0.37 m).
+On PDVD at α 0.25 the new FIT is 41 stretches, 0.84 m, diffuse (the five longest carry 47 %); at α 0.5 it is 47
+stretches and **2.80 m, of which 1.79 m is one stretch** — event 039349_61, cluster 67, 68 rows, 17.8 cm from the
+image — and at α 1 the same stretch out of 3.10 m.
+
+**The case figures** (`figs/115r2_case_*`, the four longest new FIT and `D-3live` stretches per detector at α 0.5,
+drawn with doc 114's tool): fourteen of the sixteen are 1.8–4.8 cm long with a max ridge offset of 1.1–2.4 cm and a
+max distance to the nearest image point of 0.7–1.8 cm — the fit sits *inside* the image band a centimetre or two
+off its PCA ridge (class (a), wide image; e.g. `115r2_case_pdhd_FIT_1_frame.png`, `115r2_case_pdvd_FIT_2_frame.png`).
+One case failed to draw (the tool's window indexer; `pdhd_D-3live_3`). The sixteenth is the 1.79 m stretch, which
+the doc-114 tool cannot window (no record within 12 cm of its centroid), drawn instead in the detector frame
+(`figs/115r2_case_pdvd_FIT_1_custom.png`, `d115r2_cluster_fig.py`): **under α ≥ 0.5 with `prefer3` the fit of
+cluster 67 grows a 74 cm out-and-back spur along the drift axis** at constant (y, z) ≈ (144, 20) cm from the
+track's kink at x ≈ 0 to x ≈ 93, 40 cm (median) from every image point of the cluster; the fit has 85 rows in that
+box against 11 for the base and for α 0.25 (699 → 777 rows, exit length 450 → 553 cm). The Steiner dump explains the
+place, not the trigger: the retiled cloud holds 236 points along that line in every arm (a painted stripe along the
+drift direction, 146 of them two-plane blank, 47 three-plane), with 58–61 Steiner vertices and 14 terminals on it
+in every arm — the doc-111/113 painted-ghost class — and the seed's extent in the box is the same 14 points in every
+arm; the fit's extension step walks the stripe only under `prefer3` + `tree+path` at α ≥ 0.5 (round 1's BWP1, α 1
+without `prefer3`, and P3BW2 do not: 697 / 705 rows, no far row). One cluster, on a knife edge of the lattice ties
+(sec 2.1). Without it, U1b at α 0.5 on PDVD reads −19.9 % (bar −20) and at α 1 −10 %; the rule is applied as
+frozen and the level stays FAIL.
+
+**The spots** (`figs/115r2_spot*`): h1 seed 1.97 → 0.68, fit 1.77 → 0.47 at every α (`prefer3`'s fix); h2 fit
+2.55 → 0.69 at every α (the priced route's fix; `prefer3` alone left 2.11); v1 fit 0.53 → 0.52; v2 fit 1.27 → 1.43
+(α ≤ 0.5) and 1.13 (α 1); **v3 fit 0.91 → 1.07 / 1.07 / 1.14** with seed 1.15 / 1.32 / 1.32. At v3 the two knobs
+conflict: the pricing alone brings the fit to 0.54 (round 1, BW2 and BWP1) and `prefer3` alone takes it to 1.14 by
+dropping 8 of the window's 14 one-blank terminals (doc 114); their combination inherits `prefer3`'s number at this
+spot. The 2-D residual moves as in round 1: W-plane rows > 1 wire off the charge −4…−5 % (PDHD) and −8.5…−9.2 %
+(PDVD), the medians unchanged.
+
+**The dQ/dx** (`figs/115r2_dqdx_*`): on PDHD `f_low` falls 5 / 10 / 13 % with α (paired 111/80, 112/85, 116/85 better
+/ worse), the shape median is flat within ±0.004 (paired 126/108, 123/114, 121/117), χ² 1385 → 1330, 1257 → 1264,
+1339 → 1281; on PDVD `f_low` −6 / −7 / +7 %, the shape median falls 7 / 5 / 2 %, χ² 920 → 771 (α 0.25), 861 → 803,
+905 → 923; `k_pop` is unchanged to 0.2 % everywhere, the Bee holes fall on every level.
+
+**The tags** (`figs/115r2_grade_*`, reported): PDHD `is_stm` purity / efficiency 0.959 / 0.629 → 0.957 / 0.591 (α
+0.25), 0.952 / 0.640 (α 0.5), 0.946 / 0.656 (α 1); Michel 0.880 / 0.702 → 0.847 / 0.692, 0.855 / 0.683, 0.884 /
+0.731 — α 1 raises both efficiencies (+0.027, +0.029) and grades UNDECIDED only through the purity bound. PDVD
+`is_stm` 0.982 / 0.704 → 0.963 / 0.685–0.714; Michel 0.940 / 0.725 → 0.914 / 0.678, 0.901 / 0.691, 0.885 / 0.682:
+the −0.03…−0.05 Michel efficiency cost of every `prefer3` level (doc 114, round 1) is unchanged by α.
+
+### 7.5 The recommendation: the trajectory configuration for the retune session
+
+1. **The seed-side levers are done.** After this round the unsupported trajectory length is gaps (92–93 %, kept by
+   design, every gap clause passes) plus 3–6 m of FIT — a supported seed the fit leaves — and 5–6 m of DETOUR, of
+   which the blank-carried part is 69–133 stretches. A smaller α buys nothing (the S1 gain saturates at 0.25) and a
+   larger α costs wiggle (α 1: +9.5 / +16.3 %). The remaining detour length is either the two-blank interiors of a
+   sparse image (`D-blank-int` on PDVD) or the fit leaving a good seed, and neither is a base-graph or terminal
+   question.
+2. **The configuration to carry into the tagger / PR retune is `prefer3` + `tree+path` at α 0.5 (P3BWP05, arms
+   `d115hp3bwp05` / `d115vp3bwp05`)**, the rule's fewest-failing level, with its four misses named: on PDHD the
+   shape median (+0.004, noise); on PDVD U1b (one cluster's 1.79 m spur; −19.9 % without it), U2 (−39.8 % against
+   −40) and v3 (`prefer3`'s cost at one spot). On PDHD alone α 1 passes every clause and lifts both tag efficiencies,
+   so it is the alternative there; a single cross-detector configuration is α 0.5.
+3. **What the retune session must know.** (a) The tags were tuned on the old trajectories; every pricing level
+   costs the PDVD Michel efficiency 0.03–0.05 and this round leaves that untouched. (b) The `prefer3` / pricing
+   conflict at v3 — and the PDVD U2 / U1b misses — would be settled by the one arm this round did not run, the
+   `tree+path` pricing at α 0.5 *without* `prefer3` on PDVD (round 1 ran it only at α 1), if a per-detector choice is
+   acceptable; (c) the painted-stripe ghost that drives the U1b miss is the doc-113 retile class, and the
+   `retile_mode` knob, not α, is its lever. None of these blocks the retune, which measures the tags on the P3BWP05
+   trajectories as they are.
+4. **Nothing is flipped.** Both knobs stay default-OFF; adopting P3BWP05 in the production configs is the owner's
+   decision, to be taken with the retuned tagger.
 
 ## 8. Files
 
@@ -425,4 +639,7 @@ base tags whose Steiner graph touches a dead channel are lost *less* often than 
 | `scripts/d115_base_replay.py`, `d115_sizing_verdict.py` | sec 2 |
 | `scripts/d115_proj_resid.py`, `d115_dqdx_compare.py` | sec 3 |
 | `scripts/d115_run_levels.sh`, `d115_post_arms.sh`, `d115_verdict.py` | sec 5 |
-| `figs/115_gate_*`, `115_sizing_rule*.txt` (+ `.sha256`), `115_replay_*`, `115_sizing_verdict.txt`, `115_pred.txt` (+ `.sha256`), `115_steiner_*`, `115_eval_*`, `115_compare_*`, `115_support_*`, `115_resid_*`, `115_dqdx_*`, `115_grade_*`, `115_spot*`, `115_verdict.txt`, `115_arms_complete.txt` | results |
+| `figs/115_gate_*`, `115_sizing_rule*.txt` (+ `.sha256`), `115_replay_*`, `115_sizing_verdict.txt`, `115_pred.txt` (+ `.sha256`), `115_steiner_*`, `115_eval_*`, `115_compare_*`, `115_support_*`, `115_resid_*`, `115_dqdx_*`, `115_grade_*`, `115_spot*`, `115_verdict.txt`, `115_arms_complete.txt` | results (round 1) |
+| `scripts/d115r2_run_levels.sh`, `d115r2_post_arms.sh`, `d115r2_verdict.py` | round 2 launcher (sha + pin gate), clause scripts with the `115r2_` prefix, verdict with the round-1 anchors (sec 7.1, 7.3) |
+| `scripts/d115r2_adjudicate.py`, `d115r2_cluster_fig.py`; `d115_sizing_verdict.py --replay-prefix` | FIT / `D-3live` provenance, the detector-frame cluster figure, the round-2 sizing table (sec 7.2, 7.4) |
+| `figs/115r2_replay_*`, `115r2_sizing.txt`, `115r2_gate_config.txt`, `115r2_pred.txt` (+ `.sha256`), `115r2_steiner_*`, `115r2_eval_*`, `115r2_compare_*`, `115r2_support_*`, `115r2_resid_*`, `115r2_dqdx_*`, `115r2_grade_*`, `115r2_spot*`, `115r2_newstretch_*`, `115r2_case_*`, `115r2_verdict.txt`, `115r2_arms_complete.txt` | results (round 2) |

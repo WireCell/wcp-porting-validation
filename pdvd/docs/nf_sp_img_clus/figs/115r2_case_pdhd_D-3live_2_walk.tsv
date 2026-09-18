@@ -1,0 +1,7 @@
+i	arc_cm	vid	off_cm	role	class	blank	qu	qv	qw	dead_uvw	q_dump	q_rms_ok	in_src	in_base	in_len	in_w	near_onridge_term_cm	stretch	cell_u	cell_v	cell_w	blank_dw	blank_dt	band_u	band_v	band_w
+80	-9.00	1700	3.01	interior	3live	-	35	28888	18635	000	19848	1	-	-	-	-	4.20	S0	-1	-1	0/0					3
+81	-4.79	1695	0.83	terminal	3live	-	732	10355	51267	000	30200	1	path	closely_same	4.20	3.853	0.00		-1	-1	0/0					0
+82	-2.40	1522	0.31	interior	3live	-	35743	297	10622	000	21529	1	path	closely_other	2.39	2.185	1.82		-1	-1	1/1					4
+83	-0.80	1523	0.07	interior	3live	-	22366	388	10622	000	14297	1	connect	closely_same	1.60	1.513	0.59		-1	-1	1/1					4
+84	0.00	1524	0.03	terminal	3live	-	15056	879	10622	000	10650	1	path	closely_same	0.80	0.783	0.00		-1	-1	1/1					4
+85	9.31	1528	0.29	extreme	3live	-	77	1001	1423	000	1005	1	sbt	none	9.31	9.312	9.31		-1	-1	1/1					4

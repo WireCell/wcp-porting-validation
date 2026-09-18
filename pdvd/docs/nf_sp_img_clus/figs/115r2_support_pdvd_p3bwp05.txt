@@ -1,0 +1,32 @@
+# doc pdvd/114 support census: det=pdvd arm=d115vp3bwp05 events=120 (missing 0, no image 0); records 1846 (unmatched 0, no image 0, used 1846)
+# thresholds: THR 1.0 cm, HOP 2.0, BALL_PAD 5.0, NEAR 1.5, COVER_SHARE 0.5, DEAD_SHARE 0.5, FIT_SHARE 0.8, MIN_ROWS 2, DEAD_R 1.5
+
+## rows
+- rows 562706 (3667.3 m); UNSUPPORTED (off-charge in >= 1 live plane and > 1.0 cm from the ridge or from every image point) 19699 (3.5 %, 162.9 m); JITTER (off-charge but within 1.0 cm of both) 25565 (4.5 %); WIDE (on charge everywhere, > 1.0 cm off the ridge) 7625 (1.4 %)
+- per plane U/V/W: off-charge 28154 / 34579 / 17099; dead at the row 7776 / 6869 / 3884
+- check (doc 111 sec 4.1): rows > 1.0 cm off the ridge 27473 (4.9 %); unsupported among them 63.2 %, among the rest 0.4 %
+- rows > 1.0 cm from every image point of ANY cluster 26298 (4.7 %); unsupported among them 68.2 %; rows > 1.0 cm from the own-id image but within 1.0 cm of another id's 1595 (0.3 %)
+
+## stretches (>= 2 consecutive unsupported rows)
+- stretches 1981 (single-row runs not counted: 1283); rows 18416; length 151.6 m
+
+| class | stretches | share | rows | length (m) | length share | with a blank-plane seed vertex | open-ended | detour routes with an on-image alternative | mean on-image / seed cost |
+|---|---|---|---|---|---|---|---|---|---|
+| GAP-dead | 127 | 6.4 % | 571 | 4.6 | 3.0 % | 74.0 % | 2 | - | - |
+| GAP-short | 516 | 26.0 % | 2129 | 13.8 | 9.1 % | 73.1 % | 13 | - | - |
+| GAP-live | 934 | 47.1 % | 14360 | 122.0 | 80.5 % | 71.3 % | 6 | - | - |
+| XID | 13 | 0.7 % | 72 | 0.5 | 0.3 % | 46.2 % | 0 | - | - |
+| D-crawl | 49 | 2.5 % | 206 | 1.3 | 0.8 % | 79.6 % | 0 | 17 of 48 | 1.86 |
+| D-bridge | 5 | 0.3 % | 12 | 0.1 | 0.0 % | 60.0 % | 0 | 1 of 5 | 1.00 |
+| D-blank-term | 56 | 2.8 % | 168 | 1.1 | 0.7 % | 100.0 % | 0 | 18 of 56 | 1.35 |
+| D-blank-int | 77 | 3.9 % | 202 | 1.3 | 0.8 % | 100.0 % | 0 | 26 of 77 | 1.42 |
+| D-sbt | 5 | 0.3 % | 13 | 0.1 | 0.1 % | 0.0 % | 0 | 1 of 5 | 1.51 |
+| D-3live | 56 | 2.8 % | 180 | 1.1 | 0.7 % | 0.0 % | 0 | 24 of 56 | 1.65 |
+| FIT | 143 | 7.2 % | 503 | 5.9 | 3.9 % | 0.7 % | 26 | - | - |
+
+| group | stretches | share | length (m) | length share |
+|---|---|---|---|---|
+| GAP | 1577 | 79.6 % | 140.4 | 92.6 % |
+| DETOUR | 248 | 12.5 % | 4.9 | 3.2 % |
+| FIT | 143 | 7.2 % | 5.9 | 3.9 % |
+| XID | 13 | 0.7 % | 0.5 | 0.3 % |

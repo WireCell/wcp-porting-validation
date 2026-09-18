@@ -1,0 +1,25 @@
+# doc pdvd/115 round 2: FIT / D-3live provenance, base figs/115_support_pdhd_off_stretches.tsv vs arm figs/115r2_support_pdhd_p3bwp1_stretches.tsv; join radius max(5.0 cm, mean chord)
+
+## FIT: base 83 stretches 2.81 m; arm 134 stretches 4.41 m
+  arm stretches matched to a base stretch: 78 (by base class: FIT 39 (1.95 m), GAP-live 10 (1.02 m), D-blank-term 10 (0.18 m), GAP-short 10 (0.14 m), D-blank-int 4 (0.10 m), D-crawl 3 (0.04 m), XID 1 (0.01 m), D-3live 1 (0.02 m))
+  arm stretches NEW (no base stretch of any class at the place): 56, 0.95 m, max ridge offset median 1.41 cm, open-ended 6, >= 3 rows 22
+  base stretches LOST (no arm stretch of any class at the place): 26, 0.40 m
+  top 6 new by length x max ridge offset (event cluster pass rows length_cm max_d_ridge max_d_img max_noff seed_vertices):
+    028084_10 52 0 4497-4503 4.69 2.08 1.98 1 3live:i/1blank:t/3live:t/3live:i
+    028084_10 52 0 4508-4514 4.61 1.83 1.60 3 3live:i/3live:t/3live:i/3live:t/3live:i/3live:i
+    029107_20 24 0 329-335 4.30 1.86 1.72 1 3live:e/3live:t/3live:i/3live:t/3live:t
+    028084_21 120 0 5294-5298 3.03 2.30 1.11 1 1dead:t/1dead:i/1dead:i/1dead:i
+    028084_15 50 0 1854-1858 3.51 1.72 0.79 1 3live:i/3live:i
+    028084_21 23 0 145-150 3.71 1.34 1.23 2 3live:i/3live:t/3live:i
+
+## D-3live: base 35 stretches 0.79 m; arm 78 stretches 2.29 m
+  arm stretches matched to a base stretch: 61 (by base class: D-3live 20 (0.49 m), D-blank-term 19 (0.68 m), D-blank-int 7 (0.27 m), GAP-short 6 (0.13 m), GAP-live 3 (0.06 m), XID 3 (0.14 m), FIT 2 (0.09 m), GAP-dead 1 (0.01 m))
+  arm stretches NEW (no base stretch of any class at the place): 17, 0.41 m, max ridge offset median 1.46 cm, open-ended 0, >= 3 rows 10
+  base stretches LOST (no arm stretch of any class at the place): 10, 0.22 m
+  top 6 new by length x max ridge offset (event cluster pass rows length_cm max_d_ridge max_d_img max_noff seed_vertices):
+    029107_20 22 0 126-133 4.52 2.44 1.45 1 3live:t/3live:i/3live:i/3live:i
+    028084_11 34 0 759-765 4.61 2.02 0.69 3 3live:i/3live:i/3live:i/3live:i/3live:i/3live:i
+    029107_4 37 0 2461-2467 4.20 1.67 1.32 1 3live:i/3live:i/3live:i/3live:i/3live:i
+    029107_10 46 0 1926-1931 3.75 1.61 0.95 3 3live:i/3live:i/3live:t/3live:i
+    028084_27 57 0 1788-1795 4.61 1.27 1.38 2 3live:i/3live:t/3live:e
+    028084_17 35 0 1266-1269 2.40 1.62 0.59 3 3live:i/3live:i
