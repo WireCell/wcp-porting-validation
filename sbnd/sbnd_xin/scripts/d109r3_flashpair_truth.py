@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""sbnd_xin/docs/109 rev 3 sec 8.7.2: should nu_dedup_flash_group be flipped?
+"""sbnd_xin/docs/109 rev 3 sec 8.7.2/8.7.3: should nu_dedup_flash_group be flipped?
+
+Short answer measured here: no.  The rule keeps the LONGEST candidate of a flash
+group, and on the one event of 22 where both rows are real reconstructions that
+is the wrong half of a neutrino whose muon crossed the cathode.
 
 The knob collapses neutrino candidates that share a flash_group, keeping the
 LONGEST selected activity.  The 25-event local census (d109r3_dedup_census.py)
@@ -83,7 +87,16 @@ def truth_vertices(run_dir, tag):
             continue
         v = e.get("data", {}).get("start")
         if v:
-            out.append((e.get("text", ""), tuple(v)))
+            # Primary daughters whose start and end straddle x = 0 (the SBND
+            # cathode): a charged one means this interaction's charge lands in
+            # BOTH drift volumes, which is the mechanism behind sec 8.7.3.
+            cross = []
+            for c in e.get("children", []):
+                cs = c.get("data", {}).get("start")
+                ce = c.get("data", {}).get("end")
+                if cs and ce and cs[0] * ce[0] < 0:
+                    cross.append(c.get("text", "").split()[0])
+            out.append((e.get("text", ""), tuple(v), cross))
     return out
 
 
@@ -115,7 +128,7 @@ def main():
         if not tr:
             c["both reconstructed but NO truth available"] += 1
             continue
-        d = [min(dist(r["v"], tv) for _, tv in tr) for r in rows]
+        d = [min(dist(r["v"], tv) for _, tv, _ in tr) for r in rows]
         longest = 0 if rows[0]["L"] >= rows[1]["L"] else 1
         nearest = 0 if d[0] < d[1] else 1
         ok = longest == nearest
@@ -125,8 +138,9 @@ def main():
             print("     row%d gid %8d tpc%d L=%7.1fcm Enu=%7.1f numu=%+.2f d_truth=%7.1fcm%s%s"
                   % (i, r["gid"], r["tpc"], r["L"], r["enu"], r["numu"], d[i],
                      "  <-longest" if i == longest else "", "  <-truth" if i == nearest else ""))
-        for txt, _ in tr[:3]:
-            print("        truth: %s" % txt[:78])
+        for txt, tv, cross in tr[:3]:
+            print("        truth: %s  |x_nu|=%.1f cm  cathode-crossing primaries: %s"
+                  % (txt[:56], abs(tv[0]), ", ".join(cross) or "-"))
     print("\n== totals")
     for k in sorted(c):
         print("  %-44s %d" % (k, c[k]))

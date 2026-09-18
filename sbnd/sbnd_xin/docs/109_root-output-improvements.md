@@ -634,7 +634,7 @@ stage B re-runnable). Rates are per T_tagger row unless stated.
 | 2 — empty/fake candidate | 160 rows | 62 rows | the ROW is **labelled** by doc 109 `has_vertex == 0` and the markers are sharpened here (8.4); the row is not suppressed, and the **upstream cause — why a 0.8 cm cluster is a candidate at all — is NOT fixed (8.10)** |
 | 3 — `T_rec_charge` cluster_id −1 | 344 files all −1, 12 mixed | 89 files all −1, 0 mixed | **broken** — **fixed here** |
 | 4 — two candidates, one fake | 98 two-row events | 25 two-row events | cases 2 + 3 together, so the same split: the `-1` is fixed, the fake row is labelled but kept (8.10) |
-| 5 — same ν on both sides | 22 events | 12 events | **labelled** by `flash_group`; dedup built OFF, measured, and **recommended against** — on the one event of 22 where it must choose it drops the true neutrino (8.7.2) |
+| 5 — same ν on both sides | 22 events | 12 events | **labelled** by `flash_group`. The colleague's title is right: 1 of the 22 is one neutrino whose muon crosses the cathode, split into two candidates; the other 21 are a real candidate plus a sub-10 cm stub. Dedup built OFF, measured, **recommended against** — it deletes where the event needs merging (8.7.2–8.7.3) |
 
 Supporting counts, local sample: `T_proj_data` absent in 1 675 files; a candidate with an
 empty `T_rec_charge` in 43; `nue_score` at its −15 default on 1 260 of 1 460 rows; the
@@ -873,18 +873,85 @@ row1  gid       5  tpc 0  L=104.2 cm  Enu  849.4 MeV  numu +1.12   d(truth) =   
 truth: 1 numu RES CC, Etot 2766.6 MeV, vertex (-10.4684, -193.253, 9.18667)
 ```
 
-**The premise is wrong, not just the tiebreak.** `group_flashes` proves the two *flashes* are
-one; it says nothing about the two *clusters*. Here they are 143 cm apart — a beam neutrino in
-the E drift volume and an in-time cosmic in the W one, sharing one physical flash. Collapsing
-them is not deduplication, it is deletion. Note the numu BDT would not rescue it either: the
-cosmic scores **higher** (+3.43 vs +1.12).
+#### 8.7.3 What case 5 actually is: one interaction split at the cathode
 
-**Recommendation: leave `nu_dedup_flash_group` OFF.** 21 of its 22 opportunities are just
-removing vertex-less placeholder rows, which `has_vertex == 0` already marks without deleting
-anything (8.4), and the 22nd is the case it gets wrong. If a same-flash collapse is wanted
-later, the rule should be a *quality* predicate that **refuses ambiguity** — drop a
-same-group row only when it has no vertex, and keep both when both have one. That handles
-21/22 and declines the 22nd instead of guessing. It is not built here.
+The two rows of r472 s36 e40 are **not** two different objects. Reading the Bee truth tree:
+
+```
+TRUTH  1 numu RES CC at (-10.47, -193.25, 9.19)      <- E drift volume, 10 cm from the cathode
+         mu-  1540.2 MeV   (-10.47,-193.25,  9.19) -> ( 49.56, 82.28, 610.75)   CROSSES x = 0
+         proton 531.7 MeV, pi+ 411.2 MeV             stay near the vertex
+
+RECO   nu 1 (gid 5, tpc 0, cluster 11)   vertex (-10.42,-192.48, 10.06)   <- the vertex + hadrons
+           e- 34 MeV, pi+ 129 MeV -> proton 344 MeV, mu- 9 MeV  ......... but only a muon STUB
+       nu 0 (gid 1000006, tpc 1, cluster 23)  vertex (0.81,-140.66,142.41)  <- ON the cathode
+           mu- 1205 MeV  (0.81,-140.66,142.41) -> (48.87, 14.30, 496.74)  ... the muon's far half
+```
+
+The reco muon of row 0 sits **7.8 cm** from the truth muon's chord at its start and 18.2 cm at
+its end, over a ~600 cm track that scatters — it *is* that muon. So the neutrino's 1540 MeV
+muon crosses the cathode, its charge lands in **both drift volumes**, and the two halves become
+two candidates: one with the vertex and the hadrons but no muon, one with the muon and a fake
+vertex sitting on the cathode. **Neither row is the event.** Row 0's "143 cm from truth" is not
+a different interaction — it is a point 140 cm down the same muon.
+
+**Why the two halves can never be joined at this stage** — a chain of five steps, each correct
+on its own:
+
+1. SBND has two drift volumes, so one scintillation event yields **two `opflash` objects**, one
+   per TPC, gids 1 000 000 apart and a few ns apart.
+2. Clustering is per drift volume, so a cathode-crossing track becomes **two clusters**.
+3. Q/L matches each cluster to **its own TPC's flash**, so the two halves carry *different*
+   `matched_flash_gid`.
+4. The per-bundle selection keys bundles on the **raw gid** → two bundles, two candidates.
+5. Companion gathering requires `matched_flash_gid == gid`
+   (`TaggerCheckNeutrino.cxx`), so the cathode partner — which by construction carries the
+   *other* gid — **can never be a companion**. The halves are structurally unable to rejoin.
+
+`flash_group` is exactly the label that says step 1 happened. SBND production already runs
+`long_muon_cathode_bridge = true`, but that acts *inside* a candidate's PR pass, after step 4
+has already made two of them, and step 5 keeps the partner out of the pass entirely.
+
+**How common is each shape** (22 pairs, joined to Bee truth,
+`docs/109_logs/r3/flashpair_truth_13216.txt`):
+
+| shape | events | what the second row is |
+|---|---|---|
+| a real candidate **+ a junk stub** | **21** | a 0.5–9.5 cm fragment with no reconstruction at all (`has_vertex = 0`). 17 of the 21 have a truth primary crossing the cathode, so it is usually a scrap of the same interaction's charge. **Nothing is double-counted; you get a fake extra row.** |
+| a real **split** | **1** | r472 s36 e40 — one neutrino, two halves, both reconstructed. **This one is genuine double counting.** |
+
+**Cases 4 and 5 of the slides are the same phenomenon.** Mapping the five slide events onto
+this population settles it — the deciding number is the **flash time gap**, not the TPC:
+
+| slide case | event | rows | gids (tpc) | Δt | in the 22? |
+|---|---|---|---|---|---|
+| 1 changing main clusterID | r719 s59 e6 | 1 | 1000003 (1) | — | no — single candidate |
+| 2 empty/fake candidate | r717 s32 e8 | 1 | 4 (0) | — | no — the *only* row is the placeholder |
+| 3 `T_rec_charge` id −1 | r474 s72 e31 | 2 | 2 (0), 1000011 (1) | **709 ns** | **no** — two *different* flashes, so genuinely two different objects; its problem was only the `-1` |
+| **4 two candidates, one empty/fake** | r720 s4 e18 | 2 | 1000005 (1), 1 (0) | **5 ns** | **yes** — one of the 21 stub events |
+| **5 same ν on both sides** | r472 s36 e40 | 2 | 1000006 (1), 5 (0) | **6 ns** | **yes** — the single genuine split |
+
+So the colleague's case 4 and case 5 are **one underlying phenomenon seen at two sizes**: one
+scintillation flash read out by both TPCs, two bundles, two candidates. They differ only in
+whether the cathode-side fragment was big enough to reconstruct — 21 of 22 were not (case-4
+shape), 1 was (case-5 shape). Case 3's two rows look similar in the file but are 709 ns apart,
+i.e. two separate flashes, and must **not** be collapsed.
+
+**Recommendation: leave `nu_dedup_flash_group` OFF.** It treats a *merging* problem as a
+*deletion* problem:
+- for the 21 stub events it deletes a row that `has_vertex == 0` already marks, which the
+  owner chose to mark rather than suppress (8.4);
+- for the one real split it deletes **half the neutrino**, and "keep the longest" keeps the
+  worse half — the muon fragment with a fake cathode vertex and Enu 1313.7 MeV, dropping the
+  row with the real vertex and the hadrons. (Truth Edep is 1765.1 MeV; neither half alone
+  reaches it, which is the point.) The numu BDT would not rescue the choice either: the
+  muon-only half scores **higher**, +3.43 vs +1.12.
+
+**The fix this points at** is step 5, not a dedup: let a bundle's companion set span the flash
+**group** instead of the raw gid, so the cathode partner enters the candidate's PR pass and the
+event is reconstructed once, whole. That is a real selection change needing its own default-OFF
+knob and its own gate, and it would plausibly absorb the 21 stub rows as companions too. **Not
+built here.**
 
 ### 8.8 Gates
 
