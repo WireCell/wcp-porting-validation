@@ -1,0 +1,14 @@
+=== d109r4off2 start 2026-09-17_20:11:27 pin=/home/xqian/tmp/d109r4-libsnap/new2 manifest=m267+eligible env: SBND_NO_DL=1 SBND_NU_BUNDLE_FLASH_GROUP=0 PR_JOBS=16 PR_CFG_TREE=/home/xqian/tmp/d109r4-cfg/new2/cfg
+03e175bc8f49115b0065e0921ce5f3a9  libWireCellClus.so
+8791c1c712daaa042f282240e05ddbae  libWireCellRoot.so
+=== d109r4off2 nuecc48 20:11:27 ids=0 (0 = every event)
+=== d109r4off2 nuecc48 rc=0 dirs=48 not_rc0=0
+=== d109r4off2 ncpi0 20:13:37 ids=0 (0 = every event)
+=== d109r4off2 ncpi0 rc=0 dirs=19 not_rc0=0
+=== d109r4off2 mcp1k 20:14:10 ids=239 (0 = every event)
+=== d109r4off2 mcp1k rc=0 dirs=239 not_rc0=0
+=== d109r4off2 mcp2k 20:20:05 ids=89 (0 = every event)
+=== d109r4off2 mcp2k rc=0 dirs=89 not_rc0=0
+03e175bc8f49115b0065e0921ce5f3a9  libWireCellClus.so
+8791c1c712daaa042f282240e05ddbae  libWireCellRoot.so
+=== d109r4off2 done 2026-09-17_20:22:46

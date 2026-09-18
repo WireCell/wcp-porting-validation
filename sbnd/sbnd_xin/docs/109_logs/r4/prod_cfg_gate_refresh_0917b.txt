@@ -1,0 +1,6 @@
+DRIFT     : prod_prjob.json
+
+SBND PR job, key by key (reference -> current tree):
+  ADDED   [21].data.nu_bundle_flash_group = True
+
+REFRESHED prod-2026-09-17b -- record in the round doc WHICH knob moved and on whose word.

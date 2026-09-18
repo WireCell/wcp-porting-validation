@@ -1,0 +1,25 @@
+== d109 gate d109r4off2 vs d109r4off3 (nuecc48, ncpi0, mcp1k, mcp2k)
+  ALLOWED Trun.cfg_tree                                        395
+  calib-pr absent                                              106
+  calib-pr same                                                395
+  events mcp1k                                                 239
+  events mcp2k                                                 89
+  events ncpi0                                                 19
+  events nuecc48                                               48
+  mabc-pr.zip same                                             395
+  nusel same                                                   395
+  pctree-pr same                                               395
+  root branches compared                                       414555
+  root files compared                                          395
+  root tree compared T_bad_ch                                  395
+  root tree compared T_bundle                                  395
+  root tree compared T_cluster                                 395
+  root tree compared T_flash                                   395
+  root tree compared T_kine                                    289
+  root tree compared T_proj                                    395
+  root tree compared T_proj_data                               395
+  root tree compared T_rec_charge                              395
+  root tree compared T_tagger                                  289
+  root tree compared Trun                                      395
+== failing events: 0
+=== OVERALL: PASS

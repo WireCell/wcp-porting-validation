@@ -1,0 +1,191 @@
+scanned 13216 files; same-flash-group two-row events: 22  (x=0.0 xcut=0.0 gap=20.0 cm)
+
+  r471_s42_e32: KEPT APART  [1 true interaction(s), 1 with a cathode-crossing primary]
+     truth 1 numu QE CC Etot 944.4 MeV Edep 301.1 MeV T 0.634 us          vtx (52.0, -125.3, -352.3) crossing: mu+
+     row0 gid        8 tpc0 sel  22 L   55.7 cm Enu   353.4 d_truth  359.7 cm
+     row1 gid  1000008 tpc1 sel  14 L    2.7 cm Enu     0.0 d_truth  377.5 cm  (placeholder)
+     closest approach of the two bundles (3132 / 0 Bee points): d nan cm at x nan / nan cm
+     -> kept apart, one interaction (split stays split)
+
+  r471_s69_e12: KEPT APART  [3 true interaction(s), 2 with a cathode-crossing primary]
+     truth 1 numu QE CC Etot 587.8 MeV Edep 444.8 MeV T 0.780 us          vtx (25.1, 76.8, 41.3) crossing: mu-
+     truth 2 numu QE CC Etot 667.3 MeV Edep 438.2 MeV T 0.797 us          vtx (107.0, 38.1, -9.0) crossing: -
+     truth 3 numu RES NC Etot 1896.4 MeV Edep 253.4 MeV T 1.510 us        vtx (70.6, -69.6, 351.2) crossing: neutron
+     row0 gid  1000002 tpc1 sel  13 L   77.3 cm Enu   489.6 d_truth    2.1 cm
+     row1 gid        6 tpc0 sel   6 L    1.0 cm Enu     0.0 d_truth   90.7 cm  (placeholder)
+     closest approach of the two bundles (3399 / 0 Bee points): d nan cm at x nan / nan cm
+     -> RIGHT: two interactions kept apart
+
+  r472_s36_e40: MERGED  [1 true interaction(s), 1 with a cathode-crossing primary]
+     truth 1 numu RES CC Etot 2766.6 MeV Edep 1765.1 MeV T 1.443 us       vtx (-10.5, -193.3, 9.2) crossing: mu-
+     row0 gid  1000006 tpc1 sel  23 L  391.4 cm Enu  1313.7 d_truth  143.7 cm
+     row1 gid        5 tpc0 sel  11 L  104.2 cm Enu   849.4 d_truth    1.2 cm
+     closest approach of the two bundles (7925 / 1138 Bee points): d 0.4 cm at x -10.8 / -11.1 cm
+     -> RIGHT: one interaction reunited
+
+  r474_s30_e9: KEPT APART  [2 true interaction(s), 1 with a cathode-crossing primary]
+     truth 1 numu RES CC Etot 2438.2 MeV Edep 1279.6 MeV T 0.989 us       vtx (-55.3, -13.7, -4.0) crossing: pi+
+     truth 2 numu MEC CC Etot 884.7 MeV Edep 743.7 MeV T 0.073 us         vtx (-145.7, 25.0, 360.4) crossing: -
+     row0 gid        2 tpc0 sel  22 L   21.5 cm Enu   349.7 d_truth   84.9 cm
+     row1 gid  1000006 tpc1 sel  14 L    2.9 cm Enu     0.0 d_truth   57.1 cm  (placeholder)
+     closest approach of the two bundles (3322 / 0 Bee points): d nan cm at x nan / nan cm
+     -> RIGHT: two interactions kept apart
+
+  r479_s1_e23: KEPT APART  [1 true interaction(s), 1 with a cathode-crossing primary]
+     truth 1 numu DIS CC Etot 2447.6 MeV Edep 1448.4 MeV T 0.173 us       vtx (-54.9, 16.1, -34.4) crossing: pi+
+     row0 gid        0 tpc0 sel  24 L  125.3 cm Enu   509.7 d_truth   49.2 cm
+     row1 gid  1000005 tpc1 sel  16 L    0.5 cm Enu     0.0 d_truth   66.8 cm  (placeholder)
+     closest approach of the two bundles (5372 / 0 Bee points): d nan cm at x nan / nan cm
+     -> kept apart, one interaction (split stays split)
+
+  r479_s64_e24: MERGED  [1 true interaction(s), 1 with a cathode-crossing primary]
+     truth 1 numu MEC NC Etot 1107.6 MeV Edep 558.0 MeV T 0.732 us        vtx (-29.9, 125.5, 306.4) crossing: proton
+     row0 gid  1000006 tpc1 sel  16 L   64.7 cm Enu   543.9 d_truth   37.0 cm
+     row1 gid        7 tpc0 sel   6 L    0.7 cm Enu     0.0 d_truth  332.4 cm  (placeholder)
+     closest approach of the two bundles (3405 / 3405 Bee points): d 0.0 cm at x 42.0 / 42.0 cm
+     -> RIGHT: one interaction reunited
+
+  r711_s39_e18: KEPT APART  [1 true interaction(s), 1 with a cathode-crossing primary]
+     truth 2 numu QE CC Etot 843.7 MeV Edep 468.4 MeV T 0.340 us          vtx (56.4, -149.4, 443.5) crossing: mu-
+     row0 gid  1000005 tpc1 sel  24 L   78.3 cm Enu   600.6 d_truth    1.7 cm
+     row1 gid       12 tpc0 sel   6 L    2.7 cm Enu     0.0 d_truth  471.4 cm  (placeholder)
+     closest approach of the two bundles (6411 / 0 Bee points): d nan cm at x nan / nan cm
+     -> kept apart, one interaction (split stays split)
+
+  r712_s14_e12: KEPT APART  [1 true interaction(s), 1 with a cathode-crossing primary]
+     truth 1 numu DIS CC Etot 2801.3 MeV Edep 1783.1 MeV T 0.448 us       vtx (2.6, -54.1, 302.5) crossing: mu-
+     row0 gid        2 tpc0 sel  24 L  100.7 cm Enu   510.2 d_truth   32.5 cm
+     row1 gid  1000002 tpc1 sel  15 L    3.0 cm Enu     0.0 d_truth  307.3 cm  (placeholder)
+     closest approach of the two bundles (4791 / 0 Bee points): d nan cm at x nan / nan cm
+     -> kept apart, one interaction (split stays split)
+
+  r712_s41_e24: KEPT APART  [1 true interaction(s), 0 with a cathode-crossing primary]
+     truth 2 numu RES CC Etot 1842.5 MeV Edep 1182.4 MeV T 0.162 us       vtx (-43.2, 146.9, 226.5) crossing: -
+     row0 gid        0 tpc0 sel  21 L   18.0 cm Enu   150.9 d_truth   91.1 cm
+     row1 gid  1000007 tpc1 sel  12 L    1.0 cm Enu     0.0 d_truth  273.4 cm  (placeholder)
+     closest approach of the two bundles (2092 / 0 Bee points): d nan cm at x nan / nan cm
+     -> kept apart, one interaction (split stays split)
+
+  r712_s95_e50: KEPT APART  [1 true interaction(s), 1 with a cathode-crossing primary]
+     truth 2 numu RES CC Etot 3453.0 MeV Edep 2114.3 MeV T 0.932 us       vtx (-13.5, 85.3, -9.4) crossing: mu-
+     row0 gid  1000003 tpc1 sel  25 L   98.3 cm Enu   942.4 d_truth   87.5 cm
+     row1 gid        3 tpc0 sel   8 L    0.9 cm Enu     0.0 d_truth   86.9 cm  (placeholder)
+     closest approach of the two bundles (7396 / 0 Bee points): d nan cm at x nan / nan cm
+     -> kept apart, one interaction (split stays split)
+
+  r713_s6_e6: KEPT APART  [1 true interaction(s), 0 with a cathode-crossing primary]
+     truth 1 numu MEC CC Etot 3981.3 MeV Edep 721.6 MeV T 0.337 us        vtx (94.7, 156.5, -772.7) crossing: -
+     row0 gid  1000000 tpc1 sel  25 L   72.1 cm Enu   329.9 d_truth 1258.5 cm
+     row1 gid        6 tpc0 sel   2 L    6.5 cm Enu     0.0 d_truth  794.0 cm  (placeholder)
+     closest approach of the two bundles (16169 / 0 Bee points): d nan cm at x nan / nan cm
+     -> kept apart, one interaction (split stays split)
+
+  r713_s83_e17: KEPT APART  [1 true interaction(s), 1 with a cathode-crossing primary]
+     truth 2 numu RES CC Etot 1402.9 MeV Edep 612.6 MeV T 0.967 us        vtx (-119.2, -46.9, -33.1) crossing: mu-
+     row0 gid        4 tpc0 sel  26 L   31.3 cm Enu   287.4 d_truth  295.0 cm
+     row1 gid  1000015 tpc1 sel  14 L    8.5 cm Enu     0.0 d_truth  132.3 cm  (placeholder)
+     closest approach of the two bundles (2740 / 0 Bee points): d nan cm at x nan / nan cm
+     -> kept apart, one interaction (split stays split)
+
+  r714_s18_e11: KEPT APART  [1 true interaction(s), 1 with a cathode-crossing primary]
+     truth 1 numu MEC CC Etot 1106.9 MeV Edep 1006.7 MeV T 0.179 us       vtx (23.7, -48.1, 137.7) crossing: mu-,neutron
+     row0 gid  1000008 tpc1 sel  33 L  270.8 cm Enu   921.0 d_truth    0.7 cm
+     row1 gid        9 tpc0 sel   9 L    6.0 cm Enu     0.0 d_truth  147.8 cm  (placeholder)
+     closest approach of the two bundles (7559 / 0 Bee points): d nan cm at x nan / nan cm
+     -> kept apart, one interaction (split stays split)
+
+  r714_s75_e22: KEPT APART  [1 true interaction(s), 1 with a cathode-crossing primary]
+     truth 1 numu MEC CC Etot 448.1 MeV Edep 277.7 MeV T 1.362 us         vtx (-149.6, 196.9, 361.9) crossing: neutron
+     row0 gid        5 tpc0 sel  24 L   37.7 cm Enu   347.6 d_truth    0.7 cm
+     row1 gid  1000003 tpc1 sel  18 L    1.8 cm Enu     0.0 d_truth  438.3 cm  (placeholder)
+     closest approach of the two bundles (4607 / 0 Bee points): d nan cm at x nan / nan cm
+     -> kept apart, one interaction (split stays split)
+
+  r715_s25_e23: KEPT APART  [1 true interaction(s), 1 with a cathode-crossing primary]
+     truth 2 numu DIS CC Etot 3149.0 MeV Edep 1999.7 MeV T 0.476 us       vtx (53.6, 43.0, -27.6) crossing: mu-
+     row0 gid  1000002 tpc1 sel  43 L  125.3 cm Enu   736.0 d_truth  158.1 cm
+     row1 gid        9 tpc0 sel   5 L    1.0 cm Enu     0.0 d_truth   74.1 cm  (placeholder)
+     closest approach of the two bundles (6390 / 0 Bee points): d nan cm at x nan / nan cm
+     -> kept apart, one interaction (split stays split)
+
+  r718_s22_e35: KEPT APART  [1 true interaction(s), 1 with a cathode-crossing primary]
+     truth 3 numu RES NC Etot 739.9 MeV Edep 406.9 MeV T 0.366 us         vtx (20.3, 9.0, 31.9) crossing: numu
+     row0 gid  1000015 tpc1 sel  32 L   31.1 cm Enu   396.9 d_truth   17.2 cm
+     row1 gid       13 tpc0 sel   7 L    1.7 cm Enu     0.0 d_truth   38.8 cm  (placeholder)
+     closest approach of the two bundles (1224 / 0 Bee points): d nan cm at x nan / nan cm
+     -> kept apart, one interaction (split stays split)
+
+  r719_s34_e3: MERGED  [2 true interaction(s), 1 with a cathode-crossing primary]
+     truth 2 numu MEC CC Etot 1144.6 MeV Edep 926.4 MeV T 0.474 us        vtx (-2.8, 150.9, 466.0) crossing: mu-,proton,neutron,neutron
+     truth 3 numu MEC NC Etot 825.1 MeV Edep 130.3 MeV T 1.272 us         vtx (118.3, 194.1, -34.8) crossing: -
+     row0 gid        3 tpc0 sel  28 L   27.7 cm Enu   663.8 d_truth    9.4 cm
+     row1 gid  1000008 tpc1 sel  13 L    1.6 cm Enu     0.0 d_truth  229.9 cm  (placeholder)
+     closest approach of the two bundles (2128 / 2128 Bee points): d 0.0 cm at x -3.5 / -3.5 cm
+     -> !! WRONG: merged two true interactions
+
+  r719_s79_e28: KEPT APART  [1 true interaction(s), 1 with a cathode-crossing primary]
+     truth 2 numu RES CC Etot 1653.5 MeV Edep 844.9 MeV T 1.451 us        vtx (3.9, -3.5, 307.9) crossing: pi+
+     row0 gid        7 tpc0 sel  22 L  118.7 cm Enu   646.8 d_truth   86.2 cm
+     row1 gid  1000004 tpc1 sel  12 L    0.7 cm Enu     0.0 d_truth  307.9 cm  (placeholder)
+     closest approach of the two bundles (9601 / 0 Bee points): d nan cm at x nan / nan cm
+     -> kept apart, one interaction (split stays split)
+
+  r720_s37_e2: KEPT APART  [1 true interaction(s), 0 with a cathode-crossing primary]
+     truth 1 numu QE CC Etot 3806.3 MeV Edep 744.8 MeV T 0.285 us         vtx (36.1, -232.7, -571.7) crossing: -
+     row0 gid  1000007 tpc1 sel  24 L   82.4 cm Enu   324.1 d_truth  731.5 cm
+     row1 gid        8 tpc0 sel   4 L    9.5 cm Enu     0.0 d_truth  618.3 cm  (placeholder)
+     closest approach of the two bundles (6429 / 0 Bee points): d nan cm at x nan / nan cm
+     -> kept apart, one interaction (split stays split)
+
+  r720_s4_e18: KEPT APART  [1 true interaction(s), 1 with a cathode-crossing primary]
+     truth 1 numu DIS NC Etot 6514.4 MeV Edep 995.4 MeV T 0.334 us        vtx (-123.8, 196.4, -280.4) crossing: numu
+     row0 gid  1000005 tpc1 sel  20 L   20.9 cm Enu   529.3 d_truth  300.4 cm
+     row1 gid        1 tpc0 sel   8 L    2.1 cm Enu     0.0 d_truth  364.0 cm  (placeholder)
+     closest approach of the two bundles (4153 / 0 Bee points): d nan cm at x nan / nan cm
+     -> kept apart, one interaction (split stays split)
+
+  r720_s73_e9: KEPT APART  [1 true interaction(s), 1 with a cathode-crossing primary]
+     truth 1 numu DIS NC Etot 3970.0 MeV Edep 1127.3 MeV T 0.976 us       vtx (11.6, -132.2, 216.5) crossing: numu,neutron
+     row0 gid  1000000 tpc1 sel  20 L   88.6 cm Enu  1208.9 d_truth    1.4 cm
+     row1 gid        9 tpc0 sel   6 L    3.1 cm Enu     0.0 d_truth  254.0 cm  (placeholder)
+     closest approach of the two bundles (15095 / 0 Bee points): d nan cm at x nan / nan cm
+     -> kept apart, one interaction (split stays split)
+
+  r720_s75_e8: KEPT APART  [1 true interaction(s), 0 with a cathode-crossing primary]
+     truth 1 numu RES CC Etot 1330.6 MeV Edep 432.9 MeV T 0.723 us        vtx (219.5, -159.0, 77.5) crossing: -
+     row0 gid  1000002 tpc1 sel  18 L   16.8 cm Enu    92.3 d_truth  374.8 cm
+     row1 gid       14 tpc0 sel   1 L    1.6 cm Enu     0.0 d_truth  281.9 cm  (placeholder)
+     closest approach of the two bundles (1484 / 0 Bee points): d nan cm at x nan / nan cm
+     -> kept apart, one interaction (split stays split)
+
+== grades
+  !! WRONG: merged two true interactions                  1
+  RIGHT: one interaction reunited                         2
+  RIGHT: two interactions kept apart                      2
+  both rows reconstructed                                 1
+  kept apart, one interaction (split stays split)         17
+  one row is a placeholder                                21
+
+== closest approach by truth class (d cm, x_a / x_b cm), ascending d
+  r471_s42_e32     d    nan  x    nan /    nan  true_int 1 cross 1 one-stub apart
+  r471_s69_e12     d    nan  x    nan /    nan  true_int 3 cross 2 one-stub apart
+  r472_s36_e40     d    0.4  x  -10.8 /  -11.1  true_int 1 cross 1 both-real MERGED
+  r474_s30_e9      d    nan  x    nan /    nan  true_int 2 cross 1 one-stub apart
+  r479_s1_e23      d    nan  x    nan /    nan  true_int 1 cross 1 one-stub apart
+  r479_s64_e24     d    0.0  x   42.0 /   42.0  true_int 1 cross 1 one-stub MERGED
+  r711_s39_e18     d    nan  x    nan /    nan  true_int 1 cross 1 one-stub apart
+  r712_s14_e12     d    nan  x    nan /    nan  true_int 1 cross 1 one-stub apart
+  r712_s41_e24     d    nan  x    nan /    nan  true_int 1 cross 0 one-stub apart
+  r712_s95_e50     d    nan  x    nan /    nan  true_int 1 cross 1 one-stub apart
+  r713_s6_e6       d    nan  x    nan /    nan  true_int 1 cross 0 one-stub apart
+  r713_s83_e17     d    nan  x    nan /    nan  true_int 1 cross 1 one-stub apart
+  r714_s18_e11     d    nan  x    nan /    nan  true_int 1 cross 1 one-stub apart
+  r714_s75_e22     d    nan  x    nan /    nan  true_int 1 cross 1 one-stub apart
+  r715_s25_e23     d    nan  x    nan /    nan  true_int 1 cross 1 one-stub apart
+  r718_s22_e35     d    nan  x    nan /    nan  true_int 1 cross 1 one-stub apart
+  r719_s34_e3      d    0.0  x   -3.5 /   -3.5  true_int 2 cross 1 one-stub MERGED
+  r719_s79_e28     d    nan  x    nan /    nan  true_int 1 cross 1 one-stub apart
+  r720_s37_e2      d    nan  x    nan /    nan  true_int 1 cross 0 one-stub apart
+  r720_s4_e18      d    nan  x    nan /    nan  true_int 1 cross 1 one-stub apart
+  r720_s73_e9      d    nan  x    nan /    nan  true_int 1 cross 1 one-stub apart
+  r720_s75_e8      d    nan  x    nan /    nan  true_int 1 cross 0 one-stub apart

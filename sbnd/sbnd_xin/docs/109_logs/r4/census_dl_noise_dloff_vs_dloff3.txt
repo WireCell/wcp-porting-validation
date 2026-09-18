@@ -1,0 +1,11 @@
+== nuecc48: 3 events in both arms, 3 eligible
+== ncpi0: 3 events in both arms, 3 eligible
+== mcp1k: 47 events in both arms, 47 eligible
+== mcp2k: 89 events in both arms, 89 eligible
+== totals
+  eligible events                                      142
+  eligible events unchanged (all pairs kept apart)     142
+  events compared                                      142
+  gid pairs kept apart                                 0
+  gid pairs merged                                     0
+  gid pairs tested                                     0

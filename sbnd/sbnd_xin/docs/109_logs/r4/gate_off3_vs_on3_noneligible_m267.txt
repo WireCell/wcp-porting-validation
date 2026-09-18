@@ -1,0 +1,24 @@
+== d109 gate d109r4off3 vs d109r4on3 (nuecc48, ncpi0, mcp1k)
+  ALLOWED Trun.op_config_sha256                                253
+  calib-pr absent                                              106
+  calib-pr same                                                253
+  events mcp1k                                                 192
+  events ncpi0                                                 16
+  events nuecc48                                               45
+  mabc-pr.zip same                                             253
+  nusel same                                                   253
+  pctree-pr same                                               253
+  root branches compared                                       216749
+  root files compared                                          253
+  root tree compared T_bad_ch                                  253
+  root tree compared T_bundle                                  253
+  root tree compared T_cluster                                 253
+  root tree compared T_flash                                   253
+  root tree compared T_kine                                    147
+  root tree compared T_proj                                    253
+  root tree compared T_proj_data                               253
+  root tree compared T_rec_charge                              253
+  root tree compared T_tagger                                  147
+  root tree compared Trun                                      253
+== failing events: 0
+=== OVERALL: PASS

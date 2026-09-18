@@ -1,0 +1,50 @@
+== mcp1k (d109r4on): 1000 files
+  T_bundle reason 0 selected main                                447
+  T_bundle reason 1 selected demoted                             19
+  T_bundle reason 2 all cosmic                                   196
+  T_bundle reason 3 length floor                                 189
+  T_cluster beam_flash=1                                         6616
+  T_cluster fc=1                                                 1153
+  T_cluster rows                                                 56026
+  T_cluster stm=1                                                156
+  T_cluster tgm=1                                                316
+  T_proj_data present                                            1000
+  T_rec_charge present                                           1000
+  T_rec_charge rows                                              134201
+  candidates whose main contributes points                       441
+  candidates whose points are ALL from companions                20
+  candidates with 0 T_rec_charge rows                            5
+  candidates with T_rec_charge rows                              461
+  census filled                                                  1000
+  cluster gid rows                                               55967
+  events                                                         1000
+  events with no T_tagger                                        538
+  flash groups of 2                                              11361
+  flash_tpc == gid//1e6                                          55967
+  flashes                                                        28072
+  flashes in window                                              1485
+  in-window flash groups per event=0                             117
+  in-window flash groups per event=1                             836
+  in-window flash groups per event=2                             47
+  no-row events with in-window flash(es)                         421
+  no-row events with nogid clusters                              0
+  no-row events: T_rec_charge rows                               0
+  no-row why: bundles rejected: all cosmic                       174
+  no-row why: bundles rejected: all cosmic+length floor          3
+  no-row why: bundles rejected: length floor                     175
+  no-row why: no in-window main/demoted cluster                  186
+  rev3 files                                                     1000
+  roster role 0                                                  667
+  roster role 1                                                  1191
+  roster role 2                                                  2957
+  roster role-1 entries also in PR pass                          1175
+  rows                                                           466
+  rows has_vertex=0                                              9
+  rows has_vertex=1                                              457
+  rows vertex_moved_cluster=1                                    0
+  two-row events                                                 4
+  two-row events sharing a flash_group                           1
+  two-row events sharing a group, a row without vertex           1
+== check failures (0 expected everywhere)
+  none
+=== OVERALL: PASS

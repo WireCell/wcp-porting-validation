@@ -1,0 +1,69 @@
+== nuecc48 (d109r4on): 48 files
+  T_bundle reason 0 selected main                                47
+  T_bundle reason 1 selected demoted                             1
+  T_bundle reason 2 all cosmic                                   2
+  T_bundle reason 3 length floor                                 1
+  T_cluster beam_flash=1                                         2021
+  T_cluster fc=1                                                 432
+  T_cluster rows                                                 4392
+  T_cluster stm=1                                                0
+  T_cluster tgm=1                                                14
+  T_proj_data present                                            48
+  T_rec_charge present                                           48
+  T_rec_charge rows                                              36909
+  candidates whose main contributes points                       48
+  candidates whose points are ALL from companions                0
+  candidates with T_rec_charge rows                              48
+  census filled                                                  48
+  cluster gid rows                                               4389
+  events                                                         48
+  flash groups of 2                                              555
+  flash_tpc == gid//1e6                                          4389
+  flashes                                                        1367
+  flashes in window                                              92
+  in-window flash groups per event=1                             43
+  in-window flash groups per event=2                             5
+  rev3 files                                                     48
+  roster role 0                                                  71
+  roster role 1                                                  184
+  roster role 2                                                  1742
+  roster role-1 entries also in PR pass                          183
+  rows                                                           48
+  rows has_vertex=1                                              48
+  rows vertex_moved_cluster=1                                    0
+== ncpi0 (d109r4on): 19 files
+  T_bundle reason 0 selected main                                20
+  T_cluster beam_flash=1                                         765
+  T_cluster fc=1                                                 172
+  T_cluster rows                                                 1872
+  T_cluster stm=1                                                0
+  T_cluster tgm=1                                                7
+  T_proj_data present                                            19
+  T_rec_charge present                                           19
+  T_rec_charge rows                                              13801
+  candidates whose main contributes points                       20
+  candidates whose points are ALL from companions                0
+  candidates with T_rec_charge rows                              20
+  census filled                                                  19
+  cluster gid rows                                               1871
+  events                                                         19
+  flash groups of 2                                              223
+  flash_tpc == gid//1e6                                          1871
+  flashes                                                        552
+  flashes in window                                              37
+  in-window flash groups per event=1                             18
+  in-window flash groups per event=2                             1
+  rev3 files                                                     19
+  roster role 0                                                  29
+  roster role 1                                                  127
+  roster role 2                                                  609
+  roster role-1 entries also in PR pass                          127
+  rows                                                           20
+  rows has_vertex=1                                              20
+  rows vertex_moved_cluster=1                                    0
+  two-row events                                                 1
+  two-row events sharing a flash_group                           0
+  two-row events sharing a group, a row without vertex           0
+== check failures (0 expected everywhere)
+  none
+=== OVERALL: PASS

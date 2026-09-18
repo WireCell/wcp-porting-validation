@@ -1,0 +1,14 @@
+production smoke: DL vertex, flipped working tree (nu_bundle_flash_group=true by default), work-*-d109r4prod
+mcp1k 174422 rows 1 bundles 1 dlfail 0 | g5:18/8 d0.5 in | nu0 sel 18 cid 18 hv 1 mv 0 Enu 432 numu 0.96
+mcp1k 280466 rows 1 bundles 1 dlfail 0 | g2:12/8 d0.5 in | nu0 sel 15 cid 15 hv 1 mv 0 Enu 537 numu -0.58
+mcp1k 317939 rows 1 bundles 1 dlfail 0 | g1:32/17 d3.3 in | nu0 sel 26 cid 26 hv 1 mv 0 Enu 1241 numu 3.41
+mcp1k 409634 rows 1 bundles 1 dlfail 0 | g10:9/21 d0.4 in | nu0 sel 21 cid 63 hv 1 mv 1 Enu 406 numu -0.48
+mcp1k 62583 rows 2 bundles 2 dlfail 0 | g3:30/12 d41.4 not | nu0 sel 25 cid 25 hv 1 mv 0 Enu 419 numu 0.94; nu1 sel 12 cid 12 hv 0 mv 0 Enu 0 numu -1.94
+mcp2k 167612 rows 1 bundles 1 dlfail 0 | g3:7/90 d7.6 in | nu0 sel 26 cid 26 hv 1 mv 0 Enu 694 numu -0.33
+mcp2k 294174 rows 1 bundles 1 dlfail 0 | g7:5/73 d18.2 in | nu0 sel 16 cid 16 hv 1 mv 0 Enu 1313 numu 3.11
+mcp2k 407798 rows 1 bundles 1 dlfail 0 | g6:4/25 d0.3 in | nu0 sel 28 cid 28 hv 1 mv 0 Enu 562 numu 0.74
+mcp2k 72275 rows 1 bundles 1 dlfail 0 | g10:2/21 d0.3 in | nu0 sel 15 cid 15 hv 1 mv 0 Enu 1277 numu 4.54
+mcp2k 73038 rows 1 bundles 1 dlfail 0 | g14:1/23 d0.5 in | nu0 sel 24 cid 24 hv 1 mv 0 Enu 47 numu -2.50
+mcp2k 75206 rows 1 bundles 1 dlfail 0 | g0:20/6 d0.4 in | nu0 sel 10 cid 10 hv 1 mv 0 Enu 513 numu 2.31
+mcp2k 78032 rows 2 bundles 2 dlfail 0 | g1:18/9 d25.2 not | nu0 sel 18 cid 18 hv 1 mv 0 Enu 1163 numu 5.57; nu1 sel 9 cid 9 hv 0 mv 0 Enu 0 numu -1.94
+mcp2k 90751 rows 1 bundles 1 dlfail 0 | g1:5/30 d0.5 in | nu0 sel 30 cid 30 hv 1 mv 0 Enu 862 numu -1.37

@@ -1,0 +1,22 @@
+== d109 gate d109r4h vs d109r4off3 (mcp1k)
+  ALLOWED Trun.cfg_tree                                        200
+  calib-pr absent                                              106
+  calib-pr same                                                200
+  events mcp1k                                                 200
+  mabc-pr.zip same                                             200
+  nusel same                                                   200
+  pctree-pr same                                               200
+  root branches compared                                       142920
+  root files compared                                          200
+  root tree compared T_bad_ch                                  200
+  root tree compared T_bundle                                  200
+  root tree compared T_cluster                                 200
+  root tree compared T_flash                                   200
+  root tree compared T_kine                                    94
+  root tree compared T_proj                                    200
+  root tree compared T_proj_data                               200
+  root tree compared T_rec_charge                              200
+  root tree compared T_tagger                                  94
+  root tree compared Trun                                      200
+== failing events: 0
+=== OVERALL: PASS

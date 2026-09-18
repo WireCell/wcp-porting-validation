@@ -1,0 +1,226 @@
+== nuecc48: 48 events in both arms, 3 eligible
+  pr_evt10550: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 7 (tpc 0) / 1000002 (tpc 1) group 7: clusters 6 / 37 d 14.3 cm x -0.1 / 4.2 -> MERGED
+     partner main cluster 5 (gid 7, L 1.7 cm, TGM=0 STM=0) -> companion of cluster 7 (row gid 1000002)
+     partner main cluster 6 (gid 7, L 0.7 cm, TGM=0 STM=0) -> companion of cluster 7 (row gid 1000002)
+     survivor sel 7: {'bundle': ((38, 0, 3, 7), (40, 0, 5, 7))}
+  pr_evt234638: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 9 (tpc 0) / 1000001 (tpc 1) group 9: clusters 4 / 14 d 0.3 cm x -12.9 / -13.2 -> MERGED
+     partner main cluster 4 (gid 9, L 1.4 cm, TGM=0 STM=0) -> companion of cluster 10 (row gid 1000001)
+     survivor sel 10: {'Enu': (1235.71630859375, 1235.773681640625), 'bundle': ((53, 0, 1, 10), (54, 0, 2, 10))}
+  pr_evt81597: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 0 (tpc 0) / 1000010 (tpc 1) group 0: clusters 30 / 8 d 0.3 cm x 201.4 / 201.7 -> MERGED
+     partner main cluster 8 (gid 1000010, L 1.2 cm, TGM=0 STM=0) -> companion of cluster 19 (row gid 0)
+     survivor sel 19: {'bundle': ((36, 0, 2, 1), (37, 0, 3, 1))}
+== ncpi0: 19 events in both arms, 3 eligible
+  pr_evt285567: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 6 (tpc 0) / 1000000 (tpc 1) group 6: clusters 1 / 15 d 0.4 cm x -0.4 / -0.7 -> MERGED
+     partner main cluster 1 (gid 6, L 1.7 cm, TGM=0 STM=0) -> companion of cluster 8 (row gid 1000000)
+     survivor sel 8: {'bundle': ((40, 0, 1, 5), (41, 0, 2, 5))}
+  pr_evt314838: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 8 (tpc 0) / 1000001 (tpc 1) group 8: clusters 7 / 17 d 16.5 cm x 2.6 / -3.6 -> MERGED
+     partner main cluster 7 (gid 8, L 7.9 cm, TGM=0 STM=0) -> companion of cluster 13 (row gid 1000001)
+     survivor sel 13: {'bundle': ((30, 0, 1, 7), (31, 0, 2, 7))}
+  pr_evt521075: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 7 (tpc 0) / 1000008 (tpc 1) group 7: clusters 26 / 9 d 0.4 cm x 201.1 / 201.5 -> MERGED
+     partner main cluster 9 (gid 1000008, L 1.6 cm, TGM=0 STM=0) -> companion of cluster 18 (row gid 7)
+     partner main cluster 10 (gid 1000008, L 1.1 cm, TGM=0 STM=0) -> companion of cluster 18 (row gid 7)
+     survivor sel 18: {'bundle': ((14, 0, 2, 4), (16, 0, 4, 4))}
+== mcp1k: 239 events in both arms, 47 eligible
+  pr_evt169626: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 4 (tpc 0) / 1000007 (tpc 1) group 4: clusters 23 / 4 d 0.3 cm x 201.2 / 201.5 -> MERGED
+     partner main cluster 4 (gid 1000007, L 1.6 cm, TGM=0 STM=0) -> companion of cluster 13 (row gid 4)
+     survivor sel 13: {'bundle': ((23, 0, 1, 9), (24, 0, 2, 9))}
+  pr_evt169758: 1 -> 1 rows; bundles 2 -> 2
+     pair gid 3 (tpc 0) / 1000003 (tpc 1) group 3: clusters 6 / 3 d 18.7 cm x 2.4 / -8.9 -> MERGED
+  pr_evt169890: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 7 (tpc 0) / 1000012 (tpc 1) group 7: clusters 30 / 9 d 0.4 cm x 0.5 / 0.2 -> MERGED
+     partner main cluster 9 (gid 1000012, L 3.2 cm, TGM=0 STM=0) -> companion of cluster 21 (row gid 7)
+     survivor sel 21: {'bundle': ((1, 1, 1, 1), (2, 1, 2, 1))}
+  pr_evt171358: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 9 (tpc 0) / 1000004 (tpc 1) group 9: clusters 1 / 17 d 0.4 cm x -201.7 / -201.4 -> MERGED
+     partner main cluster 1 (gid 9, L 0.7 cm, TGM=0 STM=0) -> companion of cluster 10 (row gid 1000004)
+     survivor sel 10: {'bundle': ((8, 0, 1, 3), (9, 0, 2, 3))}
+  pr_evt174422: 2 -> 1 rows; bundles 2 -> 1
+     pair gid 5 (tpc 0) / 1000003 (tpc 1) group 5: clusters 18 / 8 d 0.5 cm x 0.7 / 0.4 -> MERGED
+     partner main cluster 8 (gid 1000003, L 10.3 cm, TGM=0 STM=0) -> companion of cluster 18 (row gid 5)
+     dropped  sel 8 gid 1000003 tpc 1 has_vertex 0 Enu 0.0 numu -1.942 vtx (0.0, 0.0, 0.0)
+     survivor sel 18: {'bundle': ((3, 0, 2, 2), (4, 0, 3, 2))}
+  pr_evt279445: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 4 (tpc 0) / 1000009 (tpc 1) group 4: clusters 26 / 11 d 0.3 cm x 0.7 / 0.4 -> MERGED
+     partner main cluster 11 (gid 1000009, L 2.4 cm, TGM=0 STM=0) -> companion of cluster 19 (row gid 4)
+     survivor sel 19: {'bundle': ((7, 0, 2, 4), (8, 0, 3, 4))}
+  pr_evt280466: 2 -> 1 rows; bundles 2 -> 1
+     pair gid 2 (tpc 0) / 1000000 (tpc 1) group 2: clusters 12 / 8 d 0.5 cm x 111.0 / 111.3 -> MERGED
+     partner main cluster 8 (gid 1000000, L 1.3 cm, TGM=0 STM=0) -> companion of cluster 15 (row gid 2)
+     partner main cluster 9 (gid 1000000, L 1.2 cm, TGM=0 STM=0) -> companion of cluster 15 (row gid 2)
+     dropped  sel 8 gid 1000000 tpc 1 has_vertex 0 Enu 0.0 numu -1.942 vtx (0.0, 0.0, 0.0)
+     survivor sel 15: {'Enu': (536.6424560546875, 536.80908203125), 'bundle': ((15, 0, 1, 11), (17, 0, 3, 11))}
+  pr_evt280994: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 5 (tpc 0) / 1000012 (tpc 1) group 5: clusters 32 / 7 d 0.3 cm x 0.5 / 0.2 -> MERGED
+     partner main cluster 7 (gid 1000012, L 2.1 cm, TGM=0 STM=0) -> companion of cluster 18 (row gid 5)
+     survivor sel 18: {'bundle': ((4, 0, 1, 2), (5, 0, 2, 2))}
+  pr_evt281505: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 5 (tpc 0) / 1000013 (tpc 1) group 5: clusters 24 / 7 d 0.3 cm x 201.1 / 201.5 -> MERGED
+     partner main cluster 7 (gid 1000013, L 1.1 cm, TGM=0 STM=0) -> companion of cluster 18 (row gid 5)
+     partner main cluster 8 (gid 1000013, L 1.0 cm, TGM=0 STM=0) -> companion of cluster 18 (row gid 5)
+     survivor sel 18: {'bundle': ((7, 0, 1, 2), (9, 0, 3, 2))}
+  pr_evt281595: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 6 (tpc 0) / 1000007 (tpc 1) group 6: clusters 4 / 20 d 0.5 cm x -0.4 / -0.7 -> MERGED
+     partner main cluster 4 (gid 6, L 2.1 cm, TGM=0 STM=0) -> companion of cluster 20 (row gid 1000007)
+     survivor sel 20: {'Enu': (1103.2830810546875, 1103.2847900390625), 'bundle': ((2, 0, 1, 1), (3, 0, 2, 1))}
+  pr_evt283463: 1 -> 1 rows; bundles 2 -> 2
+     pair gid 8 (tpc 0) / 1000010 (tpc 1) group 8: clusters 25 / 9 d 0.3 cm x 52.3 / 52.0 -> MERGED
+  pr_evt285531: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 6 (tpc 0) / 1000008 (tpc 1) group 6: clusters 4 / 15 d 0.3 cm x -0.2 / -0.5 -> MERGED
+     partner main cluster 4 (gid 6, L 1.2 cm, TGM=0 STM=0) -> companion of cluster 15 (row gid 1000008)
+     survivor sel 15: {'bundle': ((2, 0, 1, 0), (3, 0, 2, 0))}
+  pr_evt285652: 1 -> 1 rows; bundles 2 -> 2
+     pair gid 4 (tpc 0) / 1000001 (tpc 1) group 4: clusters 6 / 18 d 0.4 cm x -201.7 / -201.4 -> MERGED
+  pr_evt288745: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 6 (tpc 0) / 1000010 (tpc 1) group 6: clusters 94 / 16 d 19.7 cm x 7.0 / -2.1 -> MERGED
+     partner main cluster 16 (gid 1000010, L 6.5 cm, TGM=0 STM=0) -> companion of cluster 23 (row gid 6)
+     survivor sel 23: {'bundle': ((16, 0, 1, 5), (17, 0, 2, 5))}
+  pr_evt289141: 1 -> 1 rows; bundles 2 -> 2
+     pair gid 1 (tpc 0) / 1000011 (tpc 1) group 1: clusters 22 / 8 d 0.3 cm x 201.4 / 201.7 -> MERGED
+  pr_evt289559: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 6 (tpc 0) / 1000003 (tpc 1) group 6: clusters 4 / 14 d 0.3 cm x -0.2 / -0.6 -> MERGED
+     partner main cluster 4 (gid 6, L 1.6 cm, TGM=0 STM=0) -> companion of cluster 14 (row gid 1000003)
+     survivor sel 14: {'Enu': (956.1566772460938, 956.85546875), 'bundle': ((3, 0, 1, 0), (4, 0, 2, 0))}
+  pr_evt292384: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 5 (tpc 0) / 1000002 (tpc 1) group 5: clusters 19 / 15 d 0.5 cm x 0.8 / 0.4 -> MERGED
+     partner main cluster 15 (gid 1000002, L 0.7 cm, TGM=0 STM=0) -> companion of cluster 19 (row gid 5)
+     survivor sel 19: {'bundle': ((8, 0, 2, 1), (9, 0, 3, 1))}
+  pr_evt292797: 1 -> 1 rows; bundles 2 -> 2
+     pair gid 9 (tpc 0) / 1000008 (tpc 1) group 9: clusters 4 / 27 d 0.3 cm x -0.4 / -0.7 -> MERGED
+  pr_evt315497: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 8 (tpc 0) / 1000010 (tpc 1) group 8: clusters 3 / 14 d 4.4 cm x -0.4 / 1.6 -> MERGED
+     partner main cluster 3 (gid 8, L 10.8 cm, TGM=0 STM=0) -> companion of cluster 14 (row gid 1000010)
+     survivor sel 14: {'bundle': ((10, 0, 1, 0), (11, 0, 2, 0))}
+  pr_evt317939: 2 -> 1 rows; bundles 2 -> 1
+     pair gid 1 (tpc 0) / 1000013 (tpc 1) group 1: clusters 32 / 17 d 3.3 cm x 199.9 / 203.0 -> MERGED
+     partner main cluster 17 (gid 1000013, L 16.8 cm, TGM=0 STM=0) -> companion of cluster 26 (row gid 1)
+     dropped  sel 17 gid 1000013 tpc 1 has_vertex 0 Enu 0.0 numu -1.942 vtx (0.0, 0.0, 0.0)
+     survivor sel 26: {'bundle': ((25, 1, 1, 22), (26, 1, 2, 22))}
+  pr_evt318049: 1 -> 1 rows; bundles 2 -> 2
+     pair gid 6 (tpc 0) / 1000004 (tpc 1) group 6: clusters 12 / 9 d 0.3 cm x 0.7 / 0.4 -> MERGED
+  pr_evt320667: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 2 (tpc 0) / 1000010 (tpc 1) group 2: clusters 30 / 17 d 0.6 cm x 104.1 / 103.7 -> MERGED
+     partner main cluster 17 (gid 1000010, L 0.8 cm, TGM=0 STM=0) -> companion of cluster 21 (row gid 2)
+     survivor sel 21: {'bundle': ((12, 0, 1, 7), (13, 0, 2, 7))}
+  pr_evt349549: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 3 (tpc 0) / 1000002 (tpc 1) group 3: clusters 3 / 12 d 0.3 cm x -0.4 / -0.7 -> MERGED
+     partner main cluster 3 (gid 3, L 0.8 cm, TGM=0 STM=0) -> companion of cluster 12 (row gid 1000002)
+     survivor sel 12: {'bundle': ((36, 0, 2, 23), (37, 0, 3, 23))}
+  pr_evt388026: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 0 (tpc 0) / 1000010 (tpc 1) group 0: clusters 24 / 2 d 0.3 cm x 0.7 / 0.4 -> MERGED
+     partner main cluster 2 (gid 1000010, L 1.0 cm, TGM=0 STM=0) -> companion of cluster 12 (row gid 0)
+     survivor sel 12: {'bundle': ((6, 0, 1, 4), (7, 0, 2, 4))}
+  pr_evt398238: 1 -> 1 rows; bundles 2 -> 2
+     pair gid 10 (tpc 0) / 1000006 (tpc 1) group 10: clusters 7 / 13 d 0.3 cm x -0.4 / -0.8 -> MERGED
+  pr_evt401054: 1 -> 1 rows; bundles 2 -> 2
+     pair gid 6 (tpc 0) / 1000009 (tpc 1) group 6: clusters 16 / 6 d 0.3 cm x 0.7 / 0.4 -> MERGED
+  pr_evt404684: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 3 (tpc 0) / 1000010 (tpc 1) group 3: clusters 2 / 9 d 0.5 cm x -0.2 / -0.5 -> MERGED
+     partner main cluster 2 (gid 3, L 1.7 cm, TGM=0 STM=0) -> companion of cluster 9 (row gid 1000010)
+     survivor sel 9: {'bundle': ((0, 0, 1, 0), (1, 0, 2, 0))}
+  pr_evt407170: 1 -> 1 rows; bundles 2 -> 2
+     pair gid 13 (tpc 0) / 1000001 (tpc 1) group 13: clusters 8 / 22 d 17.3 cm x 5.7 / -6.4 -> MERGED
+  pr_evt408094: 1 -> 1 rows; bundles 2 -> 2
+     pair gid 5 (tpc 0) / 1000016 (tpc 1) group 5: clusters 58 / 15 d 0.4 cm x 0.6 / 0.3 -> MERGED
+  pr_evt409282: 1 -> 1 rows; bundles 2 -> 2
+     pair gid 0 (tpc 0) / 1000001 (tpc 1) group 0: clusters 9 / 4 d 0.3 cm x 201.4 / 201.7 -> MERGED
+  pr_evt409634: 2 -> 1 rows; bundles 2 -> 1
+     pair gid 10 (tpc 0) / 1000003 (tpc 1) group 10: clusters 9 / 21 d 0.4 cm x -0.4 / -0.7 -> MERGED
+     partner main cluster 9 (gid 10, L 15.6 cm, TGM=0 STM=0) -> companion of cluster 21 (row gid 1000003)
+     dropped  sel 9 gid 10 tpc 0 has_vertex 0 Enu 0.0 numu -1.942 vtx (0.0, 0.0, 0.0)
+     survivor sel 21: {'bundle': ((15, 0, 1, 7), (16, 0, 2, 7))}
+  pr_evt489327: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 1 (tpc 0) / 1000014 (tpc 1) group 1: clusters 27 / 7 d 0.3 cm x 0.5 / 0.2 -> MERGED
+     partner main cluster 7 (gid 1000014, L 4.4 cm, TGM=0 STM=0) -> companion of cluster 19 (row gid 1)
+     survivor sel 19: {'Enu': (1483.901123046875, 1485.0467529296875), 'nue_score': (-7.8604416847229, -8.497575759887695), 'bundle': ((19, 0, 2, 1), (20, 0, 3, 1))}
+  pr_evt57661: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 7 (tpc 0) / 1000005 (tpc 1) group 7: clusters 3 / 23 d 11.5 cm x -0.2 / -4.3 -> MERGED
+     partner main cluster 3 (gid 7, L 2.7 cm, TGM=0 STM=0) -> companion of cluster 18 (row gid 1000005)
+     partner main cluster 4 (gid 7, L 8.1 cm, TGM=0 STM=0) -> companion of cluster 18 (row gid 1000005)
+     survivor sel 18: {'bundle': ((12, 0, 1, 11), (14, 0, 3, 11))}
+  pr_evt58343: 1 -> 1 rows; bundles 2 -> 2
+     pair gid 10 (tpc 0) / 1000006 (tpc 1) group 10: clusters 2 / 22 d 0.3 cm x -0.2 / -0.5 -> MERGED
+  pr_evt59047: 1 -> 1 rows; bundles 2 -> 2
+     pair gid 1 (tpc 0) / 1000005 (tpc 1) group 1: clusters 2 / 5 d 0.4 cm x -0.4 / -0.7 -> MERGED
+  pr_evt59261: 1 -> 1 rows; bundles 2 -> 1
+     pair gid 12 (tpc 0) / 1000003 (tpc 1) group 12: clusters 2 / 17 d 0.3 cm x -201.7 / -201.4 -> MERGED
+     partner main cluster 2 (gid 12, L 0.9 cm, TGM=0 STM=0) -> companion of cluster 11 (row gid 1000003)
+     survivor sel 11: {'bundle': ((8, 0, 1, 4), (9, 0, 2, 4))}
+== totals
+    surviving-row field changed: Enu                   5
+    surviving-row field changed: bundle                29
+    surviving-row field changed: nue_score             1
+  dropped rows with NO vertex (placeholder)            4
+  eligible events                                      53
+  eligible events unchanged (all pairs kept apart)     11
+  events compared                                      306
+  events with a changed surviving row                  29
+  events with a dropped row                            4
+  events with a merge                                  42
+  events with a partner main admitted                  29
+  gid pairs kept apart                                 11
+  gid pairs merged                                     42
+  gid pairs tested                                     53
+  non-eligible events                                  253
+  partner mains admitted                               34
+  rows dropped                                         4
+== closest-approach distances of every tested pair (cm), ascending
+       0.3  MERGED  pr_evt234638
+       0.3  MERGED  pr_evt81597
+       0.3  MERGED  pr_evt169626
+       0.3  MERGED  pr_evt279445
+       0.3  MERGED  pr_evt280994
+       0.3  MERGED  pr_evt281505
+       0.3  MERGED  pr_evt283463
+       0.3  MERGED  pr_evt285531
+       0.3  MERGED  pr_evt289141
+       0.3  MERGED  pr_evt289559
+       0.3  MERGED  pr_evt292797
+       0.3  MERGED  pr_evt318049
+       0.3  MERGED  pr_evt349549
+       0.3  MERGED  pr_evt388026
+       0.3  MERGED  pr_evt398238
+       0.3  MERGED  pr_evt401054
+       0.3  MERGED  pr_evt409282
+       0.3  MERGED  pr_evt489327
+       0.3  MERGED  pr_evt58343
+       0.3  MERGED  pr_evt59261
+       0.4  MERGED  pr_evt285567
+       0.4  MERGED  pr_evt521075
+       0.4  MERGED  pr_evt169890
+       0.4  MERGED  pr_evt171358
+       0.4  MERGED  pr_evt285652
+       0.4  MERGED  pr_evt408094
+       0.4  MERGED  pr_evt409634
+       0.4  MERGED  pr_evt59047
+       0.5  MERGED  pr_evt174422
+       0.5  MERGED  pr_evt280466
+       0.5  MERGED  pr_evt281595
+       0.5  MERGED  pr_evt292384
+       0.5  MERGED  pr_evt404684
+       0.6  MERGED  pr_evt320667
+       3.3  MERGED  pr_evt317939
+       4.4  MERGED  pr_evt315497
+      11.5  MERGED  pr_evt57661
+      14.3  MERGED  pr_evt10550
+      16.5  MERGED  pr_evt314838
+      17.3  MERGED  pr_evt407170
+      18.7  MERGED  pr_evt169758
+      19.7  MERGED  pr_evt288745
+      24.8  apart   pr_evt321107
+      29.1  apart   pr_evt68978
+      30.6  apart   pr_evt400274
+      32.9  apart   pr_evt285665
+      35.9  apart   pr_evt50303
+      39.7  apart   pr_evt59335
+      41.4  apart   pr_evt395654
+      41.4  apart   pr_evt62583
+      44.0  apart   pr_evt53427
+      51.1  apart   pr_evt387102
+      63.3  apart   pr_evt313979

@@ -1,0 +1,3 @@
+compiling : /home/xqian/tmp/prodcfg-0v6zsczl
+checked   : 21 artifacts
+PASS -- the compiled operating point matches prod-2026-09-17b

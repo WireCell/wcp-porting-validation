@@ -1,0 +1,4 @@
+SBND PR job, key by key (reference -> current tree):
+  ADDED   [21].data.nu_bundle_flash_group = True
+
+If this drift is an intended flip, re-run with --refresh and record it in the

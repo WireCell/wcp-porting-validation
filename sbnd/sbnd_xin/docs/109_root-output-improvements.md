@@ -633,8 +633,8 @@ stage B re-runnable). Rates are per T_tagger row unless stated.
 | 1 — main clusterID changes | 488 of 6 236 rows | 122 of 1 460 rows | **labelled** by doc 109 (`sel_cluster_id`, `vertex_moved_cluster`), but `T_rec_charge` still does not join — **fixed here** |
 | 2 — empty/fake candidate | 160 rows | 62 rows | the ROW is **labelled** by doc 109 `has_vertex == 0` and the markers are sharpened here (8.4); the row is not suppressed, and the **upstream cause — why a 0.8 cm cluster is a candidate at all — is NOT fixed (8.10)** |
 | 3 — `T_rec_charge` cluster_id −1 | 344 files all −1, 12 mixed | 89 files all −1, 0 mixed | **broken** — **fixed here** |
-| 4 — two candidates, one fake | 98 two-row events | 25 two-row events | cases 2 + 3 together, so the same split: the `-1` is fixed, the fake row is labelled but kept (8.10) |
-| 5 — same ν on both sides | 22 events | 12 events | **labelled** by `flash_group`. The colleague's title is right: 1 of the 22 is one neutrino whose muon crosses the cathode, split into two candidates; the other 21 are a real candidate plus a sub-10 cm stub. Dedup built OFF, measured, **recommended against** — it deletes where the event needs merging (8.7.2–8.7.3) |
+| 4 — two candidates, one fake | 98 two-row events | 25 two-row events | cases 2 + 3 together, so the same split: the `-1` is fixed, the fake row is labelled but kept (8.10). **Rev 4 (sec 9): the fake row's stub is folded into the real candidate as a companion when the two bundles touch — 10 of the 12 local pairs; the other 2 keep their labelled row** |
+| 5 — same ν on both sides | 22 events | 12 events | **labelled** by `flash_group`. The colleague's title is right: 1 of the 22 is one neutrino whose muon crosses the cathode, split into two candidates; the other 21 are a real candidate plus a sub-10 cm stub. Dedup built OFF, measured, **recommended against** — it deletes where the event needs merging (8.7.2–8.7.3). **Rev 4 (sec 9): the two bundles are MERGED into one candidate when their charge touches; ON in SBND production** |
 
 Supporting counts, local sample: `T_proj_data` absent in 1 675 files; a candidate with an
 empty `T_rec_charge` in 43; `nue_score` at its −15 default on 1 260 of 1 460 rows; the
@@ -1174,6 +1174,290 @@ stay **false**, so the lar 1-step chain, PDHD, PDVD and uBooNE do not move.
   each bundle, so it is left as is.
 - **`nue_score == -15` is not a defect** (8.4). `br_filled` distinguishes "never scored" from
   "scored as background" and is already in the file.
-- **`nu_dedup_flash_group` is not flipped** (8.7).
+- **`nu_dedup_flash_group` is not flipped** (8.7). Rev 4 (sec 9) builds the merge instead and
+  flips *that*.
 - **Unchanged from rev 1:** the one-file-name-per-process limitation of the two writers, and
   the 80 ns flash-t0 merge bookkeeping issue (doc pr/94 sec 9.8).
+
+## 9. Revision 4 (2026-09-18): one candidate per physical flash — `nu_bundle_flash_group`
+
+**Repro (rev 4).**
+```bash
+cd wcp-porting-img/sbnd/sbnd_xin
+scripts/d109r4_eligible_census.py                     # 142 eligible events -> docs/109_logs/r4/events_eligible_*.txt
+scripts/d109r4_flashpair_contact_truth.py /nfs/data/1/xqian/sbnd_data/run   # the colleague's 22 pairs vs truth
+# pins: ~/tmp/d109r4-libsnap/{head,new3}, cfg ~/tmp/d109r4-cfg/{head,new3}/cfg (md5 in docs/109_logs/r4/libsnap.md5)
+scripts/d109r4_arms.sh d109r4h    ~/tmp/d109r4-libsnap/head m267          SBND_NO_DL=1 PR_CFG_TREE=~/tmp/d109r4-cfg/head/cfg
+scripts/d109r4_arms.sh d109r4off3 ~/tmp/d109r4-libsnap/new3 m267+eligible SBND_NO_DL=1 SBND_NU_BUNDLE_FLASH_GROUP=0 PR_CFG_TREE=~/tmp/d109r4-cfg/new3/cfg
+scripts/d109r4_arms.sh d109r4on3  ~/tmp/d109r4-libsnap/new3 all           SBND_NO_DL=1 SBND_NU_BUNDLE_FLASH_GROUP=1 PR_CFG_TREE=~/tmp/d109r4-cfg/new3/cfg
+scripts/d109r4_dl_arm.sh d109r4dloff3 ~/tmp/d109r4-libsnap/new3 0 PR_CFG_TREE=~/tmp/d109r4-cfg/new3/cfg   # DL vertex
+scripts/d109r4_dl_arm.sh d109r4dlon3  ~/tmp/d109r4-libsnap/new3 1 PR_CFG_TREE=~/tmp/d109r4-cfg/new3/cfg
+scripts/d109_gate.py d109r4h d109r4off3 --samples nuecc48 ncpi0 --allow Trun.cfg_tree
+scripts/d109_gate.py d109r4h d109r4off3 --samples mcp1k --events docs/109_logs/events_mcp1k200.txt --allow Trun.cfg_tree
+scripts/d109_gate.py d109r4off3 d109r4on3 --samples nuecc48 ncpi0 mcp1k --events docs/109_logs/r4/noneligible_m267.txt
+scripts/d109r4_group_census.py d109r4off3 d109r4on3            # the reconstruction census, all four samples
+scripts/d109r4_group_census.py d109r4dloff3 d109r4dlon3
+scripts/d109_root_checks.py d109r4on3 --samples nuecc48 ncpi0 mcp1k mcp2k
+```
+Every log quoted below is under `docs/109_logs/r4/`.
+
+### 9.1 The ask, and the constraint that shaped it
+
+Rev 3 ended with cases 4 and 5 diagnosed but not fixed: one physical flash → two opflash
+gids → two bundles keyed on the raw gid → a candidate's companions had to carry the same gid
+(`TaggerCheckNeutrino.cxx`, the companion loop), so the other drift volume's half of an
+interaction could never join its PR pass. The dedup knob (8.7) was rejected because it
+*deletes* where the event needs *merging*. The owner asked for the merge (2026-09-17), to be
+validated on the 3 067 local events and, if it passes, turned on for SBND production.
+
+The owner's second constraint, given while the plan was being written: a shared flash group
+has **two readings** — the same neutrino split across the two volumes (double counted today)
+and **two genuinely separate neutrinos** (or a neutrino and an in-time object in the other
+volume) whose light merged. Stop the double counting **without losing the second neutrino**.
+So the flash group alone cannot be the bundle key; the merge needs a physical test.
+
+### 9.2 What the split really looks like: the halves touch at the vertex, not at the cathode
+
+The plan's first test was "the two bundles' charge meets at the cathode". Measured on the
+colleague's own case-5 event (r472 s36 e40) it is **wrong**, and the reason matters. In the
+PR-stage frame (`T_rec_charge` fitted points, `ndf` = cluster id):
+
+| cluster | bundle (gid) | role | x range (cm) | y (cm) | z (cm) | what it is |
+|---|---|---|---|---|---|---|
+| 11 | 5 (TPC 0) | main, 104 cm | −78.7 … −6.3 | −200 … −192 | 10 … 83 | the vertex, proton, pion, muon stub |
+| 48 | 1000006 (TPC 1) | **associated**, 131 cm | −12.5 … −1.4 | −193 … −145 | 10 … 129 | the muon's first 130 cm, **on the E side** |
+| 23 | 1000006 (TPC 1) | main, 391 cm | 0.8 … 48.9 | −141 … 14 | 142 … 497 | the muon beyond the cathode |
+
+The Q/L matching had already attached the muon's E-side segment (48) to the **W** flash's
+bundle as an associated cluster. So bundle 1000006 *itself* spans the cathode, and the two
+bundles touch where the muon leaves the vertex cluster — at x ≈ −11, 10 cm from the seam.
+Measured offline from the Bee points (`d109r4_flashpair_contact_truth.py`): closest approach
+**0.4 cm at x = −10.8 / −11.1**. A 6 cm cathode window refuses the motivating event.
+
+Hence the rule is a **distance**: two in-window bundles of one flash group on different TPCs
+are in contact when the closest points of some cluster pair (one cluster from each bundle,
+any role) are within `gap`. The cathode window survives only as an optional tightening
+(`nu_bundle_flash_group_xcut`, 0 = off).
+
+**Why this still keeps two neutrinos apart.** Two separate interactions' charge does not
+touch. Measured on the 142 eligible local events (9.6): every merged pair's closest approach
+is ≤ 19.7 cm and 34 of them are ≤ 0.6 cm (the clusters share a boundary); every kept-apart
+pair is ≥ 24.5 cm. The 20 cm default — `long_muon_cathode_bridge_gap`'s production value,
+the measured cathode charge-loss scale — sits in that gap.
+
+**The truth side, and its limit.** The local 3 067 events are **data**: no truth anywhere
+(doc 107). The colleague's 13 216 MC files have truth and Bee points, so the rule was
+emulated there on all 22 same-flash-group two-row events. Only r472 s36 e40 is decisive: 19
+of the 21 stub events have a 2–5 point second half that is **absent from the Bee json**, and
+in several the two flashes print the same time so the Bee per-point flash time cannot
+separate the bundles (a memory note records these three traps). On r472: 1 true interaction
+(Edep 1 765 MeV, muon crossing x = 0), contact 0.4 cm → **merged, right**. The
+"two true interactions" count in that scan (rockbox has several interactions per spill;
+only those with `Edep ≥ 20 MeV` in the TPC count) is 3 of 22 — all three had a stub as their
+second row, i.e. their second interaction was never a candidate in the first place.
+
+### 9.3 The knob
+
+`nu_bundle_flash_group` (C++ `TaggerCheckNeutrino`, **default false**; jsonnet TLA of the
+same name, key-suppressed; runner `SBND_NU_BUNDLE_FLASH_GROUP=<0|1>`), with
+`nu_bundle_flash_group_gap` (cm, 20), `_xcut` (cm, 0 = off), `_x` (cm, 0). Inert unless
+`nu_per_bundle`. A post-pass over the per-gid selection, which stays textually untouched:
+
+1. **Contact test.** For every pair of in-window gids in one flash group on different TPCs
+   (`PR::cathode_pair_candidates`), every cluster pair across the two bundles is tried with
+   `Cluster::get_closest_points`; the first pair with `d < gap` (`PR::bundle_contact`)
+   decides, and the closest pair is logged either way, so the decision is readable from the
+   log. Union-find over contacting pairs (`PR::merge_bundles`).
+2. **The merged candidate is the longer of the two bundles' own selected activities.** Each
+   side keeps its own pick — main, then the demoted-main fallback. The first rev-4 build
+   re-ran the pick over the union, and a 10 cm untagged main on one side then pre-empted the
+   demoted 387 cm main the other side had chosen (mcp1k 174422: the stub took the row and
+   the numu score fell from 0.955 to −0.055; 280466 likewise). Per-side pick, then longest,
+   is what "the two rows become one" means.
+3. **A merge needs a real winner.** If the longer selected activity is under the
+   `nu_per_bundle_min_length` floor (15 cm) the pair is left apart. Merging two stubs only
+   gave a placeholder a companion, and the PR pass then fabricated a 107 MeV muon-at-rest
+   vertex on it — five `has_vertex 0 → 1` rows in the first census, every one of them fake.
+   Those events keep their two labelled rows exactly as today.
+4. **Companions span the merged bundle.** The other side's associated clusters join as
+   always, and its **mains** — the partner half, including its own selected activity — join
+   too, under the same `skip_cosmic_companions` rule as any companion (a TGM-tagged 500 cm
+   partner is dropped and counted in `n_companion_dropped`). Partner mains lose their
+   `main_cluster` flag for the candidate's PR pass only (a scoped guard constructed after
+   the two existing flag guards, so their snapshot stays pristine), because the PR
+   algorithms read main-ness from that flag.
+5. **The record.** `act_*` lists every activity of both bundles (the winner alone
+   `is_selected`); `T_bundle` has one row per merged bundle (its `gid` = the winner's
+   flash; the folded side's no-candidate row disappears); `T_flash.nu_index` points every
+   flash of the merged bundle at the row; no new branch, so the knob-off file is
+   byte-identical. `matched_flash_gid` stays the flash the selected activity matched.
+
+`nu_dedup_flash_group` is untouched and stays off (a WARN if both are on).
+
+Unit tests: `doctest_nu_bundle_census.cxx` covers the pair enumeration (a 709 ns pair such
+as r474 s72 e31 is never tested; same-TPC members and unknown TPCs are never paired), the
+contact predicate (distance alone by default, the window when asked, exclusive boundaries,
+NaN never contacts) and the union-find (a non-contacting pair stays two bundles, a three-way
+group with one contact keeps the third apart). Knob defaults in
+`doctest_clus_knob_defaults.cxx`. The selection itself is graded by the arms below.
+
+### 9.4 Eligible population, measured before any code ran
+
+`d109r4_eligible_census.py` over `work-*-d102mpr` (group rule = `PR::group_flashes`):
+
+| candidates whose flash group holds a second in-window gid with clusters | events |
+|---|---|
+| the other gid is **also a candidate** (the 12 pair events of 8.7) | 12 |
+| the other gid has a main that was **not** a candidate (tagged, or under the floor) | 130 |
+| **total** | **142 of 3 067** (3 nuecc48, 3 ncpi0, 47 mcp1k, 89 mcp2k) |
+
+Only these can change; a single-gid group never enters the post-pass.
+
+### 9.5 Gates
+
+**Pins** (`docs/109_logs/r4/libsnap.md5`): `head` = toolkit `12798c4f` unmodified
+(`libWireCellClus.so` md5 `e5ed8064`); `new` = first rev-4 build (cathode window, union
+re-pick; `6b5f3949`); `new2` = distance rule (`03e175bc`); `new3` = per-side pick +
+floor gate, the committed code (`69d1bfe6`). `libWireCellRoot.so` relinks with the changed
+header (`8791c1c7`) and is otherwise untouched.
+
+Arms, all `setarch x86_64 -R` with `PR_CFG_TREE` pinned; `SBND_NO_DL=1` unless stated:
+
+| label | pin | knob | events |
+|---|---|---|---|
+| `d109r4h` | head | — | 267 (doc 109 manifest) |
+| `d109r4off` / `off2` / `off3` | new / new2 / new3 | off | 409 (267 + the 142 eligible) |
+| `d109r4on` | new2 | on | 3 067 (stopped after 1 913 when the pick defect was found; superseded) |
+| `d109r4on3` | new3 | on | **3 067** |
+| `d109r4dloff` / `dloff3`, `dlon` / `dlon3` | new2 / new3 | off / on, **DL vertex** | 142 each |
+| `d109r4ddon` | new2 | dedup on, this knob off | 25 (the rev 3 dedup manifest) |
+
+- **9.5.1 Compiled configuration.** Knob off: `cmp_consumers.sh` pristine `12798c4f` vs this
+  round **21/21 byte-identical**. Knob on: the production PR job gains exactly
+  `"nu_bundle_flash_group": true` and nothing else (`docs/109_logs/r4/`).
+- **9.5.2 Unit tests.** `wcdoctest-clus` 24 594 assertions, `wcdoctest-root` 4 065, all pass.
+- **9.5.3 Knob off, byte gates.** `d109r4h` vs `d109r4off3`: **PASS** on nuecc48 + ncpi0
+  (93 331 branches) and on the 200 mcp1k events (142 920 branches); the only allowed
+  difference is `Trun.cfg_tree`, the pinned path string. `off2` vs `off3` (the last two
+  builds, 409 events, 414 555 branches): **PASS** — the pick and floor changes live entirely
+  inside the knob. `off` vs `off2` likewise. The rev 3 dedup arm `d109r3ddon2` vs
+  `d109r4ddon` (dedup ON, 25 events, 34 825 branches): **PASS** — the shared flash-table
+  lambda changed nothing for the dedup.
+- **9.5.4 Knob on, non-eligible events are bit-identical.** `off3` vs `on3` on the 253
+  manifest events outside the eligible set: **PASS** with only `Trun.op_config_sha256`
+  allowed (216 749 branches) — the knob changes the compiled job, so the operating-point hash
+  must move; nothing else does.
+- **9.5.5 Content.** `d109_root_checks.py` C1–C17 on `d109r4on3`: **0 failures**.
+
+### 9.6 What the knob did on the 3 067 events (`d109r4_group_census.py`)
+
+All 3 067 events ran with the knob on (`d109r4on3`), **rc = 0 on every event**, C1–C17
+**0 failures** (`checks_d109r4on3.txt`). The census compares `off3` with `on3` on the 142
+eligible events and asserts the rest unchanged (`census_off3_vs_on3.txt`):
+
+| | geometric vertex (`off3` → `on3`) | DL vertex (`dloff3` → `dlon3`) |
+|---|---|---|
+| eligible events | 142 | 142 |
+| gid pairs merged / kept apart | **116 / 26** | **116 / 26** |
+| rows removed | 10, **all** `has_vertex = 0` placeholders | 10, all placeholders |
+| rows added (a pick changed) | 0 | 0 |
+| surviving rows that lost a vertex | **0** | **0** |
+| surviving rows whose main cluster changed | 0 | 2 (the DL vertex moved the main onto a companion) |
+| partner mains admitted as companions | 84 in 75 events | 84 in 75 events |
+| non-eligible events changed | **0** (253 checked in the census, 216 749 branches in the gate) | — |
+| \|ΔEnu\| of surviving rows | 13 of 16 within 1.5 MeV; 3 larger (below) | 12 of 16 within 1.5 MeV; 4 larger |
+| `DL vertex failed` lines | — | 0 |
+
+**Closest-approach distances are bimodal.** Every merged pair: 0.3–19.7 cm, and 34 of the
+first 53 at ≤ 0.6 cm (the clusters share a boundary). Every kept-apart pair: 24.5, 24.8,
+25.2, 27.0, 29.1, 30.3, 30.6, 31.0, 31.8, 32.9, 33.3, 34.5, 34.7, 35.9, 36.7, 39.7, 40.3,
+40.6, 41.4, 41.4, 44.0, 51.1, 58.3, 63.3, 72.8, 155.5 cm. The 20 cm default sits in the
+valley; nothing in this sample is within 5 cm of it on either side.
+
+**The 12 pair events of 8.7 (the case-4 shape).** 10 merged: the placeholder row is gone
+and its stub is a companion of the real candidate (174422: `sel 18` keeps its 431.8 MeV and
+its numu 0.955, the 10.3 cm cluster 8 joins as a companion; 280466: `sel 15` keeps
+536.6 MeV, clusters 8 and 9 join). 2 kept apart because the stub is not in contact with
+anything (62583: 41.4 cm; 78032: 25.2 cm) — those two keep their labelled placeholder row,
+which is what 8.4 promised.
+
+**The 130 partner-not-candidate events.** 106 merged: the tagged partner mains (the TGM
+cosmics that shared the flash) are dropped by `skip_cosmic_companions` and counted in
+`n_companion_dropped`; the untagged sub-floor mains and the partner's associated clusters
+join. In 116 of the 116 merges the surviving row's vertex, main cluster and scores are
+unchanged on the geometric arm, and the reconstructed energy moves by ≤ 1.5 MeV in 13 of the
+16 rows where it moves at all.
+
+**The rows the owner should look at** — the merge changed the reconstruction, not just the
+bookkeeping, and the local sample is data, so they cannot be graded against truth:
+
+| event | partner admitted | Enu before → after (MeV) | numu | note |
+|---|---|---|---|---|
+| mcp2k 51890 | 5.4 cm main | 1 037 → 1 405 | 5.31 → 5.01 | same on the DL arm |
+| mcp1k 171729 | 3.8 cm main | 786 → 1 031 | 1.03 → 0.97 | same on the DL arm |
+| mcp1k 100222 | 3.4 cm main + 10 associated | 3 334 → 3 235 | unchanged | geometric arm only |
+| mcp1k 169724 | 0.9 cm main | 424 → 724 | −0.92 → 1.19 | DL arm only: the DL vertex moved back onto the selected cluster (`vertex_moved_cluster` 1 → 0) |
+| mcp2k 497399 | 1.9 cm main | 501 → 802 | −2.39 → −1.28 | DL arm only: the DL vertex moved onto companion 106, 383 cm away |
+
+A few-cm partner cannot carry 250–370 MeV; what moved is the PR pass's own decisions
+(vertex, association, energy accounting) once the ensemble changed. Two knob-off DL arms of
+the same 142 events (`census_dl_noise_dloff_vs_dloff3.txt`) are **bit-identical**, so the
+DL-arm differences are the knob's, not run-to-run noise. The Bee zips of these five events
+are in the `on3` / `dlon3` dirs for a hand look; nothing in the numbers says which side is
+right.
+
+**The two things the first rev-4 build got wrong, for the record** (`census_off2_vs_on.txt`,
+`census_dloff_vs_dlon.txt`): with the union re-pick, 2 rows *with* a vertex were dropped and
+their stub took the row (174422 numu 0.955 → −0.055); with stub+stub merges allowed, 11
+placeholders gained a fake vertex (Enu 106–109 MeV, the muon-at-rest signature). Both are
+gone in `on3`: 0 dropped rows with a vertex, 0 `has_vertex` changes.
+
+### 9.7 Production
+
+**The flip (owner's word, 2026-09-17: "if things pass, please turn this knob on"):**
+`sbnd/wct-pr-perevt.jsonnet` sets `nu_bundle_flash_group = true` (toolkit `b93673ef`, on
+top of the knob commit `d1caf178`). The C++ default stays **false**, so the lar 1-step chain,
+PDHD, PDVD and uBooNE do not move; `nu_dedup_flash_group` stays false everywhere.
+
+- `cmp_consumers.sh` pristine `12798c4f` vs the flipped tree: **20 of 21 byte-identical**;
+  `prod_prjob.json` differs by exactly one key
+  (`cfg_production_flip_prod_prjob.diff`): `"nu_bundle_flash_group" : true`.
+- `prod_cfg_gate.py --ref ref/prod-2026-09-17` at the flipped tree names it:
+  `ADDED [21].data.nu_bundle_flash_group = True` — component `[21]` is
+  `TaggerCheckNeutrino` — and nothing else (`prod_cfg_gate_flip_vs_0917.txt`).
+- **New reference `ref/prod-2026-09-17b`, PASS 21/21** (`prod_cfg_gate_0917b_pass.txt`);
+  `ref/prod-2026-09-17` is kept.
+- Production smoke (DL vertex, the flipped working tree with **no** knob env, so the flip
+  itself is what ran; `work-*-d109r4prod`, `smoke_d109r4prod.txt`): the 12 pair events plus
+  75206. All rc 0, 0 `DL vertex failed`. The 10 touching pairs each write **one** row and
+  one `T_bundle` row, the real candidate keeping its energy and scores (174422: sel 18,
+  432 MeV, numu 0.96; 280466: sel 15, 537 MeV); the 2 non-touching pairs (62583, 78032)
+  keep two rows, the second a labelled placeholder. One merged event (409634) has the DL
+  vertex move the main onto a companion (`vertex_moved_cluster = 1`), the case rev 3 made
+  joinable.
+
+Pass criteria, as fixed before the arms ran (plan of 2026-09-17), against the result:
+knob-off byte gate PASS (9.5.3); non-eligible events identical (9.5.4); every event rc 0 and
+C1–C17 clean, no row lost its vertex (9.6); every merged pair's stub became a companion and
+every kept-apart pair survived bit-identically (9.6); no second candidate lost except
+vertex-less placeholders; DL arm 0 failures. The truth criterion could not be applied to
+data; the one truth-gradeable event (r472) merges correctly.
+
+### 9.8 Not fixed in rev 4, and why
+
+- **The both-halves-reconstructed shape (the colleague's case 5 itself) has no local
+  example**, and its inputs are on `/pnfs`. The mechanism is verified on the small shape
+  (116 merges) and the contact distance on r472 is measured (0.4 cm), but the merged
+  reconstruction of r472 — whether the DL vertex lands on the vertex half when the muon
+  half is the longer activity — has not been run.
+- **Two-neutrino events with touching charge** would merge. None was found in the samples
+  at hand (the three two-interaction pair events in the colleague's set all had a stub as
+  their second row); the 20 cm gap is the only guard. The `xcut` window exists if a tighter
+  rule is ever wanted.
+- **Kept-apart stubs stay labelled placeholders** (2 of the 12 local pairs; the 62583 stub
+  is 41 cm from anything). The upstream cause — the legacy-winner exemption from the 15 cm
+  floor (8.10) — is still open.
+- **`Cluster::get_closest_points` is a sampled search**, not an exact minimum. Every contact
+  it found here was confirmed by the bimodal distance distribution; an exact search would
+  only ever move a pair *toward* contact.
+- **The five reconstruction changes of 9.6** are reported, not adjudicated.
