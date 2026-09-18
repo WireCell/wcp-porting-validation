@@ -628,9 +628,9 @@ stage B re-runnable). Rates are per T_tagger row unless stated.
 | Case (slide) | colleague's 13 216 | local 3 067 | verdict at HEAD |
 |---|---|---|---|
 | 1 — main clusterID changes | 488 of 6 236 rows | 122 of 1 460 rows | **labelled** by doc 109 (`sel_cluster_id`, `vertex_moved_cluster`), but `T_rec_charge` still does not join — **fixed here** |
-| 2 — empty/fake candidate | 160 rows | 62 rows | **labelled** by doc 109 `has_vertex == 0`; markers sharpened here, rows not suppressed |
+| 2 — empty/fake candidate | 160 rows | 62 rows | the ROW is **labelled** by doc 109 `has_vertex == 0` and the markers are sharpened here (8.4); the row is not suppressed, and the **upstream cause — why a 0.8 cm cluster is a candidate at all — is NOT fixed (8.10)** |
 | 3 — `T_rec_charge` cluster_id −1 | 344 files all −1, 12 mixed | 89 files all −1, 0 mixed | **broken** — **fixed here** |
-| 4 — two candidates, one fake | 98 two-row events | 25 two-row events | cases 2 + 3 together |
+| 4 — two candidates, one fake | 98 two-row events | 25 two-row events | cases 2 + 3 together, so the same split: the `-1` is fixed, the fake row is labelled but kept (8.10) |
 | 5 — same ν on both sides | 22 events | 12 events | **labelled** by `flash_group`; dedup built OFF and measured (8.7) |
 
 Supporting counts, local sample: `T_proj_data` absent in 1 675 files; a candidate with an
