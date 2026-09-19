@@ -29,6 +29,11 @@ pre-registered retune ladder on the existing keys (terminal thinning, the charge
 none of it — the DL-admission lever makes the vertex worse. **The improvement is not within reach by parameter
 retuning; it needs the vertex-choice stage re-tuned against the new trajectory.** Nothing is flipped.
 
+**Full-sample counts (sec 8, all 3067 events, s0 → csp3bw).** nueCC (nue BDT > 7.0) 36 → 37, numuCC (numu BDT >
+0.9) 789 → 790, events with a reconstructed π⁰ 96 → 91: none moves beyond its own event-by-event exchange (7 / 8,
+76 / 77, 35 / 30 lost / gained). Hand-identified π⁰ pairs recovered 28 → 18, and labelled vertices within 3 cm of
+the click 724 → 664 of 878. The cost is in the vertex and in which objects are selected, not in the counts.
+
 ---
 
 ## 0. Repro
@@ -67,6 +72,8 @@ sha256sum $D/150_pred_r2.txt
 TAG=r<k> PIN=$P STM_FIT=1 JOBS=6 SAMPLES="nuecc48 ncpi0 mcp1k mcp2k" MANIFEST=/home/xqian/tmp/pr150/manifest_ladder \
     TLA_FILE=$D/tla/r<k>.tla bash scripts/pr150_arm.sh                          # k = 1..4
 bash $A/post_ladder.sh r1 r2 r3 r4                                              # -> 150_ladder_score.txt
+# --- sec 8: full-sample nueCC / numuCC / pi0 / vertex --------------------------------------------------
+python3 $A/pr150_final_counts.py                                                # -> 150_final_counts.{txt,tsv}
 ```
 
 Every table below is committed under `150_figs/`: per-event metrics `metrics/<arm>-<sample>.tsv` and
@@ -360,7 +367,8 @@ changed trajectory, with no key, and no net bias (numu > 0.9 782 → 782). Class
 **Vertex movers** (`pr150_vtx_choice.py`, `pr150_vtx_stub.py`; `150_s3_vtxchoice_csp3bw.txt`, `150_s3_stub_csp3bw.txt`):
 of the 70 "away" movers, 30 are CHOICE (s0's vertex is still a PR candidate in csp3bw, another was chosen), 20
 STRUCTURE (the candidate set changed; on 14 the click position is no longer a candidate at all), 20 LOST-CANDIDATE
-(the bundle newly STM-tagged); of the 38 "toward", 25 CHOICE, 10 STRUCTURE, 2 lost, 1 gained. The pr/149 sec 7.2
+(the bundle newly STM-tagged); of the 38 "toward", 25 CHOICE, 10 STRUCTURE, 2 lost, 1 gained (the 2 "lost" have no vertex in either arm and are
+not movers; sec 8.3 erratum). The pr/149 sec 7.2
 stub-branch mechanism is not dominant under (a)+(b): the new main vertex carries a < 5 cm degree-1 stub on 16 of 50
 away movers vs 13 of 50 in s0 (gained 7, lost 4) and on 161 of 715 non-movers — prefer3 + base-weight removes most
 of the stubs `charge_stepped` alone adds (ISO stubs +42 % → +15 %). The pr/149 adjudication classes on the 350
@@ -527,12 +535,12 @@ round of its own, not a knob.
   pdvd instruments), `pr150_bow.py` (sec 3); `pr150_stm_margin.py`, `pr150_vtx_movers.py`, `pr150_vtx_choice.py`,
   `pr150_vtx_stub.py`, `pr150_vtx_scan.py`, `pi0_manifests.py`, `pi0_score.sh`, `pi0_id_drift.py`,
   `pid_scan_score.sh`, `pid_agreement.py`, `campaign_ab.sh`, `geo_rescore.py` (sec 4); `pr150_ladder.py`,
-  `post_ladder.sh` (sec 5).
+  `post_ladder.sh` (sec 5); `pr150_final_counts.py` (sec 8).
 - Records `docs/pr/150_figs/`: `150_pred.txt` + `.sha256`, `150_pred_r2.txt` + `.sha256`, `tla/*.tla`,
   `150_cfg_proof.txt`, `150_cell_cfg.txt`, `150_gate_off_*.txt`, `150_gate_stm_*.txt`, `150_noise_s0rep_*.txt`,
   `metrics/*.tsv`, `traj/*.tsv`, `150_s1_*` / `150_s3_*` printouts, mover lists, `150_trace_*.txt`,
   `150_case_*.png`, `150_s1_vtxscan_*`, `150_s3a_vtxscan_*`, `150_s3b_vtxscan_*`, `150_lad_sentinels_*.txt`,
-  `150_ladder_score.txt`, `150_preflight.txt`.
+  `150_ladder_score.txt`, `150_preflight.txt`, `150_final_counts.{txt,tsv}` (sec 8).
 - Vertex-scan labels of this round (agent picks, a NEW tag, never merged into vtx105):
   `vertex_labels/vtxscan-pr150-{s1,s3a,s3b}/` (the scored.json of each wave with the item → event/arm key).
 - Arms on disk (releasable once this doc is accepted; `docs/work-tags.md`): `work-<s>-pr150{g16old,g16new,g16stm}`
@@ -541,3 +549,150 @@ round of its own, not a knob.
 - Scratch (not committed): `/home/xqian/tmp/pr150/` (pin `libpin`, logs, `tr/` shim + traces, `vtxscan_*/`
   renderings, `scorers*/`, `cfg/`).
 
+
+---
+
+## 8. The full-sample answer: nueCC, numuCC, π⁰ and the vertex on all 3067 events (added 2026-09-19)
+
+Owner question (2026-09-19): on the 3067 data events, what are the final nueCC (nue BDT > 7.0) and numuCC (numu
+BDT > 0.9) counts for each case, how does the number of π⁰ events change, and how does the neutrino vertex change?
+Secs 2.1 / 2.2 split these by stage; this section puts every cell on the whole sample, paired event by event
+against `s0`.
+
+```bash
+python3 scripts/analysis/pr150/pr150_final_counts.py      # -> 150_figs/150_final_counts.{txt,tsv}
+```
+
+Conventions (the script's header governs):
+
+- **Sample.** nuecc48 (48) + ncpi0 (19) + mcp1k (1000) + mcp2k (2000) = 3067, every cell rc 0 on every event. The
+  physical event 18255-1-69314 is in both nuecc48 and mcp2k. It is counted in both samples for the selections and
+  once for the vertex.
+- **Selections.** A working point needs `nu_evaluated = 1`, as in secs 2.1 / 2.2. These are reconstruction
+  selections on data with no truth. nuecc48 and ncpi0 are pre-selected samples; mcp1k / mcp2k are the numu stream.
+  The Stage-3 "numu > 0.9 782" of sec 2.2 is the mcp1k + mcp2k part of the 789 below.
+- **Paired churn.** Every change vs `s0` is split into lost (the event is no longer evaluated, or it is still
+  evaluated and fails the cut) and gained (newly evaluated, or already evaluated and now passes). The p-value is a
+  two-sided exact sign test of lost against gained: it asks whether the net change is larger than the exchange.
+- **Cases.** The five full-sample cells. The retune levels r1–r4 ran on the 626-event ladder manifest only, so
+  they get a separate table on that manifest (sec 8.4).
+
+### 8.1 nueCC and numuCC
+
+**nueCC** (nue BDT > 7.0):
+
+| cell | nuecc48 (48) | ncpi0 (19) | mcp1k (1000) | mcp2k (2000) | **all 3067** | lost / gained vs s0 (sign p) |
+|---|---|---|---|---|---|---|
+| s0 | 33 | 0 | 0 | 3 | **36** | — |
+| cs | 34 | 1 | 1 | 4 | **40** | 7 / 11 (0.48) |
+| p3bw | 30 | 0 | 0 | 2 | **32** | 8 / 4 (0.39) |
+| csp3bw | 32 | 2 | 0 | 3 | **37** | 7 / 8 (1.00) |
+| tfull | 36 | 1 | 1 | 4 | **42** | 4 / 10 (0.18) |
+
+**numuCC** (numu BDT > 0.9):
+
+| cell | nuecc48 | ncpi0 | mcp1k | mcp2k | **all 3067** | lost / gained vs s0 (sign p) | of the lost: no longer evaluated / fails the cut |
+|---|---|---|---|---|---|---|---|
+| s0 | 3 | 4 | 274 | 508 | **789** | — | — |
+| cs | 5 | 5 | 268 | 524 | **802** | 69 / 82 (0.33) | 12 / 57 |
+| p3bw | 3 | 4 | 269 | 507 | **783** | 77 / 71 (0.68) | 9 / 68 |
+| csp3bw | 3 | 5 | 272 | 510 | **790** | 76 / 77 (1.00) | 13 / 63 |
+| tfull | 5 | 3 | 271 | 512 | **791** | 77 / 79 (0.94) | 16 / 61 |
+
+Events passing both cuts: s0 1, cs 2, p3bw 0, csp3bw 1, tfull 0 (all on nuecc48). Neutrino candidates evaluated:
+1435 in s0, then 1435 / 1435 / 1429 / 1422.
+
+**Reading.** Neither selection moves beyond its own exchange on any cell: no sign test falls below p 0.18. On the
+doc-116 trajectory (`csp3bw`) the final counts are nueCC 36 → 37 and numuCC 789 → 790. The totals hide an exchange of
+members. On csp3bw 7 of the 36 nueCC events leave and 8 others enter, and 76 of the 789
+numuCC events (10 %) leave and 77 enter. Every nueCC change is a nue score crossing 7.0 on an event that stays evaluated.
+Of the 76 numuCC losses, 13 are events that stop being neutrino candidates and 63 are score crossings. On the events
+evaluated in both arms (1397 on csp3bw) the counts are nueCC 36 → 37 and numuCC 776 → 782. The candidate exchange
+itself (38 lost / 32 gained on csp3bw) is the STM tag of sec 4.2. On 69 of those 70 events one of the bundles
+changes its STM flag. The remaining one is cosmic-tagged in both arms with the same bundle flags. `tfull` has the
+highest nueCC (42), but 4 lost / 10 gained is p 0.18, and without truth a gain is not an efficiency.
+
+### 8.2 π⁰
+
+Three quantities, kept apart because they answer different questions:
+
+- **P1**: events with at least one accepted reconstructed π⁰ (showers sharing `pio_id ≥ 0` in the calib dump, the
+  winner loop's mass-windowed pairs, doc pr/126). This is the π⁰ count.
+- **P2**: the `kine_pio` BDT feature with mass in (100, 170) MeV, the proxy used in secs 2.1 / 2.2. It is computed
+  for the highest-energy shower pair whatever it is (`d86_video_picks.py` header), so it is not a π⁰ count.
+- **P3**: hand-scanned π⁰ whose two photons the arm recovers as one reconstructed π⁰, matched by position (sec 4.1,
+  65 events, 66 hand π⁰).
+
+| cell | P1 ncpi0 (19) | P1 nuecc48 | P1 mcp1k | P1 mcp2k | **P1 all** | P1 lost / gained (sign p) | accepted π⁰ groups | P2 | **P3 of 66** |
+|---|---|---|---|---|---|---|---|---|---|
+| s0 | 10 | 6 | 32 | 48 | **96** | — | 112 | 61 | **28** |
+| cs | 10 | 5 | 35 | 52 | **102** | 31 / 37 (0.55) | 114 | 72 | 21 |
+| p3bw | 11 | 7 | 40 | 43 | **101** | 30 / 35 (0.62) | 118 | 54 | 22 |
+| csp3bw | 11 | 2 | 29 | 49 | **91** | 35 / 30 (0.62) | 101 | 62 | **18** |
+| tfull | 9 | 3 | 34 | 39 | **85** | 39 / 28 (0.22) | 100 | 64 | 20 |
+
+**Reading.** The number of events with a reconstructed π⁰ barely changes: 96 → 102 / 101 / 91 / 85, inside its
+exchange on every cell (p ≥ 0.22). On the 19-event NC π⁰ sample it is 10 → 10 / 11 / 11 / 9. Which events carry the
+π⁰ changes a lot: on csp3bw 35 of the 96 lose it and 30 others gain one. Almost all of that exchange is on events
+evaluated in both arms, so it is the pairing, not the candidate selection. Against the hand scan the pairing gets
+worse on every cell: 28 recovered hand pairs become 18 on csp3bw. The count is stable, but the π⁰ it finds is less
+often the pair a person identified. P2 moves 61 → 72 / 54 / 62 / 64 and should not be read as a π⁰ change.
+
+### 8.3 The neutrino vertex
+
+On the 878 distinct vtx105-labelled events (nuecc48 40, ncpi0 16, mcp1k 357, mcp2k 465). A > 10 cm mover moved more
+than 10 cm between the arms, or has a vertex in one arm only. It is "away" if the cell's vertex is farther from the
+click than s0's.
+
+| cell | ≤ 1 cm | **≤ 3 cm** | ≤ 10 cm | no vertex | > 10 cm movers away / toward |
+|---|---|---|---|---|---|
+| s0 | 659 | **724** | 766 | 3 | — |
+| cs | 567 | 669 | 739 | 21 | 78 / 44 |
+| p3bw | 583 | 676 | 747 | 16 | 62 / 40 |
+| csp3bw | 572 | **664** | 735 | 22 | 76 / 42 |
+| tfull | 576 | 655 | 725 | 21 | 86 / 41 |
+
+The numu part is 676 of 822 in s0 and 619 in csp3bw; sec 2.2's 677 / 620 of 823 count the shared event 69314 in
+mcp2k as well.
+
+Every event, cell vertex vs s0's (1385 events with a vertex in s0):
+
+| cell | unchanged (< 0.1 cm) | 0.1–1 cm | 1–3 cm | 3–10 cm | > 10 cm | vertex lost / gained |
+|---|---|---|---|---|---|---|
+| cs | 136 | 672 | 214 | 134 | 194 | 35 / 38 |
+| p3bw | 264 | 627 | 184 | 122 | 159 | 29 / 30 |
+| csp3bw | 143 | 688 | 199 | 130 | 185 | 40 / 36 |
+| tfull | 136 | 716 | 169 | 132 | 190 | 42 / 30 |
+
+**Reading.** The vertex is re-fitted on the new trajectory on about 90 % of the events, mostly by less than 1 cm.
+12–14 % move more than 10 cm. Against the hand clicks every cell is worse than s0. On csp3bw, ≤ 3 cm drops
+724 → 664 (−60, −8 %) and ≤ 1 cm drops 659 → 572. The > 10 cm movers go away from the click almost twice as often
+as toward it (76 / 42). The blind two-arm scan of sec 4.3 supports that direction, so it is not a labelling
+artefact. `p3bw` alone is the least bad (676 at ≤ 3 cm); adding `charge_stepped` or the fit keys costs more.
+
+**Erratum to secs 4.2 / 4.3.** `pr150_vtx_movers.py` counts an event with no vertex in either arm as a mover
+(distance infinite) and calls it "toward". Two such events (mcp1k 278266 and 287431) are in the 38 Stage-3 "toward"
+movers: they are the "2 lost" of sec 4.2's toward row. The scan classed 287431 UNRESOLVED. The real Stage-3 movers
+are 70 away / 36 toward, and no conclusion changes. Sec 2.2's table uses `vertex_tolerance.py`, which counts movers
+with a vertex in both arms only (68 / 35), and is unaffected.
+
+### 8.4 The retune ladder on its 626-event manifest (not the full sample)
+
+| level | evaluated | nueCC | numuCC | π⁰ P1 | vertex ≤ 3 cm (488 labelled) |
+|---|---|---|---|---|---|
+| s0 | 626 | 34 | 388 | 48 | 405 |
+| csp3bw | 610 | 35 | 385 | 44 | 369 |
+| r1 (terminal thinning 0.7 cm) | 608 | 31 | 374 | 51 | 363 |
+| r2 (r1 + charge 6000) | 611 | 33 | 384 | 51 | 371 |
+| r3 (r1 + DL admission 4.0) | 608 | 31 | 358 | 54 | 333 |
+| r4 (r2 + DL admission 4.0) | 611 | 32 | 368 | 50 | 328 |
+
+The manifest is conditioned: its Stage-2 events were all neutrino candidates in the reference, so they can only lose
+candidacy, and "evaluated" can only fall. No level recovers the vertex. The DL-admission levels also lose numuCC
+(388 → 358 / 368). The vertex numbers are sec 5's minus the shared event 69314.
+
+**Answer to the question.** On all 3067 events the doc-116 trajectory leaves the final selection counts where they
+were (nueCC 36 → 37, numuCC 789 → 790, events with a reconstructed π⁰ 96 → 91). It exchanges members (7 of 36 nueCC, 76 of
+789 numuCC, 35 of 96 π⁰ events), recovers fewer hand-identified π⁰ pairs (28 → 18), and puts 60 fewer labelled vertices within
+3 cm of the click (724 → 664 of 878). The counts are not where the cost shows; the vertex and the identity of the
+selected objects are.

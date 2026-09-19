@@ -1,0 +1,76 @@
+# doc pr/150 sec 8 -- full-sample counts on all 3067 events (pr150_final_counts.py)
+# events 3067 per cell (every cell rc 0 on every event); the physical event 18255-1-69314 is in both nuecc48 and mcp2k
+
+## A. selections per sample (nu_evaluated == 1 required): nueCC = nue BDT > 7.0, numuCC = numu BDT > 0.9, both = passes both
+cell                   nuecc48                   ncpi0                   mcp1k                   mcp2k                     ALL
+            eval nue numu both      eval nue numu both      eval nue numu both      eval nue numu both      eval nue numu both
+s0         48   33    3    1        19    0    4    0       462    0  274    0       906    3  508    0      1435   36  789    1   
+cs         48   34    5    2        19    1    5    0       463    1  268    0       905    4  524    0      1435   40  802    2   
+p3bw       48   30    3    0        19    0    4    0       465    0  269    0       903    2  507    0      1435   32  783    0   
+csp3bw     48   32    3    1        19    2    5    0       464    0  272    0       898    3  510    0      1429   37  790    1   
+tfull      48   36    5    0        19    1    3    0       465    1  271    0       890    4  512    0      1422   42  791    0   
+
+## B. paired decomposition vs s0, all 3067 events: s0 -> cell = both + lost(de-evaluated, still evaluated) + gained(newly evaluated, already evaluated)
+  [nu_evaluated]
+    cs      s0  1435 ->  1435 (net +0); both 1401; lost 34 (de-evaluated 34, still evaluated 0); gained 34 (newly evaluated 34, already evaluated 0); sign test p 1.00
+    p3bw    s0  1435 ->  1435 (net +0); both 1407; lost 28 (de-evaluated 28, still evaluated 0); gained 28 (newly evaluated 28, already evaluated 0); sign test p 1.00
+    csp3bw  s0  1435 ->  1429 (net -6); both 1397; lost 38 (de-evaluated 38, still evaluated 0); gained 32 (newly evaluated 32, already evaluated 0); sign test p 0.55
+    tfull   s0  1435 ->  1422 (net -13); both 1395; lost 40 (de-evaluated 40, still evaluated 0); gained 27 (newly evaluated 27, already evaluated 0); sign test p 0.14
+  [nueCC]
+    cs      s0    36 ->    40 (net +4); both 29; lost 7 (de-evaluated 0, still evaluated 7); gained 11 (newly evaluated 0, already evaluated 11); sign test p 0.48
+    p3bw    s0    36 ->    32 (net -4); both 28; lost 8 (de-evaluated 0, still evaluated 8); gained 4 (newly evaluated 0, already evaluated 4); sign test p 0.39
+    csp3bw  s0    36 ->    37 (net +1); both 29; lost 7 (de-evaluated 0, still evaluated 7); gained 8 (newly evaluated 0, already evaluated 8); sign test p 1.00
+    tfull   s0    36 ->    42 (net +6); both 32; lost 4 (de-evaluated 0, still evaluated 4); gained 10 (newly evaluated 0, already evaluated 10); sign test p 0.18
+  [numuCC]
+    cs      s0   789 ->   802 (net +13); both 720; lost 69 (de-evaluated 12, still evaluated 57); gained 82 (newly evaluated 7, already evaluated 75); sign test p 0.33
+    p3bw    s0   789 ->   783 (net -6); both 712; lost 77 (de-evaluated 9, still evaluated 68); gained 71 (newly evaluated 5, already evaluated 66); sign test p 0.68
+    csp3bw  s0   789 ->   790 (net +1); both 713; lost 76 (de-evaluated 13, still evaluated 63); gained 77 (newly evaluated 8, already evaluated 69); sign test p 1.00
+    tfull   s0   789 ->   791 (net +2); both 712; lost 77 (de-evaluated 16, still evaluated 61); gained 79 (newly evaluated 6, already evaluated 73); sign test p 0.94
+  [pi0 accepted group (P1)]
+    cs      s0    96 ->   102 (net +6); both 65; lost 31 (de-evaluated 0, still evaluated 31); gained 37 (newly evaluated 0, already evaluated 37); sign test p 0.55
+    p3bw    s0    96 ->   101 (net +5); both 66; lost 30 (de-evaluated 0, still evaluated 30); gained 35 (newly evaluated 0, already evaluated 35); sign test p 0.62
+    csp3bw  s0    96 ->    91 (net -5); both 61; lost 35 (de-evaluated 2, still evaluated 33); gained 30 (newly evaluated 1, already evaluated 29); sign test p 0.62
+    tfull   s0    96 ->    85 (net -11); both 57; lost 39 (de-evaluated 0, still evaluated 39); gained 28 (newly evaluated 1, already evaluated 27); sign test p 0.22
+
+  common evaluated set (evaluated in both s0 and the cell): counts on the SAME events
+    cs      n=1401: nueCC 36 -> 40; numuCC 777 -> 795; pi0 groups(P1) 96 -> 102
+    p3bw    n=1407: nueCC 36 -> 32; numuCC 780 -> 778; pi0 groups(P1) 96 -> 101
+    csp3bw  n=1397: nueCC 36 -> 37; numuCC 776 -> 782; pi0 groups(P1) 94 -> 90
+    tfull   n=1395: nueCC 36 -> 42; numuCC 773 -> 785; pi0 groups(P1) 96 -> 84
+
+  who leaves / enters the evaluated set (attribution from the per-bundle tgm,stm,fc of nusel-evt*.tsv):
+    cs      gained stm 34, lost other (cosmic-tagged in both, same bundle flags) 1, lost stm 33
+    p3bw    gained stm 28, lost stm 28
+    csp3bw  gained stm 32, lost other (cosmic-tagged in both, same bundle flags) 1, lost stm 37
+    tfull   gained stm 27, lost other (cosmic-tagged in both, same bundle flags) 2, lost stm 38
+
+## C. pi0, three quantities kept apart (per sample and ALL)
+   P1 = events with >= 1 accepted reco pi0 group (calib showers[].pio_id >= 0); P1g = accepted groups;
+   P2 = kine_pio BDT feature with mass in (100,170) MeV (NOT a pi0 finding; census proxy of secs 2.1/2.2);
+   P3 = hand pi0 pairs recovered by position (sec 4.1, 65 events / 66 hand pi0; quoted, not recomputed here)
+  s0      nuecc48 P1 6 (P1g 7) P2 3 | ncpi0 P1 10 (P1g 13) P2 6 | mcp1k P1 32 (P1g 33) P2 23 | mcp2k P1 48 (P1g 59) P2 29 | ALL P1 96 (P1g 112) P2 61 | P3 28
+  cs      nuecc48 P1 5 (P1g 6) P2 9 | ncpi0 P1 10 (P1g 10) P2 3 | mcp1k P1 35 (P1g 37) P2 25 | mcp2k P1 52 (P1g 61) P2 35 | ALL P1 102 (P1g 114) P2 72 | P3 21
+  p3bw    nuecc48 P1 7 (P1g 7) P2 4 | ncpi0 P1 11 (P1g 12) P2 6 | mcp1k P1 40 (P1g 44) P2 20 | mcp2k P1 43 (P1g 55) P2 24 | ALL P1 101 (P1g 118) P2 54 | P3 22
+  csp3bw  nuecc48 P1 2 (P1g 3) P2 2 | ncpi0 P1 11 (P1g 13) P2 4 | mcp1k P1 29 (P1g 30) P2 22 | mcp2k P1 49 (P1g 55) P2 34 | ALL P1 91 (P1g 101) P2 62 | P3 18
+  tfull   nuecc48 P1 3 (P1g 6) P2 6 | ncpi0 P1 9 (P1g 9) P2 7 | mcp1k P1 34 (P1g 34) P2 23 | mcp2k P1 39 (P1g 51) P2 28 | ALL P1 85 (P1g 100) P2 64 | P3 20
+
+## D. neutrino vertex
+  labelled (vtx105, keyed run/subrun/event; mcp2k copy of 18255-1-69314 dropped): 878 (nuecc48 40, ncpi0 16, mcp1k 357, mcp2k 465)
+  s0      labelled <= 1 / 3 / 10 cm: 659 / 724 / 766; no vertex 3; > 10 cm movers vs s0 away 0 / toward 0; [numu-only <= 3 cm 676 of 822]
+          all events, main vertex vs s0: unchanged (< 0.1 cm) 1385, 0.1-1 cm 0, 1-3 cm 0, 3-10 cm 0, > 10 cm 0, vertex lost 0, gained 0
+  cs      labelled <= 1 / 3 / 10 cm: 567 / 669 / 739; no vertex 21; > 10 cm movers vs s0 away 78 / toward 44; [numu-only <= 3 cm 624 of 822]
+          all events, main vertex vs s0: unchanged (< 0.1 cm) 136, 0.1-1 cm 672, 1-3 cm 214, 3-10 cm 134, > 10 cm 194, vertex lost 35, gained 38
+  p3bw    labelled <= 1 / 3 / 10 cm: 583 / 676 / 747; no vertex 16; > 10 cm movers vs s0 away 62 / toward 40; [numu-only <= 3 cm 629 of 822]
+          all events, main vertex vs s0: unchanged (< 0.1 cm) 264, 0.1-1 cm 627, 1-3 cm 184, 3-10 cm 122, > 10 cm 159, vertex lost 29, gained 30
+  csp3bw  labelled <= 1 / 3 / 10 cm: 572 / 664 / 735; no vertex 22; > 10 cm movers vs s0 away 76 / toward 42; [numu-only <= 3 cm 619 of 822]
+          all events, main vertex vs s0: unchanged (< 0.1 cm) 143, 0.1-1 cm 688, 1-3 cm 199, 3-10 cm 130, > 10 cm 185, vertex lost 40, gained 36
+  tfull   labelled <= 1 / 3 / 10 cm: 576 / 655 / 725; no vertex 21; > 10 cm movers vs s0 away 86 / toward 41; [numu-only <= 3 cm 608 of 822]
+          all events, main vertex vs s0: unchanged (< 0.1 cm) 136, 0.1-1 cm 716, 1-3 cm 169, 3-10 cm 132, > 10 cm 190, vertex lost 42, gained 30
+
+## E. the retune ladder, on its 626-event manifest only (626 events: Stage 1 + the pr/149 Stage-2 manifest)
+  s0      evaluated 626; nueCC 34; numuCC 388; pi0 P1 48; vertex <= 3 cm 405 of 488
+  csp3bw  evaluated 610; nueCC 35; numuCC 385; pi0 P1 44; vertex <= 3 cm 369 of 488
+  r1      evaluated 608; nueCC 31; numuCC 374; pi0 P1 51; vertex <= 3 cm 363 of 488
+  r2      evaluated 611; nueCC 33; numuCC 384; pi0 P1 51; vertex <= 3 cm 371 of 488
+  r3      evaluated 608; nueCC 31; numuCC 358; pi0 P1 54; vertex <= 3 cm 333 of 488
+  r4      evaluated 611; nueCC 32; numuCC 368; pi0 P1 50; vertex <= 3 cm 328 of 488
