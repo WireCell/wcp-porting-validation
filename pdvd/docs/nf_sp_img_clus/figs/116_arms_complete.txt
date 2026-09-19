@@ -1,0 +1,2 @@
+# doc pdvd/116 -- completeness of the arms of this doc (the launcher's post step had overwritten 115r2_arms_complete.txt in the working tree with this line; the committed round-2 record is restored)
+d115vbwp05: runner: complete 120, incomplete 0 [], rc 0; events 120, failure lines 0, events missing an output 0 []

@@ -2,6 +2,8 @@
 
 **Status: NOT FLIPPED. No tagger level passes the frozen rule on both detectors (PDVD Michel purity −0.037…−0.039 and `is_stm` purity −0.021 at every level; PDHD passes all four metrics at T / R1 after the blind fold but fails the split-half guard). Both Steiner knobs and the tagger keys stay at their production values; no C++ change; no toolkit commit. PDHD 61 / PDVD 120 events.**
 
+**Sec 9 (2026-09-18, evening): the owner scan of sec 6.3 is set up and served** — `own116v` (PDVD, 25 items, :5017) and `own116h` (PDHD, 11 items, :5023), every item drawn on the R2 arms of the new trajectory; the fold is one command (`figs/116_owner_fold.sh`). The flip waits for the owner's labels and the re-grade.
+
 Owner request (2026-09-18, after doc 115 round 2): (1) run the one arm round 2 did not — the `tree+path` pricing at
 α 0.5 *without* `prefer3` on PDVD — to settle the v3 / U2 / U1b misses; (2) remove the output-less `d115?bwa` /
 `d115?bwb` dirs; (3) study the nature of the PDHD and PDVD tag regressions on the α 0.5 trajectories, retune the STM
@@ -369,3 +371,62 @@ The pctree targets (`d51hclus`, `p100flip`) were not touched; `ls -d pd?d/work/*
 | `figs/116_movers_*`, `116_mechanism_*`, `116_michel_terminals_*`, `116_arm_sizing_*`, `116_case_*.png` | sec 2 |
 | `figs/116_grade_{pdhd,pdvd}.txt`, `116_movers_r_*`, `116_scan_smx116_*`, `116_cleanup.txt` , `116_grade_<det>_prefold.txt`, `116_movers_ladder_*`, `116_resources_*`, `116_newstretch_pdvd_bwp05*`, `figs/116_verdict_bwp05.txt`; `scripts/d116_scan_record.py` (record builder on the doc-113 precedence), `d116_resources.py` (R clause) | secs 4–7 |
 | `<det>/docs/scan/<det>_stm_michel_smx116_verdicts.json` | the blind records (new tag) |
+
+## 9. The owner scan of sec 6.3 (set up 2026-09-18, evening; labels pending)
+
+Owner request: "follow the recommendation and set up the scan on display port 5017; once we confirm the performance,
+flip the knobs for the PDHD and PDVD production." This section records the set-up; the labels, the fold and the
+flip decision are the next round.
+
+### 9.0 Repro
+
+```bash
+IMG=/home/xqian/toolkit-dev/wcp-porting-img; S=$IMG/pdvd/docs/nf_sp_img_clus/scripts; F=$IMG/pdvd/docs/nf_sp_img_clus/figs; O=/home/xqian/tmp/d116/own
+# the display payloads on the R2 arms (the new trajectory + the R2 tagger), scratch only
+(cd $IMG/pdhd/stm_michel_scan && ./prep_stm_michel_scan.py --det pdvd --arm d116vr2 --ctx-cells --outdir $O/prep_d116vr2 --sheetdir $O/sheet_d116vr2 --redraw)   # and pdhd / d116hr2
+python3 $S/d116_owner_scan_set.py --det pdvd --a0 d115voff --r2 d116vr2 --prep $O/prep_d116vr2 --fallback-prep /home/xqian/tmp/d116/round/prep_d115voff --out $O/set_pdvd --check-movers $F/116_movers_r_pdvd_R2.tsv
+python3 $S/d116_owner_scan_set.py --det pdhd --a0 d115hoff --r2 d116hr2 --prep $O/prep_d116hr2 --fallback-prep /home/xqian/tmp/d116/round/prep_d115hoff --out $O/set_pdhd --check-movers $F/116_movers_r_pdhd_R2.tsv
+# label snapshot (M13), then the two servers
+(cd $IMG/pdhd/stm_michel_scan && ./serve_stm_michel_scan.sh 5017 --det pdvd --scan-tag own116v --manifest $O/set_pdvd/manifest.tsv --prepdir $O/set_pdvd/prep --questions $O/set_pdvd/questions.json --dead-points)
+(cd $IMG/pdhd/stm_michel_scan && ./serve_stm_michel_scan.sh 5023 --det pdhd --scan-tag own116h --manifest $O/set_pdhd/manifest.tsv --prepdir $O/set_pdhd/prep --questions $O/set_pdhd/questions.json --dead-points)
+# after the owner has labelled: the fold + re-grade (refuses an existing record), then the label-snapshot check
+bash $F/116_owner_fold.sh; sha256sum -c $F/116_label_shas_before_own116.txt
+```
+
+### 9.1 The sets
+
+Built by `scripts/d116_owner_scan_set.py` (fork of `d103_owner_scan_set.py`) from the doc-116 truth (`d116_grade.truth`
+with `smx116` folded at the lowest precedence): **tier 1 = every `fp_new` item of R2 vs A0 on either metric** — the
+script refuses to run unless that set equals the `fp_new` keys of the committed `figs/116_movers_r_<det>_R2.tsv` — plus
+controls (judged, non-owner items tagged identically in A0 and R2 with `is_stm` 1, `random.Random(116)`), shuffled,
+one question panel for every item (no chain answer, no prior label, no role; roles only in `items.tsv`).
+
+| det | tag | port | tier 1 | of which `is_stm` / Michel | owner-labelled on the old trajectory | controls | shown on | set table |
+|---|---|---|---|---|---|---|---|---|
+| PDVD | `own116v` | :5017 | 17 | 10 / 11 (4 on both) | 0 | 8 | `d116vr2` | `figs/116_own116v_set.tsv` |
+| PDHD | `own116h` | :5023 | 7 | 3 / 4 | 2 (`028084_2/116`, `029107_15/40`) | 4 | `d116hr2`; `029107_20/17` on `d115hoff` | `figs/116_own116h_set.tsv` |
+
+PDHD was added because the flip is a two-detector unit and its split-half failure rests on the same class (the 4 new
+Michel false positives, sec 6.2); its one fallback item is a 7.2 cm object on the new trajectory, below the prep's
+10 cm filter, so it is drawn from the production arm's payload and marked in the set table. Every payload was rendered
+headlessly once (`scan_harness.py shots`, WebGL, 0 context losses; `/home/xqian/tmp/d116/own/shots2_*`) before the
+servers were started; the servers answer on both ports. The sha256 of every other label tag (27 files) is recorded in
+`figs/116_label_shas_before_own116.txt`.
+
+### 9.2 The fold
+
+`figs/116_owner_fold.sh` runs `scripts/d116_owner_scan_score.py` (fork of `d103_owner_scan_score.py`: the R2 column,
+the doc-116 rule, date 2026-09-18; refuses an existing record) into `<det>/docs/scan/<det>_stm_michel_own116{v,h}_verdicts.json`,
+then `d116_grade.py --owner-record` (new option: the owner's verdicts at the *highest* precedence) with the full cell
+set and the split-half guard, writing `figs/116_own116{v,h}_<det>.txt` and `figs/116_grade_<det>_own116.txt`. The path
+was dry-run on a synthetic 4-label file in scratch (two relabels move PDVD `is_stm` purity −0.021 → −0.014, as the
+FP count says). What the flip needs (sec 6.3): PDVD `is_stm` FP ≤ 10 and Michel FP ≤ 14 at R2; PDHD the split-half
+guard, or the owner's ruling on that bar.
+
+### 9.3 Files (sec 9)
+
+`scripts/d116_owner_scan_set.py`, `scripts/d116_owner_scan_score.py`, `scripts/d116_grade.py` (`--owner-record`, additive;
+self-test unchanged), `figs/116_owner_fold.sh`, `figs/116_own116{v,h}_set.tsv`, `figs/116_label_shas_before_own116.txt`.
+Scratch: `/home/xqian/tmp/d116/own/{prep,sheet}_d116{v,h}r2`, `set_{pdvd,pdhd}`, `logs/`. Two empty directories
+`work/stm_michel_labels/own116{v,h}_shotcheck` were created by the first (mis-keyed) render check and are for the owner
+to remove; the render check was repeated with a scratch label dir.

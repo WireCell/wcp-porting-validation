@@ -1,0 +1,26 @@
+scan_id	key	role	fp_in	A0	R2	label_verdict	label_michel_kind	label_source	label_confidence	shown_on
+1	039349_21/27	tier1	R2:is_stm,R2:michel	not a candidate	is_stm 1 michel_found 1	THRU	none	record		d116vr2
+2	039253_16/104	tier1	R2:is_stm,R2:michel	is_stm 0 michel_found 0	is_stm 1 michel_found 1	THRU	none	new_agent		d116vr2
+3	039253_8/68	control	-	is_stm 1 michel_found 1	is_stm 1 michel_found 1	STM_MICHEL	attached	record		d116vr2
+4	039349_82/48	control	-	is_stm 1 michel_found 1	is_stm 1 michel_found 1	STM_MICHEL	both	record		d116vr2
+5	039349_37/55	tier1	R2:is_stm,R2:michel	not a candidate	is_stm 1 michel_found 1	THRU	none	new_agent		d116vr2
+6	039349_7/57	tier1	R2:is_stm	is_stm 0 michel_found 0	is_stm 1 michel_found 0	THRU	None	record		d116vr2
+7	039252_8/102	tier1	R2:is_stm	not a candidate	is_stm 1 michel_found 0	THRU	none	new_agent		d116vr2
+8	039349_24/24	tier1	R2:is_stm	not a candidate	is_stm 1 michel_found 0	THRU	— not set —	record		d116vr2
+9	039349_81/22	tier1	R2:is_stm	is_stm 0 michel_found 0	is_stm 1 michel_found 0	THRU	— not set —	record		d116vr2
+10	039252_4/104	tier1	R2:michel	is_stm 0 michel_found 0	is_stm 0 michel_found 1	THRU	none	new_agent		d116vr2
+11	039349_48/59	tier1	R2:michel	not a candidate	is_stm 1 michel_found 1	STM_ONLY	None	record		d116vr2
+12	039349_57/21	tier1	R2:michel	is_stm 0 michel_found 0	is_stm 0 michel_found 1	THRU	none	record		d116vr2
+13	039349_47/72	control	-	is_stm 1 michel_found 0	is_stm 1 michel_found 0	STM_ONLY	none	new_agent		d116vr2
+14	039253_17/107	tier1	R2:michel	is_stm 0 michel_found 0	is_stm 1 michel_found 1	STM_ONLY	none	new_agent		d116vr2
+15	039252_7/92	control	-	is_stm 1 michel_found 1	is_stm 1 michel_found 1	STM_MICHEL	attached	record		d116vr2
+16	039253_4/96	tier1	R2:is_stm	is_stm 0 michel_found 0	is_stm 1 michel_found 0	THRU	none	record		d116vr2
+17	039349_56/38	control	-	is_stm 1 michel_found 1	is_stm 1 michel_found 1	STM_MICHEL	attached	record		d116vr2
+18	039349_70/58	tier1	R2:is_stm,R2:michel	is_stm 0 michel_found 0	is_stm 1 michel_found 1	THRU	None	record		d116vr2
+19	039253_12/98	tier1	R2:michel	is_stm 0 michel_found 0	is_stm 0 michel_found 1	THRU	none	new_agent		d116vr2
+20	039252_9/48	tier1	R2:is_stm	not a candidate	is_stm 1 michel_found 0	THRU	none	smx116		d116vr2
+21	039252_12/84	tier1	R2:michel	not a candidate	is_stm 0 michel_found 1	STM_ONLY	detached dots	record		d116vr2
+22	039349_23/55	tier1	R2:michel	is_stm 0 michel_found 0	is_stm 0 michel_found 1	THRU	none	new_agent		d116vr2
+23	039252_0/77	control	-	is_stm 1 michel_found 0	is_stm 1 michel_found 0	STM_ONLY	detached dots	record		d116vr2
+24	039252_9/103	control	-	is_stm 1 michel_found 1	is_stm 1 michel_found 1	STM_MICHEL	attached	record		d116vr2
+25	039349_67/79	control	-	is_stm 1 michel_found 1	is_stm 1 michel_found 1	STM_MICHEL	both	record		d116vr2

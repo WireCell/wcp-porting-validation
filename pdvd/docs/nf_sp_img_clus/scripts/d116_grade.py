@@ -7,7 +7,9 @@ the same truth precedence, population, NEG / POS bounds and -0.020 bar, plus
                      with truth and source, one tsv per cell (P_<cell>.tsv);
   --split-half       the split-half guard of the rule: the grade repeated on the odd- and even-indexed halves of
                      the sorted event list, deltas vs the base per half (bar -0.040, reported per metric);
-  --neg-bar X        the NEG-bound bar of the rule (default -0.030), printed next to the point reading.
+  --neg-bar X        the NEG-bound bar of the rule (default -0.030), printed next to the point reading;
+  --owner-record F   the owner's doc-116 look (own116v / own116h, sec 6.3), folded at the HIGHEST precedence: an
+                     item in it takes the owner's verdict whatever its earlier source.
 --self-test reproduces d113_grade.py's self-test (same numbers, no extra record).
 
 Usage: d116_grade.py --det pdhd --cells A0=d115hoff,T=d115hp3bwp05,R1=d116hr1,R2=d116hr2,R3=d116hr3 \
@@ -22,7 +24,7 @@ import d103_union_grade as U                # noqa: E402
 LIMIT = D.LIMIT
 
 
-def truth(det, extra):
+def truth(det, extra, owner=None):
     T, counts = D.truth(det)
     if extra:
         n = 0
@@ -30,6 +32,11 @@ def truth(det, extra):
             if r["key"] not in T:
                 T[r["key"]] = U.row_truth(r, "smx116"); n += 1
         counts.append((os.path.basename(extra), n))
+    if owner:
+        n = 0
+        for r in json.load(open(owner)):
+            T[r["key"]] = U.row_truth(r, "record"); n += 1          # the flat verdict IS the owner's (own116)
+        counts.insert(0, (os.path.basename(owner), n))
     return T, counts
 
 
@@ -52,6 +59,7 @@ def main():
     ap.add_argument("--movers-out", default=None)
     ap.add_argument("--split-half", action="store_true")
     ap.add_argument("--neg-bar", type=float, default=-0.030)
+    ap.add_argument("--owner-record", default=None)
     ap.add_argument("--self-test", action="store_true")
     a = ap.parse_args()
     if a.self_test:
@@ -59,7 +67,7 @@ def main():
         return D.main()
     cells = [c.split("=") for c in a.cells.split(",")]
     base = cells[0][0]
-    T, src = truth(a.det, a.extra_record)
+    T, src = truth(a.det, a.extra_record, a.owner_record)
     R = {lab: U.cell_rows(a.det, arm) for lab, arm in cells}
     G, out, scen = reading(a.det, T, R, cells, base)
     print(f"# doc pdvd/116 grade ({a.det}); truth sources in precedence order (items taken): {src}")
