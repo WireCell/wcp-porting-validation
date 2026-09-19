@@ -569,6 +569,45 @@ On 2026-09-14 each event was examined in its Bee display and its `mc.json`, comp
 - **Failing flags:** the flags listed as failing match the `T_tagger` flags that are 0 in the event's `tracking-pr` ROOT file for all 29 events that have a `T_tagger` row. The flags checked are mip, mip_quality, gap, pio, br1–br4, stem_len, lem, vis, hol, lol, tro, stw, spt, sig, mgo, mgt, anc, cme, brm and stem_dir.
 - **One index omission:** row 7 also fails **br2** (`br_filled` = 1, `br2_flag` = 0). The table below includes it; the committed index file does not.
 
+Repro of the check (read-only). Every row should print `ok`, and the flags should print `same` everywhere except row 7:
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python3 - <<'EOF'
+import csv, math, re, uproot
+rd = lambda p: list(csv.DictReader(open(p), delimiter="\t"))
+C, T = rd("products/d107/candidates.tsv"), rd("products/d107/truth.tsv")
+fv = lambda x, y, z: 5 < abs(x) < 190 and abs(y) < 190 and 10 < z < 450
+S = {(t["run"], t["subrun"], t["event"]): [float(t[k]) for k in ("vx", "vy", "vz")] for t in T
+     if t["flav"] == "nue" and t["ccnc"] == "CC" and fv(*[float(t[k]) for k in ("vx", "vy", "vz")])}
+FL = ("mip mip_quality gap pio br1 br2 br3 br4 stem_len lem vis hol lol tro stw spt sig mgo mgt anc cme"
+      " brm stem_dir").split()
+n = 0
+for l in open("bee/d107nue31/d107nue31.index.txt"):
+    if l.startswith("#"): continue
+    i, ev, cat, tru, vtx, nue, numu, pf, note = l.rstrip("\n").split("\t"); n += 1
+    key = re.match(r"r(\d+)_s(\d+)_e(\d+)", ev).groups()
+    cs = [c for c in C if (c["run"], c["subrun"], c["event"]) == key and c["vertex_default"] == "0"]
+    if vtx == "-":
+        print(i, ev, "no candidate", "ok" if not cs else "DIFF"); continue
+    c = min(cs, key=lambda c: math.dist([float(c[k]) for k in ("nu_x", "nu_y", "nu_z")], S[key]))
+    d = math.dist([float(c[k]) for k in ("nu_x", "nu_y", "nu_z")], S[key])
+    ok = abs(d - float(vtx)) < 0.06 and all(abs(float(c[k]) - float(v)) < 0.006
+                                            for k, v in (("nue_score", nue), ("numu_score", numu)))
+    t = uproot.open(f"/nfs/data/1/xqian/sbnd_data/run/tracking-pr/tracking-pr_{ev}.root")["T_tagger"]
+    a = t.arrays([f + "_flag" for f in FL] + ["nue_score"], library="np")
+    j = min(range(t.num_entries), key=lambda k: abs(a["nue_score"][k] - float(nue)))
+    root = sorted(f for f in FL if a[f + "_flag"][j] == 0)
+    m = re.search(r"fails ([a-z0-9_]+(?:, [a-z0-9_]+)*)", note)
+    idx = sorted(m.group(1).split(", ") if m else [])
+    print(i, ev, "vtx/scores", "ok" if ok else "DIFF", "| flags", "same" if root == idx else f"ROOT {root} vs index {idx}")
+print("index rows", n, "true nueCC in FV", len(S))
+EOF
+# -> rows 0-1 "no candidate ok"; rows 2-30 "vtx/scores ok"; flags "same" except
+#    7 r713_s47_e30 ... ROOT ['br2', 'gap', 'stem_dir'] vs index ['gap', 'stem_dir']
+#    last line: index rows 31 true nueCC in FV 31
+```
+
 ### How the categories add up to section 5.5
 
 | Stage | Category | Events | Bee # |
