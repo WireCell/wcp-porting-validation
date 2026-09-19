@@ -1,0 +1,57 @@
+[
+  {"event": "item081", "vertex_id": 17002,
+   "confidence": "likely",
+   "why": "Rule 1 at the only 3-prong junction: the 5.7 cm stub rises monotonically to 205k at 17000 and the 5 cm e-stub rises away too, but the long 128 cm prong leaves at 161 deg to the hot stub (collinear trap) and reaches the z=0 face, so I drop a tier."},
+
+  {"event": "item082", "vertex_id": 9002,
+   "confidence": "likely",
+   "why": "Only junction in the event: the 25.5 cm prong has a clean terminal Bragg spike (245k) at 9003 away from 9002 and the other prong is a 3.1 cm 1.7-MIP stub at 52 deg, so everything gets hotter away from 9002; worry is that 9002 sits 1 cm from the z=500 face."},
+
+  {"event": "item083", "vertex_id": 11028,
+   "confidence": "certain",
+   "why": "Textbook two-Bragg-ends-one-cluster case from rule 1: the 67 cm prong spikes to 300k at 11003 and the 5.3 cm proton-like prong to 180k at 11000, both cooling into a sharp 40 deg kink at 11028, with small blobs scattered around it."},
+
+  {"event": "item084", "vertex_id": 14002,
+   "confidence": "unclear",
+   "why": "The 163 cm prong has a genuine template-matching stopping-muon rise at 14001, but the other 16 cm prong is flat at 2.4 MIP with no terminal rise and ends exactly on the y=200 face, so the cluster reads as an entering muon and 14002 as a scatter point rather than a vertex."},
+
+  {"event": "item085", "vertex_id": 25009,
+   "confidence": "unclear",
+   "why": "Clusters 17+24 are one 310 cm muon entering at z=0.1 that stops with a Michel (rule 3 puts its vertex end at the wall), leaving cluster 25 as the only other object: rule 1 clean (1 of 1 rising away, x2.37 to 118k) and the lowest z, but it is a degree-1 end at the upstream face so this is close to a coin flip."},
+
+  {"event": "item086", "vertex_id": 6001,
+   "confidence": "certain",
+   "why": "Clusters 6 and 52 are one contained 143 cm track (directions agree to 4 deg across a 12 cm gap) that Braggs to 103k at 52025, so rule 1 puts the vertex at the cool end 6001, which has a 228k 1.1 cm proton blob sitting 5 cm off it."},
+
+  {"event": "item087", "vertex_id": 11001,
+   "confidence": "unclear",
+   "why": "Messy fragmented event; I read the 3-prong sub-MIP fan at 55030 as the apex of an EM shower that points back (26 deg) at the lower blob cloud, where the only above-MIP object sits, and rule 1 puts its cool end at 11001 - but a CC-nue reading with the vertex at the shower apex is equally available."},
+
+  {"event": "item088", "vertex_id": 10001,
+   "confidence": "likely",
+   "why": "The zoom shows no kink at all at 10002 (prongs at 173 deg), so the apparent 2-of-2 rule-1 star there is the collinear trap; applying the monotonicity test, only the 10000 end is a true terminal Bragg while 10001 carries a 2 cm hot patch on an otherwise MIP end, i.e. vertex activity at the track start."},
+
+  {"event": "item090", "vertex_id": 3002,
+   "confidence": "likely",
+   "why": "Both free ends are genuine monotone Bragg peaks (210k at 3001 over the last 6 cm, 245k at 3000 over the last 4 cm), which one particle cannot do, so the junction they both cool toward is a real vertex, and a small off-axis clump of points sits right at 3002; tier dropped for the 171 deg prong pair."},
+
+  {"event": "item091", "vertex_id": 11003,
+   "confidence": "certain",
+   "why": "Rule 1 at a clean 141 deg junction: a 54 cm proton rising x3.34 to 185k at 11000 and a MIP muon leaving the other way that stops 222 cm later at 11001; the other deg-3 vertex 11005 is at 177 deg and is just a split point on that muon."},
+
+  {"event": "item092", "vertex_id": 16002,
+   "confidence": "unclear",
+   "why": "Shower-dominated event; in the principal frame the branches form a corner at about z=365, y=149 where cluster 16's hot stem, cluster 90, cluster 91 and the forward 93/80/79 chain converge, and 16002 is the candidate at that corner, but the dump's segment lengths disagree with its vertex separations here so I do not trust the topology."},
+
+  {"event": "item093", "vertex_id": 83023,
+   "confidence": "likely",
+   "why": "Rule 6 pattern: a 1 cm 270k stopping-proton stub with several shower-like fragments pointing at it, and both shower prongs (94023 and 23002) back-extrapolate to within 1-3 cm of this blob, so the vertex is at the stub rather than at the shower starts 6 cm away."},
+
+  {"event": "item094", "vertex_id": 10002,
+   "confidence": "likely",
+   "why": "The 42 cm prong has a textbook terminal Bragg (315k) at 10001, so the particle travels up and backward and stops, which no cosmic can do, so it must be born inside - and 10002 is the only junction (it also carries a 4 cm stub); the exactly 180 deg prong pair keeps this off certain."},
+
+  {"event": "item095", "vertex_id": 6004,
+   "confidence": "unclear",
+   "why": "Nothing in this event is above 63k and there is no Bragg or shower anywhere; 6004 is the only candidate where both prongs get hotter away at a genuine 65 deg opening, but it sits 0.4 cm under the y=200 face, so this is barely better than a guess."}
+]

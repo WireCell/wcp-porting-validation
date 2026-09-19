@@ -1,0 +1,208 @@
+{
+ "a": "pr150s0",
+ "b": "pr150csp3bw",
+ "seed": 150,
+ "movers": "/home/xqian/tmp/pr150/movers_s1_csp3bw.tsv",
+ "items": [
+  {
+   "item": "item001",
+   "sample": "nuecc48",
+   "event": 30504,
+   "arm": "pr150csp3bw",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item002",
+   "sample": "nuecc48",
+   "event": 163543,
+   "arm": "pr150s0",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item003",
+   "sample": "ncpi0",
+   "event": 56982,
+   "arm": "pr150s0",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item004",
+   "sample": "ncpi0",
+   "event": 180801,
+   "arm": "pr150csp3bw",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item005",
+   "sample": "nuecc48",
+   "event": 52672,
+   "arm": "pr150csp3bw",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item006",
+   "sample": "nuecc48",
+   "event": 219295,
+   "arm": "pr150s0",
+   "role": "calib",
+   "missing": false
+  },
+  {
+   "item": "item007",
+   "sample": "ncpi0",
+   "event": 463565,
+   "arm": "pr150s0",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item008",
+   "sample": "nuecc48",
+   "event": 52672,
+   "arm": "pr150s0",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item009",
+   "sample": "ncpi0",
+   "event": 521075,
+   "arm": "pr150csp3bw",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item010",
+   "sample": "ncpi0",
+   "event": 37112,
+   "arm": "pr150s0",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item011",
+   "sample": "nuecc48",
+   "event": 389538,
+   "arm": "pr150csp3bw",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item012",
+   "sample": "nuecc48",
+   "event": 163543,
+   "arm": "pr150csp3bw",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item013",
+   "sample": "nuecc48",
+   "event": 389538,
+   "arm": "pr150s0",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item014",
+   "sample": "nuecc48",
+   "event": 46363,
+   "arm": "pr150csp3bw",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item015",
+   "sample": "nuecc48",
+   "event": 38856,
+   "arm": "pr150csp3bw",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item016",
+   "sample": "nuecc48",
+   "event": 111412,
+   "arm": "pr150csp3bw",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item017",
+   "sample": "ncpi0",
+   "event": 180801,
+   "arm": "pr150s0",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item018",
+   "sample": "ncpi0",
+   "event": 56982,
+   "arm": "pr150csp3bw",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item019",
+   "sample": "nuecc48",
+   "event": 30504,
+   "arm": "pr150s0",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item020",
+   "sample": "ncpi0",
+   "event": 521075,
+   "arm": "pr150s0",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item021",
+   "sample": "ncpi0",
+   "event": 463565,
+   "arm": "pr150csp3bw",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item022",
+   "sample": "nuecc48",
+   "event": 111412,
+   "arm": "pr150s0",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item023",
+   "sample": "nuecc48",
+   "event": 46363,
+   "arm": "pr150s0",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item024",
+   "sample": "nuecc48",
+   "event": 38856,
+   "arm": "pr150s0",
+   "role": "mover",
+   "missing": false
+  },
+  {
+   "item": "item025",
+   "sample": "ncpi0",
+   "event": 37112,
+   "arm": "pr150csp3bw",
+   "role": "mover",
+   "missing": false
+  }
+ ]
+}

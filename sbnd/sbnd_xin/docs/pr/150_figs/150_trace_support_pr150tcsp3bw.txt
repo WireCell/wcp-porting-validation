@@ -1,0 +1,29 @@
+# doc pdvd/114 support census: det=sbnd arm=pr150tcsp3bw events=99 (missing 0, no image 0); records 117 (unmatched 0, no image 0, used 117)
+# thresholds: THR 1.0 cm, HOP 2.0, BALL_PAD 5.0, NEAR 1.5, COVER_SHARE 0.5, DEAD_SHARE 0.5, FIT_SHARE 0.8, MIN_ROWS 2, DEAD_R 1.5
+
+## rows
+- rows 38691 (245.9 m); UNSUPPORTED (off-charge in >= 1 live plane and > 1.0 cm from the ridge or from every image point) 1079 (2.8 %, 6.6 m); JITTER (off-charge but within 1.0 cm of both) 147 (0.4 %); WIDE (on charge everywhere, > 1.0 cm off the ridge) 494 (1.3 %)
+- per plane U/V/W: off-charge 1033 / 1127 / 1106; dead at the row 253 / 863 / 412
+- check (doc 111 sec 4.1): rows > 1.0 cm off the ridge 2125 (5.5 %); unsupported among them 49.7 %, among the rest 0.1 %
+- rows > 1.0 cm from every image point of ANY cluster 1313 (3.4 %); unsupported among them 78.4 %; rows > 1.0 cm from the own-id image but within 1.0 cm of another id's 528 (1.4 %)
+
+## stretches (>= 2 consecutive unsupported rows)
+- stretches 50 (single-row runs not counted: 16); rows 1063; length 6.5 m
+
+| class | stretches | share | rows | length (m) | length share | with a blank-plane seed vertex | open-ended | detour routes with an on-image alternative | mean on-image / seed cost |
+|---|---|---|---|---|---|---|---|---|---|
+| GAP-dead | 2 | 4.0 % | 52 | 0.3 | 5.0 % | 50.0 % | 1 | - | - |
+| GAP-short | 8 | 16.0 % | 27 | 0.2 | 3.0 % | 87.5 % | 0 | - | - |
+| GAP-live | 29 | 58.0 % | 952 | 5.7 | 88.8 % | 93.1 % | 0 | - | - |
+| XID | 1 | 2.0 % | 4 | 0.0 | 0.4 % | 0.0 % | 0 | - | - |
+| D-crawl | 5 | 10.0 % | 16 | 0.1 | 1.6 % | 100.0 % | 0 | 0 of 5 | - |
+| D-blank-int | 3 | 6.0 % | 6 | 0.0 | 0.6 % | 100.0 % | 0 | 2 of 3 | 1.40 |
+| D-3live | 1 | 2.0 % | 4 | 0.0 | 0.4 % | 0.0 % | 0 | 0 of 1 | - |
+| FIT | 1 | 2.0 % | 2 | 0.0 | 0.2 % | 0.0 % | 0 | - | - |
+
+| group | stretches | share | length (m) | length share |
+|---|---|---|---|---|
+| GAP | 39 | 78.0 % | 6.3 | 96.8 % |
+| DETOUR | 9 | 18.0 % | 0.2 | 2.6 % |
+| FIT | 1 | 2.0 % | 0.0 | 0.2 % |
+| XID | 1 | 2.0 % | 0.0 | 0.4 % |

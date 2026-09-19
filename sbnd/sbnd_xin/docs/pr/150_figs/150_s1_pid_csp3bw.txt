@@ -1,0 +1,75 @@
+=== pr150 PID scan re-score :: arm tag pr150csp3bw  (2026-09-18_21:18:05)
+  arm work-nuecc48-pr150csp3bw: 48 event(s), 46 carry an 'A5 hadronic census:' line
+  arm work-ncpi0-pr150csp3bw: 19 event(s), 11 carry an 'A5 hadronic census:' line
+  arm work-mcp1k-pr150csp3bw: 248 event(s), 11 carry an 'A5 hadronic census:' line
+  arm work-mcp2k-pr150csp3bw: ABSENT -- this sample's objects cannot be re-scored on this cell
+
+--- 1. regenerate the A5 census (pr148_a5_census.py, unforked) ---
+A5 census: 90 shower(s) in 68 event(s); 11 re-typed; 89 joined to a dump
+wrote /home/xqian/tmp/pr150/scorers/a5census-csp3bw.tsv
+    rc=0
+
+--- 2. identity probe + agreement table (pid_agreement.py) ---
+=== census csp3bw: 90 rows, 11 showers re-typed, samples mcp1k,ncpi0,nuecc48, 68 events ===
+  (event, shower_id) keys shared by >1 sample: 0  -- keying WITHOUT the sample, as pr148_score_scan.py does, would merge these
+
+--- scan0: 24 labelled objects (KEY rows 24) ---
+  event not on this arm            : 9
+  event present, shower_id absent  : 2
+  matched on (sample,event,shower) : 13
+     of those, start_seg == obj    : 0
+     of those, total_len within 2% : 0
+  IDENTITY-CONFIRMED (both)        : 0  <- the only rows scored
+
+--- scan2: 12 labelled objects (KEY rows 12) ---
+  event not on this arm            : 11
+  event present, shower_id absent  : 1
+  matched on (sample,event,shower) : 0
+     of those, start_seg == obj    : 0
+     of those, total_len within 2% : 0
+  IDENTITY-CONFIRMED (both)        : 0  <- the only rows scored
+
+--- scan3: 36 labelled objects (KEY rows 36) ---
+  event not on this arm            : 20
+  event present, shower_id absent  : 3
+  matched on (sample,event,shower) : 13
+     of those, start_seg == obj    : 0
+     of those, total_len within 2% : 0
+  IDENTITY-CONFIRMED (both)        : 0  <- the only rows scored
+
+=== agreement on the identity-confirmed objects, pass 1 = scan0 + scan2, 36 distinct objects ===
+  hand       A5 re-typed  A5 kept  total
+  HADRONIC             0        0      0
+  MIXED                0        0      0
+  EM                   0        0      0
+  TOTAL                0        0      0
+  A5 precision: no identity-confirmed re-type on this arm -- NOT 0, simply not measurable here.
+
+=== agreement on the identity-confirmed objects, pass 2 = scan3, the SAME 36 objects rescanned ===
+  hand       A5 re-typed  A5 kept  total
+  HADRONIC             0        0      0
+  MIXED                0        0      0
+  EM                   0        0      0
+  TOTAL                0        0      0
+  A5 precision: no identity-confirmed re-type on this arm -- NOT 0, simply not measurable here.
+    rc=0
+
+--- 3. doc pr/148 sec 12 tables, unforked scorer against this census ---
+    pr148_scan_combined.py indexes byk[k] unguarded, so it ABORTS (KeyError)
+    as soon as a labelled object is missing on this arm.  That abort is a
+    result, not a bug: read step 2's absent counts for which objects.
+labels pooled from 2 scan(s): 36 object(s)
+Traceback (most recent call last):
+  File "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/scripts/pr148_scan_combined.py", line 181, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/scripts/pr148_scan_combined.py", line 105, in main
+    lab = [(k, v) for k, v in V.items() if byk[k]["verdict"] == "1"]
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/scripts/pr148_scan_combined.py", line 105, in <listcomp>
+    lab = [(k, v) for k, v in V.items() if byk[k]["verdict"] == "1"]
+                                           ~~~^^^
+KeyError: ('76350', '0')
+    rc=1
+
+=== done 2026-09-18_21:18:07

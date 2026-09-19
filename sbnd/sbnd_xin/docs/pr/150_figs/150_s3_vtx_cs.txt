@@ -1,0 +1,12 @@
+/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/scripts/analysis/pr150/vertex_tolerance.py:73: RuntimeWarning: invalid value encountered in subtract
+  f'median shift of kept(<=3cm in both) {np.median(np.abs(d - d0)[(d <= 3) & (d0 <= 3)]) if ((d <= 3) & (d0 <= 3)).any() else float("nan"):.2f} cm')
+# vertex_tolerance stage 3 base pr150s0; clicks vtx105; fixed denominator (missing vertex = inf)
+[ISO] labelled 357  base b1: dist<0.05cm 79
+   pr150s0          <=1cm  268  <=3cm  297  <=10cm  317  lost   0  | vs base: moved>10cm away   0 toward   0  median shift of kept(<=3cm in both) 0.00 cm
+   pr150cs          <=1cm  204  <=3cm  265  <=10cm  302  lost  13  | vs base: moved>10cm away  35 toward  13  median shift of kept(<=3cm in both) 0.24 cm
+[control] labelled 465  base b1: dist<0.05cm 111
+   pr150s0          <=1cm  348  <=3cm  380  <=10cm  401  lost   2  | vs base: moved>10cm away   0 toward   0  median shift of kept(<=3cm in both) 0.00 cm
+   pr150cs          <=1cm  326  <=3cm  360  <=10cm  393  lost   7  | vs base: moved>10cm away  34 toward  25  median shift of kept(<=3cm in both) 0.17 cm
+[all] labelled 823  base b1: dist<0.05cm 190
+   pr150s0          <=1cm  616  <=3cm  677  <=10cm  718  lost   3  | vs base: moved>10cm away   0 toward   0  median shift of kept(<=3cm in both) 0.00 cm
+   pr150cs          <=1cm  530  <=3cm  625  <=10cm  695  lost  21  | vs base: moved>10cm away  69 toward  38  median shift of kept(<=3cm in both) 0.19 cm

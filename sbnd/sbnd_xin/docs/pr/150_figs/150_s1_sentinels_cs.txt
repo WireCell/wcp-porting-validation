@@ -1,0 +1,48 @@
+OPEN 137238   pr/93 r4 + pr/127  sccc demote+bridge: the cross-cluster muon body joins PF
+        arm=work-nuecc48-pr150cs
+        [XX] pf_node_lt mu- 150 MeV (seen: 242)
+        [XX] log_contains 'sccc demote'
+        OPEN: doc 144 sec 15 -- the exclusion pool empties (n_excluded 9 -> 1) and the EM shower absorbs it; item 5, a PID round
+FAIL 37112    pr/125 K3          samevtx track-frag absorb: gamma + proton stem = ONE shower
+        arm=work-ncpi0-pr150cs
+        [XX] max |pdg|=11 shower 684.6 want >= 700 MeV
+        [ok] pf_node_lt proton 400 MeV (seen: 3)
+FAIL 69314    pr/125 K5          satellite absorb: the vertex-connected crumbs fold in
+        arm=work-nuecc48-pr150cs
+        [XX] showers=23 want [14, 20]
+SKIP 94392    pr/125 guard       (no arm has this event)
+INERT 52693   pr/125 guard       pass3_cone track guard: 183 -> 153 MeV e- + released muon
+        shower_pass3_cone_guard_len on/off byte-identical at this epoch
+SKIP 77328    pr/125 guard       (no arm has this event)
+SKIP 171572   pr/123 r2          (no arm has this event)
+SKIP 393505   pr/123 r2          (no arm has this event)
+SKIP 348471   pr/93 r4 + pr/121  (no arm has this event)
+SKIP 315167   pr/93 r4           (no arm has this event)
+SKIP 55740    pr/128 class A     (no arm has this event)
+SKIP 72786    pr/128 class A     (no arm has this event)
+SKIP 393505   pr/129             (no arm has this event)
+INERT 171572  pr/129             real daughter KEPT by the pointing test
+        kine_guard_freed_impact on/off byte-identical in BOTH frames -- never discriminated
+INERT 94392   pr/129             guard-freed/continuation hand-off costs nothing
+        kine_guard_freed_impact on/off byte-identical in BOTH frames -- never discriminated
+INERT 47212   pr/120             stem_backfill_back_guard: the backward stem stays OUT of the shower
+        stem_backfill_back_guard on/off byte-identical at this epoch
+SKIP 497311   doc 84 r1          (no arm has this event)
+SKIP 66366    doc 84 r1          (no arm has this event)
+SKIP 313847   doc 84 r2          (no arm has this event)
+INERT 281595  doc 84 r2          members_geometry: the 221 cm continuation beats the 13.9 cm stub
+        long_muon_members_geometry on/off byte-identical at this epoch
+SKIP 53793    doc 84 r2          (no arm has this event)
+SKIP 177536   doc 84 r2.1        (no arm has this event)
+SKIP 77978    doc 84 r2.1        (no arm has this event)
+SKIP 172794   doc 84 r4          (no arm has this event)
+SKIP 347890   doc 84 r4          (no arm has this event)
+SKIP 67026    doc 84 r4          (no arm has this event)
+SKIP 292643   pr/130 B           (no arm has this event)
+SKIP 179369   pr/130 B           (no arm has this event)
+INERT 100222  pr/130 prox        shower_pass4_prox_guard_len: the 110cm muon leaves the EM shower
+        shower_pass4_prox_guard_len on/off byte-identical at this epoch
+INERT 175896  pr/130 backfill    shower_pass3_backfill_guard_len: the declined proton is not re-adopted
+        shower_pass3_backfill_guard_len on/off byte-identical at this epoch
+
+0 PASS, 2 FAIL, 1 OPEN, 7 INERT, 20 SKIP

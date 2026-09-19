@@ -1,0 +1,2 @@
+# doc pr/149 round 2 POST HOC local jitter vs bow, Stage-2 iso stratum (150 events); cm; d = B - A
+pr150p3bw vs pr150s0: paired 143 | jit_x base 0.0429 median d +0.0002 imp 29 wor 30 p=1 | jit_t base 0.0957 median d -0.0020 imp 47 wor 33 p=0.146 | bow_x base 1.1913 median d +0.0109 imp 57 wor 77 p=0.1

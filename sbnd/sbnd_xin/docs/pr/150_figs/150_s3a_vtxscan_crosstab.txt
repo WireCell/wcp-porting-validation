@@ -1,0 +1,32 @@
+# pr150 wave-1 (mcp1k) blind two-arm scan, cross-tab: where the scanner's pick lands on each arm's rendering (1 cm): click = the vtx105 click, Amain/Bmain = that arm's own main vertex, other = neither
+  1  away    A:Amain B:Bmain
+  3  away    A:Amain B:other
+  1  away    A:click B:Bmain
+  7  away    A:click B:click
+  2  away    A:click B:other
+  1  away    A:other B:Bmain
+  2  away    A:other B:click
+  4  away    A:other B:other
+ 10  away    B missing (lost candidate)
+  2  toward  A:Amain B:Bmain
+  4  toward  A:Amain B:other
+  1  toward  A:click B:Bmain
+  1  toward  A:click B:click
+  4  toward  A:click B:other
+  2  toward  A:other B:Bmain
+  5  toward  A:other B:other
+# confidence of the B-rendering picks:
+  1  away    B:Bmain  certain
+  2  away    B:Bmain  unclear
+  4  away    B:click  certain
+  5  away    B:click  likely
+  1  away    B:other  certain
+  6  away    B:other  likely
+  2  away    B:other  unclear
+  2  toward  B:Bmain  certain
+  2  toward  B:Bmain  likely
+  1  toward  B:Bmain  unclear
+  1  toward  B:click  likely
+  3  toward  B:other  certain
+  7  toward  B:other  likely
+  3  toward  B:other  unclear

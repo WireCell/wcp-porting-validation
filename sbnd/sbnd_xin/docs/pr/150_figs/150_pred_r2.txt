@@ -1,0 +1,69 @@
+doc sbnd_xin/pr/150 -- PRE-REGISTRATION of the RETUNE stage (frozen before the first retune arm; sha256 recorded in the doc)
+=================================================================================================================
+
+Input (the impact stage, 150_pred.txt; sec 2-4 of the doc).  Trajectory T = csp3bw (charge_stepped retile +
+prefer3 + base-weight 0.5 tree+path).  On the 3067-event census T vs s0:  vertex <= 3 cm on the 823 labelled numu events 677 -> 620 (ISO 297 -> 269,
+control 380 -> 351), > 10 cm movers away 68 / toward 35, labelled events that lose their vertex 22; nu_evaluated
+flips 70 (nu -> cosmic 40, cosmic -> nu 34), STM bundle flips 81, FC 146 (scope repair), TGM 1 (mcp2k 411886,
+the pr/149 scope flip -1 -> 0); numu > 0.9 782 -> 782; |dEnu| median 19.8 MeV; sentinels 20 PASS / 0 FAIL ->
+15 / 5 (171572, 72786, 393505, 313847, 292643); core time x1.03, RSS x1.00.  The trajectory itself improves on
+every arm-wide clause (R2D_W 0.97 -> 0.68 %, P2 -21 %, P1 -12 %, uncov -0.008, jit_t -0.0066 p 4e-12), the ISO
+zig-zag is flat (the bow is in the image, sec 3.3), ISO stubs 151 -> 174 (+15 %; cs alone +42 %, p3bw alone -1 %).
+
+Mechanism table (sec 4.2-4.4, the full census):
+  - STM verdict churn: every flipped candidate passes the shape (KS/ratio) test in the losing arm too -- the flips
+    are the residual-length / Michel-residual rules (constants, no key) and the guards (pre-fit exit, proton,
+    left-charge, mid-point; symmetric in both directions).  The shape-boundary hysteresis pr/149 sec 10 item 1
+    asked about would act on 0 of them: NOT A LEVER on SBND.  Class: TRADE (symmetric churn), reported.
+  - Vertex movers > 10 cm: CHOICE (s0's vertex is still a candidate, the cell chose another) ~ half; STRUCTURE
+    (the candidate set changed under it) ~ a quarter; LOST-CANDIDATE (the bundle newly STM-tagged) ~ a quarter.
+    Full census: away 70 = CHOICE 30, STRUCTURE 20 (14 with the click no longer a candidate), LOST-CANDIDATE 20;
+    toward 38 = CHOICE 25, STRUCTURE 10, LOST 2, GAINED 1.  The pr/149 sec 7.2 stub-branch mechanism is NOT
+    dominant under T: the new main vertex carries a < 5 cm stub on 16 / 50 away movers vs 13 / 50 in s0 and
+    161 / 715 non-movers (gained a stub 7, lost one 4).  STM candidacy flips 93 (lost 42 / gained 51):
+    accepted <-> eval-failed 19 / 18, pre-fit-exit -> accepted 16 vs 9, proton 11 / 10, left-charge 6 / 2.
+    Keys that act on CHOICE: the DL re-rank operating point (dl_vtx_min_accept_score, dl_vtx_top_k) and
+    vertex_z_prior_scale; on STRUCTURE / stubs: steiner_terminal_min_separation, mvga_stub, es3sg_stub_max; on the
+    cloud density: retile_sampler_charge_threshold.
+
+1. LADDER  (one key set of <= 3 keys, coarse pre-registered values; every level = T's TLAs + the level's keys;
+   TLA files docs/pr/150_figs/tla/r<k>.tla; compile proof per level = only the named keys move vs csp3bw)
+   R1  steiner_terminal_min_separation = 0.7      (cm; the pr/149 amendment-1 stub lever, its only recovering value;
+                                                     acts on the +15 % ISO stubs and the STRUCTURE class)
+   R2  R1 + retile_sampler_charge_threshold = 6000 (the pr/149 cell that recovered the two Stage-1 EM sentinels)
+   R3  R1 + dl_vtx_min_accept_score = 4.0          (the pre-2026-08-15 DL admission; admits more DL candidates
+                                                     into the re-rank: acts on the CHOICE class)
+   R4  R2 + dl_vtx_min_accept_score = 4.0
+   Arms: Stage 1 (67) + the pr/149 Stage-2 manifest (559) = 626 events per level, JOBS 6 (work-<s>-pr150r<k>),
+   then the SELECTED level on the full 3000 numu (work-<s>-pr150r<k>f).  s0 and csp3bw on the same 626 are
+   already on disk (subsets of the full arms; no re-run: the same binary, config and per-event mode).
+   Prediction (not gating): R1 removes the stubs (pr/149 measured it) and moves the vertex little (pr/149: 253 vs
+   cs 265 at <= 3 cm on Stage 2, i.e. no recovery); R2 recovers the two Stage-1 EM sentinels; R3 / R4 move the
+   CHOICE class in an unknown direction.  The honest expectation is that no level reaches a): the cost is a
+   re-decision of the vertex on a changed trajectory, not a threshold.
+
+2. METRICS on the 626 (each level vs s0, with csp3bw beside it):
+   V1  vertex <= 3 cm on the labelled events (Stage 1: 56; Stage 2: the labelled events of the 559 = 357 on s0)
+   V2  > 10 cm movers away / toward vs s0
+   N1  nu_evaluated lost / gained; event_label migrations
+   N2  numu > 0.9 count; nue > 7.0 / > 4.3 counts (Stage 1)
+   E1  |dEnu| median over both-evaluated
+   S1  sentinels PASS / FAIL (the full 30-entry registry on the 626; s0's count on the same events)
+   T1  the trajectory clauses: R2D_W, P1, P2, uncov (pr150_traj_eval.py), jit_t
+   C   rc 0 on every event; DL vertex failed 0; TGM evaluated flips 0
+   R   core time per event median <= 1.50 x s0; RSS <= 1.25 x s0
+
+3. RULE  (the recovery bar; the smallest level that passes is SELECTED; if none passes the fewest-failing level
+   is named and nothing is recommended for production)
+   a) V1 >= s0 - 1 % of the labelled events (rounded up), AND V2 away <= toward + 5;
+   b) N1 lost <= gained + 5; TGM evaluated flips = 0;
+   c) S1 FAIL <= s0 FAIL + 1 with every FAIL adjudicated by name;
+   d) N2 numu > 0.9 within +-3 % of s0's count; E1 <= 25 MeV;
+   e) T1: R2D_W, P2, uncov <= s0 (row-weighted) -- the gain the trajectory is for must survive the retune;
+   f) C and R.
+   Overfit guard: split-half on odd / even event ids: no clause of the selected level worse than its bar by more
+   than 1 % (V1) / 2 (V2, N1) on either half.
+   Confirmation: the SELECTED level on the full 3000 numu re-reads a)-f) on the 823 labelled events + the blind
+   two-arm vertex scan of its > 10 cm movers vs s0 (the same protocol as sec 4.4; a new tag).
+
+4. STOP-AND-REPORT: as 150_pred.txt sec 9.

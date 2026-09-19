@@ -1,0 +1,43 @@
+[
+  {"event": "item077", "vertex_id": 9002, "confidence": "likely",
+   "why": "Only multi-prong junction in the event: a deg-3 meeting of a 12.7 cm mu, a 4.8 cm pi+ and a 2.0 cm p, with the long prong's mild tip rise at 9001 marking its stop; the hot first 4 cm at 9002 is junction contamination from the two short stubs, and a small e-pair cluster sits 12 cm away."},
+
+  {"event": "item078", "vertex_id": 22002, "confidence": "certain",
+   "why": "Rule 1 in its clean form: both prongs get hotter away from 22002 - the 44.8 cm muon has a template-matching Bragg rise over its last 10 cm at 22003 (with a 6 cm Michel-like e hanging off that stopping end, rule 3) and the 12.2 cm proton peaks at 207k at 22000; prongs open at 114 deg so the collinear trap does not apply."},
+
+  {"event": "item079", "vertex_id": 18002, "confidence": "unclear",
+   "why": "Essentially a guess: every candidate lies on one pencil-thin 375 cm straight line (principal frame a2,a3 ~ 0 throughout, cone RMS 0.2-3.5 cm everywhere) with a flat 45-60k MIP profile and no Bragg anywhere; 18002 is named only because it is the one deg-3 point with an off-axis prong, and its rule-1 numbers come from a broken fit reading ~3k."},
+
+  {"event": "item080", "vertex_id": 15003, "confidence": "likely",
+   "why": "Two-Bragg-ends trap resolved: the 76.4 cm proton follows the brown template from 260k at 15000 down to 86k, and the other arm (25.4 cm flat MIP + 8.2 cm rising to 145k at 15004) stops at the far end too, so both point away from 15003; the intervening 15006 fan is a 150 deg near-collinear scatter of that MIP, not a primary."},
+
+  {"event": "item081", "vertex_id": 48035, "confidence": "certain",
+   "why": "Textbook rule 1, confirmed on the shapes in p4 and not just the 5 cm means: all three prongs start at only 13-21k right at 48035 and climb away from it - the 9.4 cm mu to a 100-120k plateau at 48032, the 8.6 cm e to ~89k at 48036, the 6.3 cm pi+ monotonically to 69k at 48038 - and cluster 14's 24 cm chain starts 3 cm off the same point, making it a 4-5 prong star."},
+
+  {"event": "item082", "vertex_id": 3001, "confidence": "likely",
+   "why": "Single-track event read by the dQ/dx gradient: the 64 cm cluster grades monotonically from ~70k at the free end 3001 up to 270k at 3000 along the stopping-proton template, so the particle starts at the cool end; the 3002 junction is 153 deg collinear (trap 3) and the 155k spike there is a blob, not a second Bragg."},
+
+  {"event": "item084", "vertex_id": 11002, "confidence": "unclear",
+   "why": "Close to guessing: two small EM clumps 25 cm apart, no Bragg, no long track, several near-zero fit segments. 11002 is picked as the only genuine non-collinear 3-prong star (prong pairs at 105/137/41 deg, measurable prongs cooling toward it), while the other hub 51020 is 169 deg collinear with a stub; rule 2 (lower z) actually favours 51020, so this is a coin-flip."},
+
+  {"event": "item085", "vertex_id": 15006, "confidence": "certain",
+   "why": "Rule 1, 2 of 2: from 15006 the 95.6 cm muon runs flat MIP out to the bottom face and the 18.5 cm prong rises monotonically along the proton template to 250k at 15001, meeting at a 129 deg kink, and both products go forward in z from an upstream vertex."},
+
+  {"event": "item086", "vertex_id": 8001, "confidence": "likely",
+   "why": "The 109 cm track is coolest (30-45k, below MIP) at 8001 and stays elevated at 85-160k over the whole last 10 cm past the 158 deg kink at 8003, so it starts at 8001 and stops near 8000; the single 200k point at the 8001 tip is a blob/vertex recoil, not a Bragg, since the 10 cm before it are sub-MIP. Corroborated in p1: all four small clusters (28004/5, 30008, 29006, 31010) sit 13-22 cm from 8001 with nothing at all near 8000, and rule 2 agrees since 8001 has the lowest z."},
+
+  {"event": "item087", "vertex_id": 8001, "confidence": "likely",
+   "why": "The whole 30 cm cluster is one smoothly curling stopping track: dQ/dx climbs 50k (8001) to 80k (8002) to a 358k tip at 8000, matching the stopping-particle curve at each residual range, so the kinks at 8003 and 8002 are end-of-range scattering and 8001 is the cool start; the sub-cm blips sit 6-7 cm from 8001."},
+
+  {"event": "item088", "vertex_id": 14001, "confidence": "likely",
+   "why": "Single-prong event with an unambiguous direction: the 158.5 cm muon has a clean Bragg at 14000 (150k falling to 60k within 20 cm) and is flat 50-56k at 14001, so 14001 - interior, not at any face - is the start and hence the vertex."},
+
+  {"event": "item089", "vertex_id": 3000, "confidence": "likely",
+   "why": "Two hot ends, only one real Bragg: the 3001 end rises monotonically over its last 10 cm along the stopping-muon template, while 3000 is a 2-point 220k spike on an otherwise flat MIP segment - a blob. So the 46 cm track starts at 3000, where three small fragments (68024, 36021, 32013) also sit within 11 cm."},
+
+  {"event": "item090", "vertex_id": 20007, "confidence": "unclear",
+   "why": "Rule 8 case - nothing longer than 2.5 cm in the whole event and no readable direction. Named 20007 only because its 2 cm 212k proton stub sits in the lower-z clump that also holds 73019 and 71015 within ~10 cm, against the equally good 220k stub at 9001/9000 some 130 cm away."},
+
+  {"event": "item091", "vertex_id": 21003, "confidence": "certain",
+   "why": "Classic CC topology: a 201.6 cm flat-MIP muon exiting at the bottom face and a 60.4 cm proton that rises along the brown template from 83k at 21003 to 270k at 21001, meeting in a clean 76 deg V, with both products going forward in z from an upstream point."}
+]

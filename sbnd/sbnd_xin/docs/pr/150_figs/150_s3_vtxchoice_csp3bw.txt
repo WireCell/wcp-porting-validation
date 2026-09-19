@@ -1,0 +1,110 @@
+sample	event	direction	dA	dB	A_in_B	B_in_A	click_in_A	click_in_B	same_cluster	class
+mcp1k	57903	away	1.04	12.77	0	0	0	0	0	STRUCTURE-click-gone
+mcp1k	59335	toward	65.05	0.09	1	1	1	1	1	CHOICE
+mcp1k	61843	toward	12.38	0.24	0	1	1	1	1	CHOICE
+mcp1k	62281	toward	29.27	0.56	0	1	1	1	1	CHOICE
+mcp1k	65025	away	0.00	inf						LOST-CANDIDATE
+mcp1k	66118	away	0.13	66.54	0	0	1	0	1	STRUCTURE-click-gone
+mcp1k	67746	away	0.00	inf						LOST-CANDIDATE
+mcp1k	166804	toward	24.66	1.34	1	0	1	1	1	STRUCTURE
+mcp1k	166870	away	2.52	18.94	0	0	0	1	1	STRUCTURE
+mcp1k	171892	away	0.00	12.81	1	0	1	1	0	CHOICE
+mcp1k	172788	away	99.26	inf						LOST-CANDIDATE
+mcp1k	276836	toward	224.78	48.34	1	1	1	0	1	CHOICE
+mcp1k	278266	toward	inf	inf						LOST-CANDIDATE
+mcp1k	278640	away	0.00	inf						LOST-CANDIDATE
+mcp1k	278794	away	0.00	16.96	1	0	1	1	1	CHOICE
+mcp1k	279256	toward	29.46	0.13	0	1	1	1	1	CHOICE
+mcp1k	281527	away	0.15	153.16	1	1	1	1	1	CHOICE
+mcp1k	281639	away	0.00	29.73	1	1	1	1	0	CHOICE
+mcp1k	281953	away	0.00	inf						LOST-CANDIDATE
+mcp1k	282737	away	0.06	29.30	1	1	1	1	1	CHOICE
+mcp1k	283691	away	0.15	16.13	1	1	1	1	1	CHOICE
+mcp1k	283905	away	0.00	inf						LOST-CANDIDATE
+mcp1k	284235	away	1.73	30.94	0	0	0	1	0	STRUCTURE
+mcp1k	285366	away	66.92	inf						LOST-CANDIDATE
+mcp1k	285443	away	0.00	inf						LOST-CANDIDATE
+mcp1k	285665	toward	88.95	2.20	0	1	1	0	1	CHOICE
+mcp1k	286353	away	262.56	inf						LOST-CANDIDATE
+mcp1k	286655	toward	27.88	7.96	1	0	1	1	0	STRUCTURE
+mcp1k	286681	toward	68.62	6.98	1	0	0	0	1	STRUCTURE
+mcp1k	287431	toward	inf	inf						LOST-CANDIDATE
+mcp1k	290052	away	0.24	69.15	1	0	1	1	1	CHOICE
+mcp1k	292643	away	0.71	22.27	0	1	1	0	1	STRUCTURE-click-gone
+mcp1k	293149	away	24.24	31.18	0	0	1	0	1	STRUCTURE-click-gone
+mcp1k	313781	toward	40.53	0.21	0	1	1	1	0	CHOICE
+mcp1k	315013	away	0.00	212.64	1	0	1	1	1	CHOICE
+mcp1k	315343	toward	10.91	0.80	0	1	1	1	1	CHOICE
+mcp1k	321173	toward	22.10	1.15	0	0	1	0	1	STRUCTURE
+mcp1k	321371	away	0.16	62.69	1	0	1	1	1	CHOICE
+mcp1k	347129	away	1.22	64.90	0	0	0	0	0	STRUCTURE-click-gone
+mcp1k	348515	toward	56.17	18.34	1	1	1	1	1	CHOICE
+mcp1k	348713	away	0.00	90.25	1	0	1	1	1	CHOICE
+mcp1k	386948	toward	48.50	4.63	0	0	1	0	0	STRUCTURE
+mcp1k	389874	away	0.00	12.96	1	0	1	1	1	CHOICE
+mcp1k	390864	toward	93.19	0.10	0	1	1	1	1	CHOICE
+mcp1k	391766	toward	115.52	0.41	1	1	1	1	0	CHOICE
+mcp1k	393212	away	2.22	25.12	0	1	0	0	0	STRUCTURE-click-gone
+mcp1k	399052	toward	21.87	0.12	1	1	1	1	0	CHOICE
+mcp1k	399856	away	0.00	61.20	1	1	1	1	1	CHOICE
+mcp1k	401780	toward	63.62	8.96	1	0	1	0	1	STRUCTURE
+mcp1k	409546	away	1.86	18.06	1	1	1	1	1	CHOICE
+mcp1k	411460	away	2.71	inf						LOST-CANDIDATE
+mcp2k	47278	away	0.21	27.30	1	1	1	1	1	CHOICE
+mcp2k	51128	away	0.22	12.71	1	1	1	1	1	CHOICE
+mcp2k	52605	toward	24.69	5.51	0	0	1	1	0	STRUCTURE
+mcp2k	52693	away	0.01	19.22	0	0	1	0	0	STRUCTURE-click-gone
+mcp2k	55740	toward	235.97	0.32	0	1	1	1	0	CHOICE
+mcp2k	56972	away	0.36	inf						LOST-CANDIDATE
+mcp2k	58072	away	0.20	12.17	0	0	1	0	1	STRUCTURE-click-gone
+mcp2k	65266	toward	45.47	0.19	1	1	1	1	1	CHOICE
+mcp2k	66872	away	5.12	62.21	1	1	1	1	1	CHOICE
+mcp2k	67942	away	0.00	inf						LOST-CANDIDATE
+mcp2k	69936	away	0.23	57.52	0	1	1	0	1	STRUCTURE-click-gone
+mcp2k	72099	away	0.00	inf						LOST-CANDIDATE
+mcp2k	74270	toward	17.14	0.17	1	1	1	1	1	CHOICE
+mcp2k	76346	toward	37.04	30.96	1	1	1	1	0	CHOICE
+mcp2k	76866	toward	19.96	0.40	1	1	1	1	1	CHOICE
+mcp2k	90135	away	0.00	128.93	1	1	1	1	0	CHOICE
+mcp2k	92904	toward	25.82	6.84	1	1	1	1	1	CHOICE
+mcp2k	92992	away	0.16	56.78	1	1	1	1	1	CHOICE
+mcp2k	97062	toward	35.15	0.97	0	1	1	1	1	CHOICE
+mcp2k	99232	away	0.27	32.77	0	1	1	0	1	STRUCTURE-click-gone
+mcp2k	103798	away	0.17	18.93	1	1	1	1	1	CHOICE
+mcp2k	105492	toward	12.50	0.09	1	1	1	1	1	CHOICE
+mcp2k	161043	away	0.16	11.66	1	1	1	1	1	CHOICE
+mcp2k	163771	away	0.00	98.63	1	0	1	1	1	CHOICE
+mcp2k	165544	away	0.04	19.24	1	0	1	1	1	CHOICE
+mcp2k	167744	away	0.00	203.69	0	0	1	0	0	STRUCTURE-click-gone
+mcp2k	170274	away	0.00	11.28	1	1	1	1	1	CHOICE
+mcp2k	173093	away	0.00	45.74	1	0	1	1	0	CHOICE
+mcp2k	173620	away	15.09	102.05	1	1	1	1	1	CHOICE
+mcp2k	174795	away	0.00	inf						LOST-CANDIDATE
+mcp2k	176810	away	0.00	11.07	0	1	1	0	1	STRUCTURE-click-gone
+mcp2k	177068	away	2.08	27.10	0	0	1	1	1	STRUCTURE
+mcp2k	177939	away	3.50	inf						LOST-CANDIDATE
+mcp2k	178535	away	15.15	inf						LOST-CANDIDATE
+mcp2k	179246	toward	31.91	0.12	1	1	1	1	0	CHOICE
+mcp2k	280159	away	13.21	27.12	0	1	0	0	1	STRUCTURE-click-gone
+mcp2k	280709	away	27.25	47.09	1	0	1	0	1	CHOICE
+mcp2k	281567	away	10.72	18.65	0	0	1	1	1	STRUCTURE
+mcp2k	281781	away	0.29	45.35	1	0	1	1	0	CHOICE
+mcp2k	321015	toward	28.95	6.61	1	1	0	0	1	CHOICE
+mcp2k	321169	toward	19.00	1.15	1	0	1	1	1	STRUCTURE
+mcp2k	322707	away	0.16	37.00	1	0	1	1	1	CHOICE
+mcp2k	323369	away	235.09	inf						LOST-CANDIDATE
+mcp2k	350354	away	5.22	62.58	0	0	0	1	1	STRUCTURE
+mcp2k	355106	toward	352.89	1.41	1	0	1	0	1	STRUCTURE
+mcp2k	392891	away	0.98	inf						LOST-CANDIDATE
+mcp2k	394407	toward	313.47	0.39	1	1	1	1	0	CHOICE
+mcp2k	396816	toward	32.30	12.34	1	0	1	1	0	STRUCTURE
+mcp2k	396829	away	0.00	66.49	0	1	1	0	0	STRUCTURE-click-gone
+mcp2k	400185	away	0.00	62.85	1	0	1	1	1	CHOICE
+mcp2k	406367	away	0.77	inf						LOST-CANDIDATE
+mcp2k	406631	toward	206.10	0.06	0	1	1	1	1	CHOICE
+mcp2k	409052	away	0.00	inf						LOST-CANDIDATE
+mcp2k	474612	away	0.00	18.55	1	0	1	1	1	CHOICE
+mcp2k	479650	toward	25.87	15.10	0	1	1	1	0	CHOICE
+mcp2k	481014	toward	inf	123.01						GAINED-CANDIDATE
+mcp2k	499423	away	17.42	43.49	0	0	1	1	1	STRUCTURE
+# away CHOICE 30; away LOST-CANDIDATE 20; away STRUCTURE 6; away STRUCTURE-click-gone 14; toward CHOICE 25; toward GAINED-CANDIDATE 1; toward LOST-CANDIDATE 2; toward STRUCTURE 10

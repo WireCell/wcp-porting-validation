@@ -1,0 +1,8 @@
+# pr150 stub attribution A=pr150s0 B=pr150csp3bw: labelled events with a main vertex in both 800
+| class | n | A: main vertex with a stub < 3 / 5 / 10 cm | B: the same | A deg-1 main | B deg-1 main | A shortest att. median (cm) | B |
+|---|---|---|---|---|---|---|---|
+| away | 50 | 10 / 13 / 18 | 12 / 16 / 22 | 22 | 20 | 12.6 | 11.4 |
+| toward | 35 | 6 / 13 / 18 | 2 / 5 / 11 | 15 | 20 | 7.6 | 20.5 |
+| non-mover | 715 | 76 / 158 / 288 | 69 / 161 / 289 | 219 | 204 | 13.3 | 13.4 |
+away movers 50: B main vertex gained a < 5 cm stub (A had none) 7; lost one 4; both have 9
+toward movers 35: B main vertex gained a < 5 cm stub (A had none) 2; lost one 10; both have 3

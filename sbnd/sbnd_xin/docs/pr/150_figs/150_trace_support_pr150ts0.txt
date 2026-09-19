@@ -1,0 +1,28 @@
+# doc pdvd/114 support census: det=sbnd arm=pr150ts0 events=98 (missing 0, no image 0); records 114 (unmatched 0, no image 0, used 114)
+# thresholds: THR 1.0 cm, HOP 2.0, BALL_PAD 5.0, NEAR 1.5, COVER_SHARE 0.5, DEAD_SHARE 0.5, FIT_SHARE 0.8, MIN_ROWS 2, DEAD_R 1.5
+
+## rows
+- rows 38801 (246.2 m); UNSUPPORTED (off-charge in >= 1 live plane and > 1.0 cm from the ridge or from every image point) 1072 (2.8 %, 6.6 m); JITTER (off-charge but within 1.0 cm of both) 184 (0.5 %); WIDE (on charge everywhere, > 1.0 cm off the ridge) 645 (1.7 %)
+- per plane U/V/W: off-charge 910 / 1062 / 1089; dead at the row 226 / 1021 / 419
+- check (doc 111 sec 4.1): rows > 1.0 cm off the ridge 2275 (5.9 %); unsupported among them 46.3 %, among the rest 0.1 %
+- rows > 1.0 cm from every image point of ANY cluster 1234 (3.2 %); unsupported among them 76.8 %; rows > 1.0 cm from the own-id image but within 1.0 cm of another id's 547 (1.4 %)
+
+## stretches (>= 2 consecutive unsupported rows)
+- stretches 55 (single-row runs not counted: 26); rows 1046; length 6.4 m
+
+| class | stretches | share | rows | length (m) | length share | with a blank-plane seed vertex | open-ended | detour routes with an on-image alternative | mean on-image / seed cost |
+|---|---|---|---|---|---|---|---|---|---|
+| GAP-short | 11 | 20.0 % | 50 | 0.3 | 5.4 % | 81.8 % | 0 | - | - |
+| GAP-live | 28 | 50.9 % | 866 | 5.2 | 82.1 % | 100.0 % | 0 | - | - |
+| D-crawl | 3 | 5.5 % | 74 | 0.5 | 7.3 % | 100.0 % | 0 | 1 of 3 | 3.22 |
+| D-blank-term | 10 | 18.2 % | 45 | 0.3 | 4.2 % | 100.0 % | 0 | 3 of 9 | 1.45 |
+| D-blank-int | 1 | 1.8 % | 4 | 0.0 | 0.4 % | 100.0 % | 0 | 0 of 1 | - |
+| D-sbt | 1 | 1.8 % | 4 | 0.0 | 0.3 % | 0.0 % | 0 | 0 of 1 | - |
+| FIT | 1 | 1.8 % | 3 | 0.0 | 0.3 % | 0.0 % | 0 | - | - |
+
+| group | stretches | share | length (m) | length share |
+|---|---|---|---|---|
+| GAP | 39 | 70.9 % | 5.6 | 87.5 % |
+| DETOUR | 15 | 27.3 % | 0.8 | 12.2 % |
+| FIT | 1 | 1.8 % | 0.0 | 0.3 % |
+| XID | 0 | 0.0 % | 0.0 | 0.0 % |

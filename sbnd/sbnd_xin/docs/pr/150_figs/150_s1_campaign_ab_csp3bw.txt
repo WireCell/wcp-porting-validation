@@ -1,0 +1,139 @@
+
+==============================================================================
+0. COMPLETENESS -- s0 vs csp3bw
+==============================================================================
+rows: s0 67   csp3bw 67   joined 67   only-s0 0   only-csp3bw 0
+  s0 rc census: 0=67
+  csp3bw rc census: 0=67
+
+==============================================================================
+1. POPULATION (per sample): nu_evaluated, degenerate, nusel label
+==============================================================================
+sample    arm         rows  eval  degen  clean   nusel event_label
+nuecc48   s0            48    48      0     48   cosmic-tagged=1 nu-candidate=47
+nuecc48   csp3bw        48    48      0     48   cosmic-tagged=1 nu-candidate=47
+ncpi0     s0            19    19      0     19   nu-candidate=19
+ncpi0     csp3bw        19    19      0     19   nu-candidate=19
+ALL       s0            67    67      0     67   cosmic-tagged=1 nu-candidate=66
+ALL       csp3bw        67    67      0     67   cosmic-tagged=1 nu-candidate=66
+
+==============================================================================
+2. DISTRIBUTIONS on the clean evaluated population (own-arm)
+==============================================================================
+
+-- kine_reco_Enu_MeV
+  nuecc48    | s0: n=48 med=1502.827 MeV mean=1622.848 MeV [p10 849.984, p90 2540.209] range [623.987, 3671.232]  | csp3bw: n=48 med=1486.313 MeV mean=1558.823 MeV [p10 768.112, p90 2350.079] range [462.192, 3539.621]
+  ncpi0      | s0: n=19 med=1437.918 MeV mean=1452.508 MeV [p10 868.141, p90 2169.067] range [125.770, 2678.340]  | csp3bw: n=19 med=1287.907 MeV mean=1354.073 MeV [p10 800.246, p90 2176.697] range [132.840, 2319.232]
+  mcp1k      | s0: n=0  | csp3bw: n=0
+  mcp2k      | s0: n=0  | csp3bw: n=0
+  ALL        | s0: n=67 med=1448.633 MeV mean=1574.543 MeV [p10 849.984, p90 2422.845] range [125.770, 3671.232]  | csp3bw: n=67 med=1418.968 MeV mean=1500.760 MeV [p10 768.112, p90 2281.772] range [132.840, 3539.621]
+
+-- numu_score
+  nuecc48    | s0: n=48 med=-0.261 mean=-0.223 [p10 -1.056, p90 0.521] range [-2.674, 4.686]  | csp3bw: n=48 med=-0.302 mean=-0.295 [p10 -1.442, p90 0.562] range [-2.008, 2.374]
+  ncpi0      | s0: n=19 med=-0.141 mean=0.193 [p10 -0.696, p90 1.713] range [-2.740, 3.050]  | csp3bw: n=19 med=0.127 mean=0.276 [p10 -1.009, p90 2.194] range [-1.820, 2.740]
+  mcp1k      | s0: n=0  | csp3bw: n=0
+  mcp2k      | s0: n=0  | csp3bw: n=0
+  ALL        | s0: n=67 med=-0.221 mean=-0.105 [p10 -1.035, p90 0.830] range [-2.740, 4.686]  | csp3bw: n=67 med=-0.065 mean=-0.133 [p10 -1.330, p90 0.905] range [-2.008, 2.740]
+
+-- nue_score
+  nuecc48    | s0: n=44 med=9.717 mean=8.678 [p10 3.111, p90 14.062] range [-10.832, 16.256]  | csp3bw: n=43 med=10.245 mean=9.095 [p10 5.118, p90 13.386] range [-7.674, 15.654]
+  ncpi0      | s0: n=6 med=-2.617 mean=-2.728 [p10 -3.936, p90 1.093] range [-4.818, 1.093]  | csp3bw: n=6 med=-1.182 mean=0.918 [p10 -4.116, p90 10.459] range [-5.168, 10.459]
+  mcp1k      | s0: n=0  | csp3bw: n=0
+  mcp2k      | s0: n=0  | csp3bw: n=0
+  ALL        | s0: n=50 med=9.429 mean=7.310 [p10 -3.590, p90 13.750] range [-10.832, 16.256]  | csp3bw: n=49 med=9.809 mean=8.094 [p10 -1.182, p90 12.886] range [-7.674, 15.654]
+
+-- nu_sel_len_cm
+  nuecc48    | s0: n=48 med=94.300 cm mean=93.756 cm [p10 54.600, p90 131.300] range [31.300, 171.800]  | csp3bw: n=48 med=94.300 cm mean=93.756 cm [p10 54.600, p90 131.300] range [31.300, 171.800]
+  ncpi0      | s0: n=19 med=56.400 cm mean=71.642 cm [p10 36.800, p90 102.200] range [10.900, 264.200]  | csp3bw: n=19 med=56.400 cm mean=71.642 cm [p10 36.800, p90 102.200] range [10.900, 264.200]
+  mcp1k      | s0: n=0  | csp3bw: n=0
+  mcp2k      | s0: n=0  | csp3bw: n=0
+  ALL        | s0: n=67 med=86.600 cm mean=87.485 cm [p10 48.400, p90 130.600] range [10.900, 264.200]  | csp3bw: n=67 med=86.600 cm mean=87.485 cm [p10 48.400, p90 130.600] range [10.900, 264.200]
+
+==============================================================================
+3. WORKING-POINT MIGRATION (clean evaluated, both arms joined)
+==============================================================================
+   doc 85 sec 7: numu_score > 0.9 is uB's numu-CC point; the nue points are a
+   bracket -- 7.0 (uB), 4.30103 (the REMOVED toolkit clamp ceiling), 0.7 (loose).
+  numu>0.9     nuecc48   n=   48  pass both     1  s0-only    2  csp3bw-only    2  neither    43  net +0
+  numu>0.9     ncpi0     n=   19  pass both     3  s0-only    1  csp3bw-only    2  neither    13  net +1
+  nue>7.0      nuecc48   n=   48  pass both    26  s0-only    6  csp3bw-only    5  neither     3  net -1
+  nue>7.0      ncpi0     n=   19  pass both     0  s0-only    0  csp3bw-only    2  neither     2  net +2
+  nue>4.30103  nuecc48   n=   48  pass both    33  s0-only    2  csp3bw-only    4  neither     1  net +2
+  nue>4.30103  ncpi0     n=   19  pass both     0  s0-only    0  csp3bw-only    2  neither     2  net +2
+  nue>0.7      nuecc48   n=   48  pass both    37  s0-only    1  csp3bw-only    1  neither     1  net +0
+  nue>0.7      ncpi0     n=   19  pass both     1  s0-only    0  csp3bw-only    1  neither     2  net +1
+
+==============================================================================
+4. NUSEL event_label MIGRATION (joined events)
+==============================================================================
+  nu-candidate         -> nu-candidate              66
+  cosmic-tagged        -> cosmic-tagged              1
+  nu_evaluated flips: 0
+
+==============================================================================
+5. MOVERS against the pre-registered thresholds
+==============================================================================
+   |dEnu| > 50.0 MeV or > 10% | |dnumu| > 0.05 | |dnue| > 0.05 | vtx > 1.0 cm | any label/eval/rc change
+
+  67 movers of 67 joined events (100.00%)
+  by class: enu=43  nue=43  nue_fill=11  numu=63  vtx_cm=31
+
+  top 40 by magnitude (label/eval/rc changes first):
+    ncpi0    evt  180801 (run 18255): nue_fill 'filled'->'unfilled'; Enu 1302.5->992.4 (-310.1 MeV); numu 1.359->-0.153; vtx 77.8 cm
+    ncpi0    evt  463565 (run 18255): nue_fill 'unfilled'->'filled'; Enu 1481.0->1287.9 (-193.1 MeV); numu -0.035->-0.424; vtx 15.6 cm
+    ncpi0    evt  521075 (run 18255): nue_fill 'unfilled'->'filled'; numu -0.141->-0.397; vtx 12.9 cm
+    ncpi0    evt   21073 (run 18345): nue_fill 'filled'->'unfilled'; Enu 1623.7->1191.9 (-431.9 MeV); numu -0.696->0.317; vtx 2.0 cm
+    nuecc48  evt  122660 (run 18255): nue_fill 'unfilled'->'filled'; Enu 1406.6->1334.8 (-71.7 MeV); numu -0.033->0.056; vtx 7.6 cm
+    nuecc48  evt  269774 (run 18255): nue_fill 'filled'->'unfilled'; Enu 2328.2->2572.9 (+244.7 MeV); numu -0.969->-0.065; vtx 2.1 cm
+    nuecc48  evt  389538 (run 18255): nue_fill 'unfilled'->'filled'; Enu 2200.1->1391.9 (-808.1 MeV); numu 4.686->0.523; vtx 213.3 cm
+    nuecc48  evt  469665 (run 18255): nue_fill 'filled'->'unfilled'; Enu 751.5->462.2 (-289.3 MeV); numu -0.664->0.111; vtx 1.8 cm
+    nuecc48  evt  116962 (run 18259): nue_fill 'unfilled'->'filled'; Enu 848.0->726.5 (-121.6 MeV); numu -0.085->-1.014; vtx 26.4 cm
+    nuecc48  evt  137238 (run 18264): nue_fill 'filled'->'unfilled'; Enu 1161.2->1419.0 (+257.8 MeV); numu -0.261->0.424; vtx 2.2 cm
+    nuecc48  evt   30504 (run 18342): nue_fill 'filled'->'unfilled'; Enu 1307.6->518.7 (-788.9 MeV); numu 0.231->-1.955; vtx 21.5 cm
+    nuecc48  evt   38856 (run 18304): Enu 1253.9->1304.7 (+50.8 MeV); numu 0.174->0.098; nue -4.134->15.654; vtx 32.4 cm
+    ncpi0    evt  259542 (run 18345): Enu 1437.9->1830.3 (+392.4 MeV); numu -0.425->0.020; vtx 137.2 cm
+    ncpi0    evt   56982 (run 18255): Enu 1268.5->1565.7 (+297.2 MeV); numu 0.066->0.382; nue -4.818->8.728; vtx 28.3 cm
+    nuecc48  evt  111412 (run 18259): Enu 1180.6->823.1 (-357.5 MeV); numu -0.466->0.948; nue 9.044->-1.263; vtx 40.6 cm
+    nuecc48  evt   52672 (run 18259): nue -10.832->-0.869; vtx 56.7 cm
+    ncpi0    evt  399860 (run 18255): Enu 978.2->1058.1 (+80.0 MeV); numu -0.467->-1.316; nue 1.093->10.459; vtx 2.8 cm
+    nuecc48  evt  256587 (run 18306): Enu 3671.2->3539.6 (-131.6 MeV); numu -0.773->-1.442; nue 11.423->4.180; vtx 2.0 cm
+    nuecc48  evt  163543 (run 18255): Enu 1304.1->1011.5 (-292.6 MeV); numu 0.504->-0.525; nue 3.111->9.809; vtx 32.8 cm
+    nuecc48  evt  138009 (run 18255): numu -0.530->-0.697; nue 6.747->12.886; vtx 1.5 cm
+    nuecc48  evt  196649 (run 18255): numu -0.344->-1.167; nue 4.096->9.638
+    nuecc48  evt   46363 (run 18255): Enu 1571.6->2111.9 (+540.3 MeV); numu 0.452->0.329; nue 8.257->6.311; vtx 40.7 cm
+    nuecc48  evt     388 (run 18255): Enu 2800.9->2281.8 (-519.1 MeV); numu -1.796->-1.719; nue 9.689->10.245
+    ncpi0    evt  142421 (run 18255): Enu 2678.3->2176.7 (-501.6 MeV); numu 3.050->2.740; vtx 1.8 cm
+    nuecc48  evt  437699 (run 18255): Enu 1397.2->940.2 (-457.0 MeV); numu -0.070->0.562; nue 8.545->6.125
+    ncpi0    evt   37112 (run 18259): Enu 1147.8->729.2 (-418.6 MeV); numu -0.614->0.127; nue -2.617->-4.116; vtx 29.9 cm
+    nuecc48  evt   81597 (run 18313): numu -0.061->0.359; nue 16.256->12.127
+    nuecc48  evt  168596 (run 18255): Enu 2168.9->2006.8 (-162.1 MeV); numu 0.672->-0.843; nue 6.846->10.869
+    nuecc48  evt   69314 (run 18255): Enu 1712.0->1314.8 (-397.3 MeV); numu 1.742->2.374; vtx 1.0 cm
+    nuecc48  evt  234638 (run 18255): Enu 1235.8->1442.1 (+206.4 MeV); numu 0.151->1.017; nue 10.937->7.089
+    nuecc48  evt  350186 (run 18255): numu -0.822->-0.358; nue 9.756->6.008
+    nuecc48  evt  239794 (run 18255): numu -1.894->-0.685; nue 14.808->11.335
+    ncpi0    evt  506746 (run 18255): Enu 2140.9->1848.7 (-292.3 MeV); numu 0.377->1.183
+    nuecc48  evt  489330 (run 18255): Enu 2018.6->2082.1 (+63.5 MeV); nue 14.062->11.158; vtx 1.2 cm
+    nuecc48  evt  271851 (run 18255): Enu 1365.7->1495.2 (+129.6 MeV); numu 0.398->0.246; nue 3.234->5.118; vtx 28.6 cm
+    nuecc48  evt  268067 (run 18255): numu 0.246->0.448; nue 9.737->6.970; vtx 1.5 cm
+    nuecc48  evt   74544 (run 18259): numu 0.437->-1.626; nue 9.717->12.339
+    ncpi0    evt  285567 (run 18261): Enu 2169.1->1909.3 (-259.8 MeV); numu 0.830->0.905; nue -3.936->-3.210; vtx 1.3 cm
+    nuecc48  evt   42280 (run 18259): Enu 1846.9->1921.2 (+74.3 MeV); numu -2.674->-0.184; nue 14.074->11.713
+    nuecc48  evt  342199 (run 18269): numu -0.748->0.273; nue 7.364->9.845
+
+# wrote /home/xqian/tmp/pr150/scorers/movers-s0-csp3bw.tsv (67 rows)
+
+==============================================================================
+6. RUNTIME AND PEAK RSS (per event; blank if the arm ran in group mode)
+==============================================================================
+   wall_s / core_s come from the job's own "Timer: Total" line; maxrss_kb is
+   timecmd.py's RUSAGE_CHILDREN peak, i.e. PER PROCESS and concurrency-
+   insensitive.  Wall under concurrency is contention-dominated (doc pr/11
+   sec 90), so CORE is the number to compare; wall is reported beside it.
+  nuecc48   s0         wall n=   48 med=18.3s p90=45.2 max=162.3 sum=0.36h | core med=17.0s p90=45.5 sum=0.35h | peakRSS med=1.19GiB p90=1.28 max=1.39
+  nuecc48   csp3bw     wall n=   48 med=27.8s p90=68.7 max=232.3 sum=0.52h | core med=21.4s p90=62.0 sum=0.46h | peakRSS med=1.20GiB p90=1.28 max=1.69
+  ncpi0     s0         wall n=   19 med=13.7s p90=24.7 max=26.1 sum=0.08h | core med=12.9s p90=25.0 sum=0.08h | peakRSS med=1.18GiB p90=1.25 max=1.27
+  ncpi0     csp3bw     wall n=   19 med=21.0s p90=26.4 max=39.7 sum=0.11h | core med=15.7s p90=23.8 sum=0.09h | peakRSS med=1.19GiB p90=1.26 max=1.27
+  ALL       s0         wall n=   67 med=16.0s p90=43.4 max=162.3 sum=0.44h | core med=16.2s p90=43.3 sum=0.43h | peakRSS med=1.19GiB p90=1.27 max=1.39
+  ALL       csp3bw     wall n=   67 med=24.0s p90=63.6 max=232.3 sum=0.63h | core med=18.8s p90=60.1 sum=0.55h | peakRSS med=1.19GiB p90=1.28 max=1.69
+
+# wrote /home/xqian/tmp/pr150/scorers/population-s0-csp3bw.tsv

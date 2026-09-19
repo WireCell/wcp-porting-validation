@@ -1,0 +1,41 @@
+# pr150 cell / ladder compile proof 2026-09-18_23:34:04: node diff of each cell vs s0 (production + save_stm_fit=true), of each ladder level vs csp3bw
+s0 rc=0 sha=a5366a5ff0d85b24
+cs rc=0 sha=4a58fd41ab0c1845
+p3bw rc=0 sha=38899909eb0b2a47
+csp3bw rc=0 sha=bb8f238379f7ef45
+tfull rc=0 sha=bb8f238379f7ef45
+r1 rc=0 sha=7187649955e6c56f
+r2 rc=0 sha=937919fed4a9672f
+r3 rc=0 sha=05a0cc83149483a4
+r4 rc=0 sha=8d8a89bcc4e47fa0
+-- cs vs s0: only s0 ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0']  only cs ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']
+   changed ImproveCluster_2:pr: [] samplers
+-- p3bw vs s0: only s0 []  only p3bw []
+   changed CreateSteinerGraph:pr: [('base_weight_blank_alpha', 0.5), ('base_weight_scope', 'tree+path'), ('terminal_blank_plane_mode', 'prefer3')]
+   changed CreateSteinerGraph:prrefresh: [('base_weight_blank_alpha', 0.5), ('base_weight_scope', 'tree+path'), ('terminal_blank_plane_mode', 'prefer3')]
+-- csp3bw vs s0: only s0 ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0']  only csp3bw ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']
+   changed CreateSteinerGraph:pr: [('base_weight_blank_alpha', 0.5), ('base_weight_scope', 'tree+path'), ('terminal_blank_plane_mode', 'prefer3')]
+   changed CreateSteinerGraph:prrefresh: [('base_weight_blank_alpha', 0.5), ('base_weight_scope', 'tree+path'), ('terminal_blank_plane_mode', 'prefer3')]
+   changed ImproveCluster_2:pr: [] samplers
+-- tfull vs s0: only s0 ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0']  only tfull ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']
+   changed CreateSteinerGraph:pr: [('base_weight_blank_alpha', 0.5), ('base_weight_scope', 'tree+path'), ('terminal_blank_plane_mode', 'prefer3')]
+   changed CreateSteinerGraph:prrefresh: [('base_weight_blank_alpha', 0.5), ('base_weight_scope', 'tree+path'), ('terminal_blank_plane_mode', 'prefer3')]
+   changed ImproveCluster_2:pr: [] samplers
+-- r1 vs csp3bw: only csp3bw []  only r1 []
+   changed CreateSteinerGraph:pr: [('terminal_min_separation', 7)]
+   changed CreateSteinerGraph:prrefresh: [('terminal_min_separation', 7)]
+-- r2 vs csp3bw: only csp3bw []  only r2 []
+   changed BlobSampler:live-cs-apa0-0: [('strategy', [{'charge_threshold_max': 6000, 'charge_threshold_min': 6000, 'charge_threshold_other': 6000, 'disable_mix_dead_cell': False, 'name': 'charge_stepped'}])]
+   changed BlobSampler:live-cs-apa1-0: [('strategy', [{'charge_threshold_max': 6000, 'charge_threshold_min': 6000, 'charge_threshold_other': 6000, 'disable_mix_dead_cell': False, 'name': 'charge_stepped'}])]
+   changed CreateSteinerGraph:pr: [('terminal_min_separation', 7)]
+   changed CreateSteinerGraph:prrefresh: [('terminal_min_separation', 7)]
+-- r3 vs csp3bw: only csp3bw []  only r3 []
+   changed CreateSteinerGraph:pr: [('terminal_min_separation', 7)]
+   changed CreateSteinerGraph:prrefresh: [('terminal_min_separation', 7)]
+   changed TaggerCheckNeutrino:pr: [('dl_vtx_min_accept_score', 4)]
+-- r4 vs csp3bw: only csp3bw []  only r4 []
+   changed BlobSampler:live-cs-apa0-0: [('strategy', [{'charge_threshold_max': 6000, 'charge_threshold_min': 6000, 'charge_threshold_other': 6000, 'disable_mix_dead_cell': False, 'name': 'charge_stepped'}])]
+   changed BlobSampler:live-cs-apa1-0: [('strategy', [{'charge_threshold_max': 6000, 'charge_threshold_min': 6000, 'charge_threshold_other': 6000, 'disable_mix_dead_cell': False, 'name': 'charge_stepped'}])]
+   changed CreateSteinerGraph:pr: [('terminal_min_separation', 7)]
+   changed CreateSteinerGraph:prrefresh: [('terminal_min_separation', 7)]
+   changed TaggerCheckNeutrino:pr: [('dl_vtx_min_accept_score', 4)]

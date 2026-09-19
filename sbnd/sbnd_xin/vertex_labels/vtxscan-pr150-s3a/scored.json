@@ -1,0 +1,2339 @@
+{
+ "scored_at": "2026-09-18 22:42:28",
+ "picks_written": {
+  "picks-0.json": "2026-09-18 22:37:17",
+  "picks-1.json": "2026-09-18 22:37:46",
+  "picks-2.json": "2026-09-18 22:27:04",
+  "picks-3.json": "2026-09-18 22:42:19",
+  "picks-4.json": "2026-09-18 22:37:33",
+  "picks-5.json": "2026-09-18 22:35:04",
+  "picks-6.json": "2026-09-18 22:34:11"
+ },
+ "tol": 1.0,
+ "rows": [
+  {
+   "sample": "mcp1k",
+   "event": 57903,
+   "role": "mover",
+   "cls": "REGRESSION-b-agrees",
+   "A": {
+    "item": "item017",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 14003,
+    "conf": "certain",
+    "pos": [
+     -16.56,
+     -57.71,
+     265.25
+    ],
+    "main": [
+     -16.559680670333798,
+     -57.71123323819103,
+     265.24612870079784
+    ],
+    "d_truth": 1.0332438745513453,
+    "d_main": 0.004075512898295026,
+    "reco_truth": 1.0359703163958873,
+    "why": "Rule 1, 2 of 2 rising away at the only junction in the event: the 54 cm mu climbs the muon template to 160k at 14002 and the 51 cm p falls from 325k at 14000, so both arms Bragg-terminate at their far ends, which one scattered particle cannot do; prong angle 142 deg, below the collinearity screen."
+   },
+   "B": {
+    "item": "item042",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 14003,
+    "conf": "certain",
+    "why": "Rule 1 with 2 of 2 prongs rising away and two distinct Bragg shapes in p4 - a proton decaying from 265k at 14000 and a muon spiking to 190k at 14002 - which a single scattered particle cannot produce; chord angle 144 degrees stays under the collinearity flag.",
+    "pos": [
+     -19.79,
+     -53.44,
+     254.76
+    ],
+    "main": [
+     -19.791190208538964,
+     -53.442635021667044,
+     254.7625460018243
+    ],
+    "d_truth": 12.77621599245404,
+    "d_main": 0.0038525395314476067,
+    "reco_truth": 12.773265755040038
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 59335,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item083",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 11028,
+    "conf": "certain",
+    "pos": [
+     -156.72,
+     87.18,
+     127.32
+    ],
+    "main": [
+     -156.72343332292192,
+     87.17544104324988,
+     127.32231229899946
+    ],
+    "d_truth": 65.0515033025854,
+    "d_main": 0.006157801523166169,
+    "reco_truth": 65.049550268866,
+    "why": "Textbook two-Bragg-ends-one-cluster case from rule 1: the 67 cm prong spikes to 300k at 11003 and the 5.3 cm proton-like prong to 180k at 11000, both cooling into a sharp 40 deg kink at 11028, with small blobs scattered around it."
+   },
+   "B": {
+    "item": "item004",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 11002,
+    "conf": "certain",
+    "why": "Rule 1 with two Bragg ends: p4 shows the 67.7 cm muon rising to 400k at 11003 and the 5.1 cm proton rising to 210k at 11000, both cooling to MIP at 11002, and the prong pair is 138 deg so the single-scatter reading is excluded.",
+    "pos": [
+     -156.55,
+     87.35,
+     127.35
+    ],
+    "main": [
+     -172.68720202635905,
+     46.781935745179524,
+     78.95947304202716
+    ],
+    "d_truth": 65.22130851931452,
+    "d_main": 65.17530380361157,
+    "reco_truth": 0.09404938540508527
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 61843,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item059",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 17003,
+    "conf": "likely",
+    "pos": [
+     151.16,
+     173.71,
+     64.18
+    ],
+    "main": [
+     151.16073994139066,
+     173.70616936153266,
+     64.17989648977266
+    ],
+    "d_truth": 12.374649429915282,
+    "d_main": 0.003902821888879258,
+    "reco_truth": 12.378114079538975,
+    "why": "Rule 1 at a 3-prong junction in the biggest cluster and at the event's lowest z: two prongs stop away from it (a 12.6 cm rise to 165k at 17001 and a 27.1 cm arm that is near zero at 17003 and 92k at 17002) and a 140k blob sits within 2 cm of the vertex; the 164 degree pair 17001-17003-17002 costs one tier."
+   },
+   "B": {
+    "item": "item103",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 17005,
+    "conf": "likely",
+    "why": "Rules 6 and 7: 17005 is the three-prong apex at the narrow top of the shower cone, with a heavily ionising 16.5 cm prong that rises 29k to 120k and stops at 17001 and two ~20 cm prongs opening down into the blob cloud at lower y; hadronic-shower ambiguity keeps it off certain.",
+    "pos": [
+     148.96,
+     171.39,
+     64.41
+    ],
+    "main": [
+     154.2385977583541,
+     185.39313919385572,
+     62.77296220799267
+    ],
+    "d_truth": 15.27488064516413,
+    "d_main": 15.054281593933988,
+    "reco_truth": 0.2371248061804324
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 62281,
+   "role": "mover",
+   "cls": "CONFIRMS-LABEL",
+   "A": {
+    "item": "item072",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 19002,
+    "conf": "certain",
+    "pos": [
+     179.5,
+     -81.78,
+     293.59
+    ],
+    "main": [
+     184.38852741537224,
+     -90.29102043712629,
+     320.9663361891461
+    ],
+    "d_truth": 0.5116601256554906,
+    "d_main": 29.082622858215156,
+    "reco_truth": 29.26872908346144,
+    "why": "Rule 1 at a sharp 110 degree corner: the 100 cm muon leaves 19002 at MIP and rises on the stopping template to 218k at 19001, and p4 shows the 30 cm 2.1-MIP proton also hottest away from 19002 near 19003, so both prongs point away."
+   },
+   "B": {
+    "item": "item026",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 19002,
+    "conf": "likely",
+    "why": "Rule 1: seg 19002 is a textbook stopping muon, MIP for 85 cm then up the template to 140k at 19001, so the 100 cm muon starts at 19002, and both its ends are interior; the zoom shows a 108 deg kink with a sharp cyan-to-orange charge break (45k vs 85k) meaning two particles, though 19003 23 cm away also holds a stopping proton.",
+    "pos": [
+     179.29,
+     -81.73,
+     293.49
+    ],
+    "main": [
+     179.28783948337428,
+     -81.72608301047744,
+     293.48760518823474
+    ],
+    "d_truth": 0.5608027405653745,
+    "d_main": 0.005074028222322531,
+    "reco_truth": 0.5592500267318798
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 65025,
+   "role": "mover",
+   "cls": "UNRESOLVED-missing-arm",
+   "A": {
+    "item": "item068",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 16000,
+    "conf": "unclear",
+    "pos": [
+     48.3,
+     -172.99,
+     422.89
+    ],
+    "main": [
+     38.94603524136424,
+     -198.7785486508065,
+     398.8040592162918
+    ],
+    "d_truth": 36.505868592010096,
+    "d_main": 36.505868592010096,
+    "reco_truth": 0.0,
+    "why": "Only rule 1 speaks and it speaks weakly: the 40 cm track is cooler at 16000, but p4 shows no template-shaped Bragg at either end and the zoom shows the track continuing past 16000 to a 2.2 cm stub 11 cm further on, while rule 2 points the other way to the y=-199 wall end 16001."
+   },
+   "B": null
+  },
+  {
+   "sample": "mcp1k",
+   "event": 66118,
+   "role": "mover",
+   "cls": "REGRESSION",
+   "A": {
+    "item": "item011",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 9002,
+    "conf": "certain",
+    "pos": [
+     138.63,
+     34.02,
+     204.81
+    ],
+    "main": [
+     138.62658124468328,
+     34.02068795067352,
+     204.80680457380018
+    ],
+    "d_truth": 0.1272031043267028,
+    "d_main": 0.0047298956271024884,
+    "reco_truth": 0.12490600541458241,
+    "why": "Rule 1 once vertex overlap is discounted: p4 shows the 12.9 cm proton falling monotonically from 295k at 9000 down to 135k at 9002, and the 72.6 cm muon flat at MIP with only a single hot point at arc 0, so the apparent rise toward 9002 is the proton's charge."
+   },
+   "B": {
+    "item": "item096",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 9004,
+    "conf": "likely",
+    "why": "Trap-1 two-Bragg cluster resolved by rule 1: the 17 cm proton shows a monotone p4 rise onto the proton template up to 213k at 9000 while the other prong ends at 9002 with a cool 5.5 cm Michel-like stub plus blob 49007, so both segments cool toward 9004 (2 of 2 away); prongs leave at ~153 deg, so one tier down.",
+    "pos": [
+     140.62,
+     30.87,
+     202.46
+    ],
+    "main": [
+     175.74821588321413,
+     -11.584656988749066,
+     173.88436484839175
+    ],
+    "d_truth": 4.505056006637745,
+    "d_main": 62.07218681090482,
+    "reco_truth": 66.54000207277195
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 67746,
+   "role": "mover",
+   "cls": "UNRESOLVED-missing-arm",
+   "A": {
+    "item": "item094",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 10002,
+    "conf": "likely",
+    "pos": [
+     72.37,
+     31.14,
+     369.76
+    ],
+    "main": [
+     71.10308666984562,
+     37.32897961883849,
+     330.72926584476266
+    ],
+    "d_truth": 39.538674064835945,
+    "d_main": 39.538674064835945,
+    "reco_truth": 0.0,
+    "why": "The 42 cm prong has a textbook terminal Bragg (315k) at 10001, so the particle travels up and backward and stops, which no cosmic can do, so it must be born inside - and 10002 is the only junction (it also carries a 4 cm stub); the exactly 180 deg prong pair keeps this off certain."
+   },
+   "B": null
+  },
+  {
+   "sample": "mcp1k",
+   "event": 166804,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item082",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 9002,
+    "conf": "likely",
+    "pos": [
+     56.42,
+     90.52,
+     498.9
+    ],
+    "main": [
+     56.41811246448706,
+     90.51642063843299,
+     498.9036475396607
+    ],
+    "d_truth": 24.655604996657086,
+    "d_main": 0.005447858764376828,
+    "reco_truth": 24.657211742519205,
+    "why": "Only junction in the event: the 25.5 cm prong has a clean terminal Bragg spike (245k) at 9003 away from 9002 and the other prong is a 3.1 cm 1.7-MIP stub at 52 deg, so everything gets hotter away from 9002; worry is that 9002 sits 1 cm from the z=500 face."
+   },
+   "B": {
+    "item": "item071",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 9004,
+    "conf": "certain",
+    "why": "Rule 1 satisfied by both prongs with clean profiles: the 6.4 cm curled hadron rises monotonically from 8k at 9004 to 330k at 9001, and the 24.3 cm track rises away to a hot 9002 that carries a 3 cm Michel-like stub; the chord angle is misleading because the short prong curls.",
+    "pos": [
+     62.42,
+     78.79,
+     479.45
+    ],
+    "main": [
+     62.42435829110353,
+     78.79459226693308,
+     479.4500719552599
+    ],
+    "d_truth": 1.3343647197391086,
+    "d_main": 0.0063315712494708114,
+    "reco_truth": 1.3363046931517115
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 166870,
+   "role": "mover",
+   "cls": "REGRESSION",
+   "A": {
+    "item": "item053",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 10062,
+    "conf": "certain",
+    "pos": [
+     -141.82,
+     144.74,
+     137.93
+    ],
+    "main": [
+     -141.8238341917015,
+     144.73549780681873,
+     137.93062589848725
+    ],
+    "d_truth": 2.522071353481188,
+    "d_main": 0.00594663924934675,
+    "reco_truth": 2.5243161630440234,
+    "why": "Rule 1 at a degree-5 star with zero prongs rising toward it: a 7.3 cm proton stops at 162k and a 19.9 cm prong rises x4.3 to 116k, and three further objects converge on it - cluster 85's 15 cm MIP muon at 10.4 cm and cluster 87's EM shower apex at 12.0 cm both point straight back at this point (rule 7)."
+   },
+   "B": {
+    "item": "item075",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 10006,
+    "conf": "certain",
+    "why": "Rule 1 in its strongest form: all three prongs of this degree-3 vertex leave 10006 at about 20k e/cm (half MIP) and rise away to 76k, 200k and 310k respectively, which p4 confirms segment by segment; nothing else in the event comes close.",
+    "pos": [
+     -143.51,
+     151.32,
+     146.14
+    ],
+    "main": [
+     -142.5963318891482,
+     153.08600755085286,
+     153.15250057024883
+    ],
+    "d_truth": 11.91470880696979,
+    "d_main": 7.28894617446152,
+    "reco_truth": 18.936012757761418
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 171892,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item036",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": null,
+    "conf": "unclear",
+    "pos": null,
+    "main": [
+     -7.5525449893110785,
+     62.67709621547906,
+     396.21999999999986
+    ],
+    "d_truth": null,
+    "d_main": null,
+    "reco_truth": 0.0,
+    "why": "Rule 8 abstention: the whole event is two isolated sub-cm dots 150 cm apart with no fitted track, no dQ/dx panel and no readable direction, so any click is as good as any other."
+   },
+   "B": {
+    "item": "item056",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 23000,
+    "conf": "unclear",
+    "why": "Rule 8 event with nothing to read: three isolated sub-centimetre blips, no segments, no direction, no p2/p4 panels. 27002 sits in a detector corner, so the only plausible pair is 23000 and 60004 11 cm apart, and rule 2 is the sole available discriminator - 23000 is upstream at z=387.2 against z=396.2.",
+    "pos": [
+     -12.87,
+     55.65,
+     387.22
+    ],
+    "main": [
+     -13.53841869939913,
+     55.96189544159425,
+     387.1051489832735
+    ],
+    "d_truth": 12.595848880178652,
+    "d_main": 0.7464938581373675,
+    "reco_truth": 12.806448163477004
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 172788,
+   "role": "mover",
+   "cls": "UNRESOLVED-missing-arm",
+   "A": {
+    "item": "item046",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 26001,
+    "conf": "likely",
+    "pos": [
+     160.25,
+     -141.76,
+     326.95
+    ],
+    "main": [
+     175.53759375699696,
+     13.676369340837173,
+     418.591655144397
+    ],
+    "d_truth": 279.17965827126966,
+    "d_main": 181.08663229058268,
+    "reco_truth": 99.25625115694785,
+    "why": "The 307 cm chain exits at the x=+200 anode at 26000 but ends in the interior at 26001 with no Bragg, so 26001 is a start, and it carries a 6.3 cm prong that climbs to 165k and stops at 26002 - a muon plus stopping proton vertex, lowest z of the chain with everything forward."
+   },
+   "B": null
+  },
+  {
+   "sample": "mcp1k",
+   "event": 276836,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item102",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 11002,
+    "conf": "likely",
+    "pos": [
+     132.37,
+     -53.2,
+     296.5
+    ],
+    "main": [
+     -91.21524747792287,
+     -29.928642335317384,
+     312.21779391757536
+    ],
+    "d_truth": 0.5869579567175539,
+    "d_main": 225.3418914071615,
+    "reco_truth": 224.78183098163902,
+    "why": "The 6.4 cm connector is collinear with the 222 cm stopping muon to 2.5 deg and is MIP after its first 1.8 cm of vertex pile-up, so 11003 is a split point inside the muon and the true branch point, where the 48 cm proton with its monotone 181k Bragg at 11000 leaves the muon line at 131 deg, is 11002."
+   },
+   "B": {
+    "item": "item091",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 11003,
+    "conf": "certain",
+    "why": "Rule 1 at a clean 141 deg junction: a 54 cm proton rising x3.34 to 185k at 11000 and a MIP muon leaving the other way that stops 222 cm later at 11001; the other deg-3 vertex 11005 is at 177 deg and is just a split point on that muon.",
+    "pos": [
+     126.57,
+     -52.68,
+     296.64
+    ],
+    "main": [
+     169.63192592941502,
+     -61.9738772301665,
+     325.150416429982
+    ],
+    "d_truth": 5.2591660490855,
+    "d_main": 52.47427430399415,
+    "reco_truth": 48.3431369765671
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 278640,
+   "role": "mover",
+   "cls": "UNRESOLVED-missing-arm",
+   "A": {
+    "item": "item081",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 17002,
+    "conf": "likely",
+    "pos": [
+     -69.23,
+     -80.26,
+     99.26
+    ],
+    "main": [
+     8.568181206212344,
+     -73.84710416978315,
+     2.689141433267735
+    ],
+    "d_truth": 124.17573416831354,
+    "d_main": 124.17573416831354,
+    "reco_truth": 0.0,
+    "why": "Rule 1 at the only 3-prong junction: the 5.7 cm stub rises monotonically to 205k at 17000 and the 5 cm e-stub rises away too, but the long 128 cm prong leaves at 161 deg to the hot stub (collinear trap) and reaches the z=0 face, so I drop a tier."
+   },
+   "B": null
+  },
+  {
+   "sample": "mcp1k",
+   "event": 278794,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item012",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 50048,
+    "conf": "unclear",
+    "pos": [
+     160.37,
+     -46.49,
+     65.2
+    ],
+    "main": [
+     147.6098592505412,
+     -52.36222095097654,
+     72.11126804285149
+    ],
+    "d_truth": 15.654705260822608,
+    "d_main": 15.654705260822608,
+    "reco_truth": 0.0,
+    "why": "The only Bragg is at 7000, so the long track must start at its upstream low-z end, which frays into a 33 cm spray; 50048 is that fray's apex by the p5 cone (monotone 0.2 to 3.1 cm) -- but 7002's 2-of-2 rule-1 reading is a 180 deg collinear break and the track may simply run on to the anode, so this is weak."
+   },
+   "B": {
+    "item": "item022",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 7001,
+    "conf": "likely",
+    "why": "The collinearity trap fires on 7002 (prongs 179.4 deg apart, so it is a fit break inside one 125 cm track); p4 shows a textbook stopping-muon Bragg at 7000, so the muon starts at the other end 7001, which carries a 325k point and sits at the edge of the fragment cloud including cluster 49 only 3.8 cm away.",
+    "pos": [
+     147.11,
+     -52.58,
+     72.44
+    ],
+    "main": [
+     136.3601677874646,
+     -62.70742428073072,
+     79.45886534045147
+    ],
+    "d_truth": 0.6366723523099224,
+    "d_main": 16.35200555977734,
+    "reco_truth": 16.957770372194393
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 279256,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item006",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 15004,
+    "conf": "likely",
+    "pos": [
+     86.07,
+     -52.08,
+     250.67
+    ],
+    "main": [
+     86.51703498193191,
+     -54.85971435700827,
+     251.0769582893384
+    ],
+    "d_truth": 28.793814903390594,
+    "d_main": 2.844691060711169,
+    "reco_truth": 29.46128868045863,
+    "why": "Rule 1: 2 of 3 prongs rise away from the dQ/dx minimum (33k) of the long track, and the 48 cm shower back-extrapolates to within 2 cm of 15004 across an 11.6 cm conversion gap; tier dropped because the two track prongs are 180 deg collinear."
+   },
+   "B": {
+    "item": "item002",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 15004,
+    "conf": "likely",
+    "why": "Rule 1 plus rule 6: deg-3 junction at the dQ/dx minimum of the 290 cm track, with a short downward stub and a 55 cm low-dQ/dx shower starting a few cm above it; dropped a tier because the two track prongs leave at 178 deg (collinearity trap).",
+    "pos": [
+     86.05,
+     -51.98,
+     250.59
+    ],
+    "main": [
+     75.78186348848136,
+     -52.04736257438348,
+     223.78715519964027
+    ],
+    "d_truth": 28.712377344514103,
+    "d_main": 28.70246774282275,
+    "reco_truth": 0.13316959598255348
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 281527,
+   "role": "mover",
+   "cls": "CONFIRMS-LABEL",
+   "A": {
+    "item": "item084",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 14002,
+    "conf": "unclear",
+    "pos": [
+     96.98,
+     193.15,
+     338.82
+    ],
+    "main": [
+     96.98304473212934,
+     193.1500164529333,
+     338.8239824170047
+    ],
+    "d_truth": 0.14863639228543987,
+    "d_main": 0.005013014027280535,
+    "reco_truth": 0.14907482664357116,
+    "why": "The 163 cm prong has a genuine template-matching stopping-muon rise at 14001, but the other 16 cm prong is flat at 2.4 MIP with no terminal rise and ends exactly on the y=200 face, so the cluster reads as an entering muon and 14002 as a scatter point rather than a vertex."
+   },
+   "B": {
+    "item": "item052",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 14002,
+    "conf": "likely",
+    "why": "Rule 1 satisfied 2 of 2: the 160 cm MIP track cools into 14002 with a monotone Bragg to 140k at the far end 14001, and the 16 cm 2.5-3x MIP proton also cools into it; the zoom shows an abrupt orange-to-green dQ/dx discontinuity at the 132 degree kink, so these are two particles, not one scattered track.",
+    "pos": [
+     96.96,
+     193.42,
+     339.23
+    ],
+    "main": [
+     156.34082779250062,
+     53.993824272234534,
+     314.15181090155363
+    ],
+    "d_truth": 0.6164140986254407,
+    "d_main": 153.6055231944795,
+    "reco_truth": 153.16173200755574
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 281639,
+   "role": "mover",
+   "cls": "CONFIRMS-LABEL",
+   "A": {
+    "item": "item093",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 83023,
+    "conf": "likely",
+    "pos": [
+     -195.0,
+     -66.92,
+     284.17
+    ],
+    "main": [
+     -195.001231424091,
+     -66.9203710697402,
+     284.16584535939023
+    ],
+    "d_truth": 0.004349153554481136,
+    "d_main": 0.004349153554481136,
+    "reco_truth": 0.0,
+    "why": "Rule 6 pattern: a 1 cm 270k stopping-proton stub with several shower-like fragments pointing at it, and both shower prongs (94023 and 23002) back-extrapolate to within 1-3 cm of this blob, so the vertex is at the stub rather than at the shower starts 6 cm away."
+   },
+   "B": {
+    "item": "item074",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 83022,
+    "conf": "likely",
+    "why": "Geometric convergence on a hot stub: the 33 cm cluster-23 arm and the 10.8 cm cluster-94 arm both back-extrapolate, visibly in all three projections, to within 1-2.5 cm of the dark-red 0.8 cm proton blob 83022/83023, which sits at the apex of the 58 degree opening between them.",
+    "pos": [
+     -194.92,
+     -66.92,
+     284.32
+    ],
+    "main": [
+     -166.6181263481138,
+     -66.84366834860359,
+     293.02172503239194
+    ],
+    "d_truth": 0.17424791296922626,
+    "d_main": 29.609489986619,
+    "reco_truth": 29.732694829834667
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 281953,
+   "role": "mover",
+   "cls": "UNRESOLVED-missing-arm",
+   "A": {
+    "item": "item105",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 10000,
+    "conf": "likely",
+    "pos": [
+     194.63,
+     199.67,
+     180.27
+    ],
+    "main": [
+     194.629472037556,
+     199.66910043794388,
+     180.26961086036457
+    ],
+    "d_truth": 0.0011132770952974656,
+    "d_main": 0.0011132770952974656,
+    "reco_truth": 0.0,
+    "why": "Rule 3 plus rule 1: the 88 cm track has a monotone stopping-muon Bragg over its last 7 cm ending at 115k at 10001 with the Michel blob 22004 only 2.2 cm away, so 10001 is the far end and the MIP end 10000 is the vertex end; the only doubt is that the whole object reads as a stopping cosmic."
+   },
+   "B": null
+  },
+  {
+   "sample": "mcp1k",
+   "event": 282737,
+   "role": "mover",
+   "cls": "CONFIRMS-LABEL",
+   "A": {
+    "item": "item020",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 21014,
+    "conf": "certain",
+    "pos": [
+     -34.84,
+     47.67,
+     141.81
+    ],
+    "main": [
+     -34.84432511372295,
+     47.66615751329019,
+     141.81128609791602
+    ],
+    "d_truth": 0.06884434146226853,
+    "d_main": 0.005926665224317831,
+    "reco_truth": 0.06403193346317354,
+    "why": "Rule 1, 2 of 2 rising away at a sharp kink: the pi+ climbs the proton template to 230k at 21001 and the 176 cm muon ends at 21000, which carries a 6 cm Michel 1.9 cm away (rule 3 makes that the far end); charge also spikes to ~155k in the first bin of both prongs, an unresolved recoil at the vertex."
+   },
+   "B": {
+    "item": "item073",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 21003,
+    "conf": "certain",
+    "why": "The two-Bragg-ends trap resolved in favour of the junction: p4 shows template Braggs at both free ends, 21000 (which also carries the 5.9 cm cluster-61 Michel stub 2.8 cm away) and 205k at 21001, with MIP in between, and the prongs leave 21003 at 129 degrees, below the collinearity threshold.",
+    "pos": [
+     -35.07,
+     47.63,
+     141.63
+    ],
+    "main": [
+     -14.569577818773045,
+     46.967244732915745,
+     120.75384739018321
+    ],
+    "d_truth": 0.3003902255320936,
+    "d_main": 29.26636810301118,
+    "reco_truth": 29.29716364723046
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 283691,
+   "role": "mover",
+   "cls": "CONFIRMS-LABEL",
+   "A": {
+    "item": "item104",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 23002,
+    "conf": "certain",
+    "pos": [
+     100.58,
+     -150.85,
+     256.69
+    ],
+    "main": [
+     100.58112715435026,
+     -150.85025013493072,
+     256.6946203323077
+    ],
+    "d_truth": 0.1459358174736045,
+    "d_main": 0.004762406434398934,
+    "reco_truth": 0.14495285192281246,
+    "why": "Textbook rule 1: both attached segments are protons whose p4 profiles rise monotonically along the brown proton template to 191k at 23000 and 200k at 23003, and the zoom shows them leaving 23002 as a wide 60 deg V, so the collinearity trap does not apply."
+   },
+   "B": {
+    "item": "item005",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 23002,
+    "conf": "certain",
+    "why": "Rule 1 on a two-proton vertex: p4 shows both segments falling monotonically from their outer Bragg ends (220k at 23000, 198k near 23003) to ~125k at 23002, which they leave in a wide 61 deg V.",
+    "pos": [
+     100.95,
+     -150.64,
+     256.64
+    ],
+    "main": [
+     110.91763007760771,
+     -149.43910783705522,
+     269.10380625015034
+    ],
+    "d_truth": 0.32450260896664107,
+    "d_main": 16.004444932341112,
+    "reco_truth": 16.128073423503924
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 283905,
+   "role": "mover",
+   "cls": "UNRESOLVED-missing-arm",
+   "A": {
+    "item": "item070",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 4001,
+    "conf": "certain",
+    "pos": [
+     -201.41,
+     108.86,
+     160.25
+    ],
+    "main": [
+     -201.41025416703812,
+     108.86043486700137,
+     160.2547629952765
+    ],
+    "d_truth": 0.004789554697066051,
+    "d_main": 0.004789554697066051,
+    "reco_truth": 0.0,
+    "why": "Rule 1 with a template match: p4 shows the 115 cm track spiking to 255k and decaying along the stopping template over the first 10 cm at the 4000 end, so it stops there; 4001 is the cool end and is also the lower-z one, and there are only two candidates."
+   },
+   "B": null
+  },
+  {
+   "sample": "mcp1k",
+   "event": 284235,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item040",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 6003,
+    "conf": "likely",
+    "pos": [
+     -24.78,
+     -114.48,
+     170.06
+    ],
+    "main": [
+     -23.3816137873415,
+     -90.7863843748733,
+     139.31311425139256
+    ],
+    "d_truth": 40.546257600412126,
+    "d_main": 38.84216637404409,
+    "reco_truth": 1.7338098719391477,
+    "why": "Only degree-3 junction in a fragmented event and no prong is hotter at it: seg 6004 rises nearly ninefold away from 6003 to a 108k end at 6001 while the other two prongs are flat, whereas clusters 80 and 81 are plain all-flat two-prong bends."
+   },
+   "B": {
+    "item": "item023",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 80030,
+    "conf": "unclear",
+    "why": "Nothing converges in this event; cluster 80 zooms as one continuous bent 22 cm track with a steep 200k Bragg stop at 80031, so its cool 53k free end 80030 is that proton's start, but 6001 is a 28.8 deg shower hairpin, cluster 35 is an isolated 208k stub, and 80034 is 9 cm away.",
+    "pos": [
+     -40.72,
+     -122.47,
+     114.71
+    ],
+    "main": [
+     -24.590671930414196,
+     -107.9694597884926,
+     162.92696816318167
+    ],
+    "d_truth": 43.44794342329126,
+    "d_main": 52.870567513987844,
+    "reco_truth": 30.941254701121032
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 285366,
+   "role": "mover",
+   "cls": "UNRESOLVED-missing-arm",
+   "A": {
+    "item": "item029",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 13001,
+    "conf": "unclear",
+    "pos": [
+     201.4,
+     -47.56,
+     460.88
+    ],
+    "main": [
+     201.3950709186525,
+     -47.56376842413071,
+     460.8840394782772
+    ],
+    "d_truth": 66.92870208679852,
+    "d_main": 0.007403664505587714,
+    "reco_truth": 66.92152333227608,
+    "why": "The event is one 67.7 cm segment with deg-1 ends plus four dots lying 20-42 cm off it, and p4 is flat ~90k across with no Bragg at either end; rule 1 (67k vs 92k) and rule 2 both favour 13001, which I kept despite it touching the x+ anode face because the wall rule forbids screening it out."
+   },
+   "B": null
+  },
+  {
+   "sample": "mcp1k",
+   "event": 285443,
+   "role": "mover",
+   "cls": "UNRESOLVED-missing-arm",
+   "A": {
+    "item": "item043",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 7001,
+    "conf": "likely",
+    "pos": [
+     -71.66,
+     47.55,
+     430.1
+    ],
+    "main": [
+     -71.66069804301144,
+     47.548507961937624,
+     430.097532891833
+    ],
+    "d_truth": 0.002966490238175735,
+    "d_main": 0.002966490238175735,
+    "reco_truth": 0.0,
+    "why": "The 233k end is a 7-8 cm plateau peaking well before the endpoint, not a muon Bragg (hot-blob trap), the muon's other end 7000 lies on the z=500 wall so it exits and is flat MIP for 67 cm, and the shower spray begins 13 cm from 7001 and runs about 110 cm, far too long for a Michel."
+   },
+   "B": null
+  },
+  {
+   "sample": "mcp1k",
+   "event": 285665,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item065",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 9003,
+    "conf": "certain",
+    "pos": [
+     -33.19,
+     -88.94,
+     106.14
+    ],
+    "main": [
+     -42.58858320608522,
+     -104.09923503876675,
+     19.033613589201135
+    ],
+    "d_truth": 0.2679257779922881,
+    "d_main": 88.91376905063515,
+    "reco_truth": 88.95461327099264,
+    "why": "Rule 1 plus rule 3: p4 shows the 96 cm track rising monotonically onto the stopping-muon template over its last 10 cm at the 9004 end, which also carries a 4.8 cm Michel-like segment, so 9004 is the far end; 9003 is the cool end and carries a 2.2 cm 302k e/cm proton stub at 114 degrees."
+   },
+   "B": {
+    "item": "item050",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 9003,
+    "conf": "certain",
+    "why": "Rule 1 plus rule 2: the only real object is a 94.9 cm muon whose sharp 490k Bragg spike (dark red in the zoom) is at the 9000 end, so it cools toward 9003, which is also the lowest-z candidate at z=19.5 and carries a second 4.8 cm prong at 126 degrees.",
+    "pos": [
+     -42.58,
+     -102.85,
+     19.49
+    ],
+    "main": [
+     -32.059466305692006,
+     -90.3097904673761,
+     107.00642709953567
+    ],
+    "d_truth": 88.29786743723731,
+    "d_main": 89.03405807107482,
+    "reco_truth": 2.2046374995816276
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 286353,
+   "role": "mover",
+   "cls": "UNRESOLVED-missing-arm",
+   "A": {
+    "item": "item078",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 9001,
+    "conf": "likely",
+    "pos": [
+     -62.12,
+     46.7,
+     372.4
+    ],
+    "main": [
+     -62.11950026143144,
+     46.69811615791518,
+     372.3971339166931
+    ],
+    "d_truth": 262.55941562729663,
+    "d_main": 0.0034659822791366047,
+    "reco_truth": 262.55827816047554,
+    "why": "9004 is a straight-through point (176 degrees), so the only real junction is 9001, where the zoom shows a clean 32 degree V whose two prongs, the 76 cm muon and the 11 cm pion, are both coolest at the apex and hotter away; it is also the lowest-z candidate."
+   },
+   "B": null
+  },
+  {
+   "sample": "mcp1k",
+   "event": 286655,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item037",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 19002,
+    "conf": "likely",
+    "pos": [
+     -43.7,
+     45.79,
+     37.8
+    ],
+    "main": [
+     -43.03035383081263,
+     65.3640328145349,
+     8.663831650096508
+    ],
+    "d_truth": 7.996396946072736,
+    "d_main": 35.10708607575277,
+    "reco_truth": 27.87902623300685,
+    "why": "Best rule-1 junction in a messy 36-vertex event: deg-3 with a heavily ionising 8.2 cm prong (109k rising to a 190k peak) stopping at 19001 and a 19.4 cm MIP prong stopping at 19000, both cooling toward 19002, while the rival cluster-80 tangle has prongs that are hotter at its junction."
+   },
+   "B": {
+    "item": "item016",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 19005,
+    "conf": "likely",
+    "why": "Rule 1 at the only deg-4 junction: 2 of 4 prongs rise away and none toward, the mu/p chain climbs monotonically 18k->195k over 20 cm to the Bragg stop at 19001, and two more prongs drop to 14-16k at 19005; competitor 80043 sits at the z=1 wall with only flat adjacent segments.",
+    "pos": [
+     -45.36,
+     41.06,
+     47.05
+    ],
+    "main": [
+     -43.693820606212256,
+     46.953988801267215,
+     37.990607143024604
+    ],
+    "d_truth": 18.130537473045674,
+    "d_main": 10.935623288078416,
+    "reco_truth": 7.963858191960577
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 286681,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item069",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 3004,
+    "conf": "likely",
+    "pos": [
+     -137.86,
+     1.66,
+     430.45
+    ],
+    "main": [
+     -136.56099896924974,
+     32.06501450840635,
+     460.66466350239216
+    ],
+    "d_truth": 32.747608667463,
+    "d_main": 42.88447506379296,
+    "reco_truth": 68.61838877458787,
+    "why": "Rule 1 with an energy argument: the 72.2 cm proton leaves 3004 cool and rises monotonically on the proton template to 260k at 3000, and the 66.2 cm muon also starts cool there; the upstream competitor 3002 is linked to 3004 only by a 27 cm near-MIP segment that could not deliver the ~300 MeV those two prongs carry."
+   },
+   "B": {
+    "item": "item055",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 3006,
+    "conf": "likely",
+    "why": "The best raw rule-1 candidate 3002 is the collinearity trap in its extreme form - its two hot prongs are 180 degrees apart and the zoom shows one smooth continuous track through it with no kink and no colour step - so the vertex is the upstream 3-prong junction 3006, whose prongs are 116/117/127 degrees apart with an 8.2 cm stub stopping at 174k, and which rule 2 also prefers.",
+    "pos": [
+     -135.07,
+     9.68,
+     402.38
+    ],
+    "main": [
+     -135.06908839238912,
+     9.681192767038405,
+     402.3813466461646
+    ],
+    "d_truth": 6.97697646764093,
+    "d_main": 0.0020167244573310408,
+    "reco_truth": 6.97875426951879
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 286818,
+   "role": "calib",
+   "cls": "CALIB-AGREE",
+   "A": {
+    "item": "item045",
+    "arm": "pr150s0",
+    "role": "calib",
+    "vid": 5001,
+    "conf": "likely",
+    "pos": [
+     -153.97,
+     -69.9,
+     197.32
+    ],
+    "main": [
+     -153.9730457061469,
+     -69.89777609105269,
+     197.32292332704418
+    ],
+    "d_truth": 0.004771576044298307,
+    "d_main": 0.004771576044298307,
+    "reco_truth": 0.0,
+    "why": "Rule 3 and rule 1 agree: the 43 cm muon cools toward 5001 and ends at 5002 in a four-prong stop whose only real prong is a 7.2 cm MIP electron (a Michel) plus junk stubs, and there is no genuine Bragg at 5001, only a single endpoint spike; 5001 is also the upstream end."
+   },
+   "B": null
+  },
+  {
+   "sample": "mcp1k",
+   "event": 287431,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item044",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": null,
+    "conf": "unclear",
+    "pos": null,
+    "main": null,
+    "d_truth": null,
+    "d_main": null,
+    "reco_truth": null,
+    "why": "Rule 8 abstention: the event is two isolated sub-cm stubs at z=186 and z=496 with no fitted trajectory and no dQ/dx information, so there is nothing to read a direction from."
+   },
+   "B": {
+    "item": "item007",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 23000,
+    "conf": "unclear",
+    "why": "Rule 8 territory: the whole event is two isolated sub-cm blobs 311 cm apart with no segments, no direction and no dQ/dx structure; 23000 is picked only because 24002 sits 3.6 cm from the downstream z face, so this is close to a guess.",
+    "pos": [
+     55.83,
+     -13.57,
+     185.7
+    ],
+    "main": null,
+    "d_truth": 311.05839541681144,
+    "d_main": null,
+    "reco_truth": null
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 290052,
+   "role": "mover",
+   "cls": "CONFIRMS-LABEL",
+   "A": {
+    "item": "item025",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 8007,
+    "conf": "certain",
+    "pos": [
+     107.43,
+     -38.97,
+     460.54
+    ],
+    "main": [
+     107.43049341567601,
+     -38.96650033159097,
+     460.5369618046915
+    ],
+    "d_truth": 0.23822441056553295,
+    "d_main": 0.004660661834468189,
+    "reco_truth": 0.2426165932656633,
+    "why": "Rule 1 at a deg-3 junction, 2 of 3 rising away and none toward: a 13 cm proton climbs the template 123k->190k to its stop at 8005, and the 76.7 cm muon runs MIP then peaks 152k at 8003 with a 14 cm MIP Michel continuing past it, which by rule 3 makes 8003 the far end; angles 81/134/145 deg."
+   },
+   "B": {
+    "item": "item063",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 8003,
+    "conf": "likely",
+    "why": "Rule 1 at a sharp 80 degree V with a clean dQ/dx discontinuity in the zoom: a cyan MIP 75.7 cm track on one arm and a dark-red 12.7 cm proton peaking at 205k on the other, which unambiguously starts at 8003; the more upstream alternative 8001 is only a track terminus with zero prongs rising away, and rule 2 is a tie-break that must not overturn that.",
+    "pos": [
+     107.6,
+     -39.0,
+     460.54
+    ],
+    "main": [
+     106.65451857774724,
+     -62.951604345472084,
+     395.778406153367
+    ],
+    "d_truth": 0.3350400332077464,
+    "d_main": 69.05532074647196,
+    "reco_truth": 69.15004537691694
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 291037,
+   "role": "calib",
+   "cls": "CALIB-AGREE",
+   "A": {
+    "item": "item107",
+    "arm": "pr150s0",
+    "role": "calib",
+    "vid": 13001,
+    "conf": "certain",
+    "pos": [
+     71.38,
+     96.26,
+     98.38
+    ],
+    "main": [
+     71.37522205540884,
+     96.26117690377048,
+     98.38372787413077
+    ],
+    "d_truth": 0.36668390678981977,
+    "d_main": 0.006173402832797177,
+    "reco_truth": 0.37220727242511203,
+    "why": "Rules 1, 2 and 3 agree: the 111 cm muon starts MIP at 13001 deep in the detector interior, far from any wall, and stops at 13000 with a monotone 10 cm Bragg to 122k plus Michel blobs 28009 and 27007 at 7 and 23 cm; 13001 is also the lowest-z candidate, and the single hot point at its tip looks like a vertex stub."
+   },
+   "B": null
+  },
+  {
+   "sample": "mcp1k",
+   "event": 292643,
+   "role": "mover",
+   "cls": "REGRESSION",
+   "A": {
+    "item": "item001",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 18001,
+    "conf": "certain",
+    "pos": [
+     -41.08,
+     -29.51,
+     58.78
+    ],
+    "main": [
+     -41.07871139449441,
+     -29.513810402465232,
+     58.77631103775101
+    ],
+    "d_truth": 0.7114446377027273,
+    "d_main": 0.0054578488042966375,
+    "reco_truth": 0.7111999055562572,
+    "why": "Rule 1: both prongs rise away at a 38 deg V -- the 188 cm muon Braggs at 18000 (117k, p4 shows the template fall) and the 36 cm hadron chain Braggs at 18004 (158k), and 18001 is the cool minimum and lowest-z point of the chain."
+   },
+   "B": {
+    "item": "item062",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 18006,
+    "conf": "likely",
+    "why": "Rule 1 plus rule 2 at the lowest-z point of the 224 cm cluster: the X-Y zoom shows two distinct point trails diverging from 18006 at 31 degrees, both cool there (36k and 50k) and both getting hotter away, one stopping at 92k after 35 cm and the other stopping at 120k after 182 cm, while the competing junctions 18005 and 18002 are 176 and 167 degree collinear fit breaks.",
+    "pos": [
+     -40.19,
+     -29.2,
+     59.48
+    ],
+    "main": [
+     -21.689096812018327,
+     -19.916397256789796,
+     60.058068354141525
+    ],
+    "d_truth": 1.854589235364411,
+    "d_main": 20.707555666637003,
+    "reco_truth": 22.269158205966786
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 293149,
+   "role": "mover",
+   "cls": "REGRESSION",
+   "A": {
+    "item": "item058",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 4002,
+    "conf": "unclear",
+    "pos": [
+     -129.0,
+     51.96,
+     403.76
+    ],
+    "main": [
+     -129.00248492738854,
+     51.95603463993176,
+     403.75708705462154
+    ],
+    "d_truth": 24.243559314394727,
+    "d_main": 0.005512186079494696,
+    "reco_truth": 24.239095125787685,
+    "why": "Close to a guess: the event is two disconnected faint structures, a 26 cm track ending in a 145k spike at 4000 and an EM shower apex at 52037 whose backward axis does not point at that track, 27 cm apart across an empty gap; only 4002 and 52045 have a prong rising away with none rising toward, and 52045's prongs are 153 degrees collinear, so I take 4002 on rule 1 plus rule 2."
+   },
+   "B": {
+    "item": "item014",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 52046,
+    "conf": "likely",
+    "why": "52046 is the dQ/dx discontinuity (84k proton side versus 49k MIP side) where the 7.5 cm proton stopping at 52038 starts, and the 23 cm MIP track of cluster 4 back-extrapolates to it within 5 deg across a ~23 cm photon-conversion gap; 4000 is a phantom endpoint with no charge on it.",
+    "pos": [
+     -138.19,
+     4.77,
+     411.64
+    ],
+    "main": [
+     -142.0566626531209,
+     -1.4466545214304536,
+     398.42864463103905
+    ],
+    "d_truth": 25.202278781827598,
+    "d_main": 15.104230672127416,
+    "reco_truth": 31.179770987563153
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 313781,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item019",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 9003,
+    "conf": "likely",
+    "pos": [
+     -121.46,
+     155.42,
+     401.88
+    ],
+    "main": [
+     -121.65202903104594,
+     157.0865813876395,
+     402.76996671326134
+    ],
+    "d_truth": 41.30373046112047,
+    "d_main": 1.8990548757484944,
+    "reco_truth": 40.52640789403572,
+    "why": "Rule 1: 9003 is the only vertex with a prong rising away, the 9.7 cm segment runs 45k MIP from it and spikes to 232k in the last 1.3 cm at 9001, so 9001 is the stop and the track starts at 9003, which sits in a knot of very-low-charge dust; 9000 only 2 cm off keeps it off certain."
+   },
+   "B": {
+    "item": "item032",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 9000,
+    "conf": "likely",
+    "why": "Rule 1 on the event's dominant object: seg 9000 runs flat 45-55k MIP for 11.5 cm then rises 56k->93k->140k in the last 2 cm at 9001, so 9001 is the stop and the cool end 9000 is the start; no junction exists anywhere and rule 2 mildly disagrees, so not certain.",
+    "pos": [
+     -123.1,
+     153.94,
+     403.36
+    ],
+    "main": [
+     -114.92813465391134,
+     188.97338889735713,
+     378.3745777669068
+    ],
+    "d_truth": 43.61537196411268,
+    "d_main": 43.79941831844368,
+    "reco_truth": 0.20872378144328385
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 315013,
+   "role": "mover",
+   "cls": "CONFIRMS-LABEL",
+   "A": {
+    "item": "item077",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 15001,
+    "conf": "likely",
+    "pos": [
+     -119.91,
+     -56.74,
+     277.4
+    ],
+    "main": [
+     -119.91179158244537,
+     -56.73806933140933,
+     277.40320370517225
+    ],
+    "d_truth": 0.0041474058996462376,
+    "d_main": 0.0041474058996462376,
+    "reco_truth": 0.0,
+    "why": "Rule 3 fixes the far end and topology fixes this one: the 227 cm muon stops at 15006 with two short Michel-like segments, so the vertex is the upstream end, and 15001 is the extreme end of the point cloud at the lowest z, ringed by several sub-cm fragments within 6-9 cm."
+   },
+   "B": {
+    "item": "item035",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 15001,
+    "conf": "certain",
+    "why": "Rule 3 plus rule 1: the 217 cm muon is MIP 65k here and Braggs to 134k at 15000 where a 6.4 cm electron segment sits 6.6 cm off the stopping end (Michel, so that is the far end), and 15001 starts in the detector interior inside a halo of sub-cm fragments.",
+    "pos": [
+     -119.69,
+     -56.85,
+     277.43
+    ],
+    "main": [
+     -5.552952834687259,
+     -184.06859716684818,
+     403.59196520786696
+    ],
+    "d_truth": 0.2498760133171568,
+    "d_main": 212.4351158961923,
+    "reco_truth": 212.63727530273516
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 315343,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item027",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 7004,
+    "conf": "likely",
+    "pos": [
+     -88.87,
+     -20.66,
+     379.25
+    ],
+    "main": [
+     -88.8687216041739,
+     -20.66468770954298,
+     379.246796207266
+    ],
+    "d_truth": 10.917242846438345,
+    "d_main": 0.005820069117277966,
+    "reco_truth": 10.913781052024174,
+    "why": "Both arms ride the proton template to Bragg stops at their far ends (258k at 7000, 265k at 7003, falling to ~118k at 7004), and one particle can only stop once, so 7004 is a real 2 of 2 rise-away junction; dropped one tier because the prongs leave at 172.5 deg, firing the collinearity screen."
+   },
+   "B": {
+    "item": "item067",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 7003,
+    "conf": "likely",
+    "why": "Two Bragg ends in one cluster: p4 shows dQ/dx at its minimum (~70-95k) at 7003 and rising away in both directions, to 320k at 7000 and to 273k at 7002, so both prongs point away; confidence dropped one tier because the two prongs leave 7003 at 149 degrees, near the back-to-back trap.",
+    "pos": [
+     -89.82,
+     -19.32,
+     372.43
+    ],
+    "main": [
+     -90.19296098925489,
+     -21.066456229041115,
+     368.7675291610528
+    ],
+    "d_truth": 4.598199796106363,
+    "d_main": 4.074665864288914,
+    "reco_truth": 0.8022101110737441
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 321173,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item098",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 10002,
+    "conf": "unclear",
+    "pos": [
+     172.38,
+     95.28,
+     409.67
+    ],
+    "main": [
+     172.3757906407789,
+     95.28482819501772,
+     409.66799953710307
+    ],
+    "d_truth": 22.10552475384854,
+    "d_main": 0.006710590434793067,
+    "reco_truth": 22.101533105208574,
+    "why": "Rule 1 puts 10002 at the dQ/dx minimum with the 130 cm leg rising to a clean monotone 113k Bragg at 10000, but the 10001 end is only two hot points after a dropout, which trap 2 says is not a Bragg, and the zoom shows the prongs leaving dead straight at 174 deg, so this may be a split point inside one track rather than a junction."
+   },
+   "B": {
+    "item": "item088",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 10001,
+    "conf": "likely",
+    "why": "The zoom shows no kink at all at 10002 (prongs at 173 deg), so the apparent 2-of-2 rule-1 star there is the collinear trap; applying the monotonicity test, only the 10000 end is a true terminal Bragg while 10001 carries a 2 cm hot patch on an otherwise MIP end, i.e. vertex activity at the track start.",
+    "pos": [
+     178.24,
+     114.09,
+     397.43
+    ],
+    "main": [
+     178.24339277473342,
+     114.09315461140993,
+     397.42618384352744
+    ],
+    "d_truth": 1.1445318649260774,
+    "d_main": 0.006002128269408718,
+    "reco_truth": 1.150412607275659
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 321371,
+   "role": "mover",
+   "cls": "CONFIRMS-LABEL",
+   "A": {
+    "item": "item100",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 27015,
+    "conf": "likely",
+    "pos": [
+     39.08,
+     -106.88,
+     143.71
+    ],
+    "main": [
+     39.08425170106391,
+     -106.87543786278802,
+     143.7086411207871
+    ],
+    "d_truth": 0.16046402321293946,
+    "d_main": 0.0063825238419522885,
+    "reco_truth": 0.15525606277821077,
+    "why": "Rule 1 at the dQ/dx minimum of cluster 27: a MIP pion prong runs to 27013 and a 2x-MIP prong rises monotonically along 27016 to a textbook 247k Bragg at 27017, meeting at a genuine 136 deg kink in the zoom, while cluster 18 is a 313 cm top-wall track with no Bragg at either end."
+   },
+   "B": {
+    "item": "item038",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 27002,
+    "conf": "certain",
+    "why": "Textbook two-Bragg junction: 2 of 2 prongs rise away, p4 gives a proton falling from 175k at 27000 and a muon climbing to 107k at 27001, and the zoom shows a roughly 90 degree kink in X-Z so it is not one scattered track.",
+    "pos": [
+     38.63,
+     -106.1,
+     143.84
+    ],
+    "main": [
+     22.581367118689837,
+     -58.36703471556691,
+     179.85801812135375
+    ],
+    "d_truth": 0.9485253273123228,
+    "d_main": 61.91358672855362,
+    "reco_truth": 62.693446808882136
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 347129,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item087",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 11001,
+    "conf": "unclear",
+    "pos": [
+     -196.62,
+     -107.29,
+     179.89
+    ],
+    "main": [
+     -192.71192511242083,
+     -41.81087036100184,
+     187.48843561332137
+    ],
+    "d_truth": 65.95555568451897,
+    "d_main": 66.03427664007114,
+    "reco_truth": 1.2185283044558466,
+    "why": "Messy fragmented event; I read the 3-prong sub-MIP fan at 55030 as the apex of an EM shower that points back (26 deg) at the lower blob cloud, where the only above-MIP object sits, and rule 1 puts its cool end at 11001 - but a CC-nue reading with the vertex at the shower apex is equally available."
+   },
+   "B": {
+    "item": "item018",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 11001,
+    "conf": "unclear",
+    "why": "No rise-away anywhere and the principal frame shows clusters 53/56/54/55 on one straight through-going MIP line, so their deg-2/3 points are fit breaks; picked the cool end of cluster 11, the only >MIP object (40k rising through 110k to 210k = stopping proton), but it is deg 1 and isolated, so it may be a neutron recoil.",
+    "pos": [
+     -196.57,
+     -107.47,
+     179.94
+    ],
+    "main": [
+     -196.09849933349886,
+     -106.78251304443354,
+     186.22237325668502
+    ],
+    "d_truth": 66.12473848700671,
+    "d_main": 6.337441512858023,
+    "reco_truth": 64.89484456296738
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 348515,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item039",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 14000,
+    "conf": "likely",
+    "pos": [
+     -31.72,
+     -76.27,
+     279.49
+    ],
+    "main": [
+     -57.13384696953027,
+     -84.4397616669793,
+     252.37265612905344
+    ],
+    "d_truth": 18.7068103531754,
+    "d_main": 38.05205595104042,
+    "reco_truth": 56.17364813597395,
+    "why": "Rule 1: the 32.5 cm muon cools to 14000 and Braggs to 130k at the far end 14002, and the hot 15 cm proton-like cluster-48 track begins 4.9 cm away at 48020, so the vertex is this muon-start/proton-start junction; 14000 carries the rise-away evidence while 48020 is flat."
+   },
+   "B": {
+    "item": "item051",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 48017,
+    "conf": "likely",
+    "why": "Rule 3 disqualifies 14002 (stopping-muon Bragg to 140k with a 7 cm Michel stub), leaving the muon start; the muon line extrapolated forward from 14000 passes within 0.7 cm of 48017 in all three projections, where a 15.4 cm 200-335k proton begins, so the junction sits at the proton start rather than 4.3 cm back at 14000.",
+    "pos": [
+     -28.19,
+     -74.63,
+     282.24
+    ],
+    "main": [
+     -31.502379461028294,
+     -76.12235904954913,
+     279.7634197321028
+    ],
+    "d_truth": 14.515673260514626,
+    "d_main": 4.396867413278573,
+    "reco_truth": 18.336892431800756
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 348713,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item021",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 7003,
+    "conf": "certain",
+    "pos": [
+     133.2,
+     133.18,
+     102.28
+    ],
+    "main": [
+     201.15746381392572,
+     88.20076999251576,
+     65.99597753071846
+    ],
+    "d_truth": 89.20694091066302,
+    "d_main": 89.20694091066302,
+    "reco_truth": 0.0,
+    "why": "Rule 1 plus dE/dx vs residual range: 7003->7000 climbs 55k->105k->230k over 37 cm as a stopping proton while the other arm is flat 50-60k MIP for 90 cm out to the x+ wall, which no single particle can do (a proton 127 cm from its stop would be ~33k), and charge jumps 53k->78k across the junction."
+   },
+   "B": {
+    "item": "item060",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 7001,
+    "conf": "likely",
+    "why": "Rule 1 on a single 128 cm track whose dQ/dx climbs monotonically 55k-54k-84k-107k-145k-202k along the chain, so it cools all the way toward 7001, which is also the lowest-z candidate; the track runs upward in y, which is what rules out an entering cosmic, and the rules forbid screening out a wall-touching cluster anyway.",
+    "pos": [
+     200.83,
+     88.18,
+     65.64
+    ],
+    "main": [
+     132.4426515793103,
+     133.80103538439576,
+     102.66162665903354
+    ],
+    "d_truth": 0.4841321559205565,
+    "d_main": 90.15935411280387,
+    "reco_truth": 90.25230994411751
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 349087,
+   "role": "calib",
+   "cls": "CALIB-AGREE",
+   "A": {
+    "item": "item080",
+    "arm": "pr150s0",
+    "role": "calib",
+    "vid": 3001,
+    "conf": "likely",
+    "pos": [
+     -67.21,
+     -34.59,
+     263.29
+    ],
+    "main": [
+     -68.07504085797994,
+     -35.20653768131368,
+     265.761171729157
+    ],
+    "d_truth": 0.005618441463059084,
+    "d_main": 2.689814884604345,
+    "reco_truth": 2.689855222889032,
+    "why": "p4 shows one continuous stopping proton: dQ/dx rises monotonically along the proton template from ~89k at the 3001 end through 3002 to 207k at 3000, and the 2.9 cm stub is collinear (175 degrees) and charge-continuous with the 31.5 cm segment, so 3001 is the start of the whole 34 cm track."
+   },
+   "B": null
+  },
+  {
+   "sample": "mcp1k",
+   "event": 352233,
+   "role": "calib",
+   "cls": "CALIB-AGREE",
+   "A": {
+    "item": "item086",
+    "arm": "pr150s0",
+    "role": "calib",
+    "vid": 6001,
+    "conf": "certain",
+    "pos": [
+     67.65,
+     90.95,
+     406.84
+    ],
+    "main": [
+     67.64514439526324,
+     90.95161092454474,
+     406.84423325290544
+    ],
+    "d_truth": 0.006640211247401224,
+    "d_main": 0.006640211247401224,
+    "reco_truth": 0.0,
+    "why": "Clusters 6 and 52 are one contained 143 cm track (directions agree to 4 deg across a 12 cm gap) that Braggs to 103k at 52025, so rule 1 puts the vertex at the cool end 6001, which has a 228k 1.1 cm proton blob sitting 5 cm off it."
+   },
+   "B": null
+  },
+  {
+   "sample": "mcp1k",
+   "event": 386948,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item047",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 16005,
+    "conf": "unclear",
+    "pos": [
+     -10.03,
+     177.74,
+     388.17
+    ],
+    "main": [
+     -53.23024687929776,
+     150.8124935892927,
+     332.93258337835084
+    ],
+    "d_truth": 36.54217069457743,
+    "d_main": 75.11673666344008,
+    "reco_truth": 48.50391203511123,
+    "why": "Close to a guess in a badly fragmented 30-cluster event: I take 16005 because a 24.8 cm prong cools into it with a monotone Bragg rise to 220k at 16001 and a second prong rises from it to a 148k proton peak 5 cm out, but the event's only clean 3-of-3 rule-1 candidate 80062 is merely tier-dropped by its 153 degree prong pair rather than eliminated, and the busy 16007/16016 knot 8 cm away is a live alternative."
+   },
+   "B": {
+    "item": "item092",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 16002,
+    "conf": "unclear",
+    "why": "Shower-dominated event; in the principal frame the branches form a corner at about z=365, y=149 where cluster 16's hot stem, cluster 90, cluster 91 and the forward 93/80/79 chain converge, and 16002 is the candidate at that corner, but the dump's segment lengths disagree with its vertex separations here so I do not trust the topology.",
+    "pos": [
+     -12.56,
+     148.16,
+     365.28
+    ],
+    "main": [
+     -12.55723932883932,
+     148.1573778344034,
+     365.27603120427574
+    ],
+    "d_truth": 4.629432072469681,
+    "d_main": 0.005499854286620504,
+    "reco_truth": 4.63239238298738
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 389874,
+   "role": "mover",
+   "cls": "REGRESSION-b-agrees",
+   "A": {
+    "item": "item099",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 11001,
+    "conf": "unclear",
+    "pos": [
+     31.75,
+     -26.3,
+     50.23
+    ],
+    "main": [
+     31.750347098268755,
+     -26.29746865760908,
+     50.23246564483945
+    ],
+    "d_truth": 0.0035507148551478704,
+    "d_main": 0.0035507148551478704,
+    "reco_truth": 0.0,
+    "why": "Featureless 17 cm warm stub with no Bragg at either end, so only the ordering in z decides: 11001 at 50.2, 11000 at 59.6 and the detached blob 82003 at 63.3, i.e. the object develops downstream from 11001 (rules 2 and 7); close to a coin flip between the two ends."
+   },
+   "B": {
+    "item": "item034",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 11002,
+    "conf": "unclear",
+    "why": "Only junction in a 16 cm event: the 13.5 cm track Braggs to 114k at 11001 so its other end is here, but the two prongs leave 11002 at about 154 degrees (collinearity trap) so this could be one scattered particle.",
+    "pos": [
+     26.71,
+     -34.84,
+     58.57
+    ],
+    "main": [
+     26.71446729626723,
+     -34.842153315012965,
+     58.574624197861475
+    ],
+    "d_truth": 12.957407909386813,
+    "d_main": 0.006780612608482504,
+    "reco_truth": 12.960066766743093
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 390864,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item028",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 16002,
+    "conf": "unclear",
+    "pos": [
+     -147.31,
+     -130.53,
+     270.37
+    ],
+    "main": [
+     -147.31033620799758,
+     -130.53346047921,
+     270.36963723034523
+    ],
+    "d_truth": 93.185401498696,
+    "d_main": 0.003495647865966958,
+    "reco_truth": 93.18800911435652,
+    "why": "The two long arms are exactly 180 deg apart, so they are one straight 175 cm track running from the x- wall to 7 cm off the y- wall with no Bragg at either end, and the 14 cm branch at 16002 is flat MIP, reading as a delta ray; the dust sits 5-18 cm off that track, so no vertex topology exists and this is only the least-bad point."
+   },
+   "B": {
+    "item": "item097",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 16003,
+    "conf": "unclear",
+    "why": "Cluster 16 is a 176 cm wall-to-wall track that is flat ~50k in p4 with no Bragg at either end, so the only interaction-like structure left is rule 6 at 16003, the free end of the 12.9 cm stub, with blobs 56018, 55016, 54014, 52010 and 53012 all within 15 cm of it; weak evidence, could equally be a delta ray.",
+    "pos": [
+     -145.43,
+     -138.48,
+     260.36
+    ],
+    "main": [
+     -201.3963923321175,
+     -57.02010899798709,
+     289.4528507116377
+    ],
+    "d_truth": 102.96710554745512,
+    "d_main": 103.02594272930466,
+    "reco_truth": 0.10158999844558333
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 391766,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item085",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 25009,
+    "conf": "unclear",
+    "pos": [
+     9.8,
+     -2.23,
+     1.88
+    ],
+    "main": [
+     122.90998029009691,
+     -25.606391616600057,
+     0.07219147069506304
+    ],
+    "d_truth": 0.0032061425848194393,
+    "d_main": 115.51446445323369,
+    "reco_truth": 115.51738788190625,
+    "why": "Clusters 17+24 are one 310 cm muon entering at z=0.1 that stops with a Michel (rule 3 puts its vertex end at the wall), leaving cluster 25 as the only other object: rule 1 clean (1 of 1 rising away, x2.37 to 118k) and the lowest z, but it is a degree-1 end at the upstream face so this is close to a coin flip."
+   },
+   "B": {
+    "item": "item101",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 17001,
+    "conf": "unclear",
+    "why": "Rules 1, 2 and 3 all pick the upstream end of the 280 cm forward track: it rises from 52034 at 17001 to a 140k spike and 80019 mean at 17000, 17001 is the lowest-z candidate, and the little cluster-24 V beyond 17000 opens backward at 165 and 129 deg to that stopping end, so it is far-end decay activity rather than a vertex.",
+    "pos": [
+     122.88,
+     -25.51,
+     0.18
+    ],
+    "main": [
+     9.773066302067946,
+     -2.094968618014027,
+     2.2632407474917633
+    ],
+    "d_truth": 115.46692031470789,
+    "d_main": 115.52394573065705,
+    "reco_truth": 0.40644187398324405
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 393212,
+   "role": "mover",
+   "cls": "REGRESSION",
+   "A": {
+    "item": "item003",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 83070,
+    "conf": "likely",
+    "pos": [
+     33.26,
+     181.07,
+     203.62
+    ],
+    "main": [
+     33.25642474716382,
+     181.07353159226454,
+     203.62034383882434
+    ],
+    "d_truth": 2.215362434679752,
+    "d_main": 0.005037142235708382,
+    "reco_truth": 2.2174397797443426,
+    "why": "Rule 6/7: a knot of stopping protons (14.3 cm p Bragg 159k at 83066, 2.1 cm p at 233k) with the 49 cm all-electron cluster 6 opening as an ~11 deg cone whose axis extrapolates back through 83070 to under 1 deg, 30 cm upstream of the conversion."
+   },
+   "B": {
+    "item": "item013",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 83062,
+    "conf": "likely",
+    "why": "Rule 1 plus shower pointing: two protons leave 83062 in a 98 deg V (15.4 cm to a 162k Bragg at 83061, 2.9 cm at 223k), and the 38 cm electron-segment shower axis passes 1.6 cm from 83062 versus 6.4 cm from the competing start at 84064.",
+    "pos": [
+     34.29,
+     181.37,
+     203.33
+    ],
+    "main": [
+     42.675038379793605,
+     194.11643209231926,
+     184.77201535696645
+    ],
+    "d_truth": 1.8008637271123646,
+    "d_main": 24.0245539755848,
+    "reco_truth": 25.12033620477622
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 399052,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item041",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 19026,
+    "conf": "likely",
+    "pos": [
+     -114.17,
+     -99.9,
+     446.28
+    ],
+    "main": [
+     -124.59857739748608,
+     -87.13050677349712,
+     460.63900047146683
+    ],
+    "d_truth": 0.00795353343567905,
+    "d_main": 21.86312142253814,
+    "reco_truth": 21.86633128442991,
+    "why": "Rule 1 plus geometry: the 63.6 cm heavily ionising track is coolest here (81k) and climbs to 116k as it exits at z=501, 19026 sits in the detector interior, and both EM tangles start 20-35 cm downstream of it like photon conversion gaps."
+   },
+   "B": {
+    "item": "item064",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 15004,
+    "conf": "likely",
+    "why": "Rule 1 in its strongest form once p4 is read instead of the 5 cm means: all four prongs of this degree-4 junction leave 15004 at about 42k e/cm (1 MIP) and three of them rise away to Bragg ends at 187k, 95k and 94k, while the fourth (seg 15029) also starts at 42k and falls to 22k, so its rises-toward flag is a window artifact; the deg-1 track start 19018 is the null instance of rule 1 and rule 2 may not overturn this.",
+    "pos": [
+     -143.92,
+     -69.66,
+     488.39
+    ],
+    "main": [
+     -114.2167800336634,
+     -99.98416352292966,
+     446.3461602951331
+    ],
+    "d_truth": 59.776524148045795,
+    "d_main": 59.74546532467965,
+    "reco_truth": 0.12442525935985961
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 399856,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item090",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 3002,
+    "conf": "likely",
+    "pos": [
+     -122.11,
+     101.98,
+     204.34
+    ],
+    "main": [
+     -134.55700174899647,
+     118.29764783554359,
+     164.62178549277402
+    ],
+    "d_truth": 44.70715878991146,
+    "d_main": 44.70715878991146,
+    "reco_truth": 0.0,
+    "why": "Both free ends are genuine monotone Bragg peaks (210k at 3001 over the last 6 cm, 245k at 3000 over the last 4 cm), which one particle cannot do, so the junction they both cool toward is a real vertex, and a small off-axis clump of points sits right at 3002; tier dropped for the 171 deg prong pair."
+   },
+   "B": {
+    "item": "item057",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 3002,
+    "conf": "likely",
+    "why": "Trap 1 verbatim - two Bragg ends in one cluster, a wide template-matching stopping-muon rise to 210k at 3001 and a sharp 3.5 cm 320k terminus at 3000 - so I take the junction they both point away from, with rule 1 scoring 2 of 2 there; the 171.5 degree prong pair costs it one confidence tier.",
+    "pos": [
+     -123.65,
+     103.49,
+     200.34
+    ],
+    "main": [
+     -118.63537118267575,
+     98.32669542242412,
+     220.23488654140883
+    ],
+    "d_truth": 40.174867381962805,
+    "d_main": 21.156860041884396,
+    "reco_truth": 61.19766554716892
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 401780,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item061",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 13002,
+    "conf": "certain",
+    "pos": [
+     -153.45,
+     -60.43,
+     176.93
+    ],
+    "main": [
+     -187.966559864294,
+     -89.85388820908811,
+     131.47740059797778
+    ],
+    "d_truth": 0.6100072383536576,
+    "d_main": 64.21134552870714,
+    "reco_truth": 63.618170228872614,
+    "why": "The only cluster in the event, rule 1 scores 2 of 2 at its only junction, and p4 independently template-matches a terminal Bragg on each arm (a 250k-to-55k proton-template decline from 13000 and a rise to 210k on the stopping-muon template at 13001); one particle cannot produce two terminal Braggs, both free ends are rule-1 negative, and the 147.8 degree prong pair is below the 150 degree collinearity threshold so no tier drop applies."
+   },
+   "B": {
+    "item": "item033",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 13002,
+    "conf": "certain",
+    "why": "Rule 1 outright: both prongs cool toward 13002 and p4 shows two different Bragg shapes away from it - a proton falling 260k from the 13000 end and a muon climbing to 160k at 13001 - and the zoom shows a real kink, not a collinear pair.",
+    "pos": [
+     -150.38,
+     -55.96,
+     183.27
+    ],
+    "main": [
+     -150.37520766871745,
+     -55.95753923514424,
+     183.2729985500195
+    ],
+    "d_truth": 8.951067035938904,
+    "d_main": 0.006165476868535145,
+    "reco_truth": 8.956418375049228
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 405674,
+   "role": "calib",
+   "cls": "CALIB-AGREE",
+   "A": {
+    "item": "item010",
+    "arm": "pr150s0",
+    "role": "calib",
+    "vid": 11003,
+    "conf": "certain",
+    "pos": [
+     27.91,
+     -181.19,
+     296.5
+    ],
+    "main": [
+     27.913232988730005,
+     -181.1910212114653,
+     296.49980358208904
+    ],
+    "d_truth": 0.292825700811779,
+    "d_main": 0.0033961255838048567,
+    "reco_truth": 0.2941537877768443,
+    "why": "Rule 1 with two Bragg ends, seen as a clean 90 deg V in X-Z: the 168 cm muon is flat MIP through the 11004 break and Braggs at 11000, while the 12.8 cm proton rises monotonically to 290k at 11001; the hot last bin at 11003 is vertex overlap, not a Bragg."
+   },
+   "B": null
+  },
+  {
+   "sample": "mcp1k",
+   "event": 409546,
+   "role": "mover",
+   "cls": "UNRESOLVED",
+   "A": {
+    "item": "item009",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 9001,
+    "conf": "likely",
+    "pos": [
+     -201.42,
+     47.95,
+     478.79
+    ],
+    "main": [
+     -189.01301453652354,
+     35.30769618003632,
+     485.73778503702687
+    ],
+    "d_truth": 18.203089462854773,
+    "d_main": 19.027160878279197,
+    "reco_truth": 1.8621572578300778,
+    "why": "Rule 1 on a single stopping heavy track: the chain 9001-9000-41016-41017 rises monotonically (100k, 107k, 367k) to the Bragg tip at 41017, the zoom shows the only blue/green points at the 9001 end, and no second prong leaves anywhere, so the track cools toward 9001."
+   },
+   "B": {
+    "item": "item008",
+    "arm": "pr150csp3bw",
+    "role": "mover",
+    "vid": 9000,
+    "conf": "likely",
+    "why": "Rule 1: both prongs rise away from 9000 (104k rising to 120k toward 9001, and to 220k in the 41-cluster stub), and the residual-range/dQ-dx match only works as two protons of ~16 cm and ~4 cm, not as one 20 cm track; tier dropped for the 178 deg prong pair.",
+    "pos": [
+     -190.46,
+     37.71,
+     483.23
+    ],
+    "main": [
+     -201.35840512287115,
+     47.67460185546081,
+     478.5211707754079
+    ],
+    "d_truth": 2.5651674983783117,
+    "d_main": 15.499728933966871,
+    "reco_truth": 18.062928378655503
+   }
+  },
+  {
+   "sample": "mcp1k",
+   "event": 411460,
+   "role": "mover",
+   "cls": "UNRESOLVED-missing-arm",
+   "A": {
+    "item": "item095",
+    "arm": "pr150s0",
+    "role": "mover",
+    "vid": 6004,
+    "conf": "unclear",
+    "pos": [
+     -35.53,
+     199.56,
+     366.58
+    ],
+    "main": [
+     -28.026771268218237,
+     195.98384885963088,
+     368.4435085867616
+    ],
+    "d_truth": 11.029615839421389,
+    "d_main": 8.518213582267881,
+    "reco_truth": 2.708720474424463,
+    "why": "Nothing in this event is above 63k and there is no Bragg or shower anywhere; 6004 is the only candidate where both prongs get hotter away at a genuine 65 deg opening, but it sits 0.4 cm under the y=200 face, so this is barely better than a guess."
+   },
+   "B": null
+  }
+ ]
+}

@@ -1,0 +1,86 @@
+[
+ {
+  "event": "item064",
+  "vertex_id": 15004,
+  "confidence": "likely",
+  "why": "Rule 1 in its strongest form once p4 is read instead of the 5 cm means: all four prongs of this degree-4 junction leave 15004 at about 42k e/cm (1 MIP) and three of them rise away to Bragg ends at 187k, 95k and 94k, while the fourth (seg 15029) also starts at 42k and falls to 22k, so its rises-toward flag is a window artifact; the deg-1 track start 19018 is the null instance of rule 1 and rule 2 may not overturn this."
+ },
+ {
+  "event": "item065",
+  "vertex_id": 9003,
+  "confidence": "certain",
+  "why": "Rule 1 plus rule 3: p4 shows the 96 cm track rising monotonically onto the stopping-muon template over its last 10 cm at the 9004 end, which also carries a 4.8 cm Michel-like segment, so 9004 is the far end; 9003 is the cool end and carries a 2.2 cm 302k e/cm proton stub at 114 degrees."
+ },
+ {
+  "event": "item067",
+  "vertex_id": 7003,
+  "confidence": "likely",
+  "why": "Two Bragg ends in one cluster: p4 shows dQ/dx at its minimum (~70-95k) at 7003 and rising away in both directions, to 320k at 7000 and to 273k at 7002, so both prongs point away; confidence dropped one tier because the two prongs leave 7003 at 149 degrees, near the back-to-back trap."
+ },
+ {
+  "event": "item068",
+  "vertex_id": 16000,
+  "confidence": "unclear",
+  "why": "Only rule 1 speaks and it speaks weakly: the 40 cm track is cooler at 16000, but p4 shows no template-shaped Bragg at either end and the zoom shows the track continuing past 16000 to a 2.2 cm stub 11 cm further on, while rule 2 points the other way to the y=-199 wall end 16001."
+ },
+ {
+  "event": "item069",
+  "vertex_id": 3004,
+  "confidence": "likely",
+  "why": "Rule 1 with an energy argument: the 72.2 cm proton leaves 3004 cool and rises monotonically on the proton template to 260k at 3000, and the 66.2 cm muon also starts cool there; the upstream competitor 3002 is linked to 3004 only by a 27 cm near-MIP segment that could not deliver the ~300 MeV those two prongs carry."
+ },
+ {
+  "event": "item070",
+  "vertex_id": 4001,
+  "confidence": "certain",
+  "why": "Rule 1 with a template match: p4 shows the 115 cm track spiking to 255k and decaying along the stopping template over the first 10 cm at the 4000 end, so it stops there; 4001 is the cool end and is also the lower-z one, and there are only two candidates."
+ },
+ {
+  "event": "item071",
+  "vertex_id": 9004,
+  "confidence": "certain",
+  "why": "Rule 1 satisfied by both prongs with clean profiles: the 6.4 cm curled hadron rises monotonically from 8k at 9004 to 330k at 9001, and the 24.3 cm track rises away to a hot 9002 that carries a 3 cm Michel-like stub; the chord angle is misleading because the short prong curls."
+ },
+ {
+  "event": "item072",
+  "vertex_id": 19002,
+  "confidence": "certain",
+  "why": "Rule 1 at a sharp 110 degree corner: the 100 cm muon leaves 19002 at MIP and rises on the stopping template to 218k at 19001, and p4 shows the 30 cm 2.1-MIP proton also hottest away from 19002 near 19003, so both prongs point away."
+ },
+ {
+  "event": "item073",
+  "vertex_id": 21003,
+  "confidence": "certain",
+  "why": "The two-Bragg-ends trap resolved in favour of the junction: p4 shows template Braggs at both free ends, 21000 (which also carries the 5.9 cm cluster-61 Michel stub 2.8 cm away) and 205k at 21001, with MIP in between, and the prongs leave 21003 at 129 degrees, below the collinearity threshold."
+ },
+ {
+  "event": "item074",
+  "vertex_id": 83022,
+  "confidence": "likely",
+  "why": "Geometric convergence on a hot stub: the 33 cm cluster-23 arm and the 10.8 cm cluster-94 arm both back-extrapolate, visibly in all three projections, to within 1-2.5 cm of the dark-red 0.8 cm proton blob 83022/83023, which sits at the apex of the 58 degree opening between them."
+ },
+ {
+  "event": "item075",
+  "vertex_id": 10006,
+  "confidence": "certain",
+  "why": "Rule 1 in its strongest form: all three prongs of this degree-3 vertex leave 10006 at about 20k e/cm (half MIP) and rise away to 76k, 200k and 310k respectively, which p4 confirms segment by segment; nothing else in the event comes close."
+ },
+ {
+  "event": "item077",
+  "vertex_id": 15001,
+  "confidence": "likely",
+  "why": "Rule 3 fixes the far end and topology fixes this one: the 227 cm muon stops at 15006 with two short Michel-like segments, so the vertex is the upstream end, and 15001 is the extreme end of the point cloud at the lowest z, ringed by several sub-cm fragments within 6-9 cm."
+ },
+ {
+  "event": "item078",
+  "vertex_id": 9001,
+  "confidence": "likely",
+  "why": "9004 is a straight-through point (176 degrees), so the only real junction is 9001, where the zoom shows a clean 32 degree V whose two prongs, the 76 cm muon and the 11 cm pion, are both coolest at the apex and hotter away; it is also the lowest-z candidate."
+ },
+ {
+  "event": "item080",
+  "vertex_id": 3001,
+  "confidence": "likely",
+  "why": "p4 shows one continuous stopping proton: dQ/dx rises monotonically along the proton template from ~89k at the 3001 end through 3002 to 207k at 3000, and the 2.9 cm stub is collinear (175 degrees) and charge-continuous with the 31.5 cm segment, so 3001 is the start of the whole 34 cm track."
+ }
+]

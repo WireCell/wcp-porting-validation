@@ -1,0 +1,15 @@
+# pr150 STM margin A=pr150s0 B=pr150p3bw samples=['nuecc48', 'ncpi0']: evaluated candidates A 20 B 20 common 20
+A: T_stm_pass status of the deciding pass: left-charge 8, eval-failed 6, pre-fit-exit 4, mid-point-trk 2
+A: verdict 1 6 / 0 6; margin_shape p10/p50/p90 +0.0045 +0.0534 +0.0936; |margin_shape| < 0.02: 4 (33.3 %); verdict 1 with margin_shape < 0.02: 3; verdict 0 with margin_shape > 0 (failed later rules): 5
+B: T_stm_pass status of the deciding pass: left-charge 9, eval-failed 6, pre-fit-exit 3, mid-point-trk 1, accepted 1
+B: verdict 1 5 / 0 6; margin_shape p10/p50/p90 -0.0175 +0.0788 +0.1002; |margin_shape| < 0.02: 2 (18.2 %); verdict 1 with margin_shape < 0.02: 0; verdict 0 with margin_shape > 0 (failed later rules): 4
+paired on common clusters (20): |d ks1| p50/p90 0.0422/0.1186; |d margin_shape| p50/p90 0.0195/0.0668; on the 17 verdict-stable clusters |d margin_shape| p90 = 0.0545 (the refit noise)
+verdict flips on common clusters: 3 (1->0 2, 0->1 1); evaluated only in A 0 (verdict 1: 0), only in B 0 (verdict 1: 0)
+CANDIDACY flips (status 0 <-> other) on common clusters: 1 (lost 0, gained 1); candidates only in A 0, only in B 0
+      1  pre-fit-exit -> accepted
+   of the eval-failed (status 3) candidacy flips 0: losing-arm margin_shape within the noise (0.0545) 0, beyond 0, positive (a residual/Michel rule) 0
+flip mechanism (losing arm): shape boundary within the noise 0; shape fail beyond the noise 0; shape passes, a later rule (residual / Michel) decides 3
+sample	event	cluster	verdict_A	verdict_B	margin_A	margin_B	ks1_A	ks1_B	ks2_A	ks2_B	kind
+nuecc48	81597	19	1	0	+0.0058	+0.0725	+0.1357	+0.0935	+0.1414	+0.1660	later-rule
+nuecc48	235435	2	0	1	+0.0940	+0.0701	+0.2461	+0.1275	+0.3402	+0.1976	later-rule
+nuecc48	389538	11	1	0	+0.0123	+nan	+0.0945	+nan	+0.1068	+nan	later-rule

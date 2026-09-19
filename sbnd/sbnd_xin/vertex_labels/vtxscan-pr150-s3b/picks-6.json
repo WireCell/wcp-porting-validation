@@ -1,0 +1,86 @@
+[
+  {
+    "event": "item092",
+    "vertex_id": 48037,
+    "confidence": "unclear",
+    "why": "Fragmented all-'e' event; 48037 is the cool end of the 16 cm cluster-48 prong (rises away to the 2-MIP 48036 end) and sits 3.7 cm from cluster-14's 14006, the only place two multi-cm objects converge, but 14002 has an equally good rule-1 reading so I am close to guessing."
+  },
+  {
+    "event": "item093",
+    "vertex_id": 5000,
+    "confidence": "certain",
+    "why": "Rule 1 plus a proton stub: the 47 cm track rises monotonically along the stopping-muon template to a 157k Bragg at 5001, and a 3.4 cm 201k (4.7 MIP) proton hangs off 5000, so both prongs are born at 5000."
+  },
+  {
+    "event": "item094",
+    "vertex_id": 22002,
+    "confidence": "certain",
+    "why": "Rule 1: the 13.1 cm segment peaks at 207k within 2 cm of 22000 and falls steadily to 97k at 22002 along the proton template, so it is a proton stopping at 22000 and starting at 22002, where the flat 1.4-MIP 50 cm muon also attaches at 118 degrees."
+  },
+  {
+    "event": "item095",
+    "vertex_id": 15000,
+    "confidence": "likely",
+    "why": "The 190k at 15000 is a 2-point hot patch, not a Bragg, while the track itself cools away from 15000 and carries the only real Bragg (145k on the muon template) at 15001; the 15002 junction is a 172-degree segmentation break, not a real prong pair."
+  },
+  {
+    "event": "item096",
+    "vertex_id": 7000,
+    "confidence": "likely",
+    "why": "7000 is the apex of a clean 53-degree V carrying a single 117k hot point shared by both prongs; neither the 367 cm muon nor the 20 cm prong has a Bragg at its far end, so the hot junction is the only vertex-like point in the event."
+  },
+  {
+    "event": "item097",
+    "vertex_id": 17048,
+    "confidence": "certain",
+    "why": "Rule 1 plus rule 2: a 10.3 cm 4.7-MIP proton stopping at 17003 and a 144 cm muon leave 17048 at 84 degrees, both going forward in z, and 17048 at z=36.9 is the most upstream candidate in the event."
+  },
+  {
+    "event": "item098",
+    "vertex_id": 101130,
+    "confidence": "likely",
+    "why": "In a 53-cluster mess, 101130 is the deg-3 junction of the most upstream structure (z~182, everything else is at larger z): a 12 cm 140k stopping proton rises away from it and a 95k stub sits right at it, and its cone opens fastest of all apexes tested."
+  },
+  {
+    "event": "item099",
+    "vertex_id": 13001,
+    "confidence": "certain",
+    "why": "The event is a single 10 cm proton whose dQ/dx falls along the proton template from 240k at 13000 to ~145k near 13001 before a single end-point uptick, so it stops at 13000 and is born at 13001, which is also the lower-z end."
+  },
+  {
+    "event": "item100",
+    "vertex_id": 11005,
+    "confidence": "unclear",
+    "why": "11005 is a genuine star: the 80.8 cm pion terminates there and three protons leave at 101-143 degrees, two of them rising away including a 48 cm Bragg to 206k; but the rival 11004 has its own proton stubs and lies 71 cm upstream, and its two long prongs at 158 degrees look like one track passing through, so I cannot separate neutrino vertex from hadronic star."
+  },
+  {
+    "event": "item101",
+    "vertex_id": 18002,
+    "confidence": "likely",
+    "why": "The compact 26 cm tangle at z~18 is the most upstream real object (the x=201 anode-plastered proton pair is out-of-time); within it 18002 is the deg-3 junction carrying the 2.5-MIP 4.6 cm proton stub and the 10 cm prong that points at the downstream fragments."
+  },
+  {
+    "event": "item103",
+    "vertex_id": 18008,
+    "confidence": "likely",
+    "why": "Only two long tracks and blips; the 259 cm track has a clean stopping-muon Bragg rising to 100k at 18009, so it is born at 18008, which is also the lowest-z candidate in the event at z=1.5."
+  },
+  {
+    "event": "item104",
+    "vertex_id": 3001,
+    "confidence": "likely",
+    "why": "dQ/dx runs continuously across the 3002 break (both sides ~65-78k) and the 3002 prong pair is 154 degrees, so cluster 3 is one 64 cm proton Bragging to 268k at 3000; its start, with a small charge excess of its own, is 3001."
+  },
+  {
+    "event": "item106",
+    "vertex_id": 15026,
+    "confidence": "likely",
+    "why": "A 5.5 cm proton with a textbook 238k Bragg stops at 15005 and therefore starts at 15026, where the 107 cm MIP track that runs down to the bottom wall also attaches; protons are only made at interaction points."
+  },
+  {
+    "event": "item107",
+    "vertex_id": 12000,
+    "confidence": "likely",
+    "why": "Rule 1 by direction: the 67 cm track is coolest at 12000 (41k) and heats to 52k at the cathode-side end 12001, so it must travel away from 12000, which is also where the 9.6 cm 2.5-MIP object attaches."
+  }
+]

@@ -1,0 +1,44 @@
+[
+ {
+  "event": "item019",
+  "vertex_id": 11020,
+  "confidence": "unclear",
+  "why": "Deg-4 junction carrying a localised dense blob (151550 and 139279 on the two long prongs, charge then fading downstream to 31170 at 11004) plus two short stubs 11018 and 11068 - vertex activity rather than a developing core; the competing free end 11001 gains nothing from rule 1 because its MIP tail is flat and its far-end mean just samples this blob. Demoted a tier because the two long prongs leave 11020 at ~159 deg locally, above the collinearity threshold."
+ },
+ {
+  "event": "item020",
+  "vertex_id": 94053,
+  "confidence": "likely",
+  "why": "Rule 1 plus the stopping-proton template: seg 94039 rises monotonically 150k->300k over its last 6 cm onto the brown proton curve at 94054, so it was born at its cool end 94053 (110k = the 2.1x MIP expected with 24 cm to go), the most upstream point; 18001 7 cm downstream is only a deg-2 branch on a noisy track whose backward line passes 1.3 cm from 94053."
+ },
+ {
+  "event": "item021",
+  "vertex_id": 13007,
+  "confidence": "certain",
+  "why": "Rule 1 at a 4-prong junction: the dark-red chain 13007->13001->108100->108101 gets hotter going upstream (112k->200k), so that proton stops at 108101 and was born at 13007; the other three prongs (two short p stubs and the 24.5 cm segment 13116, which is only ~40k MIP at 13007 and hot toward 13008) also point away, so all four rise away from 13007."
+ },
+ {
+  "event": "item022",
+  "vertex_id": 18076,
+  "confidence": "certain",
+  "why": "Textbook rule 1, 3 of 3 pointing away, confirmed on the zoom by three green arrows: an 8.1 cm proton stub rising 72k->215k on the proton template to 18027, a 19.3 cm muon Bragging to 180k at 18006, and a 45.3 cm MIP running into the EM shower at 18016, with the points at 18076 itself still cyan/green MIP; it is also the lowest-z substantial candidate."
+ },
+ {
+  "event": "item023",
+  "vertex_id": 19001,
+  "confidence": "likely",
+  "why": "Rule 1 (1 of 1 away) and rule 2 (lowest z by 30 cm) agree, and p4 plus the zooms show seg 19073 is a single 1x-MIP track (not 2x, so an electron and not a gamma conversion) from 19001 that turns into a continuous dark-red shower core at z=320-345 feeding the deg-6 knot and the fan out to z=400 - shower development ~1.4 X0 from the electron's birth at 19001."
+ },
+ {
+  "event": "item024",
+  "vertex_id": 12004,
+  "confidence": "certain",
+  "why": "Rule 1 at a genuine 112 deg V (not collinear, so the straight-track trap does not apply): seg 12030 starts at the 70-90k expected of a 43 cm-range proton and rises monotonically to 230k on the proton template at 12015, and 12032 leaves as a 50-70k MIP; the rival deg-6 12007 scores 6 of 6 only because it sits in a near-zero-charge hole where every prong starts sub-MIP."
+ },
+ {
+  "event": "item025",
+  "vertex_id": 9001,
+  "confidence": "likely",
+  "why": "Stopping-proton direction: seg 9077 is ~110k at 9001 (the 2.7x MIP expected with 15 cm to go) and 200-370k near 9018, so it stops at 9018 and was born at 9001, which with the 15-degree-aligned 35 cm muon leaving 9004 gives a coherent forward CCQE topology; the cluster-84 V at z=9 is a real competitor but is separated by a 15 cm gap with no charge at all."
+ }
+]

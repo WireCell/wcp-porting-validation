@@ -1,0 +1,5 @@
+# doc pr/149 round 2 primary endpoint (149_pred_r2.txt sec 3), stage 2
+# d = B - A, paired; zzi_rms_dr in CM (calib-dump length unit; round-1 doc and 149_pred_r2.txt label it mm -- a label error, the threshold 0.01 is applied in cm); improved/worsened at |d zzi_rms_dr| > 0.01; exact sign test
+pr150tfull vs pr150s0 [iso (PRIMARY)] n=150 paired=144  base median zzi_rms_dr 1.1768  median d zzi_rms_dr +0.0105  median d zzi_ratio -0.01707  improved 67 worsened 72 sign-test p=0.735  | median d zz_rms_dr (all segs) +0.0104  median d uncov -0.00308  => does not improve
+pr150tfull vs pr150s0 [vtx_iso] n=256 paired=227  base median zzi_rms_dr 0.4405  median d zzi_rms_dr +0.0083  median d zzi_ratio -0.01762  improved 93 worsened 113 sign-test p=0.185  | median d zz_rms_dr (all segs) +0.0089  median d uncov -0.00271  => does not improve
+pr150tfull vs pr150s0 [control] n=150 paired=0  base median zzi_rms_dr nan  median d zzi_rms_dr +nan  median d zzi_ratio +nan  improved 0 worsened 0 sign-test p=nan  | median d zz_rms_dr (all segs) +nan  median d uncov +nan  => does not improve

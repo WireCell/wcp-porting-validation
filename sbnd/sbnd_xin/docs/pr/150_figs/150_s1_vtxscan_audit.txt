@@ -1,0 +1,4 @@
+# pr150 Stage-1 blind scan audit 2026-09-18_21:40:07: grep of the three worker transcripts
+worker a9af0df8a2e03ec16: KEY.json mentions 1; manifest.json 1; commands touching main_vertex 0; vertex_scoreboard 1; dump.json read commands 0; scankit zooms 15
+worker aaf275704049c4f92: KEY.json mentions 1; manifest.json 1; commands touching main_vertex 0; vertex_scoreboard 1; dump.json read commands 0; scankit zooms 14
+worker ae6cd4bd9c978ccf2: KEY.json mentions 1; manifest.json 1; commands touching main_vertex 0; vertex_scoreboard 1; dump.json read commands 0; scankit zooms 13

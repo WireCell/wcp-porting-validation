@@ -1,0 +1,47 @@
+# pr150 cfg proof  base=f9665bea  post=f9665bea (+ working tree)  2026-09-18_20:38
+## (a) PR job
+pre          rc=0  sha=fb889a64b477164f
+post null    rc=0  sha=fb889a64b477164f
+post wcp/0/tree (explicit C++ defaults) rc=0  sha=c8ab62379b4a0f63
+post p3bw    rc=0  sha=a0443fc6d764e3c4
+post p3bw+rad rc=0  sha=c4c1300eea2ac2b8
+post csp3bw  rc=0  sha=9635ebcb368d66cd
+post typo    rc=0  (expected nonzero: the C++ parser would reject it; the jsonnet passes strings through)
+
+-- node diff pre -> null: only pre []  only post []
+   other changed nodes: 0
+-- node diff pre -> dflt: only pre []  only post []
+   changed node CreateSteinerGraph:pr: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'] -> [0, 'tree', 'wcp']
+   changed node CreateSteinerGraph:prrefresh: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'] -> [0, 'tree', 'wcp']
+   other changed nodes: 0
+-- node diff pre -> p3bw: only pre []  only post []
+   changed node CreateSteinerGraph:pr: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'] -> [0.5, 'tree+path', 'prefer3']
+   changed node CreateSteinerGraph:prrefresh: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'] -> [0.5, 'tree+path', 'prefer3']
+   other changed nodes: 0
+-- node diff pre -> p3bwr: only pre []  only post []
+   changed node CreateSteinerGraph:pr: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode', 'terminal_blank_plane_radius'] -> [0.5, 'tree+path', 'prefer3', 10]
+   changed node CreateSteinerGraph:prrefresh: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode', 'terminal_blank_plane_radius'] -> [0.5, 'tree+path', 'prefer3', 10]
+   other changed nodes: 0
+-- node diff pre -> csp3bw: only pre ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0']  only post ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']
+   changed node CreateSteinerGraph:pr: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'] -> [0.5, 'tree+path', 'prefer3']
+   changed node CreateSteinerGraph:prrefresh: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'] -> [0.5, 'tree+path', 'prefer3']
+   changed node ImproveCluster_2:pr: keys ['samplers'] -> [[{'apa': 0, 'face': 0, 'name': 'BlobSampler:live-cs-apa0-0'}, {'apa': 1, 'face': 0, 'name': 'BlobSampler:live-cs-apa1-0'}]]
+   other changed nodes: 0
+## (b) LArSoft one-step chain
+onestep op=sync tracking_root=true  pre=dffea4ce03f2d6ac post=dffea4ce03f2d6ac  IDENTICAL
+onestep op=sync tracking_root=false  pre=5997ca6b1d84e9d5 post=5997ca6b1d84e9d5  IDENTICAL
+onestep op=bare tracking_root=true  pre=98deab852fbfde81 post=98deab852fbfde81  IDENTICAL
+onestep op=bare tracking_root=false  pre=da8bbdfd209a2eb1 post=da8bbdfd209a2eb1  IDENTICAL
+## (c) prod_cfg_gate
+checked   : 21 artifacts
+PASS -- the compiled operating point matches prod-2026-09-17b
+gate rc=0
+## (d) per-TLA plumbing: scripts/analysis/pr150/tla_probe_added.py PRE vs POST
+# PRE TLAs 526  POST TLAs 530  lost []  gained ['steiner_blank_plane_mode', 'steiner_blank_plane_radius', 'steiner_base_weight_blank_alpha', 'steiner_base_weight_scope']
+(1) shared TLAs probed 526: identical 522, identical aborts modulo source positions 4 ['evt_subdir', 'retile_sampler_strategy', 'resample_live_strategy', 'provenance_extra'], DIFFER 0 []
+(2) gained steiner_blank_plane_mode: probe ['-S', 'steiner_blank_plane_mode=4243'] rc=0 changes-output=True
+(2) gained steiner_blank_plane_radius: probe ['-S', 'steiner_blank_plane_radius=4243'] rc=0 changes-output=True
+(2) gained steiner_base_weight_blank_alpha: probe ['-S', 'steiner_base_weight_blank_alpha=4243'] rc=0 changes-output=True
+(2) gained steiner_base_weight_scope: probe ['-S', 'steiner_base_weight_scope=4243'] rc=0 changes-output=True
+PASS
+probe rc=0

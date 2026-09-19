@@ -1,0 +1,33 @@
+# pr150 Stage-3 blind two-arm scan (waves s3a mcp1k + s3b mcp2k), 108 movers of csp3bw vs s0: where the scanner pick lands on each rendering (1 cm): click = vtx105, Amain/Bmain = that arm's own main vertex, other = neither, abstain
+calibration items: {'CALIB-AGREE': 9, 'CALIB-DISAGREE': 2}
+classes: {'CONFIRMS-LABEL': 19, 'REGRESSION': 11, 'REGRESSION-b-agrees': 4, 'UNRESOLVED': 53, 'UNRESOLVED-missing-arm': 20}
+  1  away    A:Amain B:Bmain
+  4  away    A:Amain B:other
+  2  away    A:abstain B:Bmain
+  1  away    A:abstain B:other
+  3  away    A:click B:Bmain
+ 12  away    A:click B:click
+  7  away    A:click B:other
+  3  away    A:other B:Bmain
+  1  away    A:other B:abstain
+  4  away    A:other B:click
+ 12  away    A:other B:other
+ 20  away    B missing (lost candidate)
+  3  toward  A:Amain B:Bmain
+  5  toward  A:Amain B:other
+  1  toward  A:abstain B:abstain
+  1  toward  A:abstain B:other
+  2  toward  A:click B:Bmain
+  7  toward  A:click B:click
+  5  toward  A:click B:other
+  5  toward  A:other B:Bmain
+  8  toward  A:other B:other
+# B-rendering pick, by direction:
+  9  away    B:Bmain
+  1  away    B:abstain
+ 16  away    B:click
+ 24  away    B:other
+ 10  toward  B:Bmain
+  1  toward  B:abstain
+  7  toward  B:click
+ 19  toward  B:other

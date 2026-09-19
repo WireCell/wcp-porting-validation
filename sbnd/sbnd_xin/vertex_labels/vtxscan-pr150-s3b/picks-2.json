@@ -1,0 +1,86 @@
+[
+ {
+  "event": "item031",
+  "vertex_id": 6004,
+  "confidence": "certain",
+  "why": "Rule 1: deg-4 junction 6004 with three prongs (p, mu, pi+) rising away 1.8-2.3x to their far ends and the 4th flat; zoom shows four green arrows radiating from a clean star."
+ },
+ {
+  "event": "item032",
+  "vertex_id": 17007,
+  "confidence": "certain",
+  "why": "Rule 1 plus rule 3: at 17007 both prongs rise away (51cm proton Bragg 179k at 17001, 249cm muon), and the muon's far end 17002 carries a 16cm Michel-like e, so it is the stopping end; 17007 is also the lowest-z candidate."
+ },
+ {
+  "event": "item033",
+  "vertex_id": 14001,
+  "confidence": "likely",
+  "why": "Rule 1 on a lone fully contained 158cm muon: monotone Bragg rise to 145k over the last 5cm at 14000, cool MIP end at 14001 which is also the lower-z end; only one prong, so not certain."
+ },
+ {
+  "event": "item034",
+  "vertex_id": 7004,
+  "confidence": "unclear",
+  "why": "Collinearity trap: the zoom shows the two prongs at 7000 leaving ~175 deg back-to-back, so 7000 is a point inside one continuous track 7004 -> 7000 -> 7003 and the free end 7004 is the start of the charge; a detached hot multi-prong blob (50024) competes 57cm away, so still ambiguous."
+ },
+ {
+  "event": "item035",
+  "vertex_id": 8001,
+  "confidence": "likely",
+  "why": "Rule 1 plus rule 2 on a lone contained 106cm muon: clean monotone Bragg to 155k at 8002 with a 3cm decay stub there, cool sub-MIP start at 8001 which is also the lowest-z end."
+ },
+ {
+  "event": "item036",
+  "vertex_id": 9001,
+  "confidence": "unclear",
+  "why": "Very sparse event: only a 22cm straight track near the y- wall, cool at 9001 and hot at the far tip, so rule 1 and rule 2 both point at 9001 - but it sits 2cm off the bottom wall and there is no other structure to corroborate."
+ },
+ {
+  "event": "item037",
+  "vertex_id": 62030,
+  "confidence": "unclear",
+  "why": "The only sizeable object is a 298cm wall-to-wall MIP track with 177 deg scattering kinks and no Bragg at either end; with no neutrino-like topology I take the largest detached blip of the 58/60/62 group at its lower-z end."
+ },
+ {
+  "event": "item038",
+  "vertex_id": 62028,
+  "confidence": "unclear",
+  "why": "Again a 304cm wall-to-wall flat-MIP track whose p5 cone RMS stays under 1cm everywhere (track-like, no shower) and which shows no Bragg; nothing neutrino-like, so I take the largest detached blip 62028 at the lower-z end."
+ },
+ {
+  "event": "item040",
+  "vertex_id": 18002,
+  "confidence": "certain",
+  "why": "Rule 1: deg-4 star at 18002 with three prongs rising away (97cm proton Bragg 212k at 18000, 32cm p, 6cm p) and the pi+ flat; zoom shows four distinct green arrows radiating from the junction."
+ },
+ {
+  "event": "item041",
+  "vertex_id": 18004,
+  "confidence": "likely",
+  "why": "Rule 1 plus rule 2: the 260cm track has a clean monotone Bragg at 18005, so its start is 18004 at z=1.6, the lowest-z candidate and beam-forward; the only other object is a flat-MIP top-wall cosmic with no Bragg."
+ },
+ {
+  "event": "item042",
+  "vertex_id": 27000,
+  "confidence": "unclear",
+  "why": "Rule 1: the 27001 end of the 25cm track rises monotonically over the last 3cm (50k-70k-77k-122k, following the stopping template), which is a real Bragg, so 27001 is the stopping end and 27000 the start; the wall-touching statistic says its position at the anode face is not evidence against it."
+ },
+ {
+  "event": "item043",
+  "vertex_id": 11001,
+  "confidence": "likely",
+  "why": "Rule 1 uniquely selects 11001: its segment rises away from 68914 into a dense 7cm red blob (3-5x MIP, proton-like) stopping at the anode end 11002, while the second prong (curved MIP cluster 46) turns back toward it across a 9cm gap filled by blips 27013/28015/26011."
+ },
+ {
+  "event": "item044",
+  "vertex_id": 27002,
+  "confidence": "unclear",
+  "why": "The only sizeable object is a 91cm flat-MIP track descending from the y+ wall that fades out (8000 e/cm) at its interior end - a truncated downward cosmic with no Bragg at either end; the neutrino must be one of three isolated blips, so I take the largest, cluster 27, at its lower-z end."
+ },
+ {
+  "event": "item045",
+  "vertex_id": null,
+  "confidence": "unclear",
+  "why": "Rule 8: six isolated sub-cm dots and nothing else (no p2/p4/p5 panels were even buildable), no readable direction or junction anywhere, so I abstain rather than invent a reason."
+ }
+]

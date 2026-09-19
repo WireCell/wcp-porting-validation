@@ -3155,3 +3155,12 @@ All are stage B on the doc 102 stage A `work-*-d102m`, with the same event set: 
   - `-d110grpoff` -- group, old cfg tree, knobs absent;
   - `-d110grp` / `-d110dlgrp` -- group, knobs on.
 - **Releasable** once docs 109/110 are accepted. The evidence lives in `docs/109_logs/` and `docs/110_logs/`; `d109on2` / `d109dlon2` are the per-event references both docs gate against.
+
+## doc pr/150 -- the PDHD/PDVD trajectory on SBND (2026-09-18/19)
+Stage B on the doc 102 stage A `work-*-d102m`, toolkit `ecba69ee` (cfg threading only), pinned `~/tmp/pr150/libpin` (Clus md5 2efa7fa09325 = HEAD f9665bea's build); every arm carries `tracking-stm.root` (`stm_magnify` + `save_stm_fit=true`, verdict-neutral, doc sec 1).
+- `work-{mcp1k,mcp2k}-pr150{g16old,g16new,g16stm}` -- the 16-event knob-OFF and STM-dump gates (manifest_gate16, geometric vertex).
+- `work-{nuecc48,ncpi0}-pr150{s0,s0rep,cs,p3bw,csp3bw,tfull}` -- Stage 1 (67 evt); `s0rep == s0` byte for byte.
+- `work-{mcp1k,mcp2k}-pr150{s0,cs,p3bw,csp3bw,tfull}` -- Stage 3 (3000 evt): s0 = today's production (ref/prod-2026-09-17b), cs = charge_stepped retile, p3bw = prefer3 + base-weight 0.5 tree+path, csp3bw = both (the doc-116 trajectory), tfull = + the fit keys.
+- `work-{nuecc48,ncpi0,mcp1k,mcp2k}-pr150{ts0,tcsp3bw}` -- the 159-event trace subset (WCT_STEINER_GRAPH_DUMP + WCT_STM_PATH_DEBUG in stdout.log).
+- `work-{nuecc48,ncpi0,mcp1k,mcp2k}-pr150r{1,2,3,4}` -- the retune ladder on the 626-event manifest (150_pred_r2.txt).
+- **Releasable** once doc pr/150 is accepted; the evidence is committed under `docs/pr/150_figs/`.

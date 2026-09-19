@@ -1,0 +1,126 @@
+=== pr150 pi0 census + gamma ledger :: arm tag pr150csp3bw  (2026-09-18_21:18:35)
+
+--- 1. manifests (denominator re-pointed at this arm) ---
+98-set -> /home/xqian/tmp/pr150/scorers/manifests/pr150csp3bw/denom98.tsv
+   mcp1k    rows  14  dump present   1  absent  13 | hand pi0 11, of those reachable  1
+   mcp2k    rows  17  dump present   0  absent  17 | hand pi0 10, of those reachable  0   (arm dir does not exist)
+   ncpi0    rows  19  dump present  19  absent   0 | hand pi0 12, of those reachable 12
+   nuecc48  rows  48  dump present  48  absent   0 | hand pi0  2, of those reachable  2
+141-set -> /home/xqian/tmp/pr150/scorers/manifests/pr150csp3bw/denom141.tsv
+   mcp1k    rows  52  dump present   8  absent  44 | hand pi0 15, of those reachable  3
+   mcp2k    rows  89  dump present   0  absent  89 | hand pi0 16, of those reachable  0   (arm dir does not exist)
+TOTAL rows 239  present 76  absent 163 | hand pi0 66, reachable on pr150csp3bw: 18
+   (the census denominator is the REACHABLE count: an event with no calib dump on this arm is skipped by pr132_pi0_census.py)
+
+--- 2. arm energy scale (read from .wct-cfg-evt*.json, NOT hardcoded) ---
+    kine_shower_fudge_factor = 0.86     pi0_mass_offset = 10 MeV
+
+--- 3. census (pr132) ---
+=== A. pi0 pairing vs the hand scan (18 hand pi0; fudge=0.86 offset=10) ===
+  exact       0     0.0 %
+  partial     0     0.0 %
+  none       15    83.3 %
+  no-group    3    16.7 %
+  -> exact 0 %, sharing a gamma 0 %.
+
+=== B. what stopped the other 18 (windows scaled to the arm) ===
+  absent-on-arm                                                    36
+  mass 219 (scaled 203) outside with-vertex window (100,160)       1
+  mass 260 (scaled 242) outside with-vertex window (100,160)       1
+  mass 177 (scaled 164) outside with-vertex window (100,160)       1
+  mass 101 (scaled 94) outside with-vertex window (100,160)        1
+  mass 26 (scaled 24) outside with-vertex window (100,160)         1
+
+=== C. pio_id and kine_pio_* over all 76 events ===
+  events with >=1 accepted pi0 group : 17  (22 %)
+  accepted groups                    : 20
+  kine_pio_flag = 1 / 2 / 0          : 68 / 0 / 8
+  kine_pio_*  filled although NO pi0 was accepted        51
+  kine_pio_*  names a pair NO group accepted             10
+  kine_pio_*  names an ACCEPTED pair                     7
+
+=== D. which finder accepted each group (audit counters, 77 events) ===
+  id_pi0_WITH_vertex    accepted : 19
+  id_pi0_WITHOUT_vertex accepted : 0
+
+=== E. nueCC-fake topology among accepted groups (partner < 30 MeV) ===
+  attached-at-main + tiny partner groups : 0
+
+=== F. rescan coverage: accepted group on the 109 unpaired candidates ===
+  4 of 109 rescan events carry >=1 accepted pi0 group
+
+wrote /home/xqian/tmp/pr150/scorers/pi0_csp3bw_census.tsv (18 rows)
+    census rc=0
+
+--- 4. gamma ledger (pr132_gamma_ledger.py) ---
+    NOTE: the ledger has no --fudge.  Its OK band (0.80 <= kine_charge/e_lab
+    <= 1.25) is fixed, and the labels carry SCAN-TIME energies at fudge 0.80,
+    so on an arm at 0.86 every ratio is scaled by 0.86/0.80.  Compare ledgers
+    BETWEEN arms at the same fudge; do not compare to doc pr/135's 90.9 %.
+=== per-gamma charge ledger (36 gammas) ===
+  OK              0  0.0%
+  UNDER+SIBS      0  0.0%
+  UNDER-nosibs    0  0.0%
+  OVER            0  0.0%
+  ABSENT         36  100.0%
+
+=== the defect rows ===
+  98 21073   base    g1 ABSENT        e_lab=  756.2 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 21073   base    g2 ABSENT        e_lab=  104.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 37112   overlay g1 ABSENT        e_lab=  797.3 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 37112   overlay g2 ABSENT        e_lab=  183.9 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 56982   overlay g1 ABSENT        e_lab=  533.4 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 56982   overlay g2 ABSENT        e_lab=  149.4 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 64591   base    g1 ABSENT        e_lab=  298.1 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 64591   base    g2 ABSENT        e_lab=   50.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 71372   base    g1 ABSENT        e_lab=  120.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 71372   base    g2 ABSENT        e_lab=   65.8 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 105946  base    g1 ABSENT        e_lab=  604.3 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 105946  base    g2 ABSENT        e_lab=   60.3 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 142421  overlay g1 ABSENT        e_lab=  706.5 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 142421  overlay g2 ABSENT        e_lab=  583.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 259542  overlay g1 ABSENT        e_lab=  993.0 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 259542  overlay g2 ABSENT        e_lab=  138.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 269774  base    g1 ABSENT        e_lab=  916.1 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 269774  base    g2 ABSENT        e_lab=  250.8 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 285567  base    g1 ABSENT        e_lab=   86.6 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 285567  base    g2 ABSENT        e_lab=  102.1 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 314838  overlay g1 ABSENT        e_lab=  693.4 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 314838  overlay g2 ABSENT        e_lab=  118.6 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 342199  base    g1 ABSENT        e_lab=   74.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 342199  base    g2 ABSENT        e_lab=  126.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 359980  base    g1 ABSENT        e_lab=  596.3 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 359980  base    g2 ABSENT        e_lab=  163.3 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 506114  base    g1 ABSENT        e_lab= 1715.0 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 506114  base    g2 ABSENT        e_lab=   44.8 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 506746  base    g1 ABSENT        e_lab= 1038.2 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 506746  base    g2 ABSENT        e_lab=   78.3 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 54341   base    g1 ABSENT        e_lab=  341.1 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 54341   base    g2 ABSENT        e_lab=   47.6 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 56243   base    g1 ABSENT        e_lab=  120.1 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 56243   base    g2 ABSENT        e_lab=  112.2 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 71178   base    g1 ABSENT        e_lab=  106.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 71178   base    g2 ABSENT        e_lab=   63.1 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+
+wrote /home/xqian/tmp/pr150/scorers/pi0_csp3bw_ledger.tsv (36 rows)
+    ledger rc=0
+
+--- 5. is this census READABLE on this arm? (pi0_id_drift.py vs d102mpr) ---
+    The census resolves a hand gamma through showers[].id, a per-event
+    reconstruction index.  A cell that changes clustering renumbers it and
+    EVERY gamma reads 'absent-on-arm' -- a numbering artefact reported in the
+    same column as a real missing shower (doc pr/141 sec 3).  Read this before
+    reading section A.
+=== shower-id overlap, pr150csp3bw vs d102mpr (over the 239 denominator events) ===
+  events with a dump on both       : 77   (only pr150csp3bw: 0, only d102mpr: 161)
+  identical shower-id SET          : 1 of 77
+  Jaccard of the id sets           : median 0.00  mean 0.04  max 1.00
+
+=== hand-label gamma ids found in showers[] (the census's own lookup) ===
+  pr150csp3bw      0 of 132 label gammas resolvable
+  d102mpr         39 of 132 label gammas resolvable
+  (a gamma the arm cannot resolve is reported by pr132_pi0_census.py as
+   'absent-on-arm', indistinguishable there from a real missing shower)
+    rc=0
+
+=== done 2026-09-18_21:18:45

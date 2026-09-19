@@ -1,0 +1,2 @@
+# A=work-ncpi0-pr150s0 (19 evt)  B=work-ncpi0-pr150s0rep (19 evt)  common=19  only A=0 only B=0  allow=[]
+# 19/19 events identical over 95 files

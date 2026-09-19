@@ -1,0 +1,9 @@
+# pr150 bow check A=pr150ts0 B=pr150tcsp3bw: events with >= 1 ISO segment A 152 B 146 common 146; units = time slices (1 slice ~ 0.32 cm drift)
+| arm | events | ISO length (m) | fit_bow p50 / p90 | img_bow p50 / p90 | res_bow p50 / p90 | res_rms p50 | res_med p50 | image cover p50 |
+|---|---|---|---|---|---|---|---|---|
+| pr150ts0 | 152 | 357.9 | 3.80 / 12.49 | 3.78 / 12.45 | 0.31 / 0.91 | 0.57 | +0.02 | 1.00 |
+| pr150tcsp3bw | 146 | 344.8 | 3.88 / 12.88 | 3.85 / 12.35 | 0.33 / 0.91 | 0.58 | +0.02 | 1.00 |
+paired fit_bow (B - A) on 146: median -0.032, lower 68 / higher 60
+paired img_bow (B - A) on 146: median +0.028, lower 63 / higher 66
+paired res_bow (B - A) on 146: median -0.002, lower 28 / higher 26
+on pr150ts0: median img_bow / fit_bow = 1.00; median res_bow / fit_bow = 0.08; events where the image follows the fit (res_bow < 0.5 fit_bow): 136 of 146; image straight (img_bow < 0.5 fit_bow): 0

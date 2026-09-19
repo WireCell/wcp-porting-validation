@@ -1,0 +1,13 @@
+sample	event	direction	dA	dB	moved
+ncpi0	37112	away	2.37	29.95	29.88
+ncpi0	56982	toward	34.86	7.05	28.28
+ncpi0	180801	toward	77.49	0.40	77.77
+ncpi0	463565	toward	28.18	13.33	15.60
+ncpi0	521075	away	0.00	12.94	12.94
+nuecc48	30504	toward	30.99	13.90	21.47
+nuecc48	38856	toward	32.25	1.70	32.35
+nuecc48	46363	away	0.00	40.69	40.69
+nuecc48	52672	away	3.83	56.69	56.69
+nuecc48	111412	away	1.84	38.77	40.56
+nuecc48	163543	toward	32.85	0.08	32.83
+nuecc48	389538	away	0.28	213.29	213.32

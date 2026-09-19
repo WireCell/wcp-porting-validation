@@ -1,0 +1,185 @@
+=== pr150 pi0 census + gamma ledger :: arm tag d102mpr  (2026-09-18_21:12:15)
+
+--- 1. manifests (denominator re-pointed at this arm) ---
+98-set -> /home/xqian/tmp/pr150/scorers/manifests/d102mpr/denom98.tsv
+   mcp1k    rows  14  dump present  14  absent   0 | hand pi0 11, of those reachable 11
+   mcp2k    rows  17  dump present  17  absent   0 | hand pi0 10, of those reachable 10
+   ncpi0    rows  19  dump present  19  absent   0 | hand pi0 12, of those reachable 12
+   nuecc48  rows  48  dump present  48  absent   0 | hand pi0  2, of those reachable  2
+141-set -> /home/xqian/tmp/pr150/scorers/manifests/d102mpr/denom141.tsv
+   mcp1k    rows  52  dump present  52  absent   0 | hand pi0 15, of those reachable 15
+   mcp2k    rows  89  dump present  88  absent   1 | hand pi0 16, of those reachable 16
+TOTAL rows 239  present 238  absent 1 | hand pi0 66, reachable on d102mpr: 66
+   (the census denominator is the REACHABLE count: an event with no calib dump on this arm is skipped by pr132_pi0_census.py)
+
+--- 2. arm energy scale (read from .wct-cfg-evt*.json, NOT hardcoded) ---
+    kine_shower_fudge_factor = 0.86     pi0_mass_offset = 10 MeV
+
+--- 3. census (pr132) ---
+=== A. pi0 pairing vs the hand scan (66 hand pi0; fudge=0.86 offset=10) ===
+  exact       7    10.6 %
+  partial    14    21.2 %
+  none       25    37.9 %
+  no-group   20    30.3 %
+  -> exact 11 %, sharing a gamma 32 %.
+
+=== B. what stopped the other 59 (windows scaled to the arm) ===
+  absent-on-arm                                                    93
+  mass 101 (scaled 94) outside with-vertex window (100,160)        2
+  pdg=13                                                           2
+  mass 219 (scaled 203) outside with-vertex window (100,160)       1
+  mass 41 (scaled 38) outside with-vertex window (100,160)         1
+  mass 260 (scaled 242) outside with-vertex window (100,160)       1
+  mass 177 (scaled 164) outside with-vertex window (100,160)       1
+  mass 67 (scaled 63) outside with-vertex window (100,160)         1
+  mass 444 (scaled 413) outside with-vertex window (100,160)       1
+  mass 83 (scaled 78) outside with-vertex window (100,160)         1
+  mass 26 (scaled 24) outside with-vertex window (100,160)         1
+  mass 74 (scaled 69) outside with-vertex window (100,160)         1
+  mass 76 (scaled 70) outside with-vertex window (100,160)         1
+  mass 84 (scaled 78) outside with-vertex window (100,160)         1
+  mass 95 (scaled 88) outside with-vertex window (100,160)         1
+  mass 243 (scaled 226) outside with-vertex window (100,160)       1
+  mass 298 (scaled 277) outside with-vertex window (100,160)       1
+  mass 58 (scaled 54) outside with-vertex window (100,160)         1
+
+=== C. pio_id and kine_pio_* over all 238 events ===
+  events with >=1 accepted pi0 group : 84  (35 %)
+  accepted groups                    : 100
+  kine_pio_flag = 1 / 2 / 0          : 215 / 2 / 21
+  kine_pio_*  filled although NO pi0 was accepted        134
+  kine_pio_*  names an ACCEPTED pair                     46
+  kine_pio_*  names a pair NO group accepted             37
+
+=== D. which finder accepted each group (audit counters, 238 events) ===
+  id_pi0_WITH_vertex    accepted : 96
+  id_pi0_WITHOUT_vertex accepted : 2
+
+=== E. nueCC-fake topology among accepted groups (partner < 30 MeV) ===
+  attached-at-main + tiny partner groups : 0
+
+=== F. rescan coverage: accepted group on the 109 unpaired candidates ===
+  39 of 109 rescan events carry >=1 accepted pi0 group
+
+wrote /home/xqian/tmp/pr150/scorers/pi0_d102mpr_census.tsv (66 rows)
+    census rc=0
+
+--- 4. gamma ledger (pr132_gamma_ledger.py) ---
+    NOTE: the ledger has no --fudge.  Its OK band (0.80 <= kine_charge/e_lab
+    <= 1.25) is fixed, and the labels carry SCAN-TIME energies at fudge 0.80,
+    so on an arm at 0.86 every ratio is scaled by 0.86/0.80.  Compare ledgers
+    BETWEEN arms at the same fudge; do not compare to doc pr/135's 90.9 %.
+=== per-gamma charge ledger (132 gammas) ===
+  OK             31  23.5%
+  UNDER+SIBS      2  1.5%
+  UNDER-nosibs    2  1.5%
+  OVER            4  3.0%
+  ABSENT         93  70.5%
+
+=== the defect rows ===
+  98 21073   base    g1 ABSENT        e_lab=  756.2 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 21073   base    g2 ABSENT        e_lab=  104.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 37112   overlay g1 ABSENT        e_lab=  797.3 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 37112   overlay g2 ABSENT        e_lab=  183.9 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 47212   base    g1 ABSENT        e_lab=  221.9 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 54332   base    g1 ABSENT        e_lab=  182.5 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 54332   base    g2 ABSENT        e_lab=   65.0 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 56982   overlay g1 ABSENT        e_lab=  533.4 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 56982   overlay g2 ABSENT        e_lab=  149.4 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 71372   base    g1 ABSENT        e_lab=  120.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 71372   base    g2 ABSENT        e_lab=   65.8 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 76346   base    g1 ABSENT        e_lab=  246.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 76346   base    g2 ABSENT        e_lab=    5.0 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 99838   base    g1 ABSENT        e_lab=  118.3 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 99838   base    g2 ABSENT        e_lab=  108.8 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 105946  base    g1 ABSENT        e_lab=  604.3 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 105946  base    g2 ABSENT        e_lab=   60.3 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 142421  overlay g1 ABSENT        e_lab=  706.5 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 142421  overlay g2 ABSENT        e_lab=  583.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 165157  overlay g1 ABSENT        e_lab=  167.6 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 165157  overlay g2 OVER          e_lab=  127.4 e_sh=  297.1 ratio= 2.33 sibs=    0.0 (n=0)
+  98 166870  base    g1 ABSENT        e_lab=  173.8 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 166870  base    g2 ABSENT        e_lab=   38.6 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 169626  base    g1 ABSENT        e_lab=  537.1 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 169626  base    g2 ABSENT        e_lab=  107.9 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 173093  base    g1 UNDER+SIBS    e_lab=  261.2 e_sh=  208.9 ratio= 0.80 sibs=   38.7 (n=1)
+  98 259542  overlay g1 ABSENT        e_lab=  993.0 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 259542  overlay g2 ABSENT        e_lab=  138.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 269774  base    g1 ABSENT        e_lab=  916.1 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 269774  base    g2 ABSENT        e_lab=  250.8 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 281165  base    g1 ABSENT        e_lab=  159.6 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 281165  base    g2 ABSENT        e_lab=   81.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 281485  base    g1 ABSENT        e_lab=   73.4 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 281485  base    g2 ABSENT        e_lab=   29.2 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 281639  base    g2 ABSENT        e_lab=  144.5 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 284235  base    g2 ABSENT        e_lab=   87.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 285567  base    g1 ABSENT        e_lab=   86.6 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 285567  base    g2 ABSENT        e_lab=  102.1 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 314838  overlay g1 ABSENT        e_lab=  693.4 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 314838  overlay g2 ABSENT        e_lab=  118.6 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 342199  base    g1 ABSENT        e_lab=   74.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 342199  base    g2 ABSENT        e_lab=  126.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 347129  base    g1 ABSENT        e_lab=  143.2 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 359980  base    g2 ABSENT        e_lab=  163.3 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 396222  overlay g1 ABSENT        e_lab= 2857.4 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 396222  overlay g2 ABSENT        e_lab=  162.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 399052  base    g1 ABSENT        e_lab=  399.5 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 399052  base    g2 ABSENT        e_lab=  117.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 409634  base    g1 ABSENT        e_lab=  180.6 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 415278  overlay g1 ABSENT        e_lab= 1301.5 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 415278  overlay g2 UNDER+SIBS    e_lab= 1149.1 e_sh=  546.7 ratio= 0.48 sibs=  497.3 (n=2)
+  98 506114  base    g1 ABSENT        e_lab= 1715.0 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 506114  base    g2 ABSENT        e_lab=   44.8 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 506746  base    g1 ABSENT        e_lab= 1038.2 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  98 506746  base    g2 ABSENT        e_lab=   78.3 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 52044   base    g1 ABSENT        e_lab=  103.5 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 52044   base    g2 ABSENT        e_lab=  136.1 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 54341   base    g1 ABSENT        e_lab=  341.1 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 54341   base    g2 OVER          e_lab=   47.6 e_sh=   92.4 ratio= 1.94 sibs=    0.0 (n=0)
+  141 56243   base    g2 ABSENT        e_lab=  112.2 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 57709   base    g2 ABSENT        e_lab=   98.5 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 71178   base    g2 ABSENT        e_lab=   63.1 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 71872   base    g1 ABSENT        e_lab=  200.6 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 71872   base    g2 OVER          e_lab=   19.9 e_sh=   45.3 ratio= 2.28 sibs=    0.0 (n=0)
+  141 91917   base    g1 ABSENT        e_lab=  213.4 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 91917   base    g2 ABSENT        e_lab=   54.5 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 99782   base    g1 ABSENT        e_lab=  156.6 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 99782   base    g2 ABSENT        e_lab=   64.8 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 103798  base    g1 ABSENT        e_lab=  133.0 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 171729  base    g1 ABSENT        e_lab=  117.2 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 171729  base    g2 ABSENT        e_lab=   39.8 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 242726  base    g2 ABSENT        e_lab=   67.8 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 280159  base    g1 ABSENT        e_lab=   78.1 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 280159  base    g2 ABSENT        e_lab=  129.6 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 280972  overlay g1 ABSENT        e_lab=  625.6 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 280972  overlay g2 ABSENT        e_lab=  127.3 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 283713  base    g1 UNDER-nosibs  e_lab=  163.9 e_sh=   91.7 ratio= 0.56 sibs=    0.0 (n=0)
+  141 285443  base    g1 ABSENT        e_lab=  281.3 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 286655  overlay g1 ABSENT        e_lab=  236.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 286655  overlay g2 ABSENT        e_lab=  201.3 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 292524  base    g1 ABSENT        e_lab=  329.8 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 292524  base    g2 ABSENT        e_lab=   38.1 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 347824  base    g1 ABSENT        e_lab=  528.0 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 347824  base    g2 ABSENT        e_lab=  137.0 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 348691  overlay g1 ABSENT        e_lab=  324.2 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 348691  overlay g2 ABSENT        e_lab=  115.1 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 349549  overlay g1 ABSENT        e_lab=  442.1 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 349549  overlay g2 ABSENT        e_lab=  231.4 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 392901  overlay g1 ABSENT        e_lab=  196.6 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 392901  overlay g2 ABSENT        e_lab=  106.1 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 397630  overlay g1 ABSENT        e_lab=  128.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 397630  overlay g2 ABSENT        e_lab=  114.0 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 399118  base    g1 UNDER-nosibs  e_lab=  130.5 e_sh=   74.6 ratio= 0.57 sibs=    0.0 (n=0)
+  141 400504  base    g1 ABSENT        e_lab=  153.5 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 403023  base    g1 ABSENT        e_lab=  131.0 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 403023  base    g2 ABSENT        e_lab=   96.8 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 486907  overlay g1 ABSENT        e_lab=  457.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 486907  overlay g2 ABSENT        e_lab=  154.9 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 489327  base    g1 OVER          e_lab=  237.2 e_sh=  348.0 ratio= 1.47 sibs=    0.0 (n=0)
+  141 499577  base    g1 ABSENT        e_lab=  103.7 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+  141 499577  base    g2 ABSENT        e_lab=   40.8 e_sh=   -1.0 ratio=-1.00 sibs=    0.0 (n=0)
+
+wrote /home/xqian/tmp/pr150/scorers/pi0_d102mpr_ledger.tsv (132 rows)
+    ledger rc=0
+
+=== done 2026-09-18_21:12:25

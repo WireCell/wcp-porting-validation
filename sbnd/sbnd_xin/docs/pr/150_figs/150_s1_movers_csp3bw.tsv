@@ -1,0 +1,32 @@
+sample	event	stratum	what
+ncpi0	21073	control	vertex ADVERSE 0.97->2.08cm
+ncpi0	37112	control	vertex ADVERSE 2.37->29.95cm
+ncpi0	56982	ISO	nue7 0->1; nue43 0->1; vertex toward 34.86->7.05cm
+ncpi0	142421	ISO	vertex ADVERSE 0.20->2.00cm
+ncpi0	180801	ISO	numu09 1->0; vertex toward 77.49->0.40cm
+ncpi0	285567	ISO	numu09 0->1
+ncpi0	399860	ISO	nue7 0->1; nue43 0->1
+ncpi0	463565	ISO	vertex toward 28.18->13.33cm
+ncpi0	506746	ISO	numu09 0->1
+ncpi0	521075	control	vertex ADVERSE 0.00->12.94cm
+nuecc48	30504	ISO	vertex toward 30.99->13.90cm
+nuecc48	38856	ISO	nue7 0->1; nue43 0->1; vertex toward 32.25->1.70cm
+nuecc48	46363	ISO	nue7 1->0; vertex ADVERSE 0.00->40.69cm
+nuecc48	52672	control	vertex ADVERSE 3.83->56.69cm
+nuecc48	111412	ISO	nue7 1->0; nue43 1->0; numu09 0->1; vertex ADVERSE 1.84->38.77cm
+nuecc48	122660	ISO	nue7 0->1; nue43 0->1; vertex ADVERSE 0.48->7.22cm
+nuecc48	137238	ISO	vertex ADVERSE 0.22->2.00cm
+nuecc48	138009	ISO	nue7 0->1; vertex ADVERSE 0.30->1.79cm
+nuecc48	163543	ISO	nue7 0->1; nue43 0->1; vertex toward 32.85->0.08cm
+nuecc48	168596	ISO	nue7 0->1
+nuecc48	196649	ISO	nue7 0->1; nue43 0->1
+nuecc48	219295	ISO	numu09 1->0
+nuecc48	234638	ISO	numu09 0->1
+nuecc48	256587	ISO	nue7 1->0; nue43 1->0; vertex ADVERSE 0.12->1.99cm
+nuecc48	268067	control	nue7 1->0
+nuecc48	269774	control	nue7 1->0; nue43 1->0; vertex ADVERSE 0.22->1.99cm
+nuecc48	271851	ISO	nue43 0->1
+nuecc48	350186	control	nue7 1->0
+nuecc48	389538	ISO	nue43 0->1; numu09 1->0; vertex ADVERSE 0.28->213.29cm
+nuecc48	437699	ISO	nue7 1->0
+nuecc48	469665	ISO	nue43 1->0

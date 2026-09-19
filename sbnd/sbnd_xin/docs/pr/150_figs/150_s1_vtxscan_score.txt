@@ -1,0 +1,16 @@
+# pr150 vertex scan score: 25 scannable items, picks for 25, missing 0; picks written at {'picks-0.json': '2026-09-18 21:33:42', 'picks-1.json': '2026-09-18 21:29:29', 'picks-2.json': '2026-09-18 21:36:35'}
+sample	event	role	class	A_pick	A_conf	A_d_truth	A_d_main	B_pick	B_conf	B_d_truth	B_d_main	B_d_Amain	A_d_Bmain	reco_A	reco_B
+ncpi0	37112	mover	UNRESOLVED	84095	likely	1.48	1.02	9001	likely	16.01	13.95	15.98	29.88	2.37	29.95
+ncpi0	56982	mover	UNRESOLVED	22005	likely	14.99	19.87	22019	likely	7.05	0.01	28.28	8.69	34.86	7.05
+ncpi0	180801	mover	IMPROVEMENT-CONFIRMED	15006	likely	68.66	10.89	109078	unclear	0.40	0.00	77.77	68.92	77.49	0.40
+ncpi0	463565	mover	UNRESOLVED	13012	likely	19.01	10.80	13007	certain	13.33	0.00	15.59	5.68	28.18	13.33
+ncpi0	521075	mover	REGRESSION	94053	likely	0.00	0.00	18017	likely	6.74	6.73	6.74	12.94	0.00	12.94
+nuecc48	30504	mover	UNRESOLVED	11001	unclear	0.00	30.99	11005	likely	69.42	58.50	38.48	13.90	30.99	13.90
+nuecc48	38856	mover	UNRESOLVED	12004	certain	0.16	32.25	12005	certain	1.70	0.01	32.35	1.83	32.25	1.70
+nuecc48	46363	mover	CONFIRMS-LABEL	19001	likely	0.01	0.01	19001	likely	0.82	41.17	0.82	40.69	0.00	40.69
+nuecc48	52672	mover	UNRESOLVED	9013	certain	67.43	67.34	9019	likely	56.69	0.01	56.69	11.08	3.83	56.69
+nuecc48	111412	mover	REGRESSION-b-agrees	18076	certain	1.84	0.01	18008	likely	38.78	0.01	40.57	40.57	1.84	38.77
+nuecc48	163543	mover	IMPROVEMENT-CONFIRMED	14007	certain	32.85	0.01	14001	unclear	0.08	0.00	32.83	32.84	32.85	0.08
+nuecc48	219295	calib	CALIB-AGREE	15003	certain	0.09	0.01							0.09	
+nuecc48	389538	mover	A0-WAS-WRONG	19013	certain	213.06	213.09	19010	certain	213.29	0.00	213.32	0.39	0.28	213.29
+# classes: A0-WAS-WRONG 1, CALIB-AGREE 1, CONFIRMS-LABEL 1, IMPROVEMENT-CONFIRMED 2, REGRESSION 1, REGRESSION-b-agrees 1, UNRESOLVED 6

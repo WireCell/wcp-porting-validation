@@ -1,0 +1,9 @@
+# pr150 Stage-3 wave-2 blind scan audit 2026-09-19_00:04:11: grep of the eight worker transcripts
+worker a95c751cecdd1dd8b: KEY.json mentions 1; manifest.json 1; commands touching main_vertex 0; vertex_scoreboard 1; dump.json read commands 0; scankit zooms 12
+worker a2c653126513c8b55: KEY.json mentions 1; manifest.json 1; commands touching main_vertex 0; vertex_scoreboard 1; dump.json read commands 0; scankit zooms 14
+worker affd371f7297b20a3: KEY.json mentions 2; manifest.json 2; commands touching main_vertex 0; vertex_scoreboard 1; dump.json read commands 0; scankit zooms 18
+worker aee18c3fc17373bfe: KEY.json mentions 1; manifest.json 1; commands touching main_vertex 0; vertex_scoreboard 1; dump.json read commands 0; scankit zooms 12
+worker a6988e87fe175d67e: KEY.json mentions 1; manifest.json 1; commands touching main_vertex 0; vertex_scoreboard 1; dump.json read commands 0; scankit zooms 18
+worker a407909a7d864aafb: KEY.json mentions 1; manifest.json 1; commands touching main_vertex 0; vertex_scoreboard 1; dump.json read commands 0; scankit zooms 12
+worker aa91b0aa92f54406a: KEY.json mentions 2; manifest.json 2; commands touching main_vertex 0; vertex_scoreboard 1; dump.json read commands 0; scankit zooms 9
+worker ad67e38ab443ec918: KEY.json mentions 1; manifest.json 1; commands touching main_vertex 0; vertex_scoreboard 1; dump.json read commands 0; scankit zooms 14

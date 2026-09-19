@@ -1,0 +1,74 @@
+[
+ {
+  "event": "item108",
+  "vertex_id": 16002,
+  "confidence": "certain",
+  "why": "Rule 1: deg-3 junction with a textbook monotone stopping-proton prong (110k->190k on the proton template), a 128 cm exiting muon and a 33 cm stopping pion; rival 16001 is only a 38 deg scatter kink because dQ/dx runs continuously through it."
+ },
+ {
+  "event": "item109",
+  "vertex_id": null,
+  "confidence": "unclear",
+  "why": "Rule 8: every one of the 40 candidates is degree 1, there is no junction anywhere, the biggest object is a 29.5 cm shower-like fit whose two ends coincide within 2.2 cm, and no segment follows a stopping template - nothing readable, so I abstain."
+ },
+ {
+  "event": "item110",
+  "vertex_id": 26008,
+  "confidence": "likely",
+  "why": "Rule 1 + rule 3: the only directed object is a 49 cm muon that rises smoothly onto the stopping-muon template to 165k and carries a 5.1 cm Michel stub at 26010, so 26010 is the far end and 26008 is its start and the lowest-z candidate; the rival cluster-14 junction is a 175 deg collinear break in one straight track."
+ },
+ {
+  "event": "item111",
+  "vertex_id": 95154,
+  "confidence": "likely",
+  "why": "Rule 1 + rule 7: 95154 is the only vertex of 152 with every attached segment rising away (4 of 4), all three profiled prongs start near 20k at it and climb to 100-200k, and it is the one apex whose cone RMS rises monotonically; the hot 9006 blob has segments rising toward it so it is a stopping end."
+ },
+ {
+  "event": "item112",
+  "vertex_id": 46032,
+  "confidence": "unclear",
+  "why": "Rule 2 fallback: no vertex in this event has a rising-away prong and there is no Bragg, so I take the cool, most-upstream free end (z=173.4) of the single 50 cm chain that runs downstream and exits at the x=-200.7 wall; 46034 next to it is a 162 deg collinear break."
+ },
+ {
+  "event": "item113",
+  "vertex_id": null,
+  "confidence": "unclear",
+  "why": "Rule 3 plus the deg-1 caveat: the Michel end 13001 is excluded, and 13000's 1-of-1 rise-away is vacuous because a single track's cool free end always shows it, so the 86.5% junction signature is absent everywhere; the four remaining candidates are sub-cm fragments, two inside the Michel."
+ },
+ {
+  "event": "item114",
+  "vertex_id": 95151,
+  "confidence": "likely",
+  "why": "Rule 1 + rule 7: 95151 is one of only two candidates with nothing rising toward it, and it is the sharpest apex in the event (cone RMS climbs monotonically 1 to 11 cm, far-near +4.9); the deg-4 95154 next to it is ruled out because dQ/dx runs continuously through it (94533 vs 96646), i.e. it is a break inside one track."
+ },
+ {
+  "event": "item115",
+  "vertex_id": 101128,
+  "confidence": "likely",
+  "why": "Rule 1: 101128 is a degree-4 junction with nothing rising toward it and one genuine stopping-hadron prong (14.3 cm climbing 45813 to 142183, peak at the far end), while the only other rule-1-clean multi-prong candidate 14007 sits inside a sub-MIP column with a flat cone and no stopping prong."
+ },
+ {
+  "event": "item117",
+  "vertex_id": null,
+  "confidence": "unclear",
+  "why": "Rule 3 plus the deg-1 caveat: 12003 carries a 13.3 cm Michel and a 175k stopping-muon rise so it is the far end, and 12000's 1-of-1 rise-away is vacuous for a single track's cool end; no junction anywhere shows the all-prongs-away signature and the rest are sub-cm fragments."
+ },
+ {
+  "event": "item118",
+  "vertex_id": 5001,
+  "confidence": "unclear",
+  "why": "Rule 2 tie-break: p4 shows no template rise at either end (seg5005 peaks at 115k mid-segment and falls to 67k at 5001) so rule 1 is uninformative with both segments flat, and among the four candidates 5001 is the lowest in z (253.1) and has the only other cluster sitting 5 cm from it."
+ },
+ {
+  "event": "item119",
+  "vertex_id": 92087,
+  "confidence": "unclear",
+  "why": "Rule 1 is dead here - every segment in the whole event is labelled flat and nothing follows a stopping template - so I fall back to the only degree-3 junction in the event, whose three prongs read 84909/45849/49001 at it (a discontinuous step, so a genuine junction) and which lies on the upstream side of the fragment cloud."
+ },
+ {
+  "event": "item120",
+  "vertex_id": 15002,
+  "confidence": "likely",
+  "why": "Two Bragg ends trap: both free ends of the 115 cm chain stop inside the detector on the proton template (300k at 15005, 350k at 15000), so the vertex lies between them, and 15002 is the one both prongs rise away from and the only real direction change (137 deg), while 15004 has one prong hotter at it and opens 160 deg, a collinear break."
+ }
+]

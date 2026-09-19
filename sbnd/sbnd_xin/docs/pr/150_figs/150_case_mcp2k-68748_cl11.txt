@@ -1,0 +1,2 @@
+pr150ts0 (s0): image points 1757, Steiner vertices 0, fit rows 309, rows > 5.0 cm from every image point 0
+pr150tcsp3bw (csp3bw): image points 1757, Steiner vertices 0, fit rows 304, rows > 5.0 cm from every image point 0

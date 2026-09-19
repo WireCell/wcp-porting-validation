@@ -1,0 +1,58 @@
+# pr150 vertex scan score: 95 scannable items, picks for 95, missing 0; picks written at {'picks-0.json': '2026-09-18 22:37:17', 'picks-1.json': '2026-09-18 22:37:46', 'picks-2.json': '2026-09-18 22:27:04', 'picks-3.json': '2026-09-18 22:42:19', 'picks-4.json': '2026-09-18 22:37:33', 'picks-5.json': '2026-09-18 22:35:04', 'picks-6.json': '2026-09-18 22:34:11'}
+sample	event	role	class	A_pick	A_conf	A_d_truth	A_d_main	B_pick	B_conf	B_d_truth	B_d_main	B_d_Amain	A_d_Bmain	reco_A	reco_B
+mcp1k	57903	mover	REGRESSION-b-agrees	14003	certain	1.03	0.00	14003	certain	12.78	0.00	11.77	11.77	1.04	12.77
+mcp1k	59335	mover	UNRESOLVED	11028	certain	65.05	0.01	11002	certain	65.22	65.18	0.25	65.01	65.05	0.09
+mcp1k	61843	mover	UNRESOLVED	17003	likely	12.37	0.00	17005	likely	15.27	15.05	3.20	12.16	12.38	0.24
+mcp1k	62281	mover	CONFIRMS-LABEL	19002	certain	0.51	29.08	19002	likely	0.56	0.01	29.23	0.24	29.27	0.56
+mcp1k	65025	mover	UNRESOLVED-missing-arm	16000	unclear	36.51	36.51							0.00	
+mcp1k	66118	mover	REGRESSION	9002	certain	0.13	0.00	9004	likely	4.51	62.07	4.41	66.44	0.12	66.54
+mcp1k	67746	mover	UNRESOLVED-missing-arm	10002	likely	39.54	39.54							0.00	
+mcp1k	166804	mover	UNRESOLVED	9002	likely	24.66	0.01	9004	certain	1.33	0.01	23.49	23.49	24.66	1.34
+mcp1k	166870	mover	REGRESSION	10062	certain	2.52	0.01	10006	certain	11.91	7.29	10.66	17.38	2.52	18.94
+mcp1k	171892	mover	UNRESOLVED		unclear			23000	unclear	12.60	0.75	12.60		0.00	12.81
+mcp1k	172788	mover	UNRESOLVED-missing-arm	26001	likely	279.18	181.09							99.26	
+mcp1k	276836	mover	UNRESOLVED	11002	likely	0.59	225.34	11003	certain	5.26	52.47	219.52	47.82	224.78	48.34
+mcp1k	278640	mover	UNRESOLVED-missing-arm	17002	likely	124.18	124.18							0.00	
+mcp1k	278794	mover	UNRESOLVED	50048	unclear	15.65	15.65	7001	likely	0.64	16.35	0.64	32.29	0.00	16.96
+mcp1k	279256	mover	UNRESOLVED	15004	likely	28.79	2.84	15004	likely	28.71	28.70	2.96	28.78	29.46	0.13
+mcp1k	281527	mover	CONFIRMS-LABEL	14002	unclear	0.15	0.01	14002	likely	0.62	153.61	0.49	153.29	0.15	153.16
+mcp1k	281639	mover	CONFIRMS-LABEL	83023	likely	0.00	0.00	83022	likely	0.17	29.61	0.17	29.73	0.00	29.73
+mcp1k	281953	mover	UNRESOLVED-missing-arm	10000	likely	0.00	0.00							0.00	
+mcp1k	282737	mover	CONFIRMS-LABEL	21014	certain	0.07	0.01	21003	certain	0.30	29.27	0.29	29.24	0.06	29.30
+mcp1k	283691	mover	CONFIRMS-LABEL	23002	certain	0.15	0.00	23002	certain	0.32	16.00	0.43	16.22	0.14	16.13
+mcp1k	283905	mover	UNRESOLVED-missing-arm	4001	certain	0.00	0.00							0.00	
+mcp1k	284235	mover	UNRESOLVED	6003	likely	40.55	38.84	80030	unclear	43.45	52.87	43.70	9.66	1.73	30.94
+mcp1k	285366	mover	UNRESOLVED-missing-arm	13001	unclear	66.93	0.01							66.92	
+mcp1k	285443	mover	UNRESOLVED-missing-arm	7001	likely	0.00	0.00							0.00	
+mcp1k	285665	mover	UNRESOLVED	9003	certain	0.27	88.91	9003	certain	88.30	89.03	1.33	1.98	88.95	2.20
+mcp1k	286353	mover	UNRESOLVED-missing-arm	9001	likely	262.56	0.00							262.56	
+mcp1k	286655	mover	UNRESOLVED	19002	likely	8.00	35.11	19005	likely	18.13	10.94	45.49	1.18	27.88	7.96
+mcp1k	286681	mover	UNRESOLVED	3004	likely	32.75	42.88	3006	likely	6.98	0.00	62.45	29.33	68.62	6.98
+mcp1k	286818	calib	CALIB-AGREE	5001	likely	0.00	0.00							0.00	
+mcp1k	287431	mover	UNRESOLVED		unclear			23000	unclear	311.06					
+mcp1k	290052	mover	CONFIRMS-LABEL	8007	certain	0.24	0.00	8003	likely	0.34	69.06	0.17	69.06	0.24	69.15
+mcp1k	291037	calib	CALIB-AGREE	13001	certain	0.37	0.01							0.37	
+mcp1k	292643	mover	REGRESSION	18001	certain	0.71	0.01	18006	likely	1.85	20.71	1.18	21.67	0.71	22.27
+mcp1k	293149	mover	REGRESSION	4002	unclear	24.24	0.01	52046	likely	25.20	15.10	48.71	55.24	24.24	31.18
+mcp1k	313781	mover	UNRESOLVED	9003	likely	41.30	1.90	9000	likely	43.62	43.80	3.51	41.48	40.53	0.21
+mcp1k	315013	mover	CONFIRMS-LABEL	15001	likely	0.00	0.00	15001	certain	0.25	212.44	0.25	212.64	0.00	212.64
+mcp1k	315343	mover	UNRESOLVED	7004	likely	10.92	0.01	7003	likely	4.60	4.07	7.01	10.57	10.91	0.80
+mcp1k	321173	mover	UNRESOLVED	10002	unclear	22.11	0.01	10001	likely	1.14	0.01	23.19	23.20	22.10	1.15
+mcp1k	321371	mover	CONFIRMS-LABEL	27015	likely	0.16	0.01	27002	certain	0.95	61.91	0.91	62.71	0.16	62.69
+mcp1k	347129	mover	UNRESOLVED	11001	unclear	65.96	66.03	11001	unclear	66.12	6.34	66.20	6.37	1.22	64.89
+mcp1k	348515	mover	UNRESOLVED	14000	likely	18.71	38.05	48017	likely	14.52	4.40	42.73	0.38	56.17	18.34
+mcp1k	348713	mover	UNRESOLVED	7003	certain	89.21	89.21	7001	likely	0.48	90.16	0.48	1.05	0.00	90.25
+mcp1k	349087	calib	CALIB-AGREE	3001	likely	0.01	2.69							2.69	
+mcp1k	352233	calib	CALIB-AGREE	6001	certain	0.01	0.01							0.00	
+mcp1k	386948	mover	UNRESOLVED	16005	unclear	36.54	75.12	16002	unclear	4.63	0.01	52.03	37.49	48.50	4.63
+mcp1k	389874	mover	REGRESSION-b-agrees	11001	unclear	0.00	0.00	11002	unclear	12.96	0.01	12.96	12.96	0.00	12.96
+mcp1k	390864	mover	UNRESOLVED	16002	unclear	93.19	0.00	16003	unclear	102.97	103.03	12.92	93.24	93.19	0.10
+mcp1k	391766	mover	UNRESOLVED	25009	unclear	0.00	115.51	17001	unclear	115.47	115.52	0.15	0.41	115.52	0.41
+mcp1k	393212	mover	REGRESSION	83070	likely	2.22	0.01	83062	likely	1.80	24.02	1.11	24.78	2.22	25.12
+mcp1k	399052	mover	UNRESOLVED	19026	likely	0.01	21.86	15004	likely	59.78	59.75	38.06	0.12	21.87	0.12
+mcp1k	399856	mover	UNRESOLVED	3002	likely	44.71	44.71	3002	likely	40.17	21.16	40.17	16.68	0.00	61.20
+mcp1k	401780	mover	UNRESOLVED	13002	certain	0.61	64.21	13002	certain	8.95	0.01	72.42	8.35	63.62	8.96
+mcp1k	405674	calib	CALIB-AGREE	11003	certain	0.29	0.00							0.29	
+mcp1k	409546	mover	UNRESOLVED	9001	likely	18.20	19.03	9000	likely	2.57	15.50	3.76	0.39	1.86	18.06
+mcp1k	411460	mover	UNRESOLVED-missing-arm	6004	unclear	11.03	8.52							2.71	
+# classes: CALIB-AGREE 5, CONFIRMS-LABEL 8, REGRESSION 5, REGRESSION-b-agrees 2, UNRESOLVED 25, UNRESOLVED-missing-arm 10

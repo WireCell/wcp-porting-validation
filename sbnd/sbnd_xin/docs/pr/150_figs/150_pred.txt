@@ -1,0 +1,136 @@
+doc sbnd_xin/pr/150 -- PRE-REGISTRATION of the IMPACT stage (frozen before the first physics arm; sha256 recorded in the doc)
+==============================================================================================================
+
+Question (owner, 2026-09-18): PDHD/PDVD production now runs (a) the charge_stepped PR retile, (b) the priced
+Steiner seed (terminal_blank_plane_mode 'prefer3', base_weight_blank_alpha 0.5, base_weight_scope 'tree+path';
+docs pdvd/114-116) and (c) the two lattice fit keys (fit_weight_pow 1.5, assoc_cont_center 1; doc pdvd/101).
+Does applying them to SBND improve the neutrino pattern recognition (vertex, nueCC, numuCC, NC pi0)?  The
+downstream decisions were tuned on the old fit and are expected to degrade at first; a retune of the other
+parameters (a SECOND pre-registration, 150_pred_r2.txt, written after this stage is read) is to recover them.
+NO production flip in this doc.  Owner scope: the 3067 data events, the hand scans, "evaluate the track
+trajectory fit against 2-D measurements and 3-D images".
+
+Known before any arm:
+  - doc pr/149 measured (a) and (c) on the OLD baseline (d102mpr epoch): vertex <= 3 cm 675 -> 625 of 823
+    labelled, > 10 cm away/toward 69/40, nu_evaluated churn 34/34, STM flips 39/37, sentinels 21/0 -> 15/6,
+    no ISO trajectory gain (the metric is a ~1.2 cm drift-x bow no lever moves; the transverse jitter jit_t
+    DOES fall).  Its classes: vertex choice and the STM verdict = NEEDS-DOWNSTREAM-RETUNE.
+  - (b) is new on SBND.  On PDHD/PDVD it removed 30-60 % of the Steiner DETOUR length and 80-90 % of the
+    one-blank terminals; its tag cost on the STM/Michel taggers was boundary flips restored by a tagger retune.
+  - The current SBND production operating point is ref/prod-2026-09-17b (toolkit b93673ef); prod_cfg_gate.py
+    passes 21/21 at HEAD f9665bea + the doc-150 threading (150_cfg_proof.txt).  d102mpr is NOT the current
+    production output (docs 109/110/144-147 flips since), so this stage runs its own baseline s0.
+
+---------------------------------------------------------------------------------------------------------------
+1. ARMS  (stage B from work-<s>-d102m; pin /home/xqian/tmp/pr150/libpin, Clus md5 2efa7fa09325 = installed
+          local/lib at HEAD f9665bea; PR_EXTRA_STAGES=pr_display,stm_magnify + save_stm_fit=true on EVERY arm
+          (tracking-stm.root; verdict-neutral, gate 150_gate_stm_*.txt); production DL vertex; per-event mode;
+          scripts/pr150_arm.sh; TLA files docs/pr/150_figs/tla/<cell>.tla)
+   s0       production (every knob null / the production fit JSON)
+   s0rep    repeat of s0 on Stage 1 -- noise floor (pr/149 measured zero; re-measured on this binary)
+   cs       retile_sampler_strategy='charge_stepped'                          = (a)
+   p3bw     steiner_blank_plane_mode='prefer3' + base_weight_blank_alpha 0.5 + scope 'tree+path'  = (b)
+   csp3bw   cs + p3bw                                                          = (a)+(b), the doc-116 trajectory
+   tfull    csp3bw + fit JSON 149_figs/149_tf_sbnd_kf.json (production + the two keys)  = (a)+(b)+(c)
+   Arm dirs: work-<sample>-pr150<cell>.
+   Stage 1: nuecc48 (48) + ncpi0 (19), every cell + s0rep.
+   Stage 3: mcp1k (1000) + mcp2k (2000), every cell (no Stage-2 subset this time: the full census IS the
+            impact measurement; the pr/149 Stage-2 manifest is reused only as a stratum and for the retune).
+   The trajectory T carried into the retune = csp3bw (the owner's question names (a)+(b)); tfull is reported
+   beside it and may replace it only if it passes every Q1 criterion csp3bw fails (stated before the numbers).
+
+2. OBJECTS AND STRATA  (selection from the EPOCH-REFERENCE arms work-<s>-d102mpr through the pr/149 files,
+   never from a measured arm: 149_figs/149_stage2_selection.tsv strata iso / vtx_iso / owner / control, and the
+   pr/149 sec 2 definitions of ISO (iso_len_any(75) >= 10 cm), ISO-strong (85), non-ISO control (== 0) computed
+   from 149_figs/metrics/d102mpr-<s>.tsv.  Owner ISO cases as in pr/149 sec 2.)
+   Vertex truth = vtx105 (vtx_io.TAGS_VTX105), rank-1 pick; the clicks are anchored to the stepped arm's
+   candidates (pr/149 sec 5.3), so the > 10 cm move (a different vertex choice) is the headline, <= 3 cm next.
+
+3. Q1 METRICS -- the trajectory fit against the 2-D measurements and the 3-D image
+   (pr150_metrics.py = pr149_metrics.py forked to 150_figs; pr150_traj_eval.py = the doc-115 instruments on the
+   neutrino-PR fit of tracking-pr.root; identical on every arm)
+   M1 cloud       main-cluster Steiner points; terminal count and nearest-neighbour spacing (terminal_spacing.py)
+   M2 zig-zag     pr/149 zzi_rms_dr / ratio / fold (cm) on ISO main-cluster segments >= 10 cm, >= 10 points, AND
+                  the pr/149 round-2 split jit_x / jit_t / bow_x (r2_local_jitter) on the same segments
+   M3 coverage    uncov (pr/149 M3, T_proj_data charge_pred < 0.1 * charge)
+   M4 structure   n_seg, n_stub (< 3 cm, degree-1 end)
+   M5 vertex      distance of main_vertex to the vtx105 click; missing vertex = failure (inf); n(<= 1 cm),
+                  n(<= 3 cm), movers toward / away (> 1 cm), and > 10 cm away / toward
+   M7 2-D closure R2D: share of fit rows whose fractional projection (pu/pv/pw) is > 1 wire from the nearest
+                  charged T_proj_data cell of the cluster on the row's slice, per plane, dead planes (T_bad_ch)
+                  excluded; also the +-1-slice variant and the per-plane median |d| (doc pdvd/115 definition)
+   M8 3-D ridge   P1: share of fit rows > 1 cm from the image ridge (d111_eval.Ridge on the Bee clustering
+                  layer); P3 holes per 10 m; P2 off-charge rows; P4 coverage
+   M9 STM seed    on the trace subset only (sec 6): the doc-114 support census (GAP / DETOUR / FIT stretch
+                  classes, D-blank-term / D-blank-int), S1 seed off-ridge share, wiggle, the doc-115 dQ/dx
+                  f_low / shape / k_pop against nusel_display/stm_ref_dqdx.json
+   M6 owner cases: M2-M8 per case, before/after, one-line reading each.
+
+   Q1 READING (stated before seeing numbers).  "The trajectory improves" for a cell X vs s0 iff, arm-wide:
+     (t1) median per-event delta jit_t < 0 with sign-test p < 0.05 (the jitter the levers reach), AND
+     (t2) R2D (W plane, live rows) <= s0 and P1 <= s0 (no 2-D / 3-D regression), AND
+     (t3) median delta uncov <= 0.
+   "ISO PR improves" (the pr/149 reading, kept verbatim so the two docs are comparable) iff on the ISO stratum:
+     (a) median delta rms_dr < 0 AND median delta ratio <= 0, (b) median delta uncov < 0,
+     (c) vertex toward > away on the labelled ISO events AND n(<= 3 cm) does not fall,
+     (d) n_stub over the stratum rises by no more than max(2, 10 % of the stratum's events).
+   The downstream cost is EXPECTED at this stage; (c) failing is not a verdict on the trajectory, it is the
+   retune's input.
+
+4. Q2 CENSUS  (Stage 1, Stage 3; each cell vs s0; pr150_metrics.py compare + pr_scores_table.py +
+   pr142_campaign_ab.py + the hand-scan scorers of sec 5)
+   - nusel event_label migration matrix; nu_evaluated gained / lost
+   - working points: nue_score > 7.0 and > 4.3; numu_score > 0.9 (per sample)
+   - Enu: median and p90 of |delta| over events evaluated in both arms
+   - taggers per cluster (T_tagger act_*): TGM flips MUST be 0 on evaluated verdicts (stop-and-report);
+     STM flips 0->1 / 1->0 with, NEW, the STM evaluation margin of every flipped candidate (T_stm_eval ks1 /
+     ratio1 / verdict per pass in both arms: how many flips sit within the refit noise = pr/149 sec 10 item 1);
+     FC flips (Steiner-availability scope, a repair under cs: reported, not a cost)
+   - pi0 (ncpi0 + nuecc48 + the Stage-3 samples): kine_pio_flag == 1 count, mass window (100,170) count
+   - vertex ADVERSE (> 1 cm away) and the > 10 cm movers, both directions, listed per event with the mechanism
+   - sentinels: sentinels_tolerant.py on every arm, FAIL count vs s0 and the per-fix list
+   - resources: per-event wall and peak RSS; bar (doc pdvd/102) median wall <= +50 %, median RSS <= +25 %
+   Every event_label change, nu_evaluated flip, working-point crossing, ADVERSE vertex and sentinel FAIL is
+   adjudicated with one mechanism line: tagger-threshold / PR-structure / vertex-choice / energy-scale.
+
+5. HAND-SCAN-ANCHORED CLAUSES  (each scorer is first run on s0 and must reproduce the number its doc reports
+   on the production-equivalent input, else it is dropped and said so)
+   - vtx105 vertex (sec 3 M5), 823 labelled numu + 53 EM events
+   - the 30-entry sentinel registry (pr127_sentinels.py through sentinels_tolerant.py)
+   - pi0 hand set (em_labels emscan-0827 + emscan-0828-agent5 + pi0scan-0829-agent; 66 pi0 / 132 gammas):
+     pr132_pi0_census.py fixed-pairing recovered count and pr132_gamma_ledger.py class counts
+   - pr/148 PID scan verdicts (docs/pr/pr148-pidscan*-verdicts.tsv): pr148_score_scan.py agreement
+   - a NEW blind vertex scan (sec 7) of the > 10 cm movers, both directions, both arms, new label tag
+     vertex_labels/vtxscan-pr150-<sample> (vtx105 is never written to)
+
+6. TRACE SUBSET  (M9; arms ts0 and tcsp3bw with WCT_STEINER_GRAPH_DUMP=1 WCT_STM_PATH_DEBUG=1, JOBS 4)
+   = the Stage-2 'iso' stratum (150 long-ISO muons) + the 5 mcp1k owner cases + the 10 nuecc48/ncpi0 owner cases
+   + every vtx105-labelled event whose vertex moves > 10 cm between s0 and csp3bw on Stage 3 (both directions),
+   capped at 250 events (the > 10 cm movers are taken in order of |move| if the cap binds).
+
+7. BLIND VERTEX SCAN  (the pr/149 sec 10 item 4 owner scan, done by agents; doc pr/80 sec 9 kit)
+   items  = every vtx105-labelled event whose main vertex moves > 10 cm between s0 and csp3bw (both directions),
+            shown TWICE (once per arm) as vtx_rules/scankit.py prepare renderings of that arm's calib dump, arm
+            hidden, order shuffled with random.Random(150); plus 10 % calibration items with vtx105 truth drawn
+            from the non-movers (random.Random(150)), shown once on s0.
+   scanner = Opus agents, vtx_rules/scan_worker_prompt.md, picks written before any truth is read (mtimes kept)
+   score   = the pick resolved against that arm's PR vertex pool (every PR-graph vertex, doc pr/80 kit=new);
+             an item whose pick lands within 1 cm of the vtx105 click is CONFIRMS-LABEL, within 1 cm of the
+             other arm's main vertex is A0-WAS-WRONG (for an "away" mover) / REGRESSION (for a "toward" mover
+             whose s0 pick is confirmed), else UNRESOLVED.
+   use     = the corrected vertex score of every cell = vtx105 with the CONFIRMED A0-WAS-WRONG events re-labelled
+             to the scan pick, reported BESIDE the raw vtx105 score, never replacing it.
+
+8. RECOVERABILITY CLASSES (per adjudicated degradation of csp3bw vs s0; the input to 150_pred_r2.txt)
+   RECOVERED-BY-TRAJECTORY-CELL  another cell (cs / p3bw / tfull) returns it while (t1)-(t3) still pass
+   NEEDS-DOWNSTREAM-RETUNE       the mechanism names an existing config key of the SBND PR chain
+   NEEDS-A-KNOB                  the mechanism names a threshold with NO key (the STM evaluation margin,
+                                 a degree-1 stub floor at the main vertex): a default-OFF C++ knob is built
+                                 only for the class that carries the largest cost, with the full gate set
+   TRADE                         no key and no threshold named
+   A0-WAS-WRONG                  the s0 outcome is itself the error (sec 7 scan)
+
+9. STOP-AND-REPORT
+   TGM evaluated flips != 0; s0rep != s0 on Stage 1 beyond the DL vertex; nonzero rc on an event s0 ran clean
+   (the pr/149 sec 11 segfault class); DL vertex failed count > 0; pin md5 change mid-arm; a physics number that
+   looks wrong (reported, never tuned).

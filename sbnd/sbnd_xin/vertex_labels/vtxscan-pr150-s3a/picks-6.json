@@ -1,0 +1,68 @@
+[
+  {
+    "event": "item096",
+    "vertex_id": 9004,
+    "confidence": "likely",
+    "why": "Trap-1 two-Bragg cluster resolved by rule 1: the 17 cm proton shows a monotone p4 rise onto the proton template up to 213k at 9000 while the other prong ends at 9002 with a cool 5.5 cm Michel-like stub plus blob 49007, so both segments cool toward 9004 (2 of 2 away); prongs leave at ~153 deg, so one tier down."
+  },
+  {
+    "event": "item097",
+    "vertex_id": 16003,
+    "confidence": "unclear",
+    "why": "Cluster 16 is a 176 cm wall-to-wall track that is flat ~50k in p4 with no Bragg at either end, so the only interaction-like structure left is rule 6 at 16003, the free end of the 12.9 cm stub, with blobs 56018, 55016, 54014, 52010 and 53012 all within 15 cm of it; weak evidence, could equally be a delta ray."
+  },
+  {
+    "event": "item098",
+    "vertex_id": 10002,
+    "confidence": "unclear",
+    "why": "Rule 1 puts 10002 at the dQ/dx minimum with the 130 cm leg rising to a clean monotone 113k Bragg at 10000, but the 10001 end is only two hot points after a dropout, which trap 2 says is not a Bragg, and the zoom shows the prongs leaving dead straight at 174 deg, so this may be a split point inside one track rather than a junction."
+  },
+  {
+    "event": "item099",
+    "vertex_id": 11001,
+    "confidence": "unclear",
+    "why": "Featureless 17 cm warm stub with no Bragg at either end, so only the ordering in z decides: 11001 at 50.2, 11000 at 59.6 and the detached blob 82003 at 63.3, i.e. the object develops downstream from 11001 (rules 2 and 7); close to a coin flip between the two ends."
+  },
+  {
+    "event": "item100",
+    "vertex_id": 27015,
+    "confidence": "likely",
+    "why": "Rule 1 at the dQ/dx minimum of cluster 27: a MIP pion prong runs to 27013 and a 2x-MIP prong rises monotonically along 27016 to a textbook 247k Bragg at 27017, meeting at a genuine 136 deg kink in the zoom, while cluster 18 is a 313 cm top-wall track with no Bragg at either end."
+  },
+  {
+    "event": "item101",
+    "vertex_id": 17001,
+    "confidence": "unclear",
+    "why": "Rules 1, 2 and 3 all pick the upstream end of the 280 cm forward track: it rises from 52034 at 17001 to a 140k spike and 80019 mean at 17000, 17001 is the lowest-z candidate, and the little cluster-24 V beyond 17000 opens backward at 165 and 129 deg to that stopping end, so it is far-end decay activity rather than a vertex."
+  },
+  {
+    "event": "item102",
+    "vertex_id": 11002,
+    "confidence": "likely",
+    "why": "The 6.4 cm connector is collinear with the 222 cm stopping muon to 2.5 deg and is MIP after its first 1.8 cm of vertex pile-up, so 11003 is a split point inside the muon and the true branch point, where the 48 cm proton with its monotone 181k Bragg at 11000 leaves the muon line at 131 deg, is 11002."
+  },
+  {
+    "event": "item103",
+    "vertex_id": 17005,
+    "confidence": "likely",
+    "why": "Rules 6 and 7: 17005 is the three-prong apex at the narrow top of the shower cone, with a heavily ionising 16.5 cm prong that rises 29k to 120k and stops at 17001 and two ~20 cm prongs opening down into the blob cloud at lower y; hadronic-shower ambiguity keeps it off certain."
+  },
+  {
+    "event": "item104",
+    "vertex_id": 23002,
+    "confidence": "certain",
+    "why": "Textbook rule 1: both attached segments are protons whose p4 profiles rise monotonically along the brown proton template to 191k at 23000 and 200k at 23003, and the zoom shows them leaving 23002 as a wide 60 deg V, so the collinearity trap does not apply."
+  },
+  {
+    "event": "item105",
+    "vertex_id": 10000,
+    "confidence": "likely",
+    "why": "Rule 3 plus rule 1: the 88 cm track has a monotone stopping-muon Bragg over its last 7 cm ending at 115k at 10001 with the Michel blob 22004 only 2.2 cm away, so 10001 is the far end and the MIP end 10000 is the vertex end; the only doubt is that the whole object reads as a stopping cosmic."
+  },
+  {
+    "event": "item107",
+    "vertex_id": 13001,
+    "confidence": "certain",
+    "why": "Rules 1, 2 and 3 agree: the 111 cm muon starts MIP at 13001 deep in the detector interior, far from any wall, and stops at 13000 with a monotone 10 cm Bragg to 122k plus Michel blobs 28009 and 27007 at 7 and 23 cm; 13001 is also the lowest-z candidate, and the single hot point at its tip looks like a vertex stub."
+  }
+]

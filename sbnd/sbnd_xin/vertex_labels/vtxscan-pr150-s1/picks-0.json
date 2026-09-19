@@ -1,0 +1,56 @@
+[
+ {
+  "event": "item001",
+  "vertex_id": 11005,
+  "confidence": "likely",
+  "why": "Rule 1 is silent in cluster 11 (every segment scored flat), so I went on topology: the 77 cm track is hottest at its free 11001 end and 11005 is the only junction on it, sitting at the low-z apex of the dense forward system that runs on to z=244."
+ },
+ {
+  "event": "item002",
+  "vertex_id": 14007,
+  "confidence": "certain",
+  "why": "Rule 1 at a degree-7 junction: 4 of 7 prongs rise away (x1.8 to x3.85) and p4 shows every prong cool (13-35k) at 14007 and hot at its far end, including the pi+ to 14009 whose monotone 40k->130k Bragg proves the hot z=244-250 blob is where a backward prong stopped."
+ },
+ {
+  "event": "item003",
+  "vertex_id": 22005,
+  "confidence": "likely",
+  "why": "Rule 1 plus the two-Bragg-ends trap: 22005 is 2 of 3 rising away, and p4 shows seg 22023 cool (65k) in the middle with a 290k peak just short of 22020 and seg 22019 Bragging at 22013, so two protons both start at 22005 while the deg-5 22020 is 0 away / 2 toward."
+ },
+ {
+  "event": "item004",
+  "vertex_id": 109078,
+  "confidence": "unclear",
+  "why": "No junction in the event has a clean rule-1 fan, so the only firm reading is p4 seg 109052: 40k (MIP) at the 109078 end rising monotonically to a 245k Bragg peak, i.e. the 32 cm proton is born there; 109078 is also the tip of the principal axis, but the deg-4 hub 113090 25 cm downstream is a real competitor."
+ },
+ {
+  "event": "item005",
+  "vertex_id": 9019,
+  "confidence": "likely",
+  "why": "Rule 1 is near-silent here (9019 is 1 of 5 away, the deg-6 9026 is 0 of 6 with one rising toward), so I picked on topology: 9019 is the lowest-z junction of cluster 9, with one 3x-MIP heavy prong running back to z=334 and four cooler prongs fanning forward; seg 9145 spikes above 200k at several arc lengths so I read no Bragg from it."
+ },
+ {
+  "event": "item006",
+  "vertex_id": 15003,
+  "confidence": "certain",
+  "why": "Rule 1 at the apex of a clean 89-degree V (so not the collinear-kink trap): segs 15003+15001 form one ~95 cm stopping heavy track whose dQ/dx climbs monotonically 60k->100k->165k->211655 away from 15003, and 15003 is also the lowest-z candidate in the event."
+ },
+ {
+  "event": "item007",
+  "vertex_id": 13012,
+  "confidence": "likely",
+  "why": "Rule 1: 13012 is the only junction in the event with 2 of 3 prongs rising away (mu x1.34 to 13001, pi+ x1.78 to 13135) and none rising toward, the third also trends away, and it is the upstream apex with the heavy prong stopping hot at 13001 (125631)."
+ },
+ {
+  "event": "item008",
+  "vertex_id": 9013,
+  "confidence": "certain",
+  "why": "Rule 1 with the shape check: 9013 is cool on all three prongs (27-53k) with 2 of 3 rising away (x1.96, x2.50) and p4 shows genuine Bragg rises (30k->190k, 28k->150k) peaking a few cm out, i.e. two short protons born there, while the deg-5 9015 is 0 away / 2 toward."
+ },
+ {
+  "event": "item009",
+  "vertex_id": 18017,
+  "confidence": "likely",
+  "why": "Rule 1: 18017 is 2 of 3 rising away (x2.75 and x4.90) with none toward, the best junction in the event, and both those prongs leave it sub-MIP (15726, 25029) and end hot; the isolated 24 cm proton born 6.6 cm upstream at 94056 is the one competing reading, and rule 2's low-z preference is only a tie-break."
+ }
+]
