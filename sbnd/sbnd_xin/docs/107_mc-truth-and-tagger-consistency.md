@@ -562,14 +562,14 @@ These are the 31 signal nueCC of section 5.5: true nueCC with the vertex in the 
 
 On 2026-09-14 each event was examined in its Bee display and its `mc.json`, comparing the truth with the reconstructed particle flow, and given a failure category.
 - **Bee set (31 events, uploaded 2026-09-14):** https://www.phy.bnl.gov/twister/bee/set/27f7c3e0-2c54-4ef2-aed6-d32799a8f991/event/list/ . The set is in the order of the table below, so Bee event *i* is row *i*.
-- **Annotated index:** `sbnd_xin/bee/d107nue31/d107nue31.index.txt` (wcp `30121ad8`). It has one row per event with the category, the truth, the vertex distance, both scores, the reconstructed particles at the vertex, and the nue sub-tagger flags that are 0.
+- **Annotated index:** `sbnd_xin/bee/d107nue31/d107nue31.index.txt` (wcp `30121ad8`; row 7 corrected 2026-09-19, see below). It has one row per event with the category, the truth, the vertex distance, both scores, the reconstructed particles at the vertex, and the nue sub-tagger flags that are 0.
 
 **Measured vs judged.** The categories are **hand-assigned**. They are not an owner scan, and no script produces them. The numbers were re-checked on 2026-09-19:
 - **Vertex distance and scores:** all 31 index rows match `products/d107/candidates.tsv` (distance from the reco to the true vertex, `nue_score`, `numu_score`).
 - **Failing flags:** the flags listed as failing match the `T_tagger` flags that are 0 in the event's `tracking-pr` ROOT file for all 29 events that have a `T_tagger` row. The flags checked are mip, mip_quality, gap, pio, br1–br4, stem_len, lem, vis, hol, lol, tro, stw, spt, sig, mgo, mgt, anc, cme, brm and stem_dir.
-- **One index omission:** row 7 also fails **br2** (`br_filled` = 1, `br2_flag` = 0). The table below includes it; the committed index file does not.
+- **One index omission, now corrected:** row 7 also fails **br2** (`br_filled` = 1, `br2_flag` = 0). The re-check found it; the index row was corrected on 2026-09-19 and now reads "fails gap, br2, stem_dir".
 
-Repro of the check (read-only). Every row should print `ok`, and the flags should print `same` everywhere except row 7:
+Repro of the check (read-only). Every row should print `ok`, and the flags should print `same` on every row:
 
 ```bash
 cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
@@ -603,8 +603,8 @@ for l in open("bee/d107nue31/d107nue31.index.txt"):
     print(i, ev, "vtx/scores", "ok" if ok else "DIFF", "| flags", "same" if root == idx else f"ROOT {root} vs index {idx}")
 print("index rows", n, "true nueCC in FV", len(S))
 EOF
-# -> rows 0-1 "no candidate ok"; rows 2-30 "vtx/scores ok"; flags "same" except
-#    7 r713_s47_e30 ... ROOT ['br2', 'gap', 'stem_dir'] vs index ['gap', 'stem_dir']
+# -> rows 0-1 "no candidate ok"; rows 2-30 "vtx/scores ok | flags same"
+#    (before the row-7 correction, row 7 printed ROOT ['br2', 'gap', 'stem_dir'] vs index ['gap', 'stem_dir'])
 #    last line: index rows 31 true nueCC in FV 31
 ```
 
@@ -651,7 +651,7 @@ In the "True" column, the mode is followed by the true Eν and the true electron
 | 4 | `r711_s8_e28` | VERTEX MISPLACED | RES 989 MeV, e- 247 | 32.5 | -15 | -0.13 | right cluster (contains the true vertex) but reco vertex 32 cm away; no e- shower at the reco vertex |
 | 5 | `r716_s81_e4` | VERTEX MISPLACED | QE 359 MeV, e- 290 | 34.7 | -15 | -0.18 | right cluster, vertex 35 cm away; no e- shower at the reco vertex; PF has mu-/pi+ nodes with no true muon or pion |
 | 6 | `r713_s81_e37` | VERTEX MISPLACED | MEC 1417 MeV, e- 1227 | 19.1 | 2.21 | -0.22 | right cluster, vertex 19 cm off; shower found but split (869+100+27 vs 1227); no failing sub-flag, low BDT score |
-| 7 | `r713_s47_e30` | EM MISRECO, pi0 in final state | RES 906 MeV, e- 170 (+pi0 89) | 0.9 | 1.32 | 1.15 | primary e- 142 MeV next to a reconstructed pi0; fails gap, br2, stem_dir (br2 missing from the index) |
+| 7 | `r713_s47_e30` | EM MISRECO, pi0 in final state | RES 906 MeV, e- 170 (+pi0 89) | 0.9 | 1.32 | 1.15 | primary e- 142 MeV next to a reconstructed pi0; fails gap, br2, stem_dir |
 | 8 | `r714_s30_e17` | EM STEM NOT MIP-LIKE | RES 1951 MeV, e- 656 (+pi+ 365, 286) | 0.2 | 2.57 | 1.55 | e- found (540 vs 656) but fails mip (stem dQ/dx); the two true pi+ appear as mu- 161, pi+ 107, pi+ 45 |
 | 9 | `r714_s38_e41` | SHOWER ENERGY LOW | DIS 4438 MeV, e- 1237 (+pi+ 2006, p 1028) | 2.5 | -1.42 | 1.31 | shower 448 vs 1237; no pi+ track in the PF (two neutron nodes 378/496 MeV); fails br4, cme; numu_cc_flag on |
 | 10 | `r715_s66_e15` | SHOWER SPLIT + MUON-LIKE PION | DIS 2487 MeV, e- 542 (+pi+ 1337) | 1.2 | 2.68 | 3.62 | shower split into e- 358 + gamma 364; muon-like track mu- 802 (true pi+ 1337); fails cme; numu_cc_flag on |

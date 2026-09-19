@@ -12,7 +12,7 @@
 4	r711_s8_e28	VERTEX MISPLACED	RES 989 MeV, e- 247	32.5	-15	-0.13	proton 194	right cluster (contains the true vertex) but reco vertex 32 cm away; no e- shower at the reco vertex
 5	r716_s81_e4	VERTEX MISPLACED	QE 359 MeV, e- 290	34.7	-15	-0.18	e- 14, gamma 18, mu- 90, pi+ 30, pi+ 37	right cluster, vertex 35 cm away; no e- shower at the reco vertex; PF has mu-/pi+ nodes with no true muon or pion
 6	r713_s81_e37	VERTEX MISPLACED	MEC 1417 MeV, e- 1227	19.1	2.21	-0.22	e- 869, e- 100, e- 27, pi+ 84	right cluster, vertex 19 cm off; shower found but split (869+100+27 vs 1227); no failing sub-flag, low BDT score
-7	r713_s47_e30	EM MISRECO, pi0 in final state	RES 906 MeV, e- 170 (+pi0 89)	0.9	1.32	1.15	pi+ 29, e- 60, e- 142, pi0 112, p 336, p 79	primary e- 142 MeV next to a reconstructed pi0; fails gap, stem_dir
+7	r713_s47_e30	EM MISRECO, pi0 in final state	RES 906 MeV, e- 170 (+pi0 89)	0.9	1.32	1.15	pi+ 29, e- 60, e- 142, pi0 112, p 336, p 79	primary e- 142 MeV next to a reconstructed pi0; fails gap, br2, stem_dir
 8	r714_s30_e17	EM STEM NOT MIP-LIKE	RES 1951 MeV, e- 656 (+pi+ 365, 286)	0.2	2.57	1.55	e- 540, mu- 161, pi+ 107, pi+ 45	e- found (540 vs 656) but fails mip (stem dQ/dx); the two true pi+ appear as mu- 161, pi+ 107, pi+ 45
 9	r714_s38_e41	SHOWER ENERGY LOW	DIS 4438 MeV, e- 1237 (+pi+ 2006, p 1028)	2.5	-1.42	1.31	e- 448, neutron 378, neutron 496, gamma 26	shower 448 vs 1237; no pi+ track in the PF (two neutron nodes 378/496 MeV); fails br4, cme; numu_cc_flag on
 10	r715_s66_e15	SHOWER SPLIT + MUON-LIKE PION	DIS 2487 MeV, e- 542 (+pi+ 1337)	1.2	2.68	3.62	mu- 802, e- 358, gamma 364, mu- 14	shower split into e- 358 + gamma 364; muon-like track mu- 802 (true pi+ 1337); fails cme; numu_cc_flag on
