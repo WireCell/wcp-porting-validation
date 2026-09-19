@@ -1,0 +1,26 @@
+# doc pdvd/116 movers pdvd: A0=d116vr2 A1=d116vr3; truth sources [('pdvd_stm_michel_own103v2_verdicts.json', 24), ('pdvd_stm_michel_own103v_verdicts.json', 40), ('pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json', 610), ('pdvd_stm_michel_smx11_verdicts.json', 204)]
+population 487 (Michel population 487); candidates A0 546, A1 546, common 546, A0-only 0, A1-only 0; unlabelled candidates 21
+
+== is_stm
+  tp_lost    0  candidate in: {'both': 0, 'A0 only': 0, 'A1 only': 0}  truth source: {}
+  tp_new     1  candidate in: {'both': 1, 'A0 only': 0, 'A1 only': 0}  truth source: {'record': 1}
+      039349_64/45     truth STM_MICHEL/attached [record]  A0 (0, 0)  A1 (1, 1)
+  fp_new     1  candidate in: {'both': 1, 'A0 only': 0, 'A1 only': 0}  truth source: {'record': 1}
+      039349_66/85     truth THRU/none [record]  A0 (0, 0)  A1 (1, 1)
+  fp_gone    0  candidate in: {'both': 0, 'A0 only': 0, 'A1 only': 0}  truth source: {}
+
+== michel_found
+  tp_lost    0  candidate in: {'both': 0, 'A0 only': 0, 'A1 only': 0}  truth source: {}
+  tp_new     4  candidate in: {'both': 4, 'A0 only': 0, 'A1 only': 0}  truth source: {'owner_review': 1, 'record': 3}
+      039252_6/94      truth STM_MICHEL/both [owner_review]  A0 (1, 0)  A1 (1, 1)
+      039253_13/75     truth STM_MICHEL/both [record]  A0 (1, 0)  A1 (1, 1)
+      039253_8/69      truth STM_MICHEL/attached [record]  A0 (1, 0)  A1 (1, 1)
+      039349_64/45     truth STM_MICHEL/attached [record]  A0 (0, 0)  A1 (1, 1)
+  fp_new     6  candidate in: {'both': 6, 'A0 only': 0, 'A1 only': 0}  truth source: {'new_agent': 1, 'record': 4, 'owner_review': 1}
+      039252_5/79      truth THRU/none [new_agent]  A0 (0, 0)  A1 (0, 1)
+      039252_9/74      truth STM_ONLY/detached dots [record]  A0 (1, 0)  A1 (1, 1)
+      039253_13/74     truth STM_ONLY/detached dots [owner_review]  A0 (1, 0)  A1 (1, 1)
+      039253_9/102     truth STM_ONLY/detached dots [record]  A0 (0, 0)  A1 (0, 1)
+      039349_50/55     truth STM_ONLY/detached dots [record]  A0 (0, 0)  A1 (0, 1)
+      039349_66/85     truth THRU/none [record]  A0 (0, 0)  A1 (1, 1)
+  fp_gone    0  candidate in: {'both': 0, 'A0 only': 0, 'A1 only': 0}  truth source: {}

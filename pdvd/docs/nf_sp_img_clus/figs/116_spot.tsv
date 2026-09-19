@@ -1,0 +1,10 @@
+spot	arm	label	seed_max_off_cm	fit_max_off_cm	terminals	term_1blank	term_1blank_off
+v1	d115voff	production	1.030	0.533	37	14	3
+v1	d115vp3bwp05	prefer3+alpha0.5+path	1.030	0.516	39	13	3
+v1	d115vbwp05	alpha0.5+path	1.030	0.379	37	14	3
+v2	d115voff	production	0.985	1.274	47	10	6
+v2	d115vp3bwp05	prefer3+alpha0.5+path	1.126	1.425	47	4	3
+v2	d115vbwp05	alpha0.5+path	1.126	1.425	47	10	6
+v3	d115voff	production	1.635	0.912	41	14	3
+v3	d115vp3bwp05	prefer3+alpha0.5+path	1.324	1.074	37	6	1
+v3	d115vbwp05	alpha0.5+path	1.324	0.544	41	14	3

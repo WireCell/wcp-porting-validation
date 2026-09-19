@@ -1,0 +1,10 @@
+# doc pdvd/116 blind scan record (pdhd, tag smx116); round /home/xqian/tmp/d116/round_pdhd
+items 40; records 17; missing 23 ['028084_1/31', '028084_12/1', '028084_21/20', '028084_24/66', '028084_3/49', '028084_30/107', '028084_7/109', '028084_7/21', '028084_7/8', '028084_8/109', '028084_8/39', '028084_9/120', '029107_0/17', '029107_12/19', '029107_13/32', '029107_16/1', '029107_16/15', '029107_16/32', '029107_2/11', '029107_2/117', '029107_25/9', '029107_5/107', '029107_8/22']; not in the item list []
+double scans 0: 
+rubric sha on the records: {None: 17}
+verdicts (new items): {'STM_MICHEL': 3, 'THRU': 4, 'FRAG_THRU': 2, 'MESSY': 1, 'STM_ONLY': 1, 'UNCLEAR': 1, 'FRAG_STM_MICHEL': 1}
+confidence (new items): {'high': 7, 'medium': 6}
+
+V2 calibration: 4 scanned, 4 judged on both sides; stopper-or-not disagreements 0 (0%) -> PASS
+
+wrote /home/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/scan/pdhd_stm_michel_smx116_verdicts.json (17 records)

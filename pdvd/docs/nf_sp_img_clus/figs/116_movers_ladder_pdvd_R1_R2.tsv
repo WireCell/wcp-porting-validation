@@ -1,0 +1,11 @@
+metric	class	key	verdict	michel_kind	source	A0_is_stm	A0_michel	A1_is_stm	A1_michel
+is_stm	tp_new	039253_17/107	STM_ONLY	none	new_agent	0	0	1	1
+is_stm	tp_new	039349_31/54	STM_MICHEL	attached	record	0	0	1	1
+michel_found	tp_new	039252_12/117	STM_MICHEL	attached	record	1	0	1	1
+michel_found	tp_new	039253_14/45	STM_MICHEL	both	record	1	0	1	1
+michel_found	tp_new	039349_10/66	STM_MICHEL	attached	record	1	0	1	1
+michel_found	tp_new	039349_31/54	STM_MICHEL	attached	record	0	0	1	1
+michel_found	tp_new	039349_50/49	STM_MICHEL	attached	record	1	0	1	1
+michel_found	tp_new	039349_54/33	STM_MICHEL	attached	owner_review	1	0	1	1
+michel_found	tp_new	039349_57/25	STM_MICHEL	attached	owner_review	1	0	1	1
+michel_found	fp_new	039253_17/107	STM_ONLY	none	new_agent	0	0	1	1

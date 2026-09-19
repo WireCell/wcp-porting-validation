@@ -1,0 +1,72 @@
+metric	class	key	verdict	michel_kind	source	A0_is_stm	A0_michel	A1_is_stm	A1_michel
+is_stm	tp_lost	028084_0/36	STM_MICHEL	both	new_agent	1	1	-	-
+is_stm	tp_lost	028084_2/40	STM_MICHEL	attached	new_agent	1	0	-	-
+is_stm	tp_lost	028084_20/65	STM_MICHEL	both	smx27	1	0	0	1
+is_stm	tp_lost	028084_23/125	STM_ONLY	detached dots	smx27	1	0	0	0
+is_stm	tp_lost	028084_24/52	STM_ONLY	detached dots	smx27	1	0	0	0
+is_stm	tp_lost	028084_26/41	STM_MICHEL	attached	owner_review	1	1	0	0
+is_stm	tp_lost	028084_27/27	STM_MICHEL	both	smx27	1	1	-	-
+is_stm	tp_lost	028084_3/23	STM_MICHEL	attached	smx27	1	1	-	-
+is_stm	tp_lost	028084_30/33	STM_ONLY	detached dots	smx27	1	0	0	0
+is_stm	tp_lost	028084_4/41	STM_ONLY	detached dots	owner	1	0	-	-
+is_stm	tp_lost	028084_8/120	STM_MICHEL	attached	owner_review	1	1	0	0
+is_stm	tp_lost	029107_11/26	STM_MICHEL	attached	owner_review	1	1	-	-
+is_stm	tp_lost	029107_12/95	STM_ONLY	None	owner_review	1	1	0	0
+is_stm	tp_lost	029107_14/23	STM_MICHEL	attached	new_agent	1	1	-	-
+is_stm	tp_lost	029107_15/118	STM_MICHEL	attached	owner_review	1	1	0	1
+is_stm	tp_lost	029107_24/111	STM_MICHEL	attached	new_agent	1	1	-	-
+is_stm	tp_lost	029107_25/123	STM_MICHEL	attached	owner_review	1	0	-	-
+is_stm	tp_lost	029107_27/39	STM_ONLY	detached dots	owner_review	1	1	0	1
+is_stm	tp_new	028084_12/33	STM_ONLY	none	new_agent	0	0	1	0
+is_stm	tp_new	028084_16/47	STM_MICHEL	both	new_agent	0	1	1	1
+is_stm	tp_new	028084_2/116	STM_ONLY	None	owner_review	0	0	1	1
+is_stm	tp_new	028084_2/20	STM_MICHEL	both	new_agent	0	1	1	1
+is_stm	tp_new	028084_30/111	STM_ONLY	detached dots	owner	-	-	1	0
+is_stm	tp_new	028084_4/29	STM_ONLY	detached dots	smx27	-	-	1	0
+is_stm	tp_new	028084_6/42	STM_MICHEL	attached	smx27	-	-	1	1
+is_stm	tp_new	028084_8/110	STM_MICHEL	attached	smx27	0	1	1	1
+is_stm	tp_new	028084_8/37	STM_MICHEL	attached	owner_review	0	1	1	1
+is_stm	tp_new	029107_13/114	STM_ONLY	detached dots	smx27	0	0	1	0
+is_stm	tp_new	029107_15/40	STM_ONLY	None	owner_review	0	0	1	1
+is_stm	tp_new	029107_19/106	STM_MICHEL	attached	owner_review	0	0	1	0
+is_stm	tp_new	029107_19/111	STM_ONLY	detached dots	owner_review	0	1	1	0
+is_stm	tp_new	029107_2/108	STM_MICHEL	attached	smx27	-	-	1	1
+is_stm	tp_new	029107_20/139	STM_MICHEL	attached	smx27	0	1	1	0
+is_stm	tp_new	029107_26/111	STM_MICHEL	attached	owner_review	0	1	1	0
+is_stm	tp_new	029107_29/119	STM_MICHEL	attached	smx27	0	0	1	0
+is_stm	tp_new	029107_5/26	STM_MICHEL	attached	new_agent	-	-	1	1
+is_stm	tp_new	029107_5/98	STM_ONLY	detached dots	smx27	-	-	1	0
+is_stm	tp_new	029107_6/122	STM_MICHEL	attached	owner_review	0	1	1	1
+is_stm	fp_new	028084_15/50	THRU	none	smx27	0	0	1	0
+is_stm	fp_new	029107_11/74	THRU	none	smx27	0	0	1	1
+is_stm	fp_new	029107_2/39	THRU	none	smx27	0	0	1	1
+is_stm	fp_gone	028084_22/3	THRU	attached	owner_review	1	1	-	-
+is_stm	fp_gone	029107_22/22	THRU	None	owner_review	1	0	0	0
+michel_found	tp_lost	028084_0/36	STM_MICHEL	both	new_agent	1	1	-	-
+michel_found	tp_lost	028084_21/132	STM_MICHEL	attached	smx27	1	1	1	0
+michel_found	tp_lost	028084_26/41	STM_MICHEL	attached	owner_review	1	1	0	0
+michel_found	tp_lost	028084_27/27	STM_MICHEL	both	smx27	1	1	-	-
+michel_found	tp_lost	028084_3/23	STM_MICHEL	attached	smx27	1	1	-	-
+michel_found	tp_lost	028084_8/120	STM_MICHEL	attached	owner_review	1	1	0	0
+michel_found	tp_lost	029107_11/26	STM_MICHEL	attached	owner_review	1	1	-	-
+michel_found	tp_lost	029107_11/86	STM_MICHEL	both	owner_review	1	1	1	0
+michel_found	tp_lost	029107_14/23	STM_MICHEL	attached	new_agent	1	1	-	-
+michel_found	tp_lost	029107_20/139	STM_MICHEL	attached	smx27	0	1	1	0
+michel_found	tp_lost	029107_24/111	STM_MICHEL	attached	new_agent	1	1	-	-
+michel_found	tp_lost	029107_26/111	STM_MICHEL	attached	owner_review	0	1	1	0
+michel_found	tp_new	028084_1/142	STM_MICHEL	attached	owner	1	0	1	1
+michel_found	tp_new	028084_20/65	STM_MICHEL	both	smx27	1	0	0	1
+michel_found	tp_new	028084_23/113	STM_MICHEL	both	smx27	1	0	1	1
+michel_found	tp_new	028084_6/42	STM_MICHEL	attached	smx27	-	-	1	1
+michel_found	tp_new	029107_1/85	STM_MICHEL	attached	owner_review	1	0	1	1
+michel_found	tp_new	029107_17/116	STM_MICHEL	both	new_agent	1	0	1	1
+michel_found	tp_new	029107_2/108	STM_MICHEL	attached	smx27	-	-	1	1
+michel_found	tp_new	029107_21/71	STM_MICHEL	both	new_agent	1	0	1	1
+michel_found	tp_new	029107_5/26	STM_MICHEL	attached	new_agent	-	-	1	1
+michel_found	tp_new	029107_9/109	STM_ONLY	attached	owner_review	1	0	1	1
+michel_found	fp_new	028084_2/116	STM_ONLY	None	owner_review	0	0	1	1
+michel_found	fp_new	029107_11/33	STM_ONLY	detached dots	smx27	1	0	1	1
+michel_found	fp_new	029107_15/40	STM_ONLY	None	owner_review	0	0	1	1
+michel_found	fp_new	029107_20/17	STM_ONLY	none	smx27	0	0	0	1
+michel_found	fp_gone	029107_12/95	STM_ONLY	None	owner_review	1	1	0	0
+michel_found	fp_gone	029107_19/111	STM_ONLY	detached dots	owner_review	0	1	1	0

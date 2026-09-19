@@ -1,0 +1,25 @@
+# doc pdvd/116 arm sizing pdvd d115vp3bwp05: candidates 543, clusters with stop-arm lines 216, truth [('pdvd_stm_michel_own103v2_verdicts.json', 24), ('pdvd_stm_michel_own103v_verdicts.json', 40), ('pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json', 610), ('pdvd_stm_michel_smx11_verdicts.json', 204)]
+# production thresholds: michel_mip (0.3, 2.0), michel_max_len_cm 25.0, michel_min_kink_deg 30.0, michel_shower_min_kink_deg 15.0
+accepted stoppers: with Michel 169 (truth Counter({'pos': 153, 'neg': 10, 'excluded': 4, 'unlabelled': 2})), without 111 (truth Counter({'neg': 79, 'pos': 30, 'unlabelled': 2})); stoppers without a Michel and with no stop-arm line at all: 100
+
+== (a) michel_min_kink_deg lowered: kOther arms on stoppers WITHOUT a Michel that pass mip / len and would be admitted at kink >= K
+  K =   25: admits 1 stoppers: {'pos': 1}   e.g. [('039252_12/117', 26.9, 13.2, 1.19)]
+  K =   20: admits 3 stoppers: {'pos': 3}   e.g. [('039349_57/25', 23.0, 13.0, 0.6), ('039252_12/117', 26.9, 13.2, 1.19), ('039349_10/66', 22.6, 8.4, 0.43)]
+  K =   15: admits 3 stoppers: {'pos': 3}   e.g. [('039349_57/25', 23.0, 13.0, 0.6), ('039252_12/117', 26.9, 13.2, 1.19), ('039349_10/66', 22.6, 8.4, 0.43)]
+
+== (b) michel_max_len_cm raised: kOther arms on stoppers WITHOUT a Michel with kink >= 30 (or shower-admitted), mip ok, 25 < len + far_len <= Lmax
+  Lmax =   30: admits 3 stoppers: {'pos': 3}   e.g. [('039349_54/33', 28.0, 51.4), ('039253_14/45', 26.9, 73.9), ('039349_50/49', 28.0, 55.7)]
+  Lmax =   35: admits 3 stoppers: {'pos': 3}   e.g. [('039349_54/33', 28.0, 51.4), ('039253_14/45', 26.9, 73.9), ('039349_50/49', 28.0, 55.7)]
+  Lmax =   40: admits 3 stoppers: {'pos': 3}   e.g. [('039349_54/33', 28.0, 51.4), ('039253_14/45', 26.9, 73.9), ('039349_50/49', 28.0, 55.7)]
+
+== (c) michel_range_energy vetoes on stoppers WITHOUT a Michel (n_michel_range_veto > 0), by the vetoed piece's KE (michel_ke_best) and distance
+  ke_min =   10 MeV would admit 0 stoppers: {}
+  ke_min =    7 MeV would admit 1 stoppers: {'pos': 1}
+  ke_min =    5 MeV would admit 6 stoppers: {'pos': 4, 'neg': 2}
+  ke_min =    3 MeV would admit 12 stoppers: {'pos': 8, 'neg': 4}
+  all vetoed: 19; [('039253_13/75', 8.339107714228609, 6.314555447487298, 'pos'), ('039253_8/69', 6.836205695037391, 3.189237035747156, 'pos'), ('039253_14/45', 5.798205639463712, 10.681181666779485, 'pos'), ('039252_6/94', 5.778289767678841, 11.70233317573334, 'pos'), ('039252_9/74', 5.499681242741426, 14.480822963904066, 'neg'), ('039253_13/74', 5.224053405490201, 10.391608194841512, 'neg'), ('039253_1/31', 4.478491331313403, 3.212917288549322, 'pos'), ('039349_52/33', 4.132783366294848, 3.6659259843753125, 'pos'), ('039349_7/57', 3.6977237413955697, 3.8669847522689387, 'neg'), ('039349_64/55', 3.5905264215427044, 14.550542704941723, 'pos'), ('039252_16/40', 3.4221810432878583, 11.173608199162008, 'neg'), ('039349_44/29', 3.074897543464178, 14.823096662644172, 'pos')]
+
+== current Michels (stoppers WITH a Michel): the Michel arm's kink and total length by truth
+  pos        n 153: kink p10/p50/p90 [ 36.5   74.85 137.55]; kink < 30 (shower-admitted) 4; len+far p50/p90 [ 9.64 16.5 ]; KE p10/p50 [ 9.13755147 22.73462892]; KE < 5 MeV 4
+  neg        n 10: kink p10/p50/p90 [30.1  75.   87.92]; kink < 30 (shower-admitted) 1; len+far p50/p90 [ 7.11  13.904]; KE p10/p50 [3.76191108 8.32652833]; KE < 5 MeV 3
+  unlabelled n 2: kink p10/p50/p90 [ 41.51  77.15 112.79]; kink < 30 (shower-admitted) 0; len+far p50/p90 [7.89  9.994]; KE p10/p50 [18.01961277 19.34414489]; KE < 5 MeV 0

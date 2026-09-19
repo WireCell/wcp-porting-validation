@@ -1,0 +1,7 @@
+doc pdvd/116 sec 7 -- removal of the output-less doc-115 round-1 tag dirs (owner request 2026-09-18; figs/115_pred_amend1.txt
+left them "for the owner to remove").
+Predicate, applied twice (listing, then again at removal): dir name matches <det>/work/*_d115[hv]bw[ab]; `find -type f`
+returns 0 (no regular file, not even a log); every entry is a pctree-evt* symlink staged by d111_run_arms.sh.
+Listed and verified: 362 dirs (pdhd 61 hbwa + 61 hbwb, pdvd 120 vbwa + 120 vbwb), 724 symlinks, du 4.3 MB total.
+Removed with `xargs -a /home/xqian/tmp/d116/rm_list.txt rm -r` (the list file only; no glob at the rm) at 2026-09-18 17:2x.
+After: `ls -d pd?d/work/*_d115?bw[ab]` = 0.  The pctree targets (d51hclus / p100flip) were never touched.

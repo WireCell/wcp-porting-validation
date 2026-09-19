@@ -1,0 +1,10 @@
+# doc pdvd/116 blind scan record (pdvd, tag smx116); round /home/xqian/tmp/d116/round_pdvd
+items 36; records 27; missing 9 ['039253_14/94', '039349_15/41', '039349_16/41', '039349_18/32', '039349_28/45', '039349_39/33', '039349_64/70', '039349_77/40', '039349_82/19']; not in the item list []
+double scans 0: 
+rubric sha on the records: {None: 27}
+verdicts (new items): {'THRU': 12, 'STM_ONLY': 5, 'UNCLEAR': 1, 'STM_MICHEL': 4, 'FRAG_THRU': 1, 'MESSY': 1}
+confidence (new items): {'high': 10, 'medium': 12, 'low': 2}
+
+V2 calibration: 3 scanned, 3 judged on both sides; stopper-or-not disagreements 0 (0%) -> PASS
+
+wrote /home/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/scan/pdvd_stm_michel_smx116_verdicts.json (27 records)

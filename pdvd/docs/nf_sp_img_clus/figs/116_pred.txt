@@ -1,0 +1,101 @@
+doc pdvd/116 -- PRE-REGISTERED rule for the STM / Michel tagger retune on the priced trajectory and for the flip.
+Written 2026-09-18 after the regression study of sec 2 (figs/116_movers_*, 116_mechanism_*, 116_michel_terminals_*,
+116_arm_sizing_*) had been read, and BEFORE any tagger-level arm ran.  sha256 in figs/116_pred.sha256; the launcher
+d116_run_levels.sh (SERIES=d116, PRED=116_pred.sha256) refuses to start otherwise.
+
+OWNER REQUEST (2026-09-18): study the nature of the PDHD and PDVD tag regressions on the alpha-0.5 trajectory, retune
+the STM and Michel taggers on both, and if the validation passes turn on the knobs for both the trajectory and the
+taggers.  Owner decisions taken before this rule: (1) PDVD carries BWP05 (tree+path alpha 0.5 WITHOUT prefer3) when
+d115vbwp05 passes every clause of figs/115r2_pred.txt (+ amendment 1), else P3BWP05; PDHD carries P3BWP05;
+(2) unlabelled candidates are resolved by a doc-103-style blind agent scan (Opus agents) before the grade is read.
+
+WHAT THE STUDY FOUND (sec 2; the rule rests on it):
+  * The tagger's inputs did not move coherently: on the common candidates plateau_med B/A p50 1.000, ks_mu - ks_flat
+    shift p50 0.000, muon_len B/A 1.000 (p10/p90 within 6-20 %).  80 % of the common candidates keep both tags; the
+    20 % that change sit at |d stop| 1.6-2.2 cm (p50) against 0.3 cm for the unchanged.  The regressions are boundary
+    flips of decisions the tagger was already sitting on, not a scale shift -- so no re-centring of the plateau / KS
+    windows is warranted and none is attempted.
+  * Symmetric channels (lost ~ gained, no threshold fixes them): the STM evaluation (status 0 <-> 3, prototype
+    constants, no config key), the Bragg / shape bits (no_bragg | shape_flat), mid-point / left-charge exits.
+  * One-way channels with an existing config key (the levers):
+      L1  PDVD: 10 hand stoppers lost to detect_proton (status 0 -> 5; 5 of them with an attached Michel of 8-42 MeV)
+          against 2 gained.  TaggerCheckSTM's proton_muon_guard (doc 63 round 2: "an end matching the muon hypothesis
+          in shape and normalisation is not called a proton", ks1 < 0.040 and ratio3 < 1.1) is OFF in both
+          productions (driver stm_proton_muon_guard=false; SBND production true).  PDHD lost 1 / gained 1.
+      L2  The Michel arm at the stop re-classified: kind Michel -> other when the kink at the stop fell below
+          michel_min_kink_deg 30 (PDVD 039349_10/66 39.6 -> 22.6 deg, 039252_12/117 30.8 -> 26.9; PDHD 028084_21/132
+          44.3 -> 24.9) or the arm + its far subtree exceeded michel_max_len_cm 25 (PDVD 039349_50/49 28.0 cm).
+          Sized on the ELIGIBLE population of the alpha-0.5 arms (accepted stoppers without a Michel, all their
+          stop arms): kink >= 20 admits PDVD 3 (3 hand-positive), PDHD 2 (1 pos / 1 neg); len <= 30 admits PDVD 3
+          (3 pos), PDHD 1 (1 pos).  Nothing else is eligible: the "no stop-arm at all" class (PDVD 8, PDHD most)
+          has no key.  The Michel's Steiner terminals are NOT dropped by the trajectory (B/A 0.97 vs control 0.98).
+      L3  The range-energy veto (michel_range_energy_guard, ke_min 10 MeV) on a Michel piece that the new trajectory
+          detached from the stop (conn 1 -> 2/3, dis 3-15 cm): PDVD 5 hand-positive lost; ke_min 5 admits PDVD 6
+          (4 pos / 2 neg), PDHD 0.
+  * The Michel FALSE POSITIVES gained (PDVD 10, PDHD 4) come through the symmetric channels and through very small
+    arms (0.5-2 cm, 1.6-2.3 MeV) at the stop; no existing key removes them without an equal cut on true Michels
+    (doc 104: an energy or length floor cuts both classes at the same rate).  No floor is built.
+
+CELLS per detector (production -nu -stm-fit chain, doc-115 pin clus md5 2efa7fa09325, SRC d108hflip / d103vflip):
+  A0  d115?off       production trajectory, production tagger  (= today's production output)
+  T   the trajectory arm with the production tagger: PDHD d115hp3bwp05; PDVD d115vbwp05 if it passes every clause of
+      figs/115r2_pred.txt (+ amend 1), else d115vp3bwp05  (decided by figs/116_verdict_bwp05.txt, read before the
+      PDVD sweep is launched; the PDHD sweep does not depend on it)
+  R1  T's trajectory TLAs + -S stm_proton_muon_guard=true                                   (L1; guard thresholds C++ defaults)
+  R2  R1 + -S stm_michel_extra={michel_min_kink_deg:20.0,michel_max_len_cm:30.0}           (L2; production 30 / 25)
+  R3  R2 with michel_range_energy_ke_min:5.0 added to the extra bag                        (L3; production 10)
+  Tags d116{h,v}r{1,2,3}.  The same three levels on both detectors (one ladder, one key set per level).  Every level
+  is compile-proven against T's compiled config before launch (figs/116_gate_config.txt): only the named keys of the
+  TaggerCheckSTM / CheckSTM_Michel nodes differ.
+
+METRICS (d116_grade.py = d113_grade.py + the smx116 blind record folded at the lowest precedence + mover lists):
+  is_stm purity / efficiency and michel_found purity / efficiency of R_k vs A0, on the doc-103 population and truth
+  (PDHD own103h2 > own103h > smx27 > smx28 > smx116; PDVD own103v2 > own103v > p99rwon carried corrected > smx11 >
+  smx116); point values; bootstrap 68 % intervals reported.
+
+THE BLIND SCAN (sec 5): every candidate of A0, T or any R_k of a detector that has no truth of any source, plus 10 %
+  calibration items drawn from the judged record (V2 agreement check of d103_scan_record.py); prep on the arms
+  themselves (scratch /home/xqian/tmp/d116/round), shots through the doc-103 headless viewer, one blind Opus agent per
+  wave under the frozen rubrics (PDHD pdhd_stm_michel_scan_rubric.md sha 750751ea..., PDVD d99/swap_scan_rubric.md
+  sha d760e223...), records through mkv.py only, every transcript audited (d103_audit.py), record tag smx116 (new;
+  never overwriting).  The display arm of an item is the cell where it is a candidate (A0 first, then T, then R_k).
+
+DECISION per level, both detectors, read AFTER the fold:
+  PASS  every one of the four metrics >= A0 - 0.020 on the labelled point value AND its NEG bound (every remaining
+        unlabelled candidate forced negative) >= -0.030, on BOTH detectors;
+        AND no-regression: C (wire-cell rc 0 and the three outputs for every event; a "no candidate" event is
+        complete), R (median per-event PR wall / the T arm <= 1.20), G0 (pin md5 2efa7fa09325 before and after);
+        AND the split-half guard: on the odd- and even-indexed halves of the event manifest separately, no metric
+        of the level < A0 - 0.040 (against overfitting the 61 / 120 events the levers were sized on).
+  Otherwise FAIL, naming the failing clauses per detector.
+  SELECTION = the smallest ladder level (R1 < R2 < R3) that PASSES on both detectors; it is not the best number.
+  If no level passes on both: NOTHING IS FLIPPED; the doc reports the per-detector reading of every level, the
+  fewest-failing level, and the recommended next step; the trajectory knobs stay OFF as well (the owner tied the
+  two flips together).
+
+THE FLIP UNIT when a level passes (sec 6): toolkit cfg call sites (pdhd/pr.jsonnet, protodunevd/pr.jsonnet:
+  terminal_blank_plane_mode / base_weight_blank_alpha / base_weight_scope at cm.steiner AND steiner_refresh, the
+  `if x == null then <value> else x` form of doc 108) + the driver bags (<det>/wct-pr-perevt.jsonnet:
+  stm_proton_muon_guard and the CheckSTM_Michel keys of the level).  Proof: (a) flipped compile == the level's TLA
+  compile (d116_cfgdiff.py, provenance keys excepted); (b) the pre-flip production compile is reproduced by
+  reverting the call-site edit (byte-identical) and the escape hatch -S steiner_blank_plane_mode='wcp'
+  -S steiner_base_weight_blank_alpha=0 -S steiner_base_weight_scope='tree' -S stm_proton_muon_guard=false differs
+  from today's production only in the emitted default-valued keys; (c) SBND / uBooNE production jobs compile
+  byte-identical before and after (no C++ change; the doc-115 OFF gates cover the binary); (d) runtime: arms
+  d116hflip / d116vflip with NO TLA on the flipped configs and the production library path reproduce the level's
+  arm on every branch of T_stm_michel (d103_flip_gate.py) on the full manifests.  Then commit + push both repos.
+
+PREDICTIONS (not gating):
+  * R1 recovers most of PDVD's proton-channel losses (+5..8 is_stm TP, +3..5 Michel TP) if the guard fires on ends
+    that match the muon hypothesis; +-1 on PDHD.  It adds no false positive that the study can see (protons are rare
+    in these cosmic samples; the guard only un-vetoes).
+  * R2 adds +2..3 Michel TP per detector and <= 1 FP (PDHD 029107_19/111 is hand-negative and eligible at kink 24).
+  * R3 adds +3..4 Michel TP and +2 FP on PDVD, nothing on PDHD.
+  * PDHD: is_stm both metrics pass at every level; Michel purity is within one false positive of the bar (-0.024
+    NEG / -0.011 POS today) and is decided by the blind fold and by whether R2's one eligible negative is admitted.
+  * PDVD: is_stm passes at R1+; Michel efficiency reaches the bar at R2 or R3 (needs TP >= 167 of 236 after the
+    fold); Michel PURITY IS PREDICTED TO FAIL AT EVERY LEVEL (FP 18 vs 11; the levers add true positives and remove
+    no false positive; purity >= 0.920 needs FP <= 14 at TP ~ 175).  If so the round ends without a flip and the
+    honest next step is the false-positive side (a re-scan of the 10 new Michel FPs on the new trajectory, 5 of
+    which carry blind-agent THRU labels, or a Michel-object floor built and graded out of sample).
+  * The bwp05 trajectory (Part 1) changes the PDVD T cell's FP set; the prediction above is for P3BWP05.

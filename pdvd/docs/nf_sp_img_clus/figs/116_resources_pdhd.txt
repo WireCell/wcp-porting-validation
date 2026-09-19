@@ -1,0 +1,4 @@
+# pdhd: reference d115hp3bwp05 (61 events with resources)
+d116hr1      events 61: wall median ratio 0.902 (p90 1.000; total 3186 vs 3595 s); peak RSS median ratio 1.000 (max 3.43 vs 3.43 GB)
+d116hr2      events 61: wall median ratio 0.902 (p90 1.000; total 3225 vs 3595 s); peak RSS median ratio 1.000 (max 3.43 vs 3.43 GB)
+d116hr3      events 61: wall median ratio 0.889 (p90 1.000; total 3199 vs 3595 s); peak RSS median ratio 1.000 (max 3.43 vs 3.43 GB)

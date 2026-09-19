@@ -1,0 +1,24 @@
+# doc pdvd/116 movers pdvd: A0=d116vr1 A1=d116vr2; truth sources [('pdvd_stm_michel_own103v2_verdicts.json', 24), ('pdvd_stm_michel_own103v_verdicts.json', 40), ('pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json', 610), ('pdvd_stm_michel_smx11_verdicts.json', 204)]
+population 487 (Michel population 487); candidates A0 546, A1 546, common 546, A0-only 0, A1-only 0; unlabelled candidates 21
+
+== is_stm
+  tp_lost    0  candidate in: {'both': 0, 'A0 only': 0, 'A1 only': 0}  truth source: {}
+  tp_new     2  candidate in: {'both': 2, 'A0 only': 0, 'A1 only': 0}  truth source: {'new_agent': 1, 'record': 1}
+      039253_17/107    truth STM_ONLY/none [new_agent]  A0 (0, 0)  A1 (1, 1)
+      039349_31/54     truth STM_MICHEL/attached [record]  A0 (0, 0)  A1 (1, 1)
+  fp_new     0  candidate in: {'both': 0, 'A0 only': 0, 'A1 only': 0}  truth source: {}
+  fp_gone    0  candidate in: {'both': 0, 'A0 only': 0, 'A1 only': 0}  truth source: {}
+
+== michel_found
+  tp_lost    0  candidate in: {'both': 0, 'A0 only': 0, 'A1 only': 0}  truth source: {}
+  tp_new     7  candidate in: {'both': 7, 'A0 only': 0, 'A1 only': 0}  truth source: {'record': 5, 'owner_review': 2}
+      039252_12/117    truth STM_MICHEL/attached [record]  A0 (1, 0)  A1 (1, 1)
+      039253_14/45     truth STM_MICHEL/both [record]  A0 (1, 0)  A1 (1, 1)
+      039349_10/66     truth STM_MICHEL/attached [record]  A0 (1, 0)  A1 (1, 1)
+      039349_31/54     truth STM_MICHEL/attached [record]  A0 (0, 0)  A1 (1, 1)
+      039349_50/49     truth STM_MICHEL/attached [record]  A0 (1, 0)  A1 (1, 1)
+      039349_54/33     truth STM_MICHEL/attached [owner_review]  A0 (1, 0)  A1 (1, 1)
+      039349_57/25     truth STM_MICHEL/attached [owner_review]  A0 (1, 0)  A1 (1, 1)
+  fp_new     1  candidate in: {'both': 1, 'A0 only': 0, 'A1 only': 0}  truth source: {'new_agent': 1}
+      039253_17/107    truth STM_ONLY/none [new_agent]  A0 (0, 0)  A1 (1, 1)
+  fp_gone    0  candidate in: {'both': 0, 'A0 only': 0, 'A1 only': 0}  truth source: {}

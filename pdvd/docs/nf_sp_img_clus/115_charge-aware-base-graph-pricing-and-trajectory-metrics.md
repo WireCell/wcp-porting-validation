@@ -23,6 +23,8 @@ track trajectory and dQ/dx fit results."*
 
 ## Status: the answer
 
+**Doc 116 (2026-09-18) follows this round:** the un-run PDVD arm (`tree+path` α 0.5 without `prefer3`) FAILS the round-2 rule (U1b +4.5 %, U2 −35.7 %; v3 fit 0.54), so PDVD stays on `prefer3` + α 0.5; the tagger retune on the P3BWP05 trajectories (proton guard + Michel-arm thresholds) restores the efficiencies but the PDVD purities fail the frozen rule at every level — nothing is flipped; see `116_tagger-retune-on-the-priced-trajectory.md`.
+
 **Round 2 (sec 7, 2026-09-18 — the owner's follow-up):** `tree+path` pricing at α 0.25 / 0.5 / 1 *combined with*
 `prefer3`, graded under a second frozen rule (`figs/115r2_pred.txt`, sha `c953f114…`) whose FIX clauses are
 detour-scoped (DETOUR length, DETOUR + FIT length, the blank-carried sub-classes, the crawl class, the five spot fits,

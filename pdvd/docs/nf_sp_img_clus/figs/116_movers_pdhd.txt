@@ -1,0 +1,85 @@
+# doc pdvd/116 movers pdhd: A0=d115hoff A1=d115hp3bwp05; truth sources [('pdhd_stm_michel_own103h2_verdicts.json', 24), ('pdhd_stm_michel_own103h_verdicts.json', 27), ('pdhd_stm_michel_smx27_verdicts.json', 296), ('pdhd_stm_michel_smx28_verdicts.json', 97)]
+population 328 (Michel population 180); candidates A0 333, A1 325, common 277, A0-only 56, A1-only 48; unlabelled candidates 36
+
+== is_stm
+  tp_lost   18  candidate in: {'both': 9, 'A0 only': 9, 'A1 only': 0}  truth source: {'new_agent': 4, 'smx27': 6, 'owner_review': 7, 'owner': 1}
+      028084_0/36      truth STM_MICHEL/both [new_agent]  A0 (1, 1)  A1 None
+      028084_2/40      truth STM_MICHEL/attached [new_agent]  A0 (1, 0)  A1 None
+      028084_20/65     truth STM_MICHEL/both [smx27]  A0 (1, 0)  A1 (0, 1)
+      028084_23/125    truth STM_ONLY/detached dots [smx27]  A0 (1, 0)  A1 (0, 0)
+      028084_24/52     truth STM_ONLY/detached dots [smx27]  A0 (1, 0)  A1 (0, 0)
+      028084_26/41     truth STM_MICHEL/attached [owner_review]  A0 (1, 1)  A1 (0, 0)
+      028084_27/27     truth STM_MICHEL/both [smx27]  A0 (1, 1)  A1 None
+      028084_3/23      truth STM_MICHEL/attached [smx27]  A0 (1, 1)  A1 None
+      028084_30/33     truth STM_ONLY/detached dots [smx27]  A0 (1, 0)  A1 (0, 0)
+      028084_4/41      truth STM_ONLY/detached dots [owner]  A0 (1, 0)  A1 None
+      028084_8/120     truth STM_MICHEL/attached [owner_review]  A0 (1, 1)  A1 (0, 0)
+      029107_11/26     truth STM_MICHEL/attached [owner_review]  A0 (1, 1)  A1 None
+      029107_12/95     truth STM_ONLY/None [owner_review]  A0 (1, 1)  A1 (0, 0)
+      029107_14/23     truth STM_MICHEL/attached [new_agent]  A0 (1, 1)  A1 None
+      029107_15/118    truth STM_MICHEL/attached [owner_review]  A0 (1, 1)  A1 (0, 1)
+      029107_24/111    truth STM_MICHEL/attached [new_agent]  A0 (1, 1)  A1 None
+      029107_25/123    truth STM_MICHEL/attached [owner_review]  A0 (1, 0)  A1 None
+      029107_27/39     truth STM_ONLY/detached dots [owner_review]  A0 (1, 1)  A1 (0, 1)
+  tp_new    20  candidate in: {'both': 14, 'A0 only': 0, 'A1 only': 6}  truth source: {'new_agent': 4, 'owner_review': 7, 'owner': 1, 'smx27': 8}
+      028084_12/33     truth STM_ONLY/none [new_agent]  A0 (0, 0)  A1 (1, 0)
+      028084_16/47     truth STM_MICHEL/both [new_agent]  A0 (0, 1)  A1 (1, 1)
+      028084_2/116     truth STM_ONLY/None [owner_review]  A0 (0, 0)  A1 (1, 1)
+      028084_2/20      truth STM_MICHEL/both [new_agent]  A0 (0, 1)  A1 (1, 1)
+      028084_30/111    truth STM_ONLY/detached dots [owner]  A0 None  A1 (1, 0)
+      028084_4/29      truth STM_ONLY/detached dots [smx27]  A0 None  A1 (1, 0)
+      028084_6/42      truth STM_MICHEL/attached [smx27]  A0 None  A1 (1, 1)
+      028084_8/110     truth STM_MICHEL/attached [smx27]  A0 (0, 1)  A1 (1, 1)
+      028084_8/37      truth STM_MICHEL/attached [owner_review]  A0 (0, 1)  A1 (1, 1)
+      029107_13/114    truth STM_ONLY/detached dots [smx27]  A0 (0, 0)  A1 (1, 0)
+      029107_15/40     truth STM_ONLY/None [owner_review]  A0 (0, 0)  A1 (1, 1)
+      029107_19/106    truth STM_MICHEL/attached [owner_review]  A0 (0, 0)  A1 (1, 0)
+      029107_19/111    truth STM_ONLY/detached dots [owner_review]  A0 (0, 1)  A1 (1, 0)
+      029107_2/108     truth STM_MICHEL/attached [smx27]  A0 None  A1 (1, 1)
+      029107_20/139    truth STM_MICHEL/attached [smx27]  A0 (0, 1)  A1 (1, 0)
+      029107_26/111    truth STM_MICHEL/attached [owner_review]  A0 (0, 1)  A1 (1, 0)
+      029107_29/119    truth STM_MICHEL/attached [smx27]  A0 (0, 0)  A1 (1, 0)
+      029107_5/26      truth STM_MICHEL/attached [new_agent]  A0 None  A1 (1, 1)
+      029107_5/98      truth STM_ONLY/detached dots [smx27]  A0 None  A1 (1, 0)
+      029107_6/122     truth STM_MICHEL/attached [owner_review]  A0 (0, 1)  A1 (1, 1)
+  fp_new     3  candidate in: {'both': 3, 'A0 only': 0, 'A1 only': 0}  truth source: {'smx27': 3}
+      028084_15/50     truth THRU/none [smx27]  A0 (0, 0)  A1 (1, 0)
+      029107_11/74     truth THRU/none [smx27]  A0 (0, 0)  A1 (1, 1)
+      029107_2/39      truth THRU/none [smx27]  A0 (0, 0)  A1 (1, 1)
+  fp_gone    2  candidate in: {'both': 1, 'A0 only': 1, 'A1 only': 0}  truth source: {'owner_review': 2}
+      028084_22/3      truth THRU/attached [owner_review]  A0 (1, 1)  A1 None
+      029107_22/22     truth THRU/None [owner_review]  A0 (1, 0)  A1 (0, 0)
+
+== michel_found
+  tp_lost   12  candidate in: {'both': 6, 'A0 only': 6, 'A1 only': 0}  truth source: {'new_agent': 3, 'smx27': 4, 'owner_review': 5}
+      028084_0/36      truth STM_MICHEL/both [new_agent]  A0 (1, 1)  A1 None
+      028084_21/132    truth STM_MICHEL/attached [smx27]  A0 (1, 1)  A1 (1, 0)
+      028084_26/41     truth STM_MICHEL/attached [owner_review]  A0 (1, 1)  A1 (0, 0)
+      028084_27/27     truth STM_MICHEL/both [smx27]  A0 (1, 1)  A1 None
+      028084_3/23      truth STM_MICHEL/attached [smx27]  A0 (1, 1)  A1 None
+      028084_8/120     truth STM_MICHEL/attached [owner_review]  A0 (1, 1)  A1 (0, 0)
+      029107_11/26     truth STM_MICHEL/attached [owner_review]  A0 (1, 1)  A1 None
+      029107_11/86     truth STM_MICHEL/both [owner_review]  A0 (1, 1)  A1 (1, 0)
+      029107_14/23     truth STM_MICHEL/attached [new_agent]  A0 (1, 1)  A1 None
+      029107_20/139    truth STM_MICHEL/attached [smx27]  A0 (0, 1)  A1 (1, 0)
+      029107_24/111    truth STM_MICHEL/attached [new_agent]  A0 (1, 1)  A1 None
+      029107_26/111    truth STM_MICHEL/attached [owner_review]  A0 (0, 1)  A1 (1, 0)
+  tp_new    10  candidate in: {'both': 7, 'A0 only': 0, 'A1 only': 3}  truth source: {'owner': 1, 'smx27': 4, 'owner_review': 2, 'new_agent': 3}
+      028084_1/142     truth STM_MICHEL/attached [owner]  A0 (1, 0)  A1 (1, 1)
+      028084_20/65     truth STM_MICHEL/both [smx27]  A0 (1, 0)  A1 (0, 1)
+      028084_23/113    truth STM_MICHEL/both [smx27]  A0 (1, 0)  A1 (1, 1)
+      028084_6/42      truth STM_MICHEL/attached [smx27]  A0 None  A1 (1, 1)
+      029107_1/85      truth STM_MICHEL/attached [owner_review]  A0 (1, 0)  A1 (1, 1)
+      029107_17/116    truth STM_MICHEL/both [new_agent]  A0 (1, 0)  A1 (1, 1)
+      029107_2/108     truth STM_MICHEL/attached [smx27]  A0 None  A1 (1, 1)
+      029107_21/71     truth STM_MICHEL/both [new_agent]  A0 (1, 0)  A1 (1, 1)
+      029107_5/26      truth STM_MICHEL/attached [new_agent]  A0 None  A1 (1, 1)
+      029107_9/109     truth STM_ONLY/attached [owner_review]  A0 (1, 0)  A1 (1, 1)
+  fp_new     4  candidate in: {'both': 4, 'A0 only': 0, 'A1 only': 0}  truth source: {'owner_review': 2, 'smx27': 2}
+      028084_2/116     truth STM_ONLY/None [owner_review]  A0 (0, 0)  A1 (1, 1)
+      029107_11/33     truth STM_ONLY/detached dots [smx27]  A0 (1, 0)  A1 (1, 1)
+      029107_15/40     truth STM_ONLY/None [owner_review]  A0 (0, 0)  A1 (1, 1)
+      029107_20/17     truth STM_ONLY/none [smx27]  A0 (0, 0)  A1 (0, 1)
+  fp_gone    2  candidate in: {'both': 2, 'A0 only': 0, 'A1 only': 0}  truth source: {'owner_review': 2}
+      029107_12/95     truth STM_ONLY/None [owner_review]  A0 (1, 1)  A1 (0, 0)
+      029107_19/111    truth STM_ONLY/detached dots [owner_review]  A0 (0, 1)  A1 (1, 0)

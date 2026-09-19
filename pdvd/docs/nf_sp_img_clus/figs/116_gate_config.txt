@@ -1,0 +1,41 @@
+pdvd d116_bwp05 rc=0 md5=3b305996c224
+/home/xqian/tmp/d102/cfg/d115knoboff_pdvd.json vs /home/xqian/tmp/d102/cfg/d116_bwp05_pdvd.json: 4 differing (node, key) pairs
+  CreateSteinerGraph/pr base_weight_blank_alpha added: - -> 0.5
+  CreateSteinerGraph/pr base_weight_scope added: - -> "tree+path"
+  CreateSteinerGraph/prrefresh base_weight_blank_alpha added: - -> 0.5
+  CreateSteinerGraph/prrefresh base_weight_scope added: - -> "tree+path"
+RESULT PASS: differing keys ['CreateSteinerGraph/pr/base_weight_blank_alpha', 'CreateSteinerGraph/pr/base_weight_scope', 'CreateSteinerGraph/prrefresh/base_weight_blank_alpha', 'CreateSteinerGraph/prrefresh/base_weight_scope'] vs expected ['CreateSteinerGraph/pr/base_weight_blank_alpha', 'CreateSteinerGraph/pr/base_weight_scope', 'CreateSteinerGraph/prrefresh/base_weight_blank_alpha', 'CreateSteinerGraph/prrefresh/base_weight_scope']
+pdhd d116_r1_p3 rc=0 md5=9b284225dbbc
+pdhd d116_r2_p3 rc=0 md5=4a7a24926e28
+pdhd d116_r3_p3 rc=0 md5=12d21209b958
+/home/xqian/tmp/d102/cfg/d115r2_p3bwp05_pdhd.json vs /home/xqian/tmp/d102/cfg/d116_r1_p3_pdhd.json: 1 differing (node, key) pairs
+  TaggerCheckSTM/pr proton_muon_guard added: - -> true
+RESULT PASS: differing keys ['TaggerCheckSTM/pr/proton_muon_guard'] vs expected ['TaggerCheckSTM/pr/proton_muon_guard']
+/home/xqian/tmp/d102/cfg/d115r2_p3bwp05_pdhd.json vs /home/xqian/tmp/d102/cfg/d116_r2_p3_pdhd.json: 3 differing (node, key) pairs
+  CheckSTM_Michel/pr michel_max_len_cm added: - -> 30
+  CheckSTM_Michel/pr michel_min_kink_deg added: - -> 20
+  TaggerCheckSTM/pr proton_muon_guard added: - -> true
+RESULT PASS: differing keys ['CheckSTM_Michel/pr/michel_max_len_cm', 'CheckSTM_Michel/pr/michel_min_kink_deg', 'TaggerCheckSTM/pr/proton_muon_guard'] vs expected ['CheckSTM_Michel/pr/michel_max_len_cm', 'CheckSTM_Michel/pr/michel_min_kink_deg', 'TaggerCheckSTM/pr/proton_muon_guard']
+/home/xqian/tmp/d102/cfg/d115r2_p3bwp05_pdhd.json vs /home/xqian/tmp/d102/cfg/d116_r3_p3_pdhd.json: 4 differing (node, key) pairs
+  CheckSTM_Michel/pr michel_max_len_cm added: - -> 30
+  CheckSTM_Michel/pr michel_min_kink_deg added: - -> 20
+  CheckSTM_Michel/pr michel_range_energy_ke_min added: - -> 5
+  TaggerCheckSTM/pr proton_muon_guard added: - -> true
+RESULT PASS: differing keys ['CheckSTM_Michel/pr/michel_max_len_cm', 'CheckSTM_Michel/pr/michel_min_kink_deg', 'CheckSTM_Michel/pr/michel_range_energy_ke_min', 'TaggerCheckSTM/pr/proton_muon_guard'] vs expected ['CheckSTM_Michel/pr/michel_max_len_cm', 'CheckSTM_Michel/pr/michel_min_kink_deg', 'CheckSTM_Michel/pr/michel_range_energy_ke_min', 'TaggerCheckSTM/pr/proton_muon_guard']
+pdvd d116_r1_p3 rc=0 md5=40e9846d2293
+pdvd d116_r2_p3 rc=0 md5=e103df1c18ce
+pdvd d116_r3_p3 rc=0 md5=2ecfc461456c
+/home/xqian/tmp/d102/cfg/d115r2_p3bwp05_pdvd.json vs /home/xqian/tmp/d102/cfg/d116_r1_p3_pdvd.json: 1 differing (node, key) pairs
+  TaggerCheckSTM/pr proton_muon_guard added: - -> true
+RESULT PASS: differing keys ['TaggerCheckSTM/pr/proton_muon_guard'] vs expected ['TaggerCheckSTM/pr/proton_muon_guard']
+/home/xqian/tmp/d102/cfg/d115r2_p3bwp05_pdvd.json vs /home/xqian/tmp/d102/cfg/d116_r2_p3_pdvd.json: 3 differing (node, key) pairs
+  CheckSTM_Michel/pr michel_max_len_cm added: - -> 30
+  CheckSTM_Michel/pr michel_min_kink_deg added: - -> 20
+  TaggerCheckSTM/pr proton_muon_guard added: - -> true
+RESULT PASS: differing keys ['CheckSTM_Michel/pr/michel_max_len_cm', 'CheckSTM_Michel/pr/michel_min_kink_deg', 'TaggerCheckSTM/pr/proton_muon_guard'] vs expected ['CheckSTM_Michel/pr/michel_max_len_cm', 'CheckSTM_Michel/pr/michel_min_kink_deg', 'TaggerCheckSTM/pr/proton_muon_guard']
+/home/xqian/tmp/d102/cfg/d115r2_p3bwp05_pdvd.json vs /home/xqian/tmp/d102/cfg/d116_r3_p3_pdvd.json: 4 differing (node, key) pairs
+  CheckSTM_Michel/pr michel_max_len_cm added: - -> 30
+  CheckSTM_Michel/pr michel_min_kink_deg added: - -> 20
+  CheckSTM_Michel/pr michel_range_energy_ke_min added: - -> 5
+  TaggerCheckSTM/pr proton_muon_guard added: - -> true
+RESULT PASS: differing keys ['CheckSTM_Michel/pr/michel_max_len_cm', 'CheckSTM_Michel/pr/michel_min_kink_deg', 'CheckSTM_Michel/pr/michel_range_energy_ke_min', 'TaggerCheckSTM/pr/proton_muon_guard'] vs expected ['CheckSTM_Michel/pr/michel_max_len_cm', 'CheckSTM_Michel/pr/michel_min_kink_deg', 'CheckSTM_Michel/pr/michel_range_energy_ke_min', 'TaggerCheckSTM/pr/proton_muon_guard']

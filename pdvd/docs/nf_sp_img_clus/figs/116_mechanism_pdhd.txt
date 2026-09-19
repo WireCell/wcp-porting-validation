@@ -1,0 +1,259 @@
+# doc pdvd/116 mechanism pdhd: A=d115hoff (333 candidates) B=d115hp3bwp05 (325 candidates); movers 71 rows
+# operating point {'ks_margin': -0.1, 'plateau_lo': 0.6, 'plateau_hi': 1.6, 'mip': 56000.0, 'topo_ke_min': 5.0, 'topo_len_min': 1.5, 'range_dis': 5.0, 'range_ke': 10.0}
+
+== class table (metric, mover class, first differing decision)
+  michel_found tp_new     1  STM
+  michel_found tp_new     6  MICHEL
+  michel_found tp_new     1  CAND pre-fit-exit->accepted
+  michel_found tp_new     2  CAND mid-point-trk->accepted
+  michel_found tp_lost    4  STM
+  michel_found tp_lost    2  MICHEL
+  michel_found tp_lost    2  CAND accepted->mid-point-trk
+  michel_found tp_lost    1  CAND accepted->left-charge
+  michel_found tp_lost    3  CAND accepted->eval-failed
+  michel_found fp_new     2  STM
+  michel_found fp_new     2  MICHEL
+  michel_found fp_gone    2  STM
+  is_stm       tp_new     1  CAND proton->accepted
+  is_stm       tp_new     1  CAND pre-fit-exit->accepted
+  is_stm       tp_new     2  CAND mid-point-trk->accepted
+  is_stm       tp_new     2  CAND left-charge->accepted
+  is_stm       tp_new    14  BITS
+  is_stm       tp_lost    1  CAND accepted->proton
+  is_stm       tp_lost    2  CAND accepted->mid-point-trk
+  is_stm       tp_lost    1  CAND accepted->left-charge
+  is_stm       tp_lost    5  CAND accepted->eval-failed
+  is_stm       tp_lost    9  BITS
+  is_stm       fp_new     3  BITS
+  is_stm       fp_gone    1  CAND accepted->left-charge
+  is_stm       fp_gone    1  BITS
+is_stm       tp_lost  028084_0/36      truth STM_MICHEL/both [new_agent]  CAND accepted->eval-failed
+      ks1 0.021->0.072, ratio1 0.980->0.982, res_length 9.0->11.2; the tagged arm: muon_len 253, bits STM, michel 1 conn 1 ke 30.0
+      
+is_stm       tp_lost  028084_2/40      truth STM_MICHEL/attached [new_agent]  CAND accepted->eval-failed
+      ks1 0.036->0.052, ratio1 0.902->0.935, res_length 6.3->6.0; the tagged arm: muon_len 399, bits STM, michel 0 conn 0 ke 0.0
+      
+is_stm       tp_lost  028084_20/65     truth STM_MICHEL/both [smx27]  BITS +no_bragg --
+      A STM -> B no_bragg; topo_cleared A 0 B 0; ks=-0.119 plateau/mip=0.747 plateau_edge=0.147 | B ks=-0.039 plateau/mip=0.79 plateau_edge=0.19 ke-topo_min=-0.118 len-topo_min=0.9
+      |d tagger_stop| 1.5 cm, |d stop| 2.1, muon_len 56->60, plateau_med B/A 1.058, ks margin A -0.119 B -0.039, plateau/mip A 0.75 B 0.79
+is_stm       tp_lost  028084_23/125    truth STM_ONLY/detached dots [smx27]  BITS +no_bragg --
+      A STM -> B no_bragg; topo_cleared A 0 B 0; ks=-0.134 plateau/mip=1.08 plateau_edge=0.477 | B ks=-0.11 plateau/mip=1.1 plateau_edge=0.496
+      |d tagger_stop| 0.4 cm, |d stop| 0.1, muon_len 765->759, plateau_med B/A 1.017, ks margin A -0.134 B -0.110, plateau/mip A 1.08 B 1.10
+is_stm       tp_lost  028084_24/52     truth STM_ONLY/detached dots [smx27]  BITS +no_bragg --
+      A STM -> B no_bragg; topo_cleared A 0 B 0; ks=-0.175 plateau/mip=1.19 plateau_edge=0.415 | B ks=-0.14 plateau/mip=1.18 plateau_edge=0.424
+      |d tagger_stop| 0.0 cm, |d stop| 0.0, muon_len 68->69, plateau_med B/A 0.993, ks margin A -0.175 B -0.140, plateau/mip A 1.19 B 1.18
+is_stm       tp_lost  028084_26/41     truth STM_MICHEL/attached [owner_review]  BITS +no_bragg --
+      A STM -> B no_bragg; topo_cleared A 0 B 0; ks=-0.00916 plateau/mip=0.957 plateau_edge=0.357 ke-topo_min=11 len-topo_min=5.12 | B ks=-0.142 plateau/mip=0.912 plateau_edge=0.312
+      |d tagger_stop| 0.6 cm, |d stop| 0.7, muon_len 152->146, plateau_med B/A 0.953, ks margin A -0.009 B -0.142, plateau/mip A 0.96 B 0.91
+is_stm       tp_lost  028084_27/27     truth STM_MICHEL/both [smx27]  CAND accepted->eval-failed
+      ks1 0.152->0.056, ratio1 1.508->1.389, res_length 22.8->23.9; the tagged arm: muon_len 272, bits STM, michel 1 conn 2 ke 64.3
+      
+is_stm       tp_lost  028084_3/23      truth STM_MICHEL/attached [smx27]  CAND accepted->eval-failed
+      ks1 0.283->0.227, ratio1 1.371->1.478, res_length 20.9->16.1; the tagged arm: muon_len 39, bits STM, michel 1 conn 1 ke 29.5
+      
+is_stm       tp_lost  028084_30/33     truth STM_ONLY/detached dots [smx27]  BITS +no_bragg|plateau_off_mip --
+      A STM -> B no_bragg|plateau_off_mip; topo_cleared A 0 B 0; ks=-0.0368 plateau/mip=0.624 plateau_edge=0.024 | B ks=-0.0175 plateau/mip=0.588 plateau_edge=-0.0117
+      |d tagger_stop| 0.1 cm, |d stop| 0.3, muon_len 83->76, plateau_med B/A 0.943, ks margin A -0.037 B -0.017, plateau/mip A 0.62 B 0.59
+is_stm       tp_lost  028084_4/41      truth STM_ONLY/detached dots [owner]  CAND accepted->eval-failed
+      ks1 0.043->0.165, ratio1 0.919->1.136, res_length 0.0->0.0; the tagged arm: muon_len 234, bits STM, michel 0 conn 0 ke 3.0
+      
+is_stm       tp_lost  028084_8/120     truth STM_MICHEL/attached [owner_review]  BITS +no_bragg|shape_flat --
+      A STM -> B no_bragg|shape_flat; topo_cleared A 12 B 0; ks=1.68e-05 plateau/mip=1.41 plateau_edge=0.195 ke-topo_min=9.38 len-topo_min=16.5 | B ks=0.00474 plateau/mip=1.31 plateau_edge=0.287
+      |d tagger_stop| 0.0 cm, |d stop| 2.5, muon_len 325->331, plateau_med B/A 0.934, ks margin A +0.000 B +0.005, plateau/mip A 1.41 B 1.31
+is_stm       tp_lost  029107_11/26     truth STM_MICHEL/attached [owner_review]  CAND accepted->left-charge
+      ks1 0.061->nan, ratio1 1.169->nan, res_length 23.1->nan; the tagged arm: muon_len 271, bits STM, michel 1 conn 1 ke 6.8
+      
+is_stm       tp_lost  029107_12/95     truth STM_ONLY/None [owner_review]  BITS +no_bragg|shape_flat --
+      A STM -> B no_bragg|shape_flat; topo_cleared A 0 B 0; ks=-0.107 plateau/mip=1.12 plateau_edge=0.476 ke-topo_min=13.8 len-topo_min=5.03 | B ks=0.00849 plateau/mip=0.986 plateau_edge=0.386
+      |d tagger_stop| 0.6 cm, |d stop| 3.1, muon_len 143->165, plateau_med B/A 0.877, ks margin A -0.107 B +0.008, plateau/mip A 1.12 B 0.99
+is_stm       tp_lost  029107_14/23     truth STM_MICHEL/attached [new_agent]  CAND accepted->mid-point-trk
+      ks1 0.107->0.115, ratio1 1.262->1.010, res_length 28.2->20.2; the tagged arm: muon_len 218, bits STM, michel 1 conn 2 ke 56.7
+      
+is_stm       tp_lost  029107_15/118    truth STM_MICHEL/attached [owner_review]  BITS +stop_near_boundary --
+      A STM -> B stop_near_boundary; topo_cleared A 4 B 4; ks=-0.00676 plateau/mip=1.1 plateau_edge=0.498 ke-topo_min=19.7 len-topo_min=9.99 | B ks=-0.0676 plateau/mip=1.01 plateau_edge=0.411 ke-topo_min=28.8 len-topo_min=11.3
+      |d tagger_stop| 0.0 cm, |d stop| 4.8, muon_len 173->171, plateau_med B/A 0.918, ks margin A -0.007 B -0.068, plateau/mip A 1.10 B 1.01
+is_stm       tp_lost  029107_24/111    truth STM_MICHEL/attached [new_agent]  CAND accepted->mid-point-trk
+      ks1 0.022->0.028, ratio1 0.895->0.906, res_length 30.3->30.8; the tagged arm: muon_len 706, bits STM, michel 1 conn 2 ke 29.5
+      
+is_stm       tp_lost  029107_25/123    truth STM_MICHEL/attached [owner_review]  CAND accepted->proton
+      ks1 0.083->0.121, ratio1 1.018->0.896, res_length 6.1->39.4; the tagged arm: muon_len 286, bits STM, michel 0 conn 0 ke 7.5
+      
+is_stm       tp_lost  029107_27/39     truth STM_ONLY/detached dots [owner_review]  BITS +plateau_off_mip --
+      A STM -> B plateau_off_mip; topo_cleared A 0 B 0; ks=-0.165 plateau/mip=0.692 plateau_edge=0.0917 ke-topo_min=32.1 len-topo_min=13.1 | B ks=-0.17 plateau/mip=0.478 plateau_edge=-0.122 ke-topo_min=-0.718 len-topo_min=-0.961
+      |d tagger_stop| 0.5 cm, |d stop| 10.1, muon_len 40->49, plateau_med B/A 0.692, ks margin A -0.165 B -0.170, plateau/mip A 0.69 B 0.48
+is_stm       tp_new   028084_12/33     truth STM_ONLY/none [new_agent]  BITS +- -plateau_off_mip
+      A plateau_off_mip -> B STM; topo_cleared A 0 B 0; ks=-0.0518 plateau/mip=0.563 plateau_edge=-0.0367 | B ks=-0.074 plateau/mip=0.613 plateau_edge=0.0134
+      |d tagger_stop| 1.5 cm, |d stop| 1.3, muon_len 144->149, plateau_med B/A 1.089, ks margin A -0.052 B -0.074, plateau/mip A 0.56 B 0.61
+is_stm       tp_new   028084_16/47     truth STM_MICHEL/both [new_agent]  BITS +- -stop_near_boundary
+      A stop_near_boundary -> B STM; topo_cleared A 4 B 0; ks=-0.0775 plateau/mip=0.898 plateau_edge=0.298 ke-topo_min=13.9 len-topo_min=15.3 | B ks=-0.134 plateau/mip=1.03 plateau_edge=0.425 ke-topo_min=10.3 len-topo_min=4.52
+      |d tagger_stop| 0.0 cm, |d stop| 4.4, muon_len 124->115, plateau_med B/A 1.142, ks margin A -0.077 B -0.134, plateau/mip A 0.90 B 1.03
+is_stm       tp_new   028084_2/116     truth STM_ONLY/None [owner_review]  BITS +- -no_bragg
+      A no_bragg -> B STM; topo_cleared A 0 B 0; ks=-0.02 plateau/mip=1.02 plateau_edge=0.417 | B ks=-0.152 plateau/mip=1.03 plateau_edge=0.425 ke-topo_min=10.4 len-topo_min=4.47
+      |d tagger_stop| 4.0 cm, |d stop| 5.7, muon_len 151->141, plateau_med B/A 1.008, ks margin A -0.020 B -0.152, plateau/mip A 1.02 B 1.03
+is_stm       tp_new   028084_2/20      truth STM_MICHEL/both [new_agent]  BITS +- -profile_sparse
+      A profile_sparse -> B STM; topo_cleared A 0 B 0; ks=-0.0225 plateau/mip=1.03 plateau_edge=0.432 ke-topo_min=4.43 len-topo_min=-0.425 | B ks=-0.121 plateau/mip=0.982 plateau_edge=0.382 ke-topo_min=23.4 len-topo_min=1.84
+      |d tagger_stop| 1.3 cm, |d stop| 4.2, muon_len 145->137, plateau_med B/A 0.951, ks margin A -0.023 B -0.121, plateau/mip A 1.03 B 0.98
+is_stm       tp_new   028084_30/111    truth STM_ONLY/detached dots [owner]  CAND proton->accepted
+      ks1 0.036->0.027, ratio1 0.971->0.956, res_length 0.0->0.0; the tagged arm: muon_len 141, bits STM, michel 0 conn 0 ke 0.0
+      
+is_stm       tp_new   028084_4/29      truth STM_ONLY/detached dots [smx27]  CAND left-charge->accepted
+      ks1 nan->0.112, ratio1 nan->1.880, res_length nan->40.8; the tagged arm: muon_len 53, bits STM, michel 0 conn 0 ke 4.2
+      
+is_stm       tp_new   028084_6/42      truth STM_MICHEL/attached [smx27]  CAND pre-fit-exit->accepted
+      ks1 0.021->0.021, ratio1 0.885->0.890, res_length 11.3->11.4; the tagged arm: muon_len 224, bits STM, michel 1 conn 1 ke 28.2
+      
+is_stm       tp_new   028084_8/110     truth STM_MICHEL/attached [smx27]  BITS +- -no_bragg
+      A no_bragg -> B STM; topo_cleared A 0 B 4; ks=-0.136 plateau/mip=1.18 plateau_edge=0.415 ke-topo_min=-0.547 len-topo_min=4.14 | B ks=-0.0855 plateau/mip=1.16 plateau_edge=0.437 ke-topo_min=18 len-topo_min=6.56
+      |d tagger_stop| 0.1 cm, |d stop| 0.9, muon_len 69->67, plateau_med B/A 0.981, ks margin A -0.136 B -0.085, plateau/mip A 1.18 B 1.16
+is_stm       tp_new   028084_8/37      truth STM_MICHEL/attached [owner_review]  BITS +- -profile_sparse
+      A profile_sparse -> B STM; topo_cleared A 0 B 0; ks=-0.0343 plateau/mip=1.09 plateau_edge=0.491 ke-topo_min=8.63 len-topo_min=5.55 | B ks=-0.132 plateau/mip=1.08 plateau_edge=0.485 ke-topo_min=9.15 len-topo_min=1.07
+      |d tagger_stop| 2.1 cm, |d stop| 2.1, muon_len 161->159, plateau_med B/A 0.994, ks margin A -0.034 B -0.132, plateau/mip A 1.09 B 1.08
+is_stm       tp_new   029107_13/114    truth STM_ONLY/detached dots [smx27]  BITS +- -no_bragg
+      A no_bragg -> B STM; topo_cleared A 0 B 0; ks=-0.149 plateau/mip=0.991 plateau_edge=0.391 | B ks=-0.158 plateau/mip=1.02 plateau_edge=0.421
+      |d tagger_stop| 0.2 cm, |d stop| 0.0, muon_len 103->106, plateau_med B/A 1.031, ks margin A -0.149 B -0.158, plateau/mip A 0.99 B 1.02
+is_stm       tp_new   029107_15/40     truth STM_ONLY/None [owner_review]  BITS +- -no_bragg
+      A no_bragg -> B STM; topo_cleared A 0 B 4; ks=-0.0478 plateau/mip=0.726 plateau_edge=0.126 | B ks=-0.0158 plateau/mip=0.784 plateau_edge=0.184 ke-topo_min=1.99 len-topo_min=7.94
+      |d tagger_stop| 7.7 cm, |d stop| 7.6, muon_len 138->132, plateau_med B/A 1.080, ks margin A -0.048 B -0.016, plateau/mip A 0.73 B 0.78
+is_stm       tp_new   029107_19/106    truth STM_MICHEL/attached [owner_review]  BITS +- -continuation
+      A continuation -> B STM; topo_cleared A 0 B 0; ks=-0.179 plateau/mip=1.2 plateau_edge=0.404 | B ks=-0.136 plateau/mip=1.07 plateau_edge=0.471
+      |d tagger_stop| 2.3 cm, |d stop| 2.8, muon_len 268->242, plateau_med B/A 0.896, ks margin A -0.179 B -0.136, plateau/mip A 1.20 B 1.07
+is_stm       tp_new   029107_19/111    truth STM_ONLY/detached dots [owner_review]  BITS +- -no_bragg|shape_flat
+      A no_bragg|shape_flat -> B STM; topo_cleared A 0 B 0; ks=0.000121 plateau/mip=1.17 plateau_edge=0.43 ke-topo_min=-3.94 len-topo_min=-1.26 | B ks=-0.0812 plateau/mip=1.06 plateau_edge=0.458
+      |d tagger_stop| 0.0 cm, |d stop| 14.5, muon_len 122->106, plateau_med B/A 0.904, ks margin A +0.000 B -0.081, plateau/mip A 1.17 B 1.06
+is_stm       tp_new   029107_2/108     truth STM_MICHEL/attached [smx27]  CAND mid-point-trk->accepted
+      ks1 0.065->0.066, ratio1 0.889->0.865, res_length 0.0->0.0; the tagged arm: muon_len 384, bits STM, michel 1 conn 2 ke 58.5
+      
+is_stm       tp_new   029107_20/139    truth STM_MICHEL/attached [smx27]  BITS +- -continuation
+      A continuation -> B STM; topo_cleared A 12 B 0; ks=0.000741 plateau/mip=1.12 plateau_edge=0.476 ke-topo_min=11.4 len-topo_min=9.44 | B ks=-0.152 plateau/mip=1.06 plateau_edge=0.458
+      |d tagger_stop| 0.1 cm, |d stop| 3.9, muon_len 299->290, plateau_med B/A 0.941, ks margin A +0.001 B -0.152, plateau/mip A 1.12 B 1.06
+is_stm       tp_new   029107_26/111    truth STM_MICHEL/attached [owner_review]  BITS +- -no_bragg
+      A no_bragg -> B STM; topo_cleared A 0 B 0; ks=-0.00501 plateau/mip=1.22 plateau_edge=0.376 ke-topo_min=-0.916 len-topo_min=-0.9 | B ks=-0.184 plateau/mip=1.19 plateau_edge=0.409
+      |d tagger_stop| 0.0 cm, |d stop| 0.7, muon_len 239->235, plateau_med B/A 0.973, ks margin A -0.005 B -0.184, plateau/mip A 1.22 B 1.19
+is_stm       tp_new   029107_29/119    truth STM_MICHEL/attached [smx27]  BITS +- -no_bragg|vertex_hadron
+      A no_bragg|vertex_hadron -> B STM; topo_cleared A 0 B 0; ks=-0.00638 plateau/mip=1.25 plateau_edge=0.348 | B ks=-0.194 plateau/mip=1.19 plateau_edge=0.414
+      |d tagger_stop| 0.0 cm, |d stop| 1.9, muon_len 65->57, plateau_med B/A 0.948, ks margin A -0.006 B -0.194, plateau/mip A 1.25 B 1.19
+is_stm       tp_new   029107_5/26      truth STM_MICHEL/attached [new_agent]  CAND mid-point-trk->accepted
+      ks1 0.058->0.059, ratio1 1.009->1.004, res_length 19.2->12.2; the tagged arm: muon_len 514, bits STM, michel 1 conn 1 ke 34.2
+      
+is_stm       tp_new   029107_5/98      truth STM_ONLY/detached dots [smx27]  CAND left-charge->accepted
+      ks1 nan->0.016, ratio1 nan->0.913, res_length nan->0.0; the tagged arm: muon_len 476, bits STM, michel 0 conn 0 ke 0.0
+      
+is_stm       tp_new   029107_6/122     truth STM_MICHEL/attached [owner_review]  BITS +- -no_bragg
+      A no_bragg -> B STM; topo_cleared A 0 B 0; ks=-0.0125 plateau/mip=1.08 plateau_edge=0.478 ke-topo_min=-0.91 len-topo_min=1.17 | B ks=-0.0529 plateau/mip=1.02 plateau_edge=0.424 ke-topo_min=-0.988 len-topo_min=1.89
+      |d tagger_stop| 0.4 cm, |d stop| 0.7, muon_len 77->76, plateau_med B/A 0.950, ks margin A -0.013 B -0.053, plateau/mip A 1.08 B 1.02
+is_stm       fp_new   028084_15/50     truth THRU/none [smx27]  BITS +- -no_bragg
+      A no_bragg -> B STM; topo_cleared A 0 B 0; ks=-0.00893 plateau/mip=0.685 plateau_edge=0.085 | B ks=-0.00289 plateau/mip=0.786 plateau_edge=0.186
+      |d tagger_stop| 0.0 cm, |d stop| 0.6, muon_len 248->243, plateau_med B/A 1.147, ks margin A -0.009 B -0.003, plateau/mip A 0.69 B 0.79
+is_stm       fp_new   029107_11/74     truth THRU/none [smx27]  BITS +- -continuation
+      A continuation -> B STM; topo_cleared A 0 B 0; ks=-0.143 plateau/mip=0.86 plateau_edge=0.26 | B ks=-0.169 plateau/mip=0.835 plateau_edge=0.235 ke-topo_min=13.9 len-topo_min=3.53
+      |d tagger_stop| 0.0 cm, |d stop| 1.4, muon_len 17->18, plateau_med B/A 0.971, ks margin A -0.143 B -0.169, plateau/mip A 0.86 B 0.83
+is_stm       fp_new   029107_2/39      truth THRU/none [smx27]  BITS +- -no_bragg|shape_flat
+      A no_bragg|shape_flat -> B STM; topo_cleared A 0 B 0; ks=0.0089 plateau/mip=0.96 plateau_edge=0.36 | B ks=-0.167 plateau/mip=1.37 plateau_edge=0.231 ke-topo_min=14.5 len-topo_min=7.65
+      |d tagger_stop| 41.0 cm, |d stop| 32.7, muon_len 29->37, plateau_med B/A 1.425, ks margin A +0.009 B -0.167, plateau/mip A 0.96 B 1.37
+is_stm       fp_gone  028084_22/3      truth THRU/attached [owner_review]  CAND accepted->left-charge
+      ks1 0.059->nan, ratio1 1.738->nan, res_length 13.6->nan; the tagged arm: muon_len 171, bits STM, michel 1 conn 1 ke 5.3
+      
+is_stm       fp_gone  029107_22/22     truth THRU/None [owner_review]  BITS +profile_sparse --
+      A STM -> B profile_sparse; topo_cleared A 0 B 0; ks=-0.107 plateau/mip=1.17 plateau_edge=0.434 | B ks=-0.108 plateau/mip=1.01 plateau_edge=0.409
+      |d tagger_stop| 0.5 cm, |d stop| 0.5, muon_len 12->13, plateau_med B/A 0.865, ks margin A -0.107 B -0.108, plateau/mip A 1.17 B 1.01
+michel_found tp_lost  028084_0/36      truth STM_MICHEL/both [new_agent]  CAND accepted->eval-failed
+      ks1 0.021->0.072, ratio1 0.980->0.982, res_length 9.0->11.2; the tagged arm: muon_len 253, bits STM, michel 1 conn 1 ke 30.0
+      
+michel_found tp_lost  028084_21/132    truth STM_MICHEL/attached [smx27]  MICHEL conn 1->0
+      ke 20.3->0.0 MeV, len 5.4->0.0 cm, dis 0.0->-1.0, mip 1.36->0.00, kink 44->-1, n_stop_arms 1->1, veto 0/0->0/0, retreat/split 0/0->0/0; ks=-0.185 plateau/mip=1.08 plateau_edge=0.479 ke-topo_min=15.3 len-topo_min=3.91
+      |d tagger_stop| 3.4 cm, |d stop| 2.8, muon_len 191->192, plateau_med B/A 1.013, ks margin A -0.185 B -0.191, plateau/mip A 1.08 B 1.09
+michel_found tp_lost  028084_26/41     truth STM_MICHEL/attached [owner_review]  STM +no_bragg --
+      A STM -> B no_bragg; topo_cleared A 0 B 0; ks=-0.00916 plateau/mip=0.957 plateau_edge=0.357 ke-topo_min=11 len-topo_min=5.12 | B ks=-0.142 plateau/mip=0.912 plateau_edge=0.312
+      |d tagger_stop| 0.6 cm, |d stop| 0.7, muon_len 152->146, plateau_med B/A 0.953, ks margin A -0.009 B -0.142, plateau/mip A 0.96 B 0.91
+michel_found tp_lost  028084_27/27     truth STM_MICHEL/both [smx27]  CAND accepted->eval-failed
+      ks1 0.152->0.056, ratio1 1.508->1.389, res_length 22.8->23.9; the tagged arm: muon_len 272, bits STM, michel 1 conn 2 ke 64.3
+      
+michel_found tp_lost  028084_3/23      truth STM_MICHEL/attached [smx27]  CAND accepted->eval-failed
+      ks1 0.283->0.227, ratio1 1.371->1.478, res_length 20.9->16.1; the tagged arm: muon_len 39, bits STM, michel 1 conn 1 ke 29.5
+      
+michel_found tp_lost  028084_8/120     truth STM_MICHEL/attached [owner_review]  STM +no_bragg|shape_flat --
+      A STM -> B no_bragg|shape_flat; topo_cleared A 12 B 0; ks=1.68e-05 plateau/mip=1.41 plateau_edge=0.195 ke-topo_min=9.38 len-topo_min=16.5 | B ks=0.00474 plateau/mip=1.31 plateau_edge=0.287
+      |d tagger_stop| 0.0 cm, |d stop| 2.5, muon_len 325->331, plateau_med B/A 0.934, ks margin A +0.000 B +0.005, plateau/mip A 1.41 B 1.31
+michel_found tp_lost  029107_11/26     truth STM_MICHEL/attached [owner_review]  CAND accepted->left-charge
+      ks1 0.061->nan, ratio1 1.169->nan, res_length 23.1->nan; the tagged arm: muon_len 271, bits STM, michel 1 conn 1 ke 6.8
+      
+michel_found tp_lost  029107_11/86     truth STM_MICHEL/both [owner_review]  MICHEL conn 2->0 no-arm vetoed
+      ke 10.1->1.5 MeV, len 0.9->1.7 cm, dis 9.6->11.7, mip 0.00->0.00, kink -1->-1, n_stop_arms 0->0, veto 0/0->0/1, retreat/split 0/0->0/0; ks=-0.0541 plateau/mip=1.21 plateau_edge=0.388 ke-topo_min=5.11 len-topo_min=-0.617
+      |d tagger_stop| 1.7 cm, |d stop| 3.6, muon_len 466->466, plateau_med B/A 0.999, ks margin A -0.054 B -0.029, plateau/mip A 1.21 B 1.21
+michel_found tp_lost  029107_14/23     truth STM_MICHEL/attached [new_agent]  CAND accepted->mid-point-trk
+      ks1 0.107->0.115, ratio1 1.262->1.010, res_length 28.2->20.2; the tagged arm: muon_len 218, bits STM, michel 1 conn 2 ke 56.7
+      
+michel_found tp_lost  029107_20/139    truth STM_MICHEL/attached [smx27]  STM +- -continuation
+      A continuation -> B STM; topo_cleared A 12 B 0; ks=0.000741 plateau/mip=1.12 plateau_edge=0.476 ke-topo_min=11.4 len-topo_min=9.44 | B ks=-0.152 plateau/mip=1.06 plateau_edge=0.458
+      |d tagger_stop| 0.1 cm, |d stop| 3.9, muon_len 299->290, plateau_med B/A 0.941, ks margin A +0.001 B -0.152, plateau/mip A 1.12 B 1.06
+michel_found tp_lost  029107_24/111    truth STM_MICHEL/attached [new_agent]  CAND accepted->mid-point-trk
+      ks1 0.022->0.028, ratio1 0.895->0.906, res_length 30.3->30.8; the tagged arm: muon_len 706, bits STM, michel 1 conn 2 ke 29.5
+      
+michel_found tp_lost  029107_26/111    truth STM_MICHEL/attached [owner_review]  STM +- -no_bragg
+      A no_bragg -> B STM; topo_cleared A 0 B 0; ks=-0.00501 plateau/mip=1.22 plateau_edge=0.376 ke-topo_min=-0.916 len-topo_min=-0.9 | B ks=-0.184 plateau/mip=1.19 plateau_edge=0.409
+      |d tagger_stop| 0.0 cm, |d stop| 0.7, muon_len 239->235, plateau_med B/A 0.973, ks margin A -0.005 B -0.184, plateau/mip A 1.22 B 1.19
+michel_found tp_new   028084_1/142     truth STM_MICHEL/attached [owner]  MICHEL conn 0->1 vetoed
+      ke 1.2->7.7 MeV, len 0.2->1.8 cm, dis 11.8->0.0, mip 0.00->1.10, kink -1->29, n_stop_arms 1->1, veto 0/1->0/0, retreat/split 0/0->0/0; ks=-0.00425 plateau/mip=1.13 plateau_edge=0.471 ke-topo_min=2.69 len-topo_min=0.343
+      |d tagger_stop| 9.0 cm, |d stop| 8.3, muon_len 200->208, plateau_med B/A 1.076, ks margin A -0.150 B -0.004, plateau/mip A 1.05 B 1.13
+michel_found tp_new   028084_20/65     truth STM_MICHEL/both [smx27]  STM +no_bragg --
+      A STM -> B no_bragg; topo_cleared A 0 B 0; ks=-0.119 plateau/mip=0.747 plateau_edge=0.147 | B ks=-0.039 plateau/mip=0.79 plateau_edge=0.19 ke-topo_min=-0.118 len-topo_min=0.9
+      |d tagger_stop| 1.5 cm, |d stop| 2.1, muon_len 56->60, plateau_med B/A 1.058, ks margin A -0.119 B -0.039, plateau/mip A 0.75 B 0.79
+michel_found tp_new   028084_23/113    truth STM_MICHEL/both [smx27]  MICHEL conn 0->1
+      ke 0.0->16.1 MeV, len 0.0->13.0 cm, dis -1.0->0.0, mip 0.00->0.61, kink -1->159, n_stop_arms 1->2, veto 0/0->0/0, retreat/split 0/0->0/0; ks=-0.145 plateau/mip=1 plateau_edge=0.402 ke-topo_min=11.1 len-topo_min=11.5
+      |d tagger_stop| 1.3 cm, |d stop| 0.3, muon_len 90->88, plateau_med B/A 1.063, ks margin A -0.180 B -0.145, plateau/mip A 0.94 B 1.00
+michel_found tp_new   028084_6/42      truth STM_MICHEL/attached [smx27]  CAND pre-fit-exit->accepted
+      ks1 0.021->0.021, ratio1 0.885->0.890, res_length 11.3->11.4; the tagged arm: muon_len 224, bits STM, michel 1 conn 1 ke 28.2
+      
+michel_found tp_new   029107_1/85      truth STM_MICHEL/attached [owner_review]  MICHEL conn 0->1 no-arm vetoed
+      ke 0.7->41.3 MeV, len 1.2->17.4 cm, dis 8.3->0.0, mip 0.00->1.17, kink -1->75, n_stop_arms 0->1, veto 0/1->0/0, retreat/split 0/0->0/0; ks=-0.193 plateau/mip=0.892 plateau_edge=0.292 ke-topo_min=36.3 len-topo_min=15.9
+      |d tagger_stop| 9.3 cm, |d stop| 15.3, muon_len 133->120, plateau_med B/A 0.750, ks margin A -0.026 B -0.193, plateau/mip A 1.19 B 0.89
+michel_found tp_new   029107_17/116    truth STM_MICHEL/both [new_agent]  MICHEL conn 0->1
+      ke 0.0->19.5 MeV, len 0.0->12.6 cm, dis -1.0->0.0, mip 0.00->0.59, kink -1->34, n_stop_arms 1->1, veto 0/0->0/0, retreat/split 0/1->0/1; ks=-0.143 plateau/mip=1.11 plateau_edge=0.49 ke-topo_min=14.5 len-topo_min=11.1
+      |d tagger_stop| 0.0 cm, |d stop| 0.6, muon_len 159->155, plateau_med B/A 1.106, ks margin A -0.140 B -0.143, plateau/mip A 1.00 B 1.11
+michel_found tp_new   029107_2/108     truth STM_MICHEL/attached [smx27]  CAND mid-point-trk->accepted
+      ks1 0.065->0.066, ratio1 0.889->0.865, res_length 0.0->0.0; the tagged arm: muon_len 384, bits STM, michel 1 conn 2 ke 58.5
+      
+michel_found tp_new   029107_21/71     truth STM_MICHEL/both [new_agent]  MICHEL conn 0->1
+      ke 0.0->42.7 MeV, len 0.0->20.2 cm, dis -1.0->0.0, mip 0.00->0.68, kink -1->87, n_stop_arms 1->1, veto 0/0->0/0, retreat/split 0/0->0/0; ks=-0.13 plateau/mip=1.09 plateau_edge=0.493 ke-topo_min=37.7 len-topo_min=18.7
+      |d tagger_stop| 0.7 cm, |d stop| 1.4, muon_len 191->180, plateau_med B/A 1.099, ks margin A -0.196 B -0.130, plateau/mip A 0.99 B 1.09
+michel_found tp_new   029107_5/26      truth STM_MICHEL/attached [new_agent]  CAND mid-point-trk->accepted
+      ks1 0.058->0.059, ratio1 1.009->1.004, res_length 19.2->12.2; the tagged arm: muon_len 514, bits STM, michel 1 conn 1 ke 34.2
+      
+michel_found tp_new   029107_9/109     truth STM_ONLY/attached [owner_review]  MICHEL conn 0->1 no-arm
+      ke 0.0->12.8 MeV, len 0.0->5.9 cm, dis -1.0->0.0, mip 0.00->1.05, kink -1->52, n_stop_arms 0->1, veto 0/0->0/0, retreat/split 0/0->0/0; ks=-0.145 plateau/mip=0.636 plateau_edge=0.0363 ke-topo_min=7.85 len-topo_min=4.38
+      |d tagger_stop| 1.3 cm, |d stop| 2.4, muon_len 242->243, plateau_med B/A 0.640, ks margin A -0.193 B -0.145, plateau/mip A 0.99 B 0.64
+michel_found fp_new   028084_2/116     truth STM_ONLY/None [owner_review]  STM +- -no_bragg
+      A no_bragg -> B STM; topo_cleared A 0 B 0; ks=-0.02 plateau/mip=1.02 plateau_edge=0.417 | B ks=-0.152 plateau/mip=1.03 plateau_edge=0.425 ke-topo_min=10.4 len-topo_min=4.47
+      |d tagger_stop| 4.0 cm, |d stop| 5.7, muon_len 151->141, plateau_med B/A 1.008, ks margin A -0.020 B -0.152, plateau/mip A 1.02 B 1.03
+michel_found fp_new   029107_11/33     truth STM_ONLY/detached dots [smx27]  MICHEL conn 0->1
+      ke 0.0->11.1 MeV, len 0.0->3.3 cm, dis -1.0->0.0, mip 0.00->1.27, kink -1->77, n_stop_arms 1->1, veto 0/0->0/0, retreat/split 0/0->0/0; ks=-0.188 plateau/mip=0.842 plateau_edge=0.242 ke-topo_min=6.07 len-topo_min=1.82
+      |d tagger_stop| 0.0 cm, |d stop| 1.1, muon_len 187->188, plateau_med B/A 0.808, ks margin A -0.173 B -0.188, plateau/mip A 1.04 B 0.84
+michel_found fp_new   029107_15/40     truth STM_ONLY/None [owner_review]  STM +- -no_bragg
+      A no_bragg -> B STM; topo_cleared A 0 B 4; ks=-0.0478 plateau/mip=0.726 plateau_edge=0.126 | B ks=-0.0158 plateau/mip=0.784 plateau_edge=0.184 ke-topo_min=1.99 len-topo_min=7.94
+      |d tagger_stop| 7.7 cm, |d stop| 7.6, muon_len 138->132, plateau_med B/A 1.080, ks margin A -0.048 B -0.016, plateau/mip A 0.73 B 0.78
+michel_found fp_new   029107_20/17     truth STM_ONLY/none [smx27]  MICHEL conn 0->2
+      ke 0.0->4.3 MeV, len 0.0->4.1 cm, dis -1.0->2.9, mip 0.00->0.00, kink -1->-1, n_stop_arms 1->1, veto 0/0->0/0, retreat/split 0/0->0/0; ks=-0.0726 ke-topo_min=-0.656 len-topo_min=2.56
+      |d tagger_stop| 0.6 cm, |d stop| 1.0, muon_len 19->7, plateau_med B/A 0.000, ks margin A +0.010 B -0.073, plateau/mip A 0.71 B nan
+michel_found fp_gone  029107_12/95     truth STM_ONLY/None [owner_review]  STM +no_bragg|shape_flat --
+      A STM -> B no_bragg|shape_flat; topo_cleared A 0 B 0; ks=-0.107 plateau/mip=1.12 plateau_edge=0.476 ke-topo_min=13.8 len-topo_min=5.03 | B ks=0.00849 plateau/mip=0.986 plateau_edge=0.386
+      |d tagger_stop| 0.6 cm, |d stop| 3.1, muon_len 143->165, plateau_med B/A 0.877, ks margin A -0.107 B +0.008, plateau/mip A 1.12 B 0.99
+michel_found fp_gone  029107_19/111    truth STM_ONLY/detached dots [owner_review]  STM +- -no_bragg|shape_flat
+      A no_bragg|shape_flat -> B STM; topo_cleared A 0 B 0; ks=0.000121 plateau/mip=1.17 plateau_edge=0.43 ke-topo_min=-3.94 len-topo_min=-1.26 | B ks=-0.0812 plateau/mip=1.06 plateau_edge=0.458
+      |d tagger_stop| 0.0 cm, |d stop| 14.5, muon_len 122->106, plateau_med B/A 0.904, ks margin A +0.000 B -0.081, plateau/mip A 1.17 B 1.06
+
+== scale check on 277 common candidates (B relative to A; quantiles p10 p50 p90)
+  plateau_med B/A            n 249 p10 0.856 p50 1.000 p90 1.215
+  (ks_mu - ks_flat) B - A    n 269 p10 -0.079 p50 0.000 p90 0.051
+  ratio_mu B - A             n 269 p10 -0.386 p50 -0.007 p90 0.180
+  muon_len B/A               n 277 p10 0.939 p50 1.000 p90 1.042
+  |d tagger_stop| cm         n 277 p10 0.000 p50 0.324 p90 3.390
+  |d stop| cm                n 277 p10 0.000 p50 0.499 p90 4.626
+  michel_ke_best B/A (both)  n 92 p10 0.727 p50 1.000 p90 1.595
+  michel_len B - A cm (both) n 92 p10 -2.259 p50 0.000 p90 3.189
+  tags on the common candidates: {'same tags': 221, 'tag changed': 56}; |d stop| p50 of the changed 2.2 cm vs unchanged 0.3 cm
+
+== candidacy churn (truth-free): lost 56, gained 48
+  lost: accepted->eval-failed 34, accepted->left-charge 8, accepted->proton 7, accepted->mid-point-trk 4, accepted->no-row 2, accepted->pre-fit-exit 1
+     carrying is_stm 13, michel 19; muon_len p50 185 cm
+  gained: eval-failed->accepted 24, mid-point-trk->accepted 8, proton->accepted 5, left-charge->accepted 5, pre-fit-exit->accepted 4, no-row->accepted 2
+     carrying is_stm 13, michel 22; muon_len p50 158 cm

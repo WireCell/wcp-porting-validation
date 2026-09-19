@@ -1,0 +1,25 @@
+doc pdvd/115 round 2 -- AMENDMENT 1 of figs/115r2_pred.txt (recorded 2026-09-18, after the round-2 verdict
+figs/115r2_verdict.txt was read and BEFORE the arm below produced any output).  Governs doc pdvd/116 Part 1.
+
+ONE LEVEL ADDED, PDVD only; no clause, bar or base changes.  Round 2's sec 7.5 named the one arm the round did not
+run: the tree+path pricing at alpha 0.5 WITHOUT prefer3 on PDVD (round 1 ran that scope only at alpha 1, BWP1).
+The owner asked for it (2026-09-18) to settle the three PDVD misses of P3BWP05 (U1b, U2, v3) and decided that a
+per-detector trajectory is acceptable: PDVD carries BWP05 into the tagger retune and the flip if BWP05 passes EVERY
+FIX and NO-REGRESSION clause of figs/115r2_pred.txt on PDVD, else PDVD carries P3BWP05; PDHD carries P3BWP05.
+
+  BWP05   d115vbwp05   -S steiner_base_weight_blank_alpha=0.5 -S steiner_base_weight_scope='tree+path'
+  (PDVD 120 events, SRC d103vflip, doc-115 pin clus md5 2efa7fa09325, WCT_STM_PATH_DEBUG=1 WCT_STEINER_GRAPH_DUMP=1,
+   JOBS 8; base d115voff; graded by d115r2_verdict.py --levels with the round-2 clauses and bars unchanged; the
+   tags reported, not gating.)
+
+PREDICTIONS (not gating), from the round-2 sizing row "0.5:tree+path S1 -9.9 %, wiggle x1.119, v3 1.33 (seed)" and
+round 1's BWP1 (alpha 1, no prefer3: DETOUR -33 %, U1b +0.9 %, U2 -36 %, W +17.9 %, v3 fit 0.54, h-spots n/a):
+  * U1 passes (>= -30 %): alpha 0.5 keeps most of BWP1's -33 % (P3BWP05 gave -43 %).
+  * U1b is the open clause: without prefer3 the FIT growth that BWP1 showed (3.0 -> 5.8 m) may return; predicted
+    borderline (-10..-25 %).  The cluster-67 stripe spur of P3BWP05 was absent under BWP1, predicted absent here.
+  * U2 predicted to FAIL narrowly (-30..-38 % against -40): without prefer3 the D-blank-term count stays ~114.
+  * v3 fit predicted <= 0.7 (the pricing alone gave 0.54 under BW2 / BWP1); v1, v2 within base + 0.2.
+  * W predicted to pass (x1.12 seed-only; BWP1's C++ arm was within 4 points of its replay).
+  * D1 / D2 predicted to pass on PDVD (BWP1 gave f_low -6 %, shape -5 %), paired counts the risk.
+  * Overall: a clean PASS is NOT predicted (U2); the level is expected to trade P3BWP05's U1b / v3 misses for a U2
+    miss, in which case PDVD stays on P3BWP05 by the owner's rule above.

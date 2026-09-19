@@ -1,0 +1,22 @@
+# doc pdvd/115 2-D residual: det=pdvd base=d115voff arm=d115vbwp05 events=120 (missing 0); common records 1842; rows base 560025 arm 561525; DEAD_R 1.5 cm
+# d_exact = fractional projected wire rank - nearest charged cell of the cluster on the row's slice (wire units);
+# d_pm1 = the same over slices s-1..s+1; OFF = no cell on the slice or |d| > 1; dead planes excluded
+
+| plane | arm | live rows | no cell on slice | median abs d | abs d > 1 | abs d > 2 | +-1 slice: abs d > 1 | OFF (exact) | OFF (+-1 slice) |
+|---|---|---|---|---|---|---|---|---|---|
+| U | base | 560025 | 2.06 % | 0.267 | 3.54 % | 1.36 % | 2.57 % | 5.60 % | 4.16 % |
+| U | arm | 561525 | 2.05 % | 0.266 | 3.44 % | 1.33 % | 2.51 % | 5.49 % | 4.09 % |
+| V | base | 560025 | 2.08 % | 0.304 | 4.68 % | 1.56 % | 3.35 % | 6.76 % | 4.96 % |
+| V | arm | 561525 | 2.09 % | 0.303 | 4.61 % | 1.52 % | 3.31 % | 6.69 % | 4.92 % |
+| W | base | 560025 | 1.69 % | 0.197 | 1.73 % | 1.29 % | 1.52 % | 3.41 % | 2.78 % |
+| W | arm | 561525 | 1.69 % | 0.196 | 1.58 % | 1.23 % | 1.43 % | 3.27 % | 2.70 % |
+
+| row metric | base | arm | rel |
+|---|---|---|---|
+| R2D: W-plane live rows with abs d_exact > 1 wire | 1.73 % | 1.58 % | -8.2 % |
+| rows OFF in >= 1 live plane (exact slice, > 1 wire) | 11.54 % | 11.31 % | -2.0 % |
+| rows OFF in >= 1 live plane (+-1 slice, > 1 wire) | 8.79 % | 8.64 % | -1.7 % |
+| rows OFF in >= 1 live plane (+-1 slice, > 1.5 wire ~ doc-111 P2) | 8.05 % | 7.99 % | -0.7 % |
+| rows with q < 0 (the Bee cut) | 3.99 % | 4.04 % | +1.3 % |
+
+paired per record, W-plane share abs d > 1: arm lower 250, higher 143, equal (+-0.005) 1449; row-weighted mean difference -0.148 points

@@ -1,0 +1,20 @@
+# doc pdvd/116 Michel terminals pdhd: A=d115hoff B=d115hp3bwp05; layer points within 1.5 cm of A's Michel members (role 3)
+class    key              how                                nMichel | terminals A  B | graph A  B | image A  B
+tp_lost  028084_21/132    MICHEL conn 1->0                        10 |     9   9 |    70  70 |    57  57
+tp_lost  029107_11/86     MICHEL conn 2->0 no-arm vetoed           6 |     0   0 |     0   0 |    25  25
+tp_new   028084_1/142     MICHEL conn 0->1 vetoed                  6 |     6   6 |    28  29 |    32  32
+tp_new   028084_23/113    MICHEL conn 0->1                        43 |    39  37 |   327 297 |   209 209
+tp_new   029107_1/85      MICHEL conn 0->1 no-arm vetoed          30 |    26  25 |   153 147 |   165 165
+tp_new   029107_17/116    MICHEL conn 0->1                        22 |     9   9 |    53  53 |    87  87
+tp_new   029107_21/71     MICHEL conn 0->1                        26 |    21  24 |   158 152 |   121 121
+tp_new   029107_9/109     MICHEL conn 0->1 no-arm                 13 |    15  15 |    76  76 |    81  81
+fp_new   029107_11/33     MICHEL conn 0->1                         7 |     5   3 |    52  44 |    32  32
+fp_new   029107_20/17     MICHEL conn 0->2                         8 |     6   5 |    28  23 |     8   8
+
+== control: 25 clusters with an accepted stopper + Michel in BOTH arms (first events)
+
+== summary
+  tp_lost: n 2; terminals sum A 9 B 9 (B/A 1.00; clusters with B < A: 0, B == 0 & A > 0: 0); graph vertices sum A 70 B 70 (B/A 1.00); image points A 82 B 82
+  tp_new: n 6; terminals sum A 116 B 116 (B/A 1.00; clusters with B < A: 2, B == 0 & A > 0: 0); graph vertices sum A 795 B 754 (B/A 0.95); image points A 695 B 695
+  fp_new: n 2; terminals sum A 11 B 8 (B/A 0.73; clusters with B < A: 2, B == 0 & A > 0: 0); graph vertices sum A 80 B 67 (B/A 0.84); image points A 40 B 40
+  control (Michel in both): n 25; terminals sum A 416 B 400 (B/A 0.96; clusters with B < A: 9, B == 0 & A > 0: 0); graph vertices sum A 2689 B 2523 (B/A 0.94); image points A 2532 B 2532

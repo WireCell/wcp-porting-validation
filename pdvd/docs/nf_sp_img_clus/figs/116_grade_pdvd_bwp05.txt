@@ -1,0 +1,34 @@
+# doc pdvd/113 grade (pdvd); truth sources in precedence order (items taken): [('pdvd_stm_michel_own103v2_verdicts.json', 24), ('pdvd_stm_michel_own103v_verdicts.json', 40), ('pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json', 610), ('pdvd_stm_michel_smx11_verdicts.json', 204)]
+# cells: A0=d115voff, P3BWP05=d115vp3bwp05, BWP05=d115vbwp05; base A0; bar A_x - A0 >= -0.02
+population 562 (fixed 361); Michel population 562 (excluded 0); unlabelled candidates of any cell 33
+  unlabelled candidates of A0: 9; is_stm 1 0, michel_found 1 2
+  unlabelled candidates of P3BWP05: 21; is_stm 1 4, michel_found 1 3
+  unlabelled candidates of BWP05: 21; is_stm 1 4, michel_found 1 3
+
+== is_stm
+  A0  d115voff      TP 266 FP   5 FN 104 TN  187 | purity 0.982 [0.974, 0.989] efficiency 0.719 [0.697, 0.743]
+  P3BWP05 d115vp3bwp05  TP 262 FP  10 FN 108 TN  182 | purity 0.963 [0.953, 0.974] efficiency 0.708 [0.685, 0.732]
+  BWP05 d115vbwp05    TP 257 FP  10 FN 113 TN  182 | purity 0.963 [0.951, 0.974] efficiency 0.695 [0.671, 0.718]
+
+== michel_found
+  A0  d115voff      TP 171 FP  11 FN  63 TN  317 | purity 0.940 [0.922, 0.957] efficiency 0.731 [0.702, 0.761]
+  P3BWP05 d115vp3bwp05  TP 163 FP  18 FN  71 TN  310 | purity 0.901 [0.878, 0.922] efficiency 0.697 [0.665, 0.728]
+  BWP05 d115vbwp05    TP 154 FP  23 FN  80 TN  305 | purity 0.870 [0.845, 0.896] efficiency 0.658 [0.626, 0.689]
+
+== reading per cell vs A0 (labelled; NEG / POS bounds for the unlabelled)
+  P3BWP05 is_stm       purity    : -0.018  (NEG -0.032, POS -0.018)  UNDECIDED
+  P3BWP05 is_stm       efficiency: -0.011  (NEG -0.011, POS +0.000)  PASS
+  P3BWP05 michel_found purity    : -0.039  (NEG -0.043, POS -0.038)  FAIL
+  P3BWP05 michel_found efficiency: -0.034  (NEG -0.034, POS -0.026)  FAIL
+  P3BWP05 T -> FAIL
+  BWP05 is_stm       purity    : -0.019  (NEG -0.033, POS -0.018)  UNDECIDED
+  BWP05 is_stm       efficiency: -0.024  (NEG -0.024, POS -0.012)  UNDECIDED
+  BWP05 michel_found purity    : -0.070  (NEG -0.074, POS -0.068)  FAIL
+  BWP05 michel_found efficiency: -0.073  (NEG -0.073, POS -0.060)  FAIL
+  BWP05 T -> FAIL
+
+== candidates on one side only, vs A0, by hand class
+  P3BWP05 only: 65 {'stopper': 27, 'non-stopper': 16, 'unjudged': 6, 'unlabelled': 16}
+  A0 only (vs P3BWP05): 85 {'stopper': 33, 'non-stopper': 33, 'unjudged': 15, 'unlabelled': 4}
+  BWP05 only: 60 {'stopper': 21, 'non-stopper': 20, 'unjudged': 5, 'unlabelled': 14}
+  A0 only (vs BWP05): 81 {'stopper': 35, 'non-stopper': 32, 'unjudged': 12, 'unlabelled': 2}

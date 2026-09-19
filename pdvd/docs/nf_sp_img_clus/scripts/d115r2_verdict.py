@@ -105,10 +105,17 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--figs", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "figs"))
     ap.add_argument("--anchors", action="store_true", help="also grade the round-1 arms P3 / BWP1 / P3BW2 from their 115_ files under the round-2 clauses")
+    # doc pdvd/116 Part 1 (additive): grade other levels under the same clauses, e.g. --levels BWP05:bwp05:0.5:115r2_ --spot 116_spot.tsv
+    ap.add_argument("--levels", default=None, help="comma list LABEL:tag:alpha:prefix replacing the round-2 level table")
+    ap.add_argument("--spot", default=None, help="an extra spot table (figs/<name>) consulted before 115r2_spot.tsv")
     a = ap.parse_args()
     F = a.figs
     levels = LEVELS + (ANCHORS if a.anchors else [])
+    if a.levels:
+        levels = [(t[0], t[1], float(t[2]), t[3]) for t in (x.split(":") for x in a.levels.split(","))]
     spot = spots_table(f"{F}/115r2_spot.tsv")
+    if a.spot and os.path.exists(f"{F}/{a.spot}"):
+        spot = {**spot, **spots_table(f"{F}/{a.spot}")}
     spot1 = spots_table(f"{F}/115_spot.tsv")
     comp_lines, out = [], []
     verdict = {lvl: {} for lvl, *_ in levels}
@@ -223,7 +230,7 @@ def main():
                    + (f"  failing FIX {', '.join(ffix) or '-'}; NO-REGRESSION {', '.join(f for f in fails if f not in ffix) or '-'}" if fails else ""))
     out.append("\n## recommendation (figs/115r2_pred.txt): the smallest-alpha PASSING round-2 level; a larger passing alpha is named as the "
                "alternative when it beats it by > 10 points on U1 on both detectors; if none passes, the level with the fewest failing clauses, unqualified")
-    r2 = [(lvl, alpha) for lvl, suf, alpha, P in LEVELS]
+    r2 = [(lvl, alpha) for lvl, suf, alpha, P in (LEVELS if not a.levels else levels)]
     passing = [(lvl, al) for lvl, al in r2 if not summary[lvl][0]]
     if passing:
         pick = min(passing, key=lambda t: t[1])

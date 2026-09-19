@@ -1,0 +1,4 @@
+metric	class	key	verdict	michel_kind	source	A0_is_stm	A0_michel	A1_is_stm	A1_michel
+michel_found	tp_new	028084_21/132	STM_MICHEL	attached	smx27	1	0	1	1
+michel_found	tp_new	029107_20/139	STM_MICHEL	attached	smx27	1	0	1	1
+michel_found	fp_new	029107_19/111	STM_ONLY	detached dots	owner_review	1	0	1	1

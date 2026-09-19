@@ -1,0 +1,15 @@
+# doc pdvd/116 movers pdhd: A0=d116hr2 A1=d116hr3; truth sources [('pdhd_stm_michel_own103h2_verdicts.json', 24), ('pdhd_stm_michel_own103h_verdicts.json', 27), ('pdhd_stm_michel_smx27_verdicts.json', 296), ('pdhd_stm_michel_smx28_verdicts.json', 97)]
+population 307 (Michel population 174); candidates A0 325, A1 325, common 325, A0-only 0, A1-only 0; unlabelled candidates 34
+
+== is_stm
+  tp_lost    0  candidate in: {'both': 0, 'A0 only': 0, 'A1 only': 0}  truth source: {}
+  tp_new     0  candidate in: {'both': 0, 'A0 only': 0, 'A1 only': 0}  truth source: {}
+  fp_new     0  candidate in: {'both': 0, 'A0 only': 0, 'A1 only': 0}  truth source: {}
+  fp_gone    0  candidate in: {'both': 0, 'A0 only': 0, 'A1 only': 0}  truth source: {}
+
+== michel_found
+  tp_lost    0  candidate in: {'both': 0, 'A0 only': 0, 'A1 only': 0}  truth source: {}
+  tp_new     0  candidate in: {'both': 0, 'A0 only': 0, 'A1 only': 0}  truth source: {}
+  fp_new     1  candidate in: {'both': 1, 'A0 only': 0, 'A1 only': 0}  truth source: {'smx27': 1}
+      028084_30/33     truth STM_ONLY/detached dots [smx27]  A0 (0, 0)  A1 (0, 1)
+  fp_gone    0  candidate in: {'both': 0, 'A0 only': 0, 'A1 only': 0}  truth source: {}

@@ -1,0 +1,4 @@
+# pdvd: reference d115vp3bwp05 (120 events with resources)
+d116vr1      events 120: wall median ratio 0.945 (p90 1.058; total 4630 vs 5115 s); peak RSS median ratio 1.000 (max 3.53 vs 3.53 GB)
+d116vr2      events 120: wall median ratio 0.955 (p90 1.092; total 4678 vs 5115 s); peak RSS median ratio 1.000 (max 3.53 vs 3.53 GB)
+d116vr3      events 120: wall median ratio 0.940 (p90 1.100; total 4646 vs 5115 s); peak RSS median ratio 1.000 (max 3.53 vs 3.53 GB)

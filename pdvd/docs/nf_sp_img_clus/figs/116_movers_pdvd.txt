@@ -1,0 +1,180 @@
+# doc pdvd/116 movers pdvd: A0=d115voff A1=d115vp3bwp05; truth sources [('pdvd_stm_michel_own103v2_verdicts.json', 24), ('pdvd_stm_michel_own103v_verdicts.json', 40), ('pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json', 610), ('pdvd_stm_michel_smx11_verdicts.json', 204)]
+population 550 (Michel population 550); candidates A0 563, A1 543, common 478, A0-only 85, A1-only 65; unlabelled candidates 25
+
+== is_stm
+  tp_lost   43  candidate in: {'both': 21, 'A0 only': 22, 'A1 only': 0}  truth source: {'new_agent': 12, 'record': 27, 'owner_review': 4}
+      039252_11/31     truth STM_MICHEL/attached [new_agent]  A0 (1, 0)  A1 None
+      039252_12/96     truth STM_MICHEL/both [record]  A0 (1, 0)  A1 None
+      039252_13/70     truth STM_ONLY/detached dots [owner_review]  A0 (1, 0)  A1 None
+      039252_17/40     truth STM_ONLY/detached dots [new_agent]  A0 (1, 0)  A1 None
+      039252_17/94     truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 None
+      039252_6/40      truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 (0, 0)
+      039252_7/91      truth STM_MICHEL/attached [record]  A0 (1, 0)  A1 (0, 1)
+      039252_8/118     truth STM_ONLY/none [record]  A0 (1, 0)  A1 None
+      039253_13/101    truth STM_ONLY/detached dots [record]  A0 (1, 0)  A1 (0, 0)
+      039253_14/130    truth STM_MICHEL/attached [new_agent]  A0 (1, 1)  A1 (0, 0)
+      039253_17/88     truth STM_MICHEL/both [record]  A0 (1, 1)  A1 (0, 1)
+      039253_8/27      truth STM_ONLY/detached dots [record]  A0 (1, 0)  A1 (0, 0)
+      039253_9/102     truth STM_ONLY/detached dots [record]  A0 (1, 0)  A1 (0, 0)
+      039349_16/42     truth STM_MICHEL/attached [new_agent]  A0 (1, 1)  A1 None
+      039349_18/10     truth STM_ONLY/None [record]  A0 (1, 0)  A1 None
+      039349_20/34     truth STM_MICHEL/attached [new_agent]  A0 (1, 1)  A1 None
+      039349_20/78     truth STM_ONLY/none [record]  A0 (1, 0)  A1 (0, 0)
+      039349_24/88     truth STM_MICHEL/both [new_agent]  A0 (1, 1)  A1 (0, 0)
+      039349_26/41     truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 (0, 1)
+      039349_28/19     truth STM_ONLY/detached dots [owner_review]  A0 (1, 0)  A1 None
+      039349_30/54     truth STM_MICHEL/both [new_agent]  A0 (1, 1)  A1 (0, 1)
+      039349_30/55     truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 None
+      039349_31/54     truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 (0, 0)
+      039349_33/54     truth STM_ONLY/None [owner_review]  A0 (1, 0)  A1 (0, 0)
+      039349_37/38     truth STM_MICHEL/both [record]  A0 (1, 1)  A1 (0, 1)
+      039349_38/35     truth STM_ONLY/detached dots [record]  A0 (1, 1)  A1 (0, 1)
+      039349_38/68     truth STM_MICHEL/attached [new_agent]  A0 (1, 1)  A1 None
+      039349_38/72     truth STM_MICHEL/both [record]  A0 (1, 1)  A1 None
+      039349_41/58     truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 (0, 0)
+      039349_44/38     truth STM_MICHEL/attached [new_agent]  A0 (1, 1)  A1 (0, 0)
+      039349_45/49     truth STM_MICHEL/both [new_agent]  A0 (1, 1)  A1 None
+      039349_53/28     truth STM_ONLY/None [owner_review]  A0 (1, 0)  A1 None
+      039349_53/44     truth STM_MICHEL/attached [new_agent]  A0 (1, 0)  A1 (0, 0)
+      039349_60/40     truth STM_MICHEL/attached [record]  A0 (1, 0)  A1 None
+      039349_62/69     truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 (0, 1)
+      039349_63/55     truth STM_MICHEL/attached [record]  A0 (1, 0)  A1 None
+      039349_63/66     truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 None
+      039349_65/41     truth STM_MICHEL/both [new_agent]  A0 (1, 1)  A1 None
+      039349_67/78     truth STM_MICHEL/both [record]  A0 (1, 1)  A1 (0, 0)
+      039349_73/57     truth STM_MICHEL/both [record]  A0 (1, 1)  A1 None
+      039349_76/82     truth STM_ONLY/detached dots [record]  A0 (1, 0)  A1 None
+      039349_82/42     truth STM_ONLY/none [record]  A0 (1, 0)  A1 (0, 0)
+      039349_82/61     truth STM_ONLY/none [record]  A0 (1, 0)  A1 None
+  tp_new    39  candidate in: {'both': 20, 'A0 only': 0, 'A1 only': 19}  truth source: {'record': 29, 'owner_review': 4, 'new_agent': 6}
+      039252_1/114     truth STM_MICHEL/both [record]  A0 (0, 0)  A1 (1, 1)
+      039252_15/83     truth STM_MICHEL/attached [owner_review]  A0 None  A1 (1, 1)
+      039252_16/44     truth STM_MICHEL/attached [owner_review]  A0 None  A1 (1, 1)
+      039252_2/36      truth STM_MICHEL/both [record]  A0 (0, 0)  A1 (1, 1)
+      039252_8/43      truth STM_ONLY/none [new_agent]  A0 None  A1 (1, 0)
+      039252_8/96      truth STM_MICHEL/attached [record]  A0 (0, 0)  A1 (1, 1)
+      039252_9/95      truth STM_MICHEL/attached [record]  A0 (0, 1)  A1 (1, 1)
+      039253_0/90      truth STM_ONLY/detached dots [new_agent]  A0 (0, 0)  A1 (1, 0)
+      039253_10/93     truth STM_MICHEL/both [record]  A0 None  A1 (1, 1)
+      039253_12/77     truth STM_MICHEL/attached [new_agent]  A0 None  A1 (1, 1)
+      039253_13/39     truth STM_MICHEL/attached [record]  A0 None  A1 (1, 1)
+      039253_13/75     truth STM_MICHEL/both [record]  A0 (0, 0)  A1 (1, 0)
+      039253_17/76     truth STM_MICHEL/attached [record]  A0 (0, 1)  A1 (1, 1)
+      039253_3/31      truth STM_MICHEL/both [record]  A0 None  A1 (1, 1)
+      039253_5/113     truth STM_ONLY/None [record]  A0 (0, 0)  A1 (1, 0)
+      039253_6/99      truth STM_MICHEL/attached [record]  A0 None  A1 (1, 1)
+      039253_7/89      truth STM_MICHEL/attached [record]  A0 (0, 0)  A1 (1, 1)
+      039253_8/65      truth STM_MICHEL/both [record]  A0 None  A1 (1, 1)
+      039253_9/101     truth STM_ONLY/None [record]  A0 None  A1 (1, 0)
+      039253_9/35      truth STM_MICHEL/attached [record]  A0 None  A1 (1, 0)
+      039253_9/72      truth STM_ONLY/none [record]  A0 None  A1 (1, 0)
+      039349_0/28      truth STM_MICHEL/attached [record]  A0 None  A1 (1, 0)
+      039349_18/47     truth STM_MICHEL/attached [record]  A0 (0, 0)  A1 (1, 0)
+      039349_26/18     truth STM_ONLY/none [record]  A0 None  A1 (1, 0)
+      039349_3/50      truth STM_MICHEL/attached [record]  A0 (0, 0)  A1 (1, 0)
+      039349_4/39      truth STM_MICHEL/both [record]  A0 None  A1 (1, 1)
+      039349_44/78     truth STM_MICHEL/attached [record]  A0 None  A1 (1, 0)
+      039349_48/59     truth STM_ONLY/None [record]  A0 None  A1 (1, 1)
+      039349_5/65      truth STM_MICHEL/attached [record]  A0 (0, 1)  A1 (1, 1)
+      039349_50/52     truth STM_MICHEL/attached [record]  A0 None  A1 (1, 0)
+      039349_51/27     truth STM_MICHEL/both [record]  A0 (0, 0)  A1 (1, 1)
+      039349_52/33     truth STM_MICHEL/both [owner_review]  A0 (0, 1)  A1 (1, 0)
+      039349_58/22     truth STM_ONLY/none [record]  A0 (0, 0)  A1 (1, 0)
+      039349_60/59     truth STM_MICHEL/attached [new_agent]  A0 (0, 1)  A1 (1, 1)
+      039349_65/43     truth STM_MICHEL/attached [record]  A0 None  A1 (1, 1)
+      039349_69/64     truth STM_ONLY/none [new_agent]  A0 (0, 0)  A1 (1, 0)
+      039349_72/60     truth STM_MICHEL/attached [record]  A0 (0, 0)  A1 (1, 1)
+      039349_83/24     truth STM_MICHEL/attached [new_agent]  A0 (0, 0)  A1 (1, 1)
+      039349_83/67     truth STM_MICHEL/attached [owner_review]  A0 (0, 0)  A1 (1, 1)
+  fp_new     9  candidate in: {'both': 5, 'A0 only': 0, 'A1 only': 4}  truth source: {'new_agent': 3, 'record': 6}
+      039252_8/102     truth THRU/none [new_agent]  A0 None  A1 (1, 0)
+      039253_16/104    truth THRU/none [new_agent]  A0 (0, 0)  A1 (1, 1)
+      039253_4/96      truth THRU/none [record]  A0 (0, 0)  A1 (1, 0)
+      039349_21/27     truth THRU/none [record]  A0 None  A1 (1, 1)
+      039349_24/24     truth THRU/— not set — [record]  A0 None  A1 (1, 0)
+      039349_37/55     truth THRU/none [new_agent]  A0 None  A1 (1, 1)
+      039349_7/57      truth THRU/None [record]  A0 (0, 0)  A1 (1, 0)
+      039349_70/58     truth THRU/None [record]  A0 (0, 0)  A1 (1, 1)
+      039349_81/22     truth THRU/— not set — [record]  A0 (0, 0)  A1 (1, 0)
+  fp_gone    4  candidate in: {'both': 4, 'A0 only': 0, 'A1 only': 0}  truth source: {'owner_review': 1, 'record': 3}
+      039253_8/83      truth THRU/None [owner_review]  A0 (1, 0)  A1 (0, 0)
+      039349_20/81     truth THRU/none [record]  A0 (1, 0)  A1 (0, 0)
+      039349_69/23     truth THRU/none [record]  A0 (1, 0)  A1 (0, 0)
+      039349_82/25     truth THRU/— not set — [record]  A0 (1, 1)  A1 (0, 1)
+
+== michel_found
+  tp_lost   33  candidate in: {'both': 23, 'A0 only': 10, 'A1 only': 0}  truth source: {'owner_review': 7, 'record': 17, 'new_agent': 9}
+      039252_1/36      truth STM_MICHEL/attached [owner_review]  A0 (0, 1)  A1 (0, 0)
+      039252_12/117    truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 (1, 0)
+      039252_14/37     truth STM_MICHEL/both [record]  A0 (1, 1)  A1 (1, 0)
+      039252_17/94     truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 None
+      039252_6/40      truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 (0, 0)
+      039252_6/94      truth STM_MICHEL/both [owner_review]  A0 (1, 1)  A1 (1, 0)
+      039253_14/130    truth STM_MICHEL/attached [new_agent]  A0 (1, 1)  A1 (0, 0)
+      039253_14/45     truth STM_MICHEL/both [record]  A0 (1, 1)  A1 (1, 0)
+      039253_17/21     truth STM_MICHEL/attached [new_agent]  A0 (0, 1)  A1 (0, 0)
+      039253_8/69      truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 (1, 0)
+      039349_1/61      truth STM_MICHEL/attached [record]  A0 (0, 1)  A1 (0, 0)
+      039349_10/66     truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 (1, 0)
+      039349_11/19     truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 (1, 0)
+      039349_16/42     truth STM_MICHEL/attached [new_agent]  A0 (1, 1)  A1 None
+      039349_20/34     truth STM_MICHEL/attached [new_agent]  A0 (1, 1)  A1 None
+      039349_24/88     truth STM_MICHEL/both [new_agent]  A0 (1, 1)  A1 (0, 0)
+      039349_30/55     truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 None
+      039349_31/54     truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 (0, 0)
+      039349_33/15     truth STM_MICHEL/attached [owner_review]  A0 (0, 1)  A1 (0, 0)
+      039349_38/68     truth STM_MICHEL/attached [new_agent]  A0 (1, 1)  A1 None
+      039349_38/72     truth STM_MICHEL/both [record]  A0 (1, 1)  A1 None
+      039349_41/58     truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 (0, 0)
+      039349_44/38     truth STM_MICHEL/attached [new_agent]  A0 (1, 1)  A1 (0, 0)
+      039349_45/49     truth STM_MICHEL/both [new_agent]  A0 (1, 1)  A1 None
+      039349_50/49     truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 (1, 0)
+      039349_52/33     truth STM_MICHEL/both [owner_review]  A0 (0, 1)  A1 (1, 0)
+      039349_54/33     truth STM_MICHEL/attached [owner_review]  A0 (1, 1)  A1 (1, 0)
+      039349_63/66     truth STM_MICHEL/attached [record]  A0 (1, 1)  A1 None
+      039349_64/55     truth STM_MICHEL/attached [owner_review]  A0 (1, 1)  A1 (1, 0)
+      039349_65/41     truth STM_MICHEL/both [new_agent]  A0 (1, 1)  A1 None
+      039349_67/78     truth STM_MICHEL/both [record]  A0 (1, 1)  A1 (0, 0)
+      039349_7/4       truth STM_MICHEL/attached [owner_review]  A0 (0, 1)  A1 (0, 0)
+      039349_73/57     truth STM_MICHEL/both [record]  A0 (1, 1)  A1 None
+  tp_new    25  candidate in: {'both': 15, 'A0 only': 0, 'A1 only': 10}  truth source: {'record': 18, 'owner_review': 5, 'new_agent': 2}
+      039252_1/114     truth STM_MICHEL/both [record]  A0 (0, 0)  A1 (1, 1)
+      039252_15/83     truth STM_MICHEL/attached [owner_review]  A0 None  A1 (1, 1)
+      039252_16/44     truth STM_MICHEL/attached [owner_review]  A0 None  A1 (1, 1)
+      039252_2/36      truth STM_MICHEL/both [record]  A0 (0, 0)  A1 (1, 1)
+      039252_7/91      truth STM_MICHEL/attached [record]  A0 (1, 0)  A1 (0, 1)
+      039252_7/96      truth STM_MICHEL/both [record]  A0 (1, 0)  A1 (1, 1)
+      039252_8/96      truth STM_MICHEL/attached [record]  A0 (0, 0)  A1 (1, 1)
+      039253_10/93     truth STM_MICHEL/both [record]  A0 None  A1 (1, 1)
+      039253_12/77     truth STM_MICHEL/attached [new_agent]  A0 None  A1 (1, 1)
+      039253_13/39     truth STM_MICHEL/attached [record]  A0 None  A1 (1, 1)
+      039253_3/31      truth STM_MICHEL/both [record]  A0 None  A1 (1, 1)
+      039253_6/99      truth STM_MICHEL/attached [record]  A0 None  A1 (1, 1)
+      039253_7/89      truth STM_MICHEL/attached [record]  A0 (0, 0)  A1 (1, 1)
+      039253_8/65      truth STM_MICHEL/both [record]  A0 None  A1 (1, 1)
+      039253_9/36      truth STM_MICHEL/both [owner_review]  A0 (0, 0)  A1 (0, 1)
+      039349_32/63     truth STM_MICHEL/attached [record]  A0 (1, 0)  A1 (1, 1)
+      039349_4/39      truth STM_MICHEL/both [record]  A0 None  A1 (1, 1)
+      039349_43/48     truth STM_MICHEL/attached [record]  A0 (1, 0)  A1 (1, 1)
+      039349_51/27     truth STM_MICHEL/both [record]  A0 (0, 0)  A1 (1, 1)
+      039349_65/43     truth STM_MICHEL/attached [record]  A0 None  A1 (1, 1)
+      039349_72/60     truth STM_MICHEL/attached [record]  A0 (0, 0)  A1 (1, 1)
+      039349_77/66     truth STM_MICHEL/attached [owner_review]  A0 (1, 0)  A1 (1, 1)
+      039349_78/22     truth STM_MICHEL/attached [record]  A0 (1, 0)  A1 (1, 1)
+      039349_83/24     truth STM_MICHEL/attached [new_agent]  A0 (0, 0)  A1 (1, 1)
+      039349_83/67     truth STM_MICHEL/attached [owner_review]  A0 (0, 0)  A1 (1, 1)
+  fp_new    10  candidate in: {'both': 6, 'A0 only': 0, 'A1 only': 4}  truth source: {'record': 5, 'new_agent': 5}
+      039252_12/84     truth STM_ONLY/detached dots [record]  A0 None  A1 (0, 1)
+      039252_4/104     truth THRU/none [new_agent]  A0 (0, 0)  A1 (0, 1)
+      039253_12/98     truth THRU/none [new_agent]  A0 (0, 0)  A1 (0, 1)
+      039253_16/104    truth THRU/none [new_agent]  A0 (0, 0)  A1 (1, 1)
+      039349_21/27     truth THRU/none [record]  A0 None  A1 (1, 1)
+      039349_23/55     truth THRU/none [new_agent]  A0 (0, 0)  A1 (0, 1)
+      039349_37/55     truth THRU/none [new_agent]  A0 None  A1 (1, 1)
+      039349_48/59     truth STM_ONLY/None [record]  A0 None  A1 (1, 1)
+      039349_57/21     truth THRU/none [record]  A0 (0, 0)  A1 (0, 1)
+      039349_70/58     truth THRU/None [record]  A0 (0, 0)  A1 (1, 1)
+  fp_gone    3  candidate in: {'both': 2, 'A0 only': 1, 'A1 only': 0}  truth source: {'record': 2, 'owner_review': 1}
+      039253_1/101     truth STM_ONLY/None [record]  A0 (0, 1)  A1 (0, 0)
+      039349_28/50     truth THRU/None [owner_review]  A0 (0, 1)  A1 None
+      039349_29/48     truth STM_ONLY/None [record]  A0 (1, 1)  A1 (1, 0)

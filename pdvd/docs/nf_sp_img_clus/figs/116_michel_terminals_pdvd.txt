@@ -1,0 +1,38 @@
+# doc pdvd/116 Michel terminals pdvd: A=d115voff B=d115vp3bwp05; layer points within 1.5 cm of A's Michel members (role 3)
+class    key              how                                nMichel | terminals A  B | graph A  B | image A  B
+tp_lost  039252_1/36      MICHEL conn 1->0 no-arm                  3 |     5   5 |    16  16 |    24  24
+tp_lost  039252_12/117    MICHEL conn 1->0                        22 |    19  17 |   117  99 |    92  92
+tp_lost  039252_14/37     MICHEL conn 1->0 no-arm                 17 |    14  14 |    68  65 |    65  65
+tp_lost  039252_6/94      MICHEL conn 1->0 vetoed                  5 |    10  10 |    43  34 |    39  39
+tp_lost  039253_14/45     MICHEL conn 1->0 vetoed                 39 |    28  26 |   126 116 |   119 119
+tp_lost  039253_17/21     MICHEL conn 1->0 no-arm                  2 |     5   4 |    12  13 |     5   5
+tp_lost  039253_8/69      MICHEL conn 1->0 no-arm vetoed          17 |    21  19 |    87  75 |   100 100
+tp_lost  039349_1/61      MICHEL conn 1->0 no-arm vetoed           7 |     8   8 |    26  26 |    22  22
+tp_lost  039349_10/66     MICHEL conn 1->0                        15 |    10  10 |    41  39 |    50  50
+tp_lost  039349_11/19     MICHEL conn 1->0                        16 |    11  12 |    80  69 |    49  49
+tp_lost  039349_33/15     MICHEL conn 1->0 no-arm                 11 |     8   8 |    25  26 |    30  30
+tp_lost  039349_50/49     MICHEL conn 1->0                        38 |     9  12 |    40  40 |    27  27
+tp_lost  039349_54/33     MICHEL conn 2->0                        19 |    13  12 |    57  47 |    33  33
+tp_lost  039349_64/55     MICHEL conn 1->0 no-arm vetoed          19 |    14  13 |    70  62 |    53  53
+tp_lost  039349_7/4       MICHEL conn 1->0 no-arm                  8 |    13  12 |    63  59 |    32  32
+tp_new   039252_7/96      MICHEL conn 0->1 no-arm vetoed          19 |    19  19 |    74  74 |    74  74
+tp_new   039253_9/36      MICHEL conn 0->1 no-arm vetoed          11 |    10  10 |    42  42 |    62  62
+tp_new   039349_32/63     MICHEL conn 0->1 no-arm                 18 |    17  15 |    85  79 |   103 103
+tp_new   039349_43/48     MICHEL conn 0->1                         7 |    15  15 |    62  55 |    38  38
+tp_new   039349_77/66     MICHEL conn 0->1 no-arm                 13 |    12   9 |    97  82 |    51  51
+tp_new   039349_78/22     MICHEL conn 0->1 vetoed                 15 |    17  17 |   104  99 |    67  67
+fp_new   039252_4/104     MICHEL conn 0->1 no-arm                  2 |     3   3 |    11  10 |     8   8
+fp_new   039253_12/98     MICHEL conn 0->1 no-arm                  4 |     8   7 |    29  25 |    26  26
+fp_new   039349_23/55     MICHEL conn 0->1 no-arm vetoed          15 |    12  10 |    60  48 |    49  49
+fp_new   039349_57/21     MICHEL conn 0->1 no-arm                  2 |     4   4 |     9   9 |    12  12
+fp_gone  039253_1/101     MICHEL conn 1->0 no-arm                 30 |     9   7 |    56  37 |    26  26
+fp_gone  039349_29/48     MICHEL conn 1->0                         9 |    11  12 |    52  52 |    45  45
+
+== control: 25 clusters with an accepted stopper + Michel in BOTH arms (first events)
+
+== summary
+  tp_lost: n 15; terminals sum A 188 B 182 (B/A 0.97; clusters with B < A: 7, B == 0 & A > 0: 0); graph vertices sum A 871 B 786 (B/A 0.90); image points A 740 B 740
+  tp_new: n 6; terminals sum A 90 B 85 (B/A 0.94; clusters with B < A: 2, B == 0 & A > 0: 0); graph vertices sum A 464 B 431 (B/A 0.93); image points A 395 B 395
+  fp_new: n 4; terminals sum A 27 B 24 (B/A 0.89; clusters with B < A: 2, B == 0 & A > 0: 0); graph vertices sum A 109 B 92 (B/A 0.84); image points A 95 B 95
+  fp_gone: n 2; terminals sum A 20 B 19 (B/A 0.95; clusters with B < A: 1, B == 0 & A > 0: 0); graph vertices sum A 108 B 89 (B/A 0.82); image points A 71 B 71
+  control (Michel in both): n 25; terminals sum A 431 B 422 (B/A 0.98; clusters with B < A: 8, B == 0 & A > 0: 0); graph vertices sum A 2026 B 1908 (B/A 0.94); image points A 2023 B 2023

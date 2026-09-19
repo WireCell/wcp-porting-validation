@@ -1,0 +1,5 @@
+metric	class	key	verdict	michel_kind	source	A0_is_stm	A0_michel	A1_is_stm	A1_michel
+is_stm	tp_new	039252_12/96	STM_MICHEL	both	record	-	-	1	0
+is_stm	tp_new	039349_30/55	STM_MICHEL	attached	record	-	-	1	0
+is_stm	tp_new	039349_38/72	STM_MICHEL	both	record	-	-	1	1
+michel_found	tp_new	039349_38/72	STM_MICHEL	both	record	-	-	1	1

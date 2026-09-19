@@ -1,0 +1,72 @@
+# doc pdvd/116 grade (pdhd); truth sources in precedence order (items taken): [('pdhd_stm_michel_own103h2_verdicts.json', 24), ('pdhd_stm_michel_own103h_verdicts.json', 27), ('pdhd_stm_michel_smx27_verdicts.json', 296), ('pdhd_stm_michel_smx28_verdicts.json', 97), ('pdhd_stm_michel_smx116_verdicts.json', 13)]
+# cells: A0=d115hoff, T=d115hp3bwp05, R1=d116hr1, R2=d116hr2, R3=d116hr3; base A0; bar A_x - A0 >= -0.02 on the point value, NEG bound >= -0.03
+population 339 (fixed 248); Michel population 185 (excluded 1); unlabelled candidates of any cell 23
+  unlabelled candidates of A0: 20; is_stm 1 0, michel_found 1 1
+  unlabelled candidates of T: 21; is_stm 1 0, michel_found 1 2
+  unlabelled candidates of R1: 21; is_stm 1 0, michel_found 1 2
+  unlabelled candidates of R2: 21; is_stm 1 0, michel_found 1 2
+  unlabelled candidates of R3: 21; is_stm 1 0, michel_found 1 2
+
+== is_stm
+  A0   d115hoff      TP 117 FP   5 FN  69 TN  148 | purity 0.959 [0.940, 0.976] efficiency 0.629 [0.592, 0.665]
+  T    d115hp3bwp05  TP 123 FP   6 FN  63 TN  147 | purity 0.953 [0.936, 0.971] efficiency 0.661 [0.625, 0.695]
+  R1   d116hr1       TP 123 FP   6 FN  63 TN  147 | purity 0.953 [0.936, 0.971] efficiency 0.661 [0.625, 0.695]
+  R2   d116hr2       TP 123 FP   6 FN  63 TN  147 | purity 0.953 [0.936, 0.971] efficiency 0.661 [0.625, 0.695]
+  R3   d116hr3       TP 123 FP   6 FN  63 TN  147 | purity 0.953 [0.936, 0.971] efficiency 0.661 [0.625, 0.695]
+
+== michel_found
+  A0   d115hoff      TP  73 FP  10 FN  33 TN   69 | purity 0.880 [0.841, 0.916] efficiency 0.689 [0.642, 0.732]
+  T    d115hp3bwp05  TP  75 FP  12 FN  31 TN   67 | purity 0.862 [0.827, 0.900] efficiency 0.708 [0.661, 0.752]
+  R1   d116hr1       TP  75 FP  12 FN  31 TN   67 | purity 0.862 [0.827, 0.900] efficiency 0.708 [0.661, 0.752]
+  R2   d116hr2       TP  77 FP  13 FN  29 TN   66 | purity 0.856 [0.818, 0.895] efficiency 0.726 [0.680, 0.769]
+  R3   d116hr3       TP  77 FP  14 FN  29 TN   65 | purity 0.846 [0.809, 0.885] efficiency 0.726 [0.680, 0.769]
+
+== reading per cell vs A0 (point value; NEG / POS bounds for the unlabelled); rule: point >= -0.02 AND NEG >= -0.03
+  T    is_stm       purity    : -0.006  (NEG -0.006, POS -0.006)  PASS   [doc-113 reading PASS]
+  T    is_stm       efficiency: +0.032  (NEG +0.032, POS +0.029)  PASS   [doc-113 reading PASS]
+  T    michel_found purity    : -0.017  (NEG -0.017, POS -0.016)  PASS   [doc-113 reading PASS]
+  T    michel_found efficiency: +0.019  (NEG +0.019, POS +0.023)  PASS   [doc-113 reading PASS]
+  T    T -> PASS
+  R1   is_stm       purity    : -0.006  (NEG -0.006, POS -0.006)  PASS   [doc-113 reading PASS]
+  R1   is_stm       efficiency: +0.032  (NEG +0.032, POS +0.029)  PASS   [doc-113 reading PASS]
+  R1   michel_found purity    : -0.017  (NEG -0.017, POS -0.016)  PASS   [doc-113 reading PASS]
+  R1   michel_found efficiency: +0.019  (NEG +0.019, POS +0.023)  PASS   [doc-113 reading PASS]
+  R1   T -> PASS
+  R2   is_stm       purity    : -0.006  (NEG -0.006, POS -0.006)  PASS   [doc-113 reading PASS]
+  R2   is_stm       efficiency: +0.032  (NEG +0.032, POS +0.029)  PASS   [doc-113 reading PASS]
+  R2   michel_found purity    : -0.024  (NEG -0.024, POS -0.022)  FAIL   [doc-113 reading FAIL]
+  R2   michel_found efficiency: +0.038  (NEG +0.038, POS +0.039)  PASS   [doc-113 reading PASS]
+  R2   T -> FAIL
+  R3   is_stm       purity    : -0.006  (NEG -0.006, POS -0.006)  PASS   [doc-113 reading PASS]
+  R3   is_stm       efficiency: +0.032  (NEG +0.032, POS +0.029)  PASS   [doc-113 reading PASS]
+  R3   michel_found purity    : -0.033  (NEG -0.033, POS -0.031)  FAIL   [doc-113 reading FAIL]
+  R3   michel_found efficiency: +0.038  (NEG +0.038, POS +0.039)  PASS   [doc-113 reading PASS]
+  R3   T -> FAIL
+
+== split-half guard: the grade on the odd / even halves of the sorted event list (bar -0.040 per metric)
+  odd  half (30 events, pop 288) T   : is_stm_pur -0.019, is_stm_eff -0.013, michel_pur +0.030, michel_eff +0.035  -> PASS
+  odd  half (30 events, pop 288) R1  : is_stm_pur -0.019, is_stm_eff -0.013, michel_pur +0.030, michel_eff +0.035  -> PASS
+  odd  half (30 events, pop 288) R2  : is_stm_pur -0.019, is_stm_eff -0.013, michel_pur +0.030, michel_eff +0.035  -> PASS
+  odd  half (30 events, pop 288) R3  : is_stm_pur -0.019, is_stm_eff -0.013, michel_pur +0.030, michel_eff +0.035  -> PASS
+  even half (31 events, pop 299) T   : is_stm_pur +0.002, is_stm_eff +0.047, michel_pur -0.056, michel_eff -0.010  -> FAIL
+  even half (31 events, pop 299) R1  : is_stm_pur +0.002, is_stm_eff +0.047, michel_pur -0.056, michel_eff -0.010  -> FAIL
+  even half (31 events, pop 299) R2  : is_stm_pur +0.002, is_stm_eff +0.047, michel_pur -0.064, michel_eff +0.010  -> FAIL
+  even half (31 events, pop 299) R3  : is_stm_pur +0.002, is_stm_eff +0.047, michel_pur -0.079, michel_eff +0.010  -> FAIL
+
+== movers T vs A0: is_stm fp_gone 2, is_stm fp_new 3, is_stm tp_lost 18, is_stm tp_new 24, michel_found fp_gone 2, michel_found fp_new 4, michel_found tp_lost 12, michel_found tp_new 14  -> figs/116_movers_r_pdhd_T.tsv
+
+== movers R1 vs A0: is_stm fp_gone 2, is_stm fp_new 3, is_stm tp_lost 18, is_stm tp_new 24, michel_found fp_gone 2, michel_found fp_new 4, michel_found tp_lost 12, michel_found tp_new 14  -> figs/116_movers_r_pdhd_R1.tsv
+
+== movers R2 vs A0: is_stm fp_gone 2, is_stm fp_new 3, is_stm tp_lost 18, is_stm tp_new 24, michel_found fp_gone 1, michel_found fp_new 4, michel_found tp_lost 10, michel_found tp_new 14  -> figs/116_movers_r_pdhd_R2.tsv
+
+== movers R3 vs A0: is_stm fp_gone 2, is_stm fp_new 3, is_stm tp_lost 18, is_stm tp_new 24, michel_found fp_gone 1, michel_found fp_new 5, michel_found tp_lost 10, michel_found tp_new 14  -> figs/116_movers_r_pdhd_R3.tsv
+
+== candidates on one side only, vs A0, by hand class
+  T only: 48 {'stopper': 13, 'non-stopper': 24, 'unjudged': 8, 'unlabelled': 3}
+  A0 only (vs T): 56 {'stopper': 15, 'non-stopper': 30, 'unjudged': 9, 'unlabelled': 2}
+  R1 only: 48 {'stopper': 13, 'non-stopper': 24, 'unjudged': 8, 'unlabelled': 3}
+  A0 only (vs R1): 56 {'stopper': 15, 'non-stopper': 30, 'unjudged': 9, 'unlabelled': 2}
+  R2 only: 48 {'stopper': 13, 'non-stopper': 24, 'unjudged': 8, 'unlabelled': 3}
+  A0 only (vs R2): 56 {'stopper': 15, 'non-stopper': 30, 'unjudged': 9, 'unlabelled': 2}
+  R3 only: 48 {'stopper': 13, 'non-stopper': 24, 'unjudged': 8, 'unlabelled': 3}
+  A0 only (vs R3): 56 {'stopper': 15, 'non-stopper': 30, 'unjudged': 9, 'unlabelled': 2}
