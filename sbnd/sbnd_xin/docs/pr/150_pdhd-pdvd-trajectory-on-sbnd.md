@@ -30,9 +30,11 @@ none of it — the DL-admission lever makes the vertex worse. **The improvement 
 retuning; it needs the vertex-choice stage re-tuned against the new trajectory.** Nothing is flipped.
 
 **Full-sample counts (sec 8, all 3067 events, s0 → csp3bw).** nueCC (nue BDT > 7.0) 36 → 37, numuCC (numu BDT >
-0.9) 789 → 790, events with a reconstructed π⁰ 96 → 91: none moves beyond its own event-by-event exchange (7 / 8,
-76 / 77, 35 / 30 lost / gained). Hand-identified π⁰ pairs recovered 28 → 18, and labelled vertices within 3 cm of
-the click 724 → 664 of 878. The cost is in the vertex and in which objects are selected, not in the counts.
+0.9) 789 → 790, events with a reconstructed π⁰ 96 → 91. None of these net changes can be separated from the
+event-by-event exchange underneath it (7 / 8, 76 / 77, 35 / 30 lost / gained); for nueCC, with 15 exchanged events,
+that test could only have seen a very large shift. Hand-identified π⁰ pairs recovered 28 → 18, and labelled vertices within 3 cm of
+the click 724 → 664 of 878. The measurable cost is in the vertex and in which objects are selected; the counts
+show no separable change.
 
 ---
 
@@ -413,9 +415,10 @@ lost candidates of sec 4.2) and were shown on s0 only. Where the SAME scanner se
 | direction | picks the click | picks csp3bw's own vertex | neither | abstain |
 |---|---|---|---|---|
 | away (50 shown on both) | **16** | 9 | 24 | 1 |
-| toward (37) | 7 | **10** | 19 | 1 |
+| toward (37; 36 real movers, sec 8.3 erratum) | 7 | **10** | 19 | 1 |
 
-On the s0 rendering of the same events the scanner lands on the click 22 / 50 (away) and 14 / 37 (toward). The
+The one "toward" abstain is mcp1k 287431, which has no vertex in either arm and is not a mover (sec 8.3): the
+real toward row is 36 = click 7 / csp3bw's vertex 10 / neither 19. On the s0 rendering of the same events the scanner lands on the click 22 / 50 (away) and 14 / 37 (toward). The
 scanner is decisive on about half of these (by selection hard) events, and where it is, it sides with the click on
 the "away" movers (16 : 9) and with csp3bw's choice on the "toward" movers (10 : 7): the label direction is
 supported in both classes, no "away" mover qualifies as A0-WAS-WRONG (a pick on csp3bw's vertex from BOTH
@@ -567,7 +570,8 @@ Conventions (the script's header governs):
 
 - **Sample.** nuecc48 (48) + ncpi0 (19) + mcp1k (1000) + mcp2k (2000) = 3067, every cell rc 0 on every event. The
   physical event 18255-1-69314 is in both nuecc48 and mcp2k. It is counted in both samples for the selections and
-  once for the vertex.
+  once for the vertex. It passes numuCC (and not nueCC) in every cell, so each numuCC total below counts it twice;
+  it moves with every arm, so no comparison is affected.
 - **Selections.** A working point needs `nu_evaluated = 1`, as in secs 2.1 / 2.2. These are reconstruction
   selections on data with no truth. nuecc48 and ncpi0 are pre-selected samples; mcp1k / mcp2k are the numu stream.
   The Stage-3 "numu > 0.9 782" of sec 2.2 is the mcp1k + mcp2k part of the 789 below.
@@ -602,8 +606,9 @@ Conventions (the script's header governs):
 Events passing both cuts: s0 1, cs 2, p3bw 0, csp3bw 1, tfull 0 (all on nuecc48). Neutrino candidates evaluated:
 1435 in s0, then 1435 / 1435 / 1429 / 1422.
 
-**Reading.** Neither selection moves beyond its own exchange on any cell: no sign test falls below p 0.18. On the
-doc-116 trajectory (`csp3bw`) the final counts are nueCC 36 → 37 and numuCC 789 → 790. The totals hide an exchange of
+**Reading.** No net change can be separated from the exchange underneath it: no sign test falls below p 0.18. For
+numuCC (about 150 exchanged events per cell) that is a real statement of no net shift. For nueCC (12–18 exchanged
+events) the test is weak, so "no detectable change" is all it supports. On the doc-116 trajectory (`csp3bw`) the final counts are nueCC 36 → 37 and numuCC 789 → 790. The totals hide an exchange of
 members. On csp3bw 7 of the 36 nueCC events leave and 8 others enter, and 76 of the 789
 numuCC events (10 %) leave and 77 enter. Every nueCC change is a nue score crossing 7.0 on an event that stays evaluated.
 Of the 76 numuCC losses, 13 are events that stop being neutrino candidates and 63 are score crossings. On the events
@@ -672,7 +677,8 @@ artefact. `p3bw` alone is the least bad (676 at ≤ 3 cm); adding `charge_steppe
 
 **Erratum to secs 4.2 / 4.3.** `pr150_vtx_movers.py` counts an event with no vertex in either arm as a mover
 (distance infinite) and calls it "toward". Two such events (mcp1k 278266 and 287431) are in the 38 Stage-3 "toward"
-movers: they are the "2 lost" of sec 4.2's toward row. The scan classed 287431 UNRESOLVED. The real Stage-3 movers
+movers: they are the "2 lost" of sec 4.2's toward row. The scan classed 287431 UNRESOLVED (it is the one abstain in sec 4.3's "toward (37)" row); 278266 had no dump
+to render and was never scored. The real Stage-3 movers
 are 70 away / 36 toward, and no conclusion changes. Sec 2.2's table uses `vertex_tolerance.py`, which counts movers
 with a vertex in both arms only (68 / 35), and is unaffected.
 
@@ -691,8 +697,9 @@ The manifest is conditioned: its Stage-2 events were all neutrino candidates in 
 candidacy, and "evaluated" can only fall. No level recovers the vertex. The DL-admission levels also lose numuCC
 (388 → 358 / 368). The vertex numbers are sec 5's minus the shared event 69314.
 
-**Answer to the question.** On all 3067 events the doc-116 trajectory leaves the final selection counts where they
-were (nueCC 36 → 37, numuCC 789 → 790, events with a reconstructed π⁰ 96 → 91). It exchanges members (7 of 36 nueCC, 76 of
+**Answer to the question.** On all 3067 events the doc-116 trajectory gives nueCC 36 → 37, numuCC 789 → 790 and
+events with a reconstructed π⁰ 96 → 91. None of these net changes can be separated from the exchange underneath it,
+and for nueCC the sample is too small to exclude a moderate shift. It exchanges members (7 of 36 nueCC, 76 of
 789 numuCC, 35 of 96 π⁰ events), recovers fewer hand-identified π⁰ pairs (28 → 18), and puts 60 fewer labelled vertices within
-3 cm of the click (724 → 664 of 878). The counts are not where the cost shows; the vertex and the identity of the
-selected objects are.
+3 cm of the click (724 → 664 of 878). The measurable cost is in the vertex and in the identity of the selected objects; the
+counts show no separable change.
