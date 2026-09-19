@@ -1,0 +1,26 @@
+# doc pdvd/116 sec 10.3 (d) -- runtime flip gate (2026-09-18T20:05:04-07:00): the flipped configs with NO TLA (arms d116vflip / d116hflip, production binary) vs the graded R2 arms, every branch, every event, every cluster (d116_flip_gate.py)
+[d116hflip] det=pdhd src=d108hflip jobs=5 pin=/home/xqian/tmp/d115/libpin_d115 clus md5 2efa7fa09325 tla=<none> trace=<none> 2026-09-18T19:54:01-07:00
+[d116hflip] complete 60, incomplete 1, run rc=0, pin md5 after 2efa7fa09325
+[d116vflip] det=pdvd src=d103vflip jobs=8 pin=/home/xqian/tmp/d115/libpin_d115 clus md5 2efa7fa09325 tla=<none> trace=<none> 2026-09-18T19:54:01-07:00
+[d116vflip] complete 119, incomplete 1, run rc=0, pin md5 after 2efa7fa09325
+local/lib clus md5 after: 2efa7fa09325
+# doc pdvd/116 flip gate (pdvd): d116vr2 (graded, TLAs) vs d116vflip (flipped config); tree T_stm_michel
+  events compared 119 (dirs 120 / 120), clusters 546, branches 198
+  T_stm_michel absent in BOTH arms with the same tree set (no candidate; counted as a match): ["039252_17 (trees ['T_bad_ch', 'T_cluster', 'T_proj', 'Trun'])"]
+  IDENTICAL: every event, cluster and branch of the tagger table matches.
+  -> pdvd T_stm_michel rc=0
+# doc pdvd/116 flip gate (pdvd): d116vr2 (graded, TLAs) vs d116vflip (flipped config); tree T_rec_charge
+  events compared 119 (dirs 120 / 120), clusters 177748, branches 19
+  T_rec_charge absent in BOTH arms with the same tree set (no candidate; counted as a match): ["039252_17 (trees ['T_bad_ch', 'T_cluster', 'T_proj', 'Trun'])"]
+  IDENTICAL: every event, cluster and branch of the tagger table matches.
+  -> pdvd T_rec_charge rc=0
+# doc pdvd/116 flip gate (pdhd): d116hr2 (graded, TLAs) vs d116hflip (flipped config); tree T_stm_michel
+  events compared 60 (dirs 61 / 61), clusters 325, branches 199
+  T_stm_michel absent in BOTH arms with the same tree set (no candidate; counted as a match): ["028084_13 (trees ['T_bad_ch', 'T_cluster', 'T_proj', 'Trun'])"]
+  IDENTICAL: every event, cluster and branch of the tagger table matches.
+  -> pdhd T_stm_michel rc=0
+# doc pdvd/116 flip gate (pdhd): d116hr2 (graded, TLAs) vs d116hflip (flipped config); tree T_rec_charge
+  events compared 60 (dirs 61 / 61), clusters 113418, branches 19
+  T_rec_charge absent in BOTH arms with the same tree set (no candidate; counted as a match): ["028084_13 (trees ['T_bad_ch', 'T_cluster', 'T_proj', 'Trun'])"]
+  IDENTICAL: every event, cluster and branch of the tagger table matches.
+  -> pdhd T_rec_charge rc=0

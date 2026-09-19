@@ -1,0 +1,40 @@
+# doc pdvd/116 sec 10 -- compiled-config proofs of the flip (2026-09-18T19:52:58-07:00); toolkit HEAD 054b72d0 + working-tree edit of pdhd/pr.jsonnet, protodunevd/pr.jsonnet; wcp driver bags edited
+# baseline: today's production compile (pre-edit) == d115knoboff byte for byte
+  pdhd d116_preflip == d115knoboff
+  pdvd d116_preflip == d115knoboff
+
+# (a) flipped production, NO TLA, vs the R2 arm's TLA compile on the pre-flip tree (d116_r2_p3_<det>.json, the arms d116?r2)
+pdhd d116_flip rc=0 md5=4a7a24926e28
+RESULT PASS: byte-level node/key set identical
+  pdhd d116_flip == d116_r2_p3 BYTE FOR BYTE
+pdvd d116_flip rc=0 md5=e103df1c18ce
+RESULT PASS: byte-level node/key set identical
+  pdvd d116_flip == d116_r2_p3 BYTE FOR BYTE
+
+# (b) escape hatch on the flipped tree vs today's production: -S steiner_blank_plane_mode='wcp' -S steiner_base_weight_blank_alpha=0 -S steiner_base_weight_scope='tree' -S stm_proton_muon_guard=false -S stm_michel_extra={michel_min_kink_deg:30.0,michel_max_len_cm:25.0}
+pdhd d116_escape rc=0 md5=ad156071d0c4
+/home/xqian/tmp/d102/cfg/d116_preflip_pdhd.json vs /home/xqian/tmp/d102/cfg/d116_escape_pdhd.json: 8 differing (node, key) pairs
+  CheckSTM_Michel/pr michel_max_len_cm added: - -> 25
+  CheckSTM_Michel/pr michel_min_kink_deg added: - -> 30
+  CreateSteinerGraph/pr base_weight_blank_alpha added: - -> 0
+  CreateSteinerGraph/pr base_weight_scope added: - -> "tree"
+  CreateSteinerGraph/pr terminal_blank_plane_mode added: - -> "wcp"
+  CreateSteinerGraph/prrefresh base_weight_blank_alpha added: - -> 0
+  CreateSteinerGraph/prrefresh base_weight_scope added: - -> "tree"
+  CreateSteinerGraph/prrefresh terminal_blank_plane_mode added: - -> "wcp"
+pdvd d116_escape rc=0 md5=b38918da597a
+/home/xqian/tmp/d102/cfg/d116_preflip_pdvd.json vs /home/xqian/tmp/d102/cfg/d116_escape_pdvd.json: 8 differing (node, key) pairs
+  CheckSTM_Michel/pr michel_max_len_cm added: - -> 25
+  CheckSTM_Michel/pr michel_min_kink_deg added: - -> 30
+  CreateSteinerGraph/pr base_weight_blank_alpha added: - -> 0
+  CreateSteinerGraph/pr base_weight_scope added: - -> "tree"
+  CreateSteinerGraph/pr terminal_blank_plane_mode added: - -> "wcp"
+  CreateSteinerGraph/prrefresh base_weight_blank_alpha added: - -> 0
+  CreateSteinerGraph/prrefresh base_weight_scope added: - -> "tree"
+  CreateSteinerGraph/prrefresh terminal_blank_plane_mode added: - -> "wcp"
+
+# (c) only the two detector files change in toolkit/cfg; no other jsonnet imports them
+ cfg/pgrapher/experiment/pdhd/pr.jsonnet        | 39 +++++++++++++++++---------
+ cfg/pgrapher/experiment/protodunevd/pr.jsonnet | 39 +++++++++++++++++---------
+ 2 files changed, 52 insertions(+), 26 deletions(-)
+  importers outside the two detector dirs: 0

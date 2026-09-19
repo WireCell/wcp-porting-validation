@@ -281,6 +281,16 @@ function(
         stop_extend_max: 3,            // follow a collinear MIP continuation past the tagger's stop (sec 6.3) ...
         michel_guards_stop: true,      // ... unless a Michel arm or the Bragg rise says the muon stopped here (sec 6.3)
         michel_shower_min_kink_deg: 15, // a shower-flagged stop arm must still turn 15 deg (sec 6.8; the muon's own Bragg stub is not a Michel)
+        // doc pdvd/116 (owner 2026-09-18) -- PDHD PRODUCTION, the R2 operating point of the tagger retune on the
+        // prefer3 + tree+path alpha 0.5 Steiner trajectory (toolkit pr.jsonnet call sites, same commit round).
+        // The stop-arm classifier (StmMichelFunctions classify_stop_arm) re-classified Michel arms the new
+        // trajectory bends less (kink 20-30 deg) or lengthens (25-30 cm with the far subtree) as non-Michel; sized on
+        // the eligible population (figs/116_arm_sizing_*.txt) and graded as a unit with proton_muon_guard (arms
+        // d116?r2 vs d115?off after the owner scans own116h / own116v): PDVD Michel efficiency +0.037 at purity
+        // +0.003, PDHD +0.064 at +0.019 (figs/116_grade_*_own116.txt).  C++ defaults 30 / 25; remove both lines (or
+        // -S stm_michel_extra={michel_min_kink_deg:30.0,michel_max_len_cm:25.0}) for the pre-116 behaviour.
+        michel_min_kink_deg: 20.0,
+        michel_max_len_cm: 30.0,
         // absorb_bragg_stub is NOT set: absorbing 029107/1 cluster 113's 5.5 cm stub turned a clean STM into no_bragg (sec 6.8)
         stop_fv_use_config_tolerance: true,  // stop containment with the taggers' per-wall margins, not a flat 5 cm (sec 6.9)
         dead_volume_check: true,       // stop that walks into a dead region (sec 6.4; fired 0/165 on 029107, kept for the record)
@@ -1073,7 +1083,11 @@ function(
     // proton).  C++ default false; key omitted when off => byte-identical.
     // DEFAULT TRUE = SBND production as of doc 63 (owner 2026-07-26).
     // Runner flag: -stm-proton-guard / SBND_STM_PROTON_GUARD=1.
-    stm_proton_muon_guard = false,   // PDVD: OFF (STM is the signal, doc 25 sec 2.3); SBND production true
+    // doc pdvd/116 (owner 2026-09-18): FLIPPED to true for PDHD production, the R2 operating point of the
+    // tagger retune on the prefer3 + tree+path alpha 0.5 trajectory (the R1 lever: +3 PDVD stoppers, 0 FP;
+    // graded after the owner scans own116h / own116v, figs/116_grade_*_own116.txt).  Was false since doc 25
+    // sec 2.3 (STM is the signal).  -S stm_proton_muon_guard=false restores the pre-116 compile (key omitted).
+    stm_proton_muon_guard = true,
     // doc-63 round-3 cathode-truncation veto (a fitted stop within ~5 cm of
     // the CPA with no Bragg rise did not stop -- drift-boundary truncation).
     // C++ default false; key omitted when off => byte-identical.  DEFAULT

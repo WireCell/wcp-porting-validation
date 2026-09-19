@@ -1,8 +1,10 @@
 # 116 — the STM / Michel tagger retune on the priced trajectory: the un-run PDVD arm, the nature of the tag regressions, a pre-registered tagger ladder, the blind fold, and the flip decision
 
-**Status: NOT FLIPPED. No tagger level passes the frozen rule on both detectors (PDVD Michel purity −0.037…−0.039 and `is_stm` purity −0.021 at every level; PDHD passes all four metrics at T / R1 after the blind fold but fails the split-half guard). Both Steiner knobs and the tagger keys stay at their production values; no C++ change; no toolkit commit. PDHD 61 / PDVD 120 events.**
+**Status: FLIPPED (sec 10, owner 2026-09-18). After the owner's own scans of the false positives on the new trajectory (`own116v` 25 items, `own116h` 11 items) the frozen rule PASSES at T, R1 and R2 on both detectors, split-half guard included. Production now carries the trajectory (`prefer3` + `tree+path` α 0.5, toolkit `pdhd/pr.jsonnet` + `protodunevd/pr.jsonnet` call sites) and the R2 tagger point (`stm_proton_muon_guard` true, `michel_min_kink_deg` 20, `michel_max_len_cm` 30 in both driver bags). vs production: PDHD `is_stm` purity +0.002 / efficiency +0.032, Michel +0.019 / +0.064; PDVD +0.000 / +0.018, +0.003 / +0.037. No C++ change. The rule's literal tie-break names R1; R2 is the owner's operating point (sec 10.2). PDHD 61 / PDVD 120 events.**
 
-**Sec 9 (2026-09-18, evening): the owner scan of sec 6.3 is set up and served** — `own116v` (PDVD, 25 items, :5017) and `own116h` (PDHD, 11 items, :5023), every item drawn on the R2 arms of the new trajectory; the fold is one command (`figs/116_owner_fold.sh`). The flip waits for the owner's labels and the re-grade.
+*Superseded status (before the owner scan):* NOT FLIPPED. No tagger level passes the frozen rule on both detectors (PDVD Michel purity −0.037…−0.039 and `is_stm` purity −0.021 at every level; PDHD passes all four metrics at T / R1 after the blind fold but fails the split-half guard). Both Steiner knobs and the tagger keys stay at their production values; no C++ change; no toolkit commit. PDHD 61 / PDVD 120 events.*
+
+**Sec 9 / 10 (2026-09-18, evening): the owner scan of sec 6.3 was served, labelled, folded, and the flip made** — `own116v` (PDVD, 25 items, :5017) and `own116h` (PDHD, 11 items, :5023), every item drawn on the R2 arms of the new trajectory; the fold is one command (`figs/116_owner_fold.sh`). The flip waits for the owner's labels and the re-grade.
 
 Owner request (2026-09-18, after doc 115 round 2): (1) run the one arm round 2 did not — the `tree+path` pricing at
 α 0.5 *without* `prefer3` on PDVD — to settle the v3 / U2 / U1b misses; (2) remove the output-less `d115?bwa` /
@@ -372,7 +374,7 @@ The pctree targets (`d51hclus`, `p100flip`) were not touched; `ls -d pd?d/work/*
 | `figs/116_grade_{pdhd,pdvd}.txt`, `116_movers_r_*`, `116_scan_smx116_*`, `116_cleanup.txt` , `116_grade_<det>_prefold.txt`, `116_movers_ladder_*`, `116_resources_*`, `116_newstretch_pdvd_bwp05*`, `figs/116_verdict_bwp05.txt`; `scripts/d116_scan_record.py` (record builder on the doc-113 precedence), `d116_resources.py` (R clause) | secs 4–7 |
 | `<det>/docs/scan/<det>_stm_michel_smx116_verdicts.json` | the blind records (new tag) |
 
-## 9. The owner scan of sec 6.3 (set up 2026-09-18, evening; labels pending)
+## 9. The owner scan of sec 6.3 (set up 2026-09-18, evening)
 
 Owner request: "follow the recommendation and set up the scan on display port 5017; once we confirm the performance,
 flip the knobs for the PDHD and PDVD production." This section records the set-up; the labels, the fold and the
@@ -430,3 +432,95 @@ self-test unchanged), `figs/116_owner_fold.sh`, `figs/116_own116{v,h}_set.tsv`, 
 Scratch: `/home/xqian/tmp/d116/own/{prep,sheet}_d116{v,h}r2`, `set_{pdvd,pdhd}`, `logs/`. Two empty directories
 `work/stm_michel_labels/own116{v,h}_shotcheck` were created by the first (mis-keyed) render check and are for the owner
 to remove; the render check was repeated with a scratch label dir.
+
+## 10. The owner's labels, the re-grade, and the flip (2026-09-18, evening)
+
+Owner request: "I am done with the scanning; analyze the results and fold them into the decision. I assume we can flip
+the knobs for PDHD and PDVD, update the md file, commit and push."
+
+### 10.0 Repro
+
+```bash
+IMG=/home/xqian/toolkit-dev/wcp-porting-img; S=$IMG/pdvd/docs/nf_sp_img_clus/scripts; F=$IMG/pdvd/docs/nf_sp_img_clus/figs
+bash $F/116_owner_fold.sh; sha256sum -c $F/116_label_shas_before_own116.txt      # 26 / 26 OK: no other label tag changed
+# the flip unit: toolkit cfg/pgrapher/experiment/{pdhd,protodunevd}/pr.jsonnet call sites + <det>/wct-pr-perevt.jsonnet bags (this commit round)
+for d in pdhd pdvd; do bash $S/d102_compile_pr.sh $d d116_preflip; done   # BEFORE the edit: == d115knoboff byte for byte
+# after the edit (figs/116_flip_compiled.txt): (a) no-TLA compile == the R2 arms' TLA compile; (b) escape hatch vs today's production
+for d in pdhd pdvd; do bash $S/d102_compile_pr.sh $d d116_flip; python3 $S/d116_cfgdiff.py /home/xqian/tmp/d102/cfg/d116_r2_p3_$d.json /home/xqian/tmp/d102/cfg/d116_flip_$d.json --expect ""; done
+# (d) runtime: the flipped configs with NO TLA, production binary (pin md5 2efa7fa09325 == local/lib), full manifests
+ARM=d116vflip DET=pdvd SRC=d103vflip JOBS=8 PIN=/home/xqian/tmp/d115/libpin_d115 PR_TLA= bash $S/d111_run_arms.sh   # and d116hflip / pdhd / d108hflip / JOBS=5
+for t in T_stm_michel T_rec_charge; do python3 $S/d103_flip_gate.py --det pdvd --a d116vr2 --b d116vflip --tree $t; python3 $S/d103_flip_gate.py --det pdhd --a d116hr2 --b d116hflip --tree $t; done   # figs/116_flip_gate.txt
+```
+
+### 10.1 The owner's labels
+
+`figs/116_own116v_pdvd.txt`, `figs/116_own116h_pdhd.txt` (records `pdvd/docs/scan/pdvd_stm_michel_own116v_verdicts.json` 25
+items, `pdhd/docs/scan/pdhd_stm_michel_own116h_verdicts.json` 11 items; not blind, the chain answer revealed on every item).
+
+| det | tier 1 | `is_stm` charge: now a TP / FP confirmed / leaves the population | Michel charge: now a TP / FP confirmed / leaves | controls changed (stopper class) |
+|---|---|---|---|---|
+| PDVD | 17 | 5 / 4 / 1 | 7 / 3 / 1 | 0 of 8 (Michel call 0 of 8) |
+| PDHD | 7 | 1 / 2 / 0 | 2 / 0 / 2 | 0 of 4 (Michel kind set/unset 2 of 4, both STM_ONLY stoppers) |
+
+On PDVD the owner turned 7 of the 11 Michel charges and 5 of the 10 `is_stm` charges into true positives — the clusters
+the new trajectory tags as stoppers are, on the owner's reading of the new trajectory, stoppers with attached Michels
+(`039349_21/27`, `039253_16/104`, `039349_70/58`, `039253_12/98`, `039349_23/55`, `039349_48/59`, `039253_17/107`) or
+stoppers (`039253_4/96`, `039252_9/48`); 4 `is_stm` and 3 Michel charges are confirmed THRU / no-Michel
+(`039349_7/57`, `039252_8/102`, `039349_24/24`, `039349_81/22`; `039252_4/104`, `039349_57/21`, `039252_12/84`), and
+`039349_37/55` is UNCLEAR. On PDHD one charge became a TP on each metric (`029107_11/74` STM_MICHEL; `029107_11/33`,
+`028084_2/116` attached Michels), two are confirmed THRU (`029107_2/39`, `028084_15/50`) and two leave the population
+(`029107_20/17` UNCLEAR, `029107_15/40` MESSY). The controls held on both detectors. No other label tag changed
+(`sha256sum -c figs/116_label_shas_before_own116.txt`: 26 / 26).
+
+### 10.2 The re-grade (`figs/116_grade_{pdvd,pdhd}_own116.txt`; owner records at the highest precedence)
+
+| det | cell | `is_stm` purity | `is_stm` eff | Michel purity | Michel eff | split-half worst | T |
+|---|---|---|---|---|---|---|---|
+| PDVD | T | +0.000 | +0.005 | +0.000 | +0.000 | −0.016 | PASS |
+| PDVD | R1 | +0.000 | +0.013 | +0.000 | +0.004 | −0.016 | PASS |
+| PDVD | **R2** | **+0.000** | **+0.018** | **+0.003** | **+0.037** | −0.005 | **PASS** |
+| PDVD | R3 | −0.003 | +0.021 | −0.024 FAIL | +0.054 | −0.037 | FAIL |
+| PDHD | T | +0.002 | +0.032 | +0.027 | +0.046 | −0.019 | PASS |
+| PDHD | R1 | +0.002 | +0.032 | +0.027 | +0.046 | −0.019 | PASS |
+| PDHD | **R2** | **+0.002** | **+0.032** | **+0.019** | **+0.064** | −0.019 | **PASS** |
+| PDHD | R3 | +0.002 | +0.032 | +0.009 | +0.064 | −0.019 | PASS |
+
+Absolute values at R2 (`TP / FP / FN`): PDVD `is_stm` 270 / 5 / 104 (purity 0.982, efficiency 0.722) and Michel
+174 / 18 / 62 (0.906, 0.737); PDHD `is_stm` 123 / 5 / 62 (0.961, 0.665) and Michel 80 / 9 / 29 (0.899, 0.734). NEG
+bounds are within 0.005 of the point values on every metric (PDVD 5 unlabelled candidates, PDHD 21). C, R
+(0.89–0.96) and G0 pass as in sec 6.1.
+
+**The selection.** The rule's tie-break (sec 3: "the smallest ladder level that passes") names **R1**. The owner's
+request was a retune of the tagger for STM *and Michel* identification, sec 6.3 and the fold recap named R2 as the
+operating point this round carries, and the owner's go was given on that reading; **R2 is flipped as the owner's
+operating point.** R2 differs from R1 only by the Michel-arm keys (`michel_min_kink_deg` 20, `michel_max_len_cm` 30):
+on PDVD they turn 6 more Michel TP-losses into finds and add 2 TP-news at no false positive (Michel purity +0.003 vs
++0.000, efficiency +0.037 vs +0.004); on PDHD +2 Michel TPs for one false positive (purity +0.019 vs +0.027,
+efficiency +0.064 vs +0.046). Both pass every clause; R1 remains one line away (remove the two bag keys).
+
+### 10.3 The flip unit and its proofs
+
+* **Toolkit** (`cfg/pgrapher/experiment/pdhd/pr.jsonnet`, `cfg/pgrapher/experiment/protodunevd/pr.jsonnet`): at the
+  `cm.steiner` and `steiner_refresh` call sites, `terminal_blank_plane_mode` / `base_weight_blank_alpha` /
+  `base_weight_scope` become `if x == null then 'prefer3' | 0.5 | 'tree+path' else x` (the doc-108 form); the `pr()`
+  defaults stay `null` and the driver still forwards them, so `-S steiner_blank_plane_mode='wcp'
+  -S steiner_base_weight_blank_alpha=0 -S steiner_base_weight_scope='tree'` is the escape hatch. No C++ change.
+* **Driver bags** (`pdhd/wct-pr-perevt.jsonnet`, `pdvd/wct-pr-perevt.jsonnet`): `stm_proton_muon_guard = true`;
+  `michel_min_kink_deg: 20.0`, `michel_max_len_cm: 30.0` in `stm_michel_knobs`.
+* **(a) compiled** (`figs/116_flip_compiled.txt`): the pre-edit compile equals the round-2 `d115knoboff` compile byte
+  for byte (the baseline is today's production); the flipped compile with no override equals the R2 arms' TLA compile
+  (`d116_r2_p3_<det>.json`) **byte for byte** on both detectors (PDHD md5 `4a7a24926e28`, PDVD `e103df1c18ce`).
+* **(b) escape hatch**: the flipped tree with the six overrides above plus `-S stm_michel_extra=
+  {michel_min_kink_deg:30.0,michel_max_len_cm:25.0}` differs from today's production in exactly the 8 emitted keys at
+  their C++ default values (`wcp` / 0 / `tree` ×2 passes, 30 / 25); `proton_muon_guard` is key-suppressed when false.
+* **(c) scope**: `git diff --stat` in the toolkit shows only the two detector files; no other jsonnet imports them, so
+  the SBND / uBooNE production compiles are unchanged by construction (no C++ change; the doc-114/115 OFF gates cover
+  the binary).
+* **(d) runtime** (`figs/116_flip_gate.txt`): arms `d116hflip` / `d116vflip`, no TLA, pin md5 `2efa7fa09325` == `local/lib`
+  before and after, full manifests: **IDENTICAL** to `d116hr2` / `d116vr2` on every event, cluster and branch of `T_stm_michel` (PDHD 60 events / 325 clusters / 199 branches; PDVD 119 / 546 / 198) and of `T_rec_charge` (113 418 / 177 748 clusters, 19 branches); the one event per detector without a tagger table (`028084_13`, `039252_17`, the known no-candidate events) lacks it in both arms with the same tree set (`scripts/d116_flip_gate.py`, a fork of the doc-103 gate that reports that case as a match instead of "cannot read"). Completeness 61 / 120 (`figs/116_arms_complete.txt`).
+
+### 10.4 Files (sec 10)
+
+`figs/116_own116{v,h}_{pdvd,pdhd}.txt`, `figs/116_grade_{pdvd,pdhd}_own116.txt`, `figs/116_movers_own_*`,
+`figs/116_flip_compiled.txt`, `figs/116_flip_gate.txt`, `figs/116_arms_complete.txt` (+ the flip arms);
+records `<det>/docs/scan/<det>_stm_michel_own116{v,h}_verdicts.json`; toolkit commit `f9665bea`, wcp commit (this one).

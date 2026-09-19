@@ -1,0 +1,72 @@
+# doc pdvd/116 grade (pdvd); truth sources in precedence order (items taken): [('pdvd_stm_michel_own116v_verdicts.json', 25), ('pdvd_stm_michel_own103v2_verdicts.json', 24), ('pdvd_stm_michel_own103v_verdicts.json', 40), ('pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json', 610), ('pdvd_stm_michel_smx11_verdicts.json', 204), ('pdvd_stm_michel_smx116_verdicts.json', 24)]
+# cells: A0=d115voff, T=d115vp3bwp05, R1=d116vr1, R2=d116vr2, R3=d116vr3; base A0; bar A_x - A0 >= -0.02 on the point value, NEG bound >= -0.03
+population 563 (fixed 361); Michel population 563 (excluded 0); unlabelled candidates of any cell 9
+  unlabelled candidates of A0: 9; is_stm 1 0, michel_found 1 2
+  unlabelled candidates of T: 5; is_stm 1 1, michel_found 1 1
+  unlabelled candidates of R1: 5; is_stm 1 1, michel_found 1 1
+  unlabelled candidates of R2: 5; is_stm 1 1, michel_found 1 1
+  unlabelled candidates of R3: 5; is_stm 1 1, michel_found 1 1
+
+== is_stm
+  A0   d115voff      TP 266 FP   5 FN 113 TN  179 | purity 0.982 [0.974, 0.989] efficiency 0.702 [0.679, 0.725]
+  T    d115vp3bwp05  TP 268 FP   5 FN 111 TN  179 | purity 0.982 [0.974, 0.989] efficiency 0.707 [0.682, 0.730]
+  R1   d116vr1       TP 271 FP   5 FN 108 TN  179 | purity 0.982 [0.974, 0.989] efficiency 0.715 [0.691, 0.738]
+  R2   d116vr2       TP 273 FP   5 FN 106 TN  179 | purity 0.982 [0.974, 0.989] efficiency 0.720 [0.697, 0.743]
+  R3   d116vr3       TP 274 FP   6 FN 105 TN  178 | purity 0.979 [0.970, 0.986] efficiency 0.723 [0.699, 0.746]
+
+== michel_found
+  A0   d115voff      TP 171 FP  11 FN  71 TN  310 | purity 0.940 [0.922, 0.957] efficiency 0.707 [0.677, 0.735]
+  T    d115vp3bwp05  TP 171 FP  11 FN  71 TN  310 | purity 0.940 [0.923, 0.958] efficiency 0.707 [0.679, 0.733]
+  R1   d116vr1       TP 172 FP  11 FN  70 TN  310 | purity 0.940 [0.924, 0.958] efficiency 0.711 [0.683, 0.738]
+  R2   d116vr2       TP 180 FP  11 FN  62 TN  310 | purity 0.942 [0.927, 0.960] efficiency 0.744 [0.716, 0.771]
+  R3   d116vr3       TP 184 FP  17 FN  58 TN  304 | purity 0.915 [0.898, 0.936] efficiency 0.760 [0.734, 0.787]
+
+== reading per cell vs A0 (point value; NEG / POS bounds for the unlabelled); rule: point >= -0.02 AND NEG >= -0.03
+  T    is_stm       purity    : +0.000  (NEG -0.003, POS +0.000)  PASS   [doc-113 reading PASS]
+  T    is_stm       efficiency: +0.005  (NEG +0.005, POS +0.008)  PASS   [doc-113 reading PASS]
+  T    michel_found purity    : +0.000  (NEG +0.005, POS -0.000)  PASS   [doc-113 reading PASS]
+  T    michel_found efficiency: +0.000  (NEG +0.000, POS -0.004)  PASS   [doc-113 reading PASS]
+  T    T -> PASS
+  R1   is_stm       purity    : +0.000  (NEG -0.003, POS +0.000)  PASS   [doc-113 reading PASS]
+  R1   is_stm       efficiency: +0.013  (NEG +0.013, POS +0.015)  PASS   [doc-113 reading PASS]
+  R1   michel_found purity    : +0.000  (NEG +0.005, POS +0.000)  PASS   [doc-113 reading PASS]
+  R1   michel_found efficiency: +0.004  (NEG +0.004, POS +0.000)  PASS   [doc-113 reading PASS]
+  R1   T -> PASS
+  R2   is_stm       purity    : +0.000  (NEG -0.003, POS +0.001)  PASS   [doc-113 reading PASS]
+  R2   is_stm       efficiency: +0.018  (NEG +0.018, POS +0.021)  PASS   [doc-113 reading PASS]
+  R2   michel_found purity    : +0.003  (NEG +0.008, POS +0.002)  PASS   [doc-113 reading PASS]
+  R2   michel_found efficiency: +0.037  (NEG +0.037, POS +0.032)  PASS   [doc-113 reading PASS]
+  R2   T -> PASS
+  R3   is_stm       purity    : -0.003  (NEG -0.006, POS -0.003)  PASS   [doc-113 reading PASS]
+  R3   is_stm       efficiency: +0.021  (NEG +0.021, POS +0.023)  PASS   [doc-113 reading PASS]
+  R3   michel_found purity    : -0.024  (NEG -0.018, POS -0.024)  FAIL   [doc-113 reading UNDECIDED]
+  R3   michel_found efficiency: +0.054  (NEG +0.054, POS +0.048)  PASS   [doc-113 reading PASS]
+  R3   T -> FAIL
+
+== split-half guard: the grade on the odd / even halves of the sorted event list (bar -0.040 per metric)
+  odd  half (60 events, pop 267) T   : is_stm_pur -0.000, is_stm_eff -0.016, michel_pur +0.010, michel_eff -0.008  -> PASS
+  odd  half (60 events, pop 267) R1  : is_stm_pur -0.000, is_stm_eff -0.016, michel_pur +0.010, michel_eff -0.008  -> PASS
+  odd  half (60 events, pop 267) R2  : is_stm_pur -0.000, is_stm_eff -0.005, michel_pur +0.012, michel_eff +0.017  -> PASS
+  odd  half (60 events, pop 267) R3  : is_stm_pur -0.008, is_stm_eff +0.000, michel_pur -0.037, michel_eff +0.034  -> PASS
+  even half (60 events, pop 296) T   : is_stm_pur +0.001, is_stm_eff +0.026, michel_pur -0.009, michel_eff +0.008  -> PASS
+  even half (60 events, pop 296) R1  : is_stm_pur +0.001, is_stm_eff +0.041, michel_pur -0.008, michel_eff +0.016  -> PASS
+  even half (60 events, pop 296) R2  : is_stm_pur +0.001, is_stm_eff +0.041, michel_pur -0.005, michel_eff +0.057  -> PASS
+  even half (60 events, pop 296) R3  : is_stm_pur +0.001, is_stm_eff +0.041, michel_pur -0.012, michel_eff +0.073  -> PASS
+
+== movers T vs A0: is_stm fp_gone 4, is_stm fp_new 4, is_stm tp_lost 43, is_stm tp_new 45, michel_found fp_gone 3, michel_found fp_new 3, michel_found tp_lost 33, michel_found tp_new 33  -> /home/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/figs/116_movers_own_pdvd_T.tsv
+
+== movers R1 vs A0: is_stm fp_gone 4, is_stm fp_new 4, is_stm tp_lost 40, is_stm tp_new 45, michel_found fp_gone 3, michel_found fp_new 3, michel_found tp_lost 32, michel_found tp_new 33  -> /home/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/figs/116_movers_own_pdvd_R1.tsv
+
+== movers R2 vs A0: is_stm fp_gone 4, is_stm fp_new 4, is_stm tp_lost 39, is_stm tp_new 46, michel_found fp_gone 3, michel_found fp_new 3, michel_found tp_lost 26, michel_found tp_new 35  -> /home/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/figs/116_movers_own_pdvd_R2.tsv
+
+== movers R3 vs A0: is_stm fp_gone 4, is_stm fp_new 5, is_stm tp_lost 39, is_stm tp_new 47, michel_found fp_gone 3, michel_found fp_new 9, michel_found tp_lost 24, michel_found tp_new 37  -> /home/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/figs/116_movers_own_pdvd_R3.tsv
+
+== candidates on one side only, vs A0, by hand class
+  T only: 65 {'stopper': 34, 'non-stopper': 22, 'unjudged': 9, 'unlabelled': 0}
+  A0 only (vs T): 85 {'stopper': 33, 'non-stopper': 33, 'unjudged': 15, 'unlabelled': 4}
+  R1 only: 65 {'stopper': 34, 'non-stopper': 22, 'unjudged': 9, 'unlabelled': 0}
+  A0 only (vs R1): 82 {'stopper': 30, 'non-stopper': 33, 'unjudged': 15, 'unlabelled': 4}
+  R2 only: 65 {'stopper': 34, 'non-stopper': 22, 'unjudged': 9, 'unlabelled': 0}
+  A0 only (vs R2): 82 {'stopper': 30, 'non-stopper': 33, 'unjudged': 15, 'unlabelled': 4}
+  R3 only: 65 {'stopper': 34, 'non-stopper': 22, 'unjudged': 9, 'unlabelled': 0}
+  A0 only (vs R3): 82 {'stopper': 30, 'non-stopper': 33, 'unjudged': 15, 'unlabelled': 4}

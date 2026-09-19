@@ -1,0 +1,35 @@
+# doc pdvd/116 own116h (owner, 2026-09-18): 11 of 11 items labelled; tag own116h; labels sha256 0202f24958dc; revealed the chain answer before labelling: 11 of 11 (NOT blind)
+# set /home/xqian/tmp/d116/own/set_pdhd; shown on d116hr2
+
+== 1. each item
+   1 029107_7/32    control A0 [is_stm 1 michel_found 0] R2 [is_stm 1 michel_found 0] | label STM_ONLY/none (smx27, ) -> OWNER STM_ONLY/None | michel no michel -> stopper, kind unset
+   2 029107_11/33   tier1   A0 [is_stm 1 michel_found 0] R2 [is_stm 1 michel_found 1] | label STM_ONLY/detached dots (smx27, ) -> OWNER STM_MICHEL/attached | michel no michel -> michel
+   3 029107_11/74   tier1   A0 [is_stm 0 michel_found 0] R2 [is_stm 1 michel_found 1] | label THRU/none (smx27, ) -> OWNER STM_MICHEL/attached | class non-stopper -> stopper
+   4 028084_2/116   tier1   A0 [is_stm 0 michel_found 0] R2 [is_stm 1 michel_found 1] | label STM_ONLY/None (owner_review, owner) -> OWNER STM_MICHEL/attached | michel stopper, kind unset -> michel
+   5 029107_20/148  control A0 [is_stm 1 michel_found 0] R2 [is_stm 1 michel_found 0] | label STM_ONLY/none (new_agent, ) -> OWNER STM_ONLY/none | same
+   6 029107_2/39    tier1   A0 [is_stm 0 michel_found 0] R2 [is_stm 1 michel_found 1] | label THRU/none (smx27, ) -> OWNER THRU/None | same
+   7 029107_20/17   tier1   A0 [is_stm 0 michel_found 0] R2 [is_stm 0 michel_found 1] | label STM_ONLY/none (smx27, ) -> OWNER UNCLEAR/None | class stopper -> unjudged
+   8 028084_15/50   tier1   A0 [is_stm 0 michel_found 0] R2 [is_stm 1 michel_found 0] | label THRU/none (smx27, ) -> OWNER THRU/None | same
+   9 029107_15/40   tier1   A0 [is_stm 0 michel_found 0] R2 [is_stm 1 michel_found 1] | label STM_ONLY/None (owner_review, owner) -> OWNER MESSY/None | class stopper -> unjudged
+  10 029107_22/123  control A0 [is_stm 1 michel_found 0] R2 [is_stm 1 michel_found 0] | label STM_ONLY/detached dots (smx27, ) -> OWNER STM_ONLY/detached dots | same
+  11 029107_4/123   control A0 [is_stm 1 michel_found 0] R2 [is_stm 1 michel_found 0] | label STM_ONLY/detached dots (smx27, ) -> OWNER STM_ONLY/None | michel no michel -> stopper, kind unset
+
+== 2. tier 1: what each charged false positive becomes (descriptive; NOT a purity -- the re-grade is d116_grade.py --owner-record)
+  029107_11/33   R2:michel: now a TP
+  029107_11/74   R2:is_stm: now a TP
+  028084_2/116   R2:michel: now a TP
+  029107_2/39    R2:is_stm: FP confirmed
+  029107_20/17   R2:michel: leaves the population
+  028084_15/50   R2:is_stm: FP confirmed
+  029107_15/40   R2:michel: leaves the population
+    is_stm  FP confirmed: 2
+    is_stm  now a TP: 1
+    michel  leaves the population: 2
+    michel  now a TP: 2
+
+== 3. controls (the doc-103 reading: >= 3 stopper-class changes -> not settled)
+  stopper class changed: 0 of 4 -> controls hold on the stopper call
+  Michel class changed (incl. kind set/unset): 2 of 4: ['029107_7/32', '029107_4/123']
+  null controls 4; shared-FP control(s) reported apart: []
+
+== 4. wrote /home/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/scan/pdhd_stm_michel_own116h_verdicts.json: 11 items
