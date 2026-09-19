@@ -1,0 +1,35 @@
+# doc sbnd_xin/113 -- pre-registered rule for the fix arm (quiet-plane 2-view tiling), written 2026-09-19
+# BEFORE the first stage-A arm with the knob on was launched (sha256 of this file and its mtime are quoted in
+# the doc, sec 6).  Frozen; deviations are enumerated in the doc, never edited here.
+
+## Arms
+OFF = production stage A work-<s>-d102m (reproduced byte-for-byte by today's binary on 32 events,
+      113_baseline_repro.txt) + production stage B work-<s>-pr150s0 (ref/prod-2026-09-17b).
+ON  = work-<s>-d113on (stage A: run_chain_group.sh with IMG_EXTRA_TLA = docs/113_figs/tla/qp2v4.tla, i.e.
+      img_knobs={ms_quiet_mask_window:4}, everything else production) + work-<s>-d113onpr (stage B, the production
+      PR job on that stage A, PR_EXTRA_STAGES=pr_display, DL vertex on).
+Samples: nuecc48 48 + ncpi0 19 + mcp1k 1000 + mcp2k 2000 = 3067 events.
+
+## PRIMARY (the fix's purpose: the candidate holds more of its 2-D charge)
+P1  the census re-run on ON (d113_missing2d.py --stageA d113on --stageB d113onpr, same cuts) flags FEWER events in
+    the imaging classes (NOBLOB-SLICE + NOBLOB-INSLICE + THRESH) than OFF: 47 / 1392 on OFF; bar: <= 33 (-30 %).
+P2  on the events the blind scan judged YES (both scanners), the candidate's own 2-D charge (Qbundle summed over
+    planes) rises on ON in >= 2/3 of them, and the median kine_reco_Enu on those events does not fall.
+P3  Enu on common candidates (nu_evaluated in both arms): median dEnu (ON - OFF) >= 0; |dEnu| median <= 25 MeV.
+P4  the newly-missing components on ON (the instrument run both ways) are not more numerous than the recovered ones.
+
+## GUARDS (pr/150 spirit; the fix must not re-decide the neutrino PR)
+G1  labelled vertex <= 3 cm on the 878 vtx105 labels (position-anchored): ON >= OFF - 1 % (OFF: 724 of 878 per
+    pr/150 sec 8 on pr150s0); > 10 cm movers away <= toward + 5.
+G2  nu_evaluated: lost <= gained + 5 over 3067 events.
+G3  TGM evaluated flips = 0; STM / FC flips reported.
+G4  sentinels (pr149 sentinels_tolerant.py on ON): FAIL <= 1, every FAIL adjudicated in the doc.
+G5  hand-pi0 pairs (geo_rescore.py position-anchored) >= OFF - 2; PID agreement reported.
+G6  numuCC (numu > 0.9) net change within +-10 of 789 (pr150 s0); nueCC (nue > 7.0) reported, not gated (36).
+G7  cost: stage-A wall per group median <= 1.3 x OFF; peak RSS <= 1.25 x; blob count per event <= 1.10 x OFF.
+G8  split-half (odd / even event ids): no clause worse than its bar by more than 1 %.
+
+## Decision
+PASS = P1..P4 and G1..G8.  A PASS is a recommendation to the owner, never a flip (this doc flips nothing).
+FAIL on a guard -> sec 7 ladder (window 2 / 12 slices; then the deghost keys), smallest departure that passes;
+nothing passes -> the fewest-failing rung and the per-mechanism reading, no recommendation.

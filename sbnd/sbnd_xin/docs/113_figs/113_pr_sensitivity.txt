@@ -1,0 +1,13 @@
+# doc 113 sec 6: missing-prong census sensitivity matrix (events flagged UNHELD-TRACK / UNHELD-WIDE of 1392 candidates; held = fit + shower points; dvtx <= 15 cm; Qfrac >= 3 %)
+min_pts 20  rms<=0.8  halo>=0 cm : TRACK 22/1392  WIDE 126/1392  events(any) 146 1  [events, 279955-flagged]
+min_pts 20  rms<=0.8  halo>=8 cm : TRACK 2/1392  WIDE 60/1392  events(any) 62 0  [events, 279955-flagged]
+min_pts 20  rms<=0.8  halo>=12 cm : TRACK 2/1392  WIDE 28/1392  events(any) 30 0  [events, 279955-flagged]
+min_pts 20  rms<=1.5  halo>=0 cm : TRACK 84/1392  WIDE 77/1392  events(any) 146 1  [events, 279955-flagged]
+min_pts 20  rms<=1.5  halo>=8 cm : TRACK 5/1392  WIDE 58/1392  events(any) 62 0  [events, 279955-flagged]
+min_pts 20  rms<=1.5  halo>=12 cm : TRACK 3/1392  WIDE 27/1392  events(any) 30 0  [events, 279955-flagged]
+min_pts 40  rms<=0.8  halo>=0 cm : TRACK 20/1392  WIDE 125/1392  events(any) 143 1  [events, 279955-flagged]
+min_pts 40  rms<=0.8  halo>=8 cm : TRACK 2/1392  WIDE 60/1392  events(any) 62 0  [events, 279955-flagged]
+min_pts 40  rms<=0.8  halo>=12 cm : TRACK 2/1392  WIDE 28/1392  events(any) 30 0  [events, 279955-flagged]
+min_pts 40  rms<=1.5  halo>=0 cm : TRACK 81/1392  WIDE 77/1392  events(any) 143 1  [events, 279955-flagged]
+min_pts 40  rms<=1.5  halo>=8 cm : TRACK 5/1392  WIDE 58/1392  events(any) 62 0  [events, 279955-flagged]
+min_pts 40  rms<=1.5  halo>=12 cm : TRACK 3/1392  WIDE 27/1392  events(any) 30 0  [events, 279955-flagged]

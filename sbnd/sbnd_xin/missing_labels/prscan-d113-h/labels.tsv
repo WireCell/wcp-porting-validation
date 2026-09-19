@@ -1,0 +1,31 @@
+item	verdict	kind	connected	confidence	comment
+mcp2k-392262-p014	NO	HALO	YES	3	Red fills lower edge of the track's own charge band along the full green line
+mcp2k-93105-p003	YES	SHOWER	YES	2	Coherent 30 cm unheld stripe inside broad grey fan beside vertex; no green on it
+mcp2k-414306-p006	NO	HALO	YES	3	Red hugs lower edge of the single green track band from the vertex
+mcp1k-58345-p021	NO	HALO	YES	3	Red on lower edge of green track band just above vertex; within track smear
+mcp2k-400349-p007	NO	FRAGMENT	NO	2	Short isolated 10 cm stub; no other candidate charge or vertex within window
+mcp2k-395870-p004	YES	TRACK	YES	3	Distinct 35 cm prong rising from vertex region with no green along it
+mcp1k-280994-p017	NO	HALO	YES	3	Red on lower edge of the single track's band from vertex; own smear
+mcp2k-292810-p008	YES	TRACK	YES	3	Vertical 18 cm prong descending from vertex, unheld; two other prongs are green
+mcp2k-284047-p005	NO	HALO	YES	3	Red on lower-right edge of short track band, green on top edge; one object
+mcp2k-179912-p001	NO	HALO	YES	3	Red stripe on one side of the long vertical track's own band, green alongside
+mcp2k-52121-p010	NO	HALO	YES	2	Thin red row parallel to green inside the same 8 cm track band; no gap
+mcp2k-70222-p013	YES	TRACK	YES	2	25 cm unheld prong leaving vertex to the right, below the green track
+mcp2k-348198-p016	NO	HALO	YES	2	Short red segment inside the wide grey band just below vertex; no separate axis
+mcp1k-283229-p902	NO	HALO	YES	3	Red is a mid-segment of the long green track itself, on the green line
+mcp2k-157215-p019	UNSURE	TRACK	YES	2	Blue-cluster vertical track continues candidate column downward; no vertex or green shown
+mcp2k-350596-p015	NO	HALO	YES	3	Red on upper edge of the wedge-shaped track band, green on lower edge
+mcp1k-286906-p903	NO	HALO	YES	3	Red is an unheld mid-segment sitting on the long green track, collinear
+mcp1k-57441-p904	NO	HALO	YES	3	Red segment lies on the single green track's line below the vertex
+mcp1k-287007-p900	NO	FRAGMENT	NO	3	A few scattered dots only; no coherent structure, no track or vertex
+mcp2k-292788-p000	NO	HALO	YES	3	Red runs along lower edge of the up-going track's own band; green alongside
+mcp2k-54475-p020	YES	TRACK	YES	2	Thin red line parallel but offset from green track, starts near vertex, ends early
+mcp2k-403309-p905	NO	HALO	YES	3	Red sits directly on the short green track from the vertex; already held
+mcp2k-398181-p009	UNSURE	TRACK	YES	2	Dense 13 cm stripe offset above the up-going band; on-band in x-y, separate in z-y
+mcp2k-319475-p901	NO	HALO	YES	3	Red is a mid-segment of the long green track, collinear and on the green line
+mcp1k-277276-p907	NO	HALO	YES	3	Red hugs the upper edge of the descending track's band; green on lower edge
+mcp2k-392900-p018	NO	HALO	YES	3	Red on left edge of the descending track's band below vertex; green in core
+mcp1k-48895-p012	NO	HALO	YES	2	Red stripe on lower edge of the wide track band; green line runs through core
+mcp2k-174311-p011	NO	HALO	YES	2	Red line on the upper-left edge of the track's own band, parallel to green core
+mcp1k-56243-p906	NO	HALO	YES	2	Red is the terminal segment of the same green track, collinear continuation
+mcp2k-275539-p002	YES	TRACK	YES	2	11 cm unheld stub between vertex and where green ends; offset in z from band

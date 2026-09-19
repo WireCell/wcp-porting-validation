@@ -1,0 +1,73 @@
+item	verdict	kind	connected	confidence	comment
+mcp1k-65999-p056	YES	TRACK	YES	2	drift-parallel red band ~8 cm collinear with and abutting green track; second tiny red at vertex
+mcp1k-287431-p030	YES	TRACK	YES	2	red is bulk of candidate image, no green anywhere; 50 cm elongated band continuing grey
+mcp2k-165855-p901	YES	TRACK	YES	2	terminal ~15 cm of long track, green stops where red starts, grey continues
+mcp2k-347824-p037	NO	CROSSING-TRACK	YES	3	straight ~350 cm track spanning whole window, crosses vertex, continues far both ways
+mcp2k-395837-p025	YES	TRACK	YES	3	long straight ~230 cm track emanating from the gold star, unheld; green goes elsewhere
+mcp1k-49951-p057	NO	FRAGMENT	YES	2	two small ~3 cm red stubs at the far tips of two green tracks
+mcp1k-351639-p001	UNSURE	SHOWER	UNSURE	1	dense blob at head of a large light-blue cluster; candidate is only two dots ~6 cm away
+mcp2k-172463-p046	YES	SHOWER	YES	2	dense unheld blob at the vertex, ~9 cm down and 7 cm wide; green track starts there
+mcp1k-287211-p904	YES	TRACK	YES	3	top ~15 cm of a long green track unheld, smooth collinear continuation
+mcp2k-104172-p023	YES	SHOWER	YES	3	large unheld fan plus long arms radiating from vertex, tens of cm, dwarfs the green
+nuecc48-10550-p020	NO	CROSSING-TRACK	YES	3	~350 cm straight track at fixed drift x through the vertex, continues far both ways
+mcp2k-400349-p045	YES	TRACK	YES	2	long ~95 cm kinked track ending a few cm from the candidate's two small green blobs
+mcp2k-174771-p041	NO	CROSSING-TRACK	YES	2	long straight track crosses the candidate ~10 cm off the vertex, continues both sides
+mcp2k-400349-p005	UNSURE	TRACK	NO	1	isolated dense ~12 cm segment; window otherwise empty, no green, nothing to connect to
+mcp2k-157215-p015	YES	TRACK	NO	2	~250 cm track is the entire candidate image, nothing held; only two distant green dots
+mcp1k-282231-p053	YES	TRACK	YES	2	short ~10 cm unheld stub at the vertex going up; green track leaves downward
+mcp2k-400029-p034	NO	CROSSING-TRACK	YES	2	straight ~175 cm track passes through vertex, extends far both sides, no kink
+mcp1k-65289-p027	NO	CROSSING-TRACK	YES	3	~420 cm straight track through the vertex, window-spanning both ends
+mcp2k-481014-p042	YES	TRACK	NO	2	long curved ~120 cm track is the whole candidate image; green only scattered specks off it
+mcp1k-280466-p033	YES	TRACK	YES	3	long ~320 cm track starting at the vertex, unheld; green track goes the opposite way
+mcp2k-480002-p006	YES	TRACK	NO	2	elongated ~20 cm unheld blob, ~12 cm gap to candidate's small green blob, points at it
+mcp1k-284657-p036	NO	CROSSING-TRACK	YES	3	~270 cm straight track through vertex region, continues ~100 cm each way
+mcp2k-395597-p909	YES	SHOWER	YES	2	dense unheld blob ~12 cm across filling the wedge between two green tracks at the vertex
+mcp1k-317741-p009	YES	TRACK	YES	2	very long ~300 cm wide band starting at the vertex going down, entirely unheld
+mcp2k-398225-p021	YES	TRACK	YES	3	long ~250 cm track from the vertex downward, unheld; green tracks go other ways
+mcp1k-287517-p035	NO	CROSSING-TRACK	YES	2	straight ~230 cm track passes exactly through vertex, ~100 cm each side
+nuecc48-137238-p050	YES	TRACK	YES	2	small L-shaped ~10 cm unheld cluster a few cm below the green shower
+mcp1k-352123-p019	NO	CROSSING-TRACK	YES	3	~380 cm straight track through vertex region, continues far both directions
+mcp1k-291548-p013	NO	CROSSING-TRACK	YES	3	~420 cm straight track crossing the short green track at the vertex, both ends at edges
+mcp1k-174422-p059	YES	TRACK	YES	2	collinear chain of small blobs over ~35 cm pointing straight at the vertex, gappy track
+mcp1k-290052-p026	NO	CROSSING-TRACK	YES	3	~450 cm straight track through the vertex, continues to both window edges
+mcp2k-323171-p004	NO	HALO	YES	2	small ~10 cm unheld patch embedded inside the candidate's grey/green fan at the vertex
+mcp2k-280709-p051	YES	TRACK	YES	2	~8 cm unheld cap continuing the green track past its far end, away from the vertex
+mcp2k-181050-p043	YES	TRACK	YES	3	two thin unheld prongs ~20 cm rising from the vertex; green tracks leave the other way
+mcp2k-68308-p010	NO	CROSSING-TRACK	YES	3	~400 cm straight track through the vertex, both ends at window edges
+mcp2k-94942-p038	YES	TRACK	YES	3	long ~150 cm straight track starting at the vertex, unheld; green leaves opposite
+mcp2k-474612-p058	NO	FRAGMENT	YES	2	small ~6 cm compact blob at the far end of a short green track, no extension
+mcp1k-321371-p907	NO	HALO	YES	2	unheld patch mid-way along a long green track, green continues above, below and alongside
+mcp2k-48488-p008	YES	TRACK	YES	2	~400 cm wide unheld band starting at the vertex going down; green track leaves sideways
+mcp2k-321235-p048	YES	TRACK	YES	2	~17 cm drift-parallel unheld track from the vertex; green shower fans the other way
+mcp2k-398191-p040	NO	CROSSING-TRACK	YES	2	straight ~220 cm track through the vertex, continues well past on both sides
+mcp1k-287431-p000	YES	TRACK	YES	2	large 55 cm unheld band beside the candidate's small grey patch (~7 cm gap), no green
+mcp1k-351639-p017	YES	TRACK	YES	2	~240 cm track, the candidate's own image, unheld; top end at the few candidate grey dots
+ncpi0-180801-p905	YES	SHOWER	YES	2	dense unheld bundle ~15 cm inside the shower region, ~15 cm from vertex, green around
+mcp1k-409634-p054	NO	HALO	YES	2	thin unheld slab offset in drift x from the held green blob, overlapping it in z-y
+mcp1k-386332-p039	NO	CROSSING-TRACK	YES	2	straight ~105 cm track crossing the green track ~9 cm off the vertex, continues both ways
+mcp2k-100564-p900	NO	HALO	YES	3	~12 cm unheld segment mid-way along a long green track, green continuous both sides
+mcp2k-480002-p028	YES	TRACK	NO	2	~300 cm track is the whole candidate image, unheld; green only two specks ~25 cm away
+mcp2k-396521-p908	NO	FRAGMENT	NO	3	only two tiny specks a few cm across in an otherwise empty window
+mcp2k-179369-p016	YES	SHOWER	YES	2	large multi-arm unheld structure at vertex, ~70 cm vertical arm plus arm continuing green
+mcp2k-391756-p903	YES	TRACK	YES	2	L-shaped ~12 cm unheld segment at the vertex, green only at its far tip
+mcp1k-283969-p011	NO	CROSSING-TRACK	YES	3	~400 cm straight track through the vertex, both ends at window edges
+mcp2k-157215-p007	YES	TRACK	YES	2	~17 cm vertical segment continuing the candidate grey downward; nothing held in window
+mcp2k-158227-p044	YES	TRACK	YES	3	~120 cm unheld track running from the vertex in -z, roughly continuing the short green track
+mcp2k-405707-p018	YES	TRACK	YES	3	~300 cm unheld track leaving the vertex downward; green tracks go sideways and up
+mcp2k-100245-p031	NO	CROSSING-TRACK	YES	3	~310 cm straight track through the vertex, continues far on both sides
+mcp1k-401516-p014	YES	TRACK	YES	3	long unheld track leaving the vertex; green track goes the other way
+mcp1k-284200-p052	NO	FRAGMENT	YES	2	small unheld clumps ~5 cm beside the vertex, offset in drift x from the green
+mcp2k-237292-p902	NO	FRAGMENT	YES	2	one small ~5 cm clump plus a speck at the end of the green track, nothing extended
+mcp2k-282909-p022	YES	SHOWER	YES	2	large sprawling unheld shower-like spray, tens of cm, around and beyond the vertex
+mcp2k-480728-p906	NO	HALO	YES	2	red strand runs parallel and adjacent to the green arms at the vertex, offset a few cm
+mcp1k-401252-p012	YES	SHOWER	YES	2	multi-strand unheld structure ~80 cm tall starting just right of the vertex
+mcp2k-100728-p003	YES	TRACK	NO	2	~20 cm unheld patch of candidate image continuing a light-blue band; green blob ~12 cm below
+mcp2k-98947-p049	NO	FRAGMENT	NO	2	half a dozen small clumps scattered over ~60 cm, not collinear, no coherent object
+mcp2k-242814-p047	YES	SHOWER	YES	2	compact ~20 cm unheld bundle attached at the vertex, plus one far isolated red dot
+mcp2k-49742-p024	NO	CROSSING-TRACK	YES	2	~330 cm straight track through the vertex, ~45 cm one side and ~290 cm the other
+mcp1k-52085-p911	NO	HALO	YES	3	~12 cm unheld segment mid-way along a long green track, green continuous both sides
+mcp2k-97033-p055	YES	TRACK	YES	2	~7 cm unheld collinear continuation past the end of the short green track from the vertex
+mcp2k-481014-p002	YES	SHOWER	YES	2	~12 cm dense unheld patch at a kink of a light-blue track, abutting the candidate grey
+mcp2k-166295-p910	YES	TRACK	YES	2	~12 cm unheld terminal segment of the green track right at the vertex
+mcp2k-100728-p032	YES	TRACK	YES	2	~175 cm z-running track, the candidate's own unheld image; green only specks at its ends
+mcp1k-491483-p029	NO	CROSSING-TRACK	YES	3	~450 cm straight track through the vertex, continues to both window edges

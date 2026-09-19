@@ -1,0 +1,4 @@
+extract d113adopt nuecc48: 48 events -> /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/150_figs/metrics/d113adopt-nuecc48.tsv
+extract d113adopt ncpi0: 19 events -> /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/150_figs/metrics/d113adopt-ncpi0.tsv
+extract d113adopt mcp1k: 1000 events -> /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/150_figs/metrics/d113adopt-mcp1k.tsv
+extract d113adopt mcp2k: 2000 events -> /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/150_figs/metrics/d113adopt-mcp2k.tsv

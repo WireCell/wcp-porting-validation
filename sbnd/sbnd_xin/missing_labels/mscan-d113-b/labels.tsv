@@ -1,0 +1,73 @@
+item	verdict	kind	connected	confidence	comment
+mcp1k-169356-r019	NO	NONE	NO	3	box holds only the blue-outlined green diagonal track; no un-imaged charge
+mcp2k-98382-r024	YES	TRACK	YES	3	grey diagonal ~30-wire gap between imaged track and blob, no blue outline; same gap in W
+mcp2k-75554-r011	YES	TRACK	YES	2	un-imaged diagonal segment ~40 wires continuing green candidate upward, no blue
+mcp1k-58755-r057	NO	NONE	NO	2	large box, all visible tracks and green cluster already blue-outlined
+mcp2k-91697-r029	YES	TRACK	YES	2	dark ~20-slice track segment in the blue-outline gap between upper and lower imaged parts
+mcp1k-314507-r001	YES	TRACK	YES	3	dark 70-wire diagonal with no blue outline joining two imaged segments; W empty there
+mcp2k-410064-r907	NO	NONE	NO	3	box contains one small already-imaged blob; rest empty
+mcp2k-70538-r910	NO	NONE	NO	3	box sits above the imaged track end, empty white; only blue-outlined corner inside
+mcp1k-175808-r041	NO	STRIPE	YES	2	faint single-wire vertical smear below U/V track end, nothing in W; induction tail
+mcp2k-241626-r053	NO	NONE	NO	2	long diagonal inside box is blue-outlined along its length; no un-imaged ionisation
+nuecc48-90055-r000	YES	TRACK	YES	3	dark 105-slice diagonal in V and W, no blue, joins green candidate end at slice 748
+mcp2k-168209-r028	NO	NONE	NO	3	box holds only the blue-outlined green track; no un-imaged charge
+mcp2k-70084-r010	NO	NONE	NO	3	narrow box below candidate, empty except hatched edge; no charge
+mcp1k-281505-r018	YES	TRACK	YES	2	grey diagonal fills the blue gap between upper imaged track and lower imaged track
+mcp1k-349835-r032	NO	NONE	NO	2	vertical tip inside box is green and blue-outlined; nothing extra above it
+mcp2k-75554-r003	YES	TRACK	YES	3	dark 58-wire diagonal segment, no blue outline, between two imaged blobs on same track
+mcp2k-56763-r026	NO	STRIPE	YES	2	faint 1-wire vertical smear below track end in U and V only, nothing in W
+mcp1k-492649-r013	YES	TRACK	YES	3	dark rising diagonal in V and W with blue gap; U has no charge above slice 462
+mcp2k-395695-r022	NO	STRIPE	YES	2	full-height grey streak hugging the dead-wire line in U only; no counterpart in V or W
+mcp1k-490361-r040	NO	STRIPE	YES	2	faint vertical smear under the U/V track end, absent in W; induction tail
+mcp2k-56972-r017	NO	STRIPE	YES	2	dark 1-wire vertical smear below candidate end in U and V, nothing in W
+mcp2k-396057-r043	NO	NONE	NO	2	near-vertical track in box carries green candidate cells; already imaged
+mcp1k-352233-r025	YES	TRACK	YES	2	~40-slice diagonal segment un-outlined in both V and W between imaged parts
+mcp2k-321983-r054	NO	NONE	NO	2	large box; long diagonal and blob cluster all blue-outlined, no un-imaged ionisation
+mcp1k-281214-r911	NO	NONE	NO	3	green blue-outlined diagonal crosses the box; nothing un-imaged
+mcp2k-414200-r012	YES	TRACK	YES	3	~50-wire dark diagonal with no blue in U and W; V shows matching blob gap
+nuecc48-256587-r900	NO	NONE	NO	2	dense shower inside box fully covered by blue outlines and green cells
+mcp2k-400185-r042	YES	TRACK	YES	3	dark steep track ~25 slices above the green end, no blue; same in V orange box
+mcp2k-478088-r051	NO	NONE	NO	2	panel-wide box; both long tracks and the green track are blue-outlined
+mcp2k-179611-r037	NO	NONE	NO	2	diagonal in box carries green candidate cells; nothing un-imaged beside it
+mcp1k-395654-r050	NO	NONE	NO	3	green blue-outlined rising track crosses the small box; only hatched dead wires beside
+mcp1k-283009-r009	NO	NONE	NO	2	dark vertical stub under the horizontal track carries green cells down to its tip
+mcp2k-49742-r030	NO	NONE	NO	2	steep line in box carries green candidate cells; charge faint, already in candidate
+mcp2k-400185-r005	YES	TRACK	YES	3	dark 75-slice diagonal with no blue in V and U, between imaged blobs of the candidate
+mcp2k-392901-r058	NO	NONE	NO	2	panel-wide box; both crossing tracks blue-outlined, nothing un-imaged
+mcp2k-409624-r027	YES	TRACK	YES	2	grey vertical segment ~55 slices in W and V filling the blue gap of the same track
+mcp1k-353729-r052	NO	NONE	NO	2	dark band in box enclosed by a blue contour along its length; only diffuse halo outside
+mcp1k-394532-r049	NO	STRIPE	YES	2	faint vertical smear below the cluster in U and V only, at a dead-wire edge
+nuecc48-437699-r901	NO	NONE	NO	2	box on the green shower band; contents blue-outlined, nothing un-imaged
+mcp2k-294174-r039	YES	TRACK	YES	2	grey ~22-slice diagonal in the blue-outline gap of the candidate track; V region is dead
+mcp2k-74336-r034	YES	TRACK	YES	2	faint but coherent ~40-slice diagonal in W and V between two imaged blobs
+mcp2k-289246-r906	NO	NONE	NO	2	box on the imaged rising track at a dead-wire line; contents blue-outlined and green
+mcp2k-72768-r038	NO	NONE	NO	2	green dotted line inside box with almost no grey charge under it; nothing un-imaged
+mcp2k-100157-r023	NO	STRIPE	YES	2	dark 1-wire vertical smear below the vertex in U and V, nothing in W
+mcp1k-49951-r004	NO	STRIPE	YES	2	vertical smears below the U and V track ends only; W empty below
+mcp2k-179611-r015	YES	TRACK	YES	3	grey 55-slice diagonal with no blue in W and V between two imaged blobs
+mcp2k-52693-r002	YES	TRACK	YES	3	~60-wire grey diagonal, no blue outline, between imaged blobs of the candidate track
+mcp1k-172266-r020	YES	TRACK	YES	3	dark 48-slice steep track with no blue in U and W between imaged blobs
+mcp1k-174422-r031	YES	TRACK	YES	3	dark 35-slice diagonal un-imaged in V and W, running into the candidate vertex
+mcp1k-487853-r909	NO	NONE	NO	3	horizontal green track crosses the box, blue-outlined; space above it empty
+mcp2k-52693-r008	YES	TRACK	YES	3	~50-wire grey diagonal with no blue between two imaged blobs of the same track
+mcp2k-178548-r036	YES	TRACK	YES	3	dark 30-slice diagonal un-outlined in V and W between imaged blobs
+mcp2k-293734-r047	NO	NONE	NO	2	box on the candidate vertex; horizontal and vertical tracks both blue-outlined
+mcp1k-65999-r044	YES	TRACK	YES	3	~25-wire horizontal band un-imaged in W with matching gaps in U and V
+mcp2k-97084-r016	NO	STRIPE	YES	2	dark vertical smear below the small blob in U and V only; W has nothing
+nuecc48-267597-r903	NO	NONE	NO	2	blue-outlined green shower blob at the dead-region edge; nothing un-imaged
+mcp2k-493659-r046	YES	TRACK	YES	2	faint 25-slice track segment with blue gaps in all three planes
+mcp2k-100245-r056	NO	NONE	NO	2	panel-wide box; all crossing tracks blue-outlined, nothing un-imaged
+mcp2k-393758-r045	NO	STRIPE	YES	2	vertical smear below the V track end; the track itself continues imaged in U and W
+mcp2k-95899-r014	NO	NONE	NO	2	green dotted descending track in box with almost no grey charge; nothing un-imaged
+nuecc48-433451-r902	NO	NONE	NO	2	shower charge in box carries green cells and blue outlines; nothing un-imaged
+mcp2k-397927-r904	NO	NONE	NO	3	descending green track crosses the box fully blue-outlined
+mcp2k-389225-r905	NO	NONE	NO	2	long shallow track inside box is enclosed by a blue band; nothing outside it
+mcp1k-276836-r048	YES	TRACK	YES	2	grey ~24-slice steep segment with matching blue gaps in W and V
+mcp2k-173671-r059	NO	NONE	NO	2	long steep track inside the panel-wide box is blue-outlined throughout
+mcp2k-280709-r007	NO	STRIPE	YES	2	dark 1-wire vertical smear below the candidate in U and V at a dead wire; W empty
+mcp2k-393089-r006	YES	TRACK	YES	3	dark 70-wire diagonal with no blue in W and V joining two imaged segments
+mcp1k-58607-r021	NO	STRIPE	YES	2	dark vertical smear below the horizontal cluster in V and U only; W empty below
+mcp2k-403397-r033	NO	NONE	NO	2	steep track in box carries green candidate cells and small blue blobs; already imaged
+mcp1k-319039-r035	NO	NONE	NO	2	box straddles a dead-wire band on the imaged horizontal green track; rest blue-outlined
+mcp1k-319039-r055	NO	NONE	NO	2	panel-wide box; steep track and horizontal bands all blue-outlined or green
+mcp1k-281507-r908	NO	NONE	NO	3	green blue-outlined diagonal crosses the small box; nothing un-imaged

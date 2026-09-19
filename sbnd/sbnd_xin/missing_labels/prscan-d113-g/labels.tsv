@@ -1,0 +1,31 @@
+item	verdict	kind	connected	confidence	comment
+mcp2k-292788-p000	YES	TRACK	YES	3	Long ~60 cm straight prong leaving vertex; dense coherent red core, no green line along it
+mcp2k-179912-p001	NO	HALO	YES	2	Red fills the band beside an already-green vertical track; same axis, no separate structure
+mcp2k-398181-p009	NO	HALO	YES	1	Short dense line ~6 cm off the green track inside its sparse fan; similar slope, no clean gap
+mcp2k-275539-p002	NO	HALO	YES	1	Near-vertex stretch of the same track band, ~4 cm off in z, same vertical direction, no gap
+mcp1k-48895-p012	NO	HALO	YES	2	Red chain parallel ~4 cm below green track inside its wide band, same slope throughout
+mcp2k-54475-p020	NO	HALO	YES	2	Red fills the lower half of the same straight green track band, collinear, 2 cm offset
+mcp1k-280994-p017	NO	HALO	YES	2	Red line at lower edge of the green track's band, same slope, ~4 cm offset, no own axis
+mcp2k-403309-p905	NO	HALO	YES	3	Red sits directly inside the narrow band of a fully green short track; no separate structure
+mcp2k-70222-p013	YES	TRACK	YES	2	~25 cm unheld prong leaving vertex, diverges below/left of the green band, own axis in x-z
+mcp2k-400349-p007	NO	TRACK	NO	2	Isolated ~10 cm segment; no other candidate points, no green, no vertex in the 70 cm window
+mcp1k-283229-p902	NO	HALO	YES	3	Red is a mid-segment lying exactly on a long green track; the track's own charge
+mcp2k-350596-p015	NO	HALO	YES	2	Red traces the upper edge of one compact wedge whose lower edge carries green; lateral spread
+mcp2k-395870-p004	YES	TRACK	YES	2	~26 cm prong rising from vertex, no green along it, separate from the green shower clump
+mcp2k-392900-p018	NO	HALO	YES	1	Thin red column at the left edge of the green track's ~10 cm band; slight divergence only
+mcp2k-284047-p005	NO	HALO	YES	2	Red is the lower-right stripe of one small 15 cm clump whose other half carries green
+mcp1k-277276-p907	NO	HALO	YES	2	Red is the near-vertex stretch of the same green track, collinear with it, no separate prong
+mcp2k-319475-p901	NO	HALO	YES	3	Red is a mid-segment lying on the long green track; the track's own unheld charge
+mcp1k-287007-p900	NO	FRAGMENT	NO	3	Tiny few-point blob ~2 cm; only isolated dots elsewhere in window, no track, no vertex
+mcp2k-93105-p003	NO	HALO	YES	2	Red runs parallel ~4 cm below the green line inside one wide 15 cm band; same slope
+mcp2k-392262-p014	NO	HALO	YES	2	Red hugs the lower edge of the green band, same slope over 35 cm, inside ~5 cm
+mcp2k-348198-p016	NO	HALO	YES	2	Short red segment embedded inside a broad candidate sheet with green points a few cm away
+mcp2k-292810-p008	YES	TRACK	YES	3	Third prong from vertex going down ~18 cm, all red/grey with no green, unlike two green prongs
+mcp2k-157215-p019	NO	CROSSING-TRACK	YES	2	Piece of one ~65 cm vertical line crossing the window; rest is other clusters; no green/vertex
+mcp1k-286906-p903	NO	HALO	YES	3	Red is a mid-stretch lying exactly on one long green track; same trajectory, its own charge
+mcp2k-52121-p010	NO	HALO	YES	2	Red stripe parallel ~4 cm above the green line over 35 cm, same band, converging at the far end
+mcp1k-57441-p904	NO	HALO	YES	3	Red is a stretch lying on the single long green track from the vertex; its own charge
+mcp1k-56243-p906	NO	HALO	YES	2	Unheld ~10 cm tail continuing the same green track collinearly at its far end
+mcp2k-174311-p011	NO	HALO	YES	2	Red runs along the upper-left edge of the green track's band for 35 cm, same slope, ~5 cm off
+mcp1k-58345-p021	NO	HALO	YES	2	Short red chain ~4 cm below the green line inside the same band near the vertex
+mcp2k-414306-p006	NO	HALO	YES	2	Red follows the lower-left edge of the green band for ~25 cm, same slope, no separate axis

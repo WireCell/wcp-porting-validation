@@ -1,0 +1,6 @@
+flagged imaging components: 106 in 47 (event, apa) sets; sets with partners in exactly 2 planes: 28 (the third plane is quiet), in all 3 planes: 19
+quiet plane (no flagged partner) among the 2-plane sets: {'W': 12, 'V': 7, 'U': 9}
+slice-extent / wire-extent per flagged component: median 1.74, share > 3 (drift-direction-going): 0.26, share < 1/3: 0.04
+  NOBLOB-SLICE: n=40 median 1.56 share>3 0.30
+  NOBLOB-INSLICE: n=66 median 1.90 share>3 0.24
+plane of the flagged components: {'V': 44, 'U': 38, 'W': 24}

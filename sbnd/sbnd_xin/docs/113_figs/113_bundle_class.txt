@@ -1,0 +1,8 @@
+BUNDLE flags 2802 in 557 events -> /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/113_figs/113_bundle_class.tsv
+class: flags, events, charge share
+  OWN           23 flags     9 events    0.7 % of the flagged charge
+  COMPANION      9 flags     3 events    0.3 % of the flagged charge
+  OTHER       1413 flags   355 events   47.4 % of the flagged charge
+  UNMATCHED   1357 flags   334 events   51.6 % of the flagged charge
+  EMPTY          0 flags     0 events    0.0 % of the flagged charge
+OWN: Qfrac median 0.445, >= 0.10 in 22 flags / 9 events

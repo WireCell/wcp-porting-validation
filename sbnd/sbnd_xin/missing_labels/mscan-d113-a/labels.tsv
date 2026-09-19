@@ -1,0 +1,73 @@
+item	verdict	kind	connected	confidence	comment
+nuecc48-256587-r900	NO	HALO	YES	2	box sits on blue/green shower core; charge inside blue outline, only halo
+mcp2k-294174-r039	YES	TRACK	YES	3	straight ~25-slice track segment in blue-outline gap, continues imaged track above and below
+mcp2k-493659-r046	YES	TRACK	YES	2	faint ~25-slice segment along the track in a blue-outline gap, no green
+mcp2k-100245-r056	NO	TRACK	YES	3	whole-panel box; every track carries a blue outline, nothing uncovered
+mcp1k-276836-r048	YES	TRACK	YES	3	~20-slice steep track segment with no blue outline, continues imaged track below
+mcp1k-395654-r050	NO	HALO	YES	2	box on the blue-outlined green track; only faint halo above it
+mcp1k-174422-r031	YES	TRACK	YES	3	dark ~35-slice straight track segment, no blue outline, continues green track below
+nuecc48-267597-r903	YES	FRAGMENT	YES	2	dark ~20-slice vertical fragment beside dead band, no outline, adjoins candidate blobs
+mcp1k-319039-r035	UNSURE	TRACK	YES	1	horizontal track crossing dead band; cannot read whether the charge is inside blue
+mcp2k-400185-r042	YES	TRACK	YES	3	~24-slice dark track segment above the imaged track end, no blue outline
+nuecc48-437699-r901	NO	SHOWER	YES	2	box on blue/green shower band; content already inside blue
+mcp1k-349835-r032	YES	TRACK	YES	3	~22-slice vertical track stub above the imaged track, no blue outline
+mcp1k-65999-r044	YES	TRACK	YES	3	~25-wire horizontal band with no blue outline between two imaged pieces
+mcp1k-492649-r013	YES	TRACK	YES	3	~32-slice track segment above the green track end, no blue outline
+nuecc48-433451-r902	NO	SHOWER	YES	2	box on the blue/green shower core; nothing uncovered visible
+mcp1k-490361-r040	YES	TRACK	YES	2	faint ~22-slice vertical tail below imaged track end, no blue; same feature in U
+mcp1k-58755-r057	NO	TRACK	YES	2	large box; all tracks and blobs carry blue outlines
+mcp1k-281214-r911	NO	TRACK	YES	3	box lies on the blue-outlined green track, nothing outside blue
+mcp1k-175808-r041	YES	TRACK	YES	2	~25-slice vertical tail below the imaged track end, no blue outline
+mcp2k-179611-r037	YES	TRACK	YES	2	~20-slice track charge between two blue lobes, no blue contour, green cells over it
+mcp2k-52693-r008	YES	TRACK	YES	3	~60-slice grey track bridging two imaged blobs, no blue outline
+mcp2k-393089-r006	YES	TRACK	YES	3	~70-wire track segment with no blue outline between two imaged parts
+mcp1k-314507-r001	YES	TRACK	YES	3	long dark ~75-slice track segment, no blue outline, imaged track at both ends
+mcp2k-393758-r045	UNSURE	FRAGMENT	YES	1	very faint ~18-slice vertical streak below track end; barely above background
+mcp2k-56763-r026	YES	TRACK	YES	2	~25-slice vertical tail below the imaged track end, visible in U too
+mcp2k-321983-r054	NO	TRACK	YES	2	whole-panel box; long track and blobs all blue-outlined
+mcp1k-58607-r021	YES	TRACK	YES	2	dark ~25-slice vertical tail below imaged cluster, no blue outline
+mcp2k-179611-r015	YES	TRACK	YES	3	~55-slice track segment with no blue outline between two imaged pieces
+mcp1k-319039-r055	NO	TRACK	YES	2	large box; tracks and blobs all carry blue outlines
+mcp1k-281507-r908	NO	TRACK	YES	3	box sits on the imaged green track, entirely inside blue
+mcp2k-70538-r910	NO	NONE	YES	3	box mostly empty above the imaged green track end
+mcp2k-75554-r003	YES	TRACK	YES	3	~60-slice grey track with no blue outline, imaged blobs at both corners
+mcp2k-478088-r051	NO	TRACK	YES	2	whole-panel box; all tracks blue-outlined, nothing uncovered
+mcp2k-409624-r027	YES	TRACK	YES	3	~55-slice vertical track segment in blue-outline gap, imaged above and below
+mcp2k-289246-r906	NO	TRACK	YES	2	dead-wire band over the blue-outlined track crossing; nothing clearly outside blue
+mcp2k-395695-r022	YES	TRACK	YES	2	~50-slice steep segment along dead-band edge, no blue, continues imaged track
+mcp2k-56972-r017	YES	TRACK	YES	2	dark ~25-slice vertical tail below the imaged shower end, no blue outline
+mcp1k-352233-r025	YES	TRACK	YES	2	~18-slice grey track stretch with no blue contour, imaged track above and blob below
+mcp2k-72768-r038	NO	NONE	YES	2	line of green candidate cells with little charge; tracks at edges blue-outlined
+mcp2k-49742-r030	NO	NONE	YES	2	green candidate cells cross the box, only faint charge, no uncovered object
+mcp2k-293734-r047	NO	TRACK	YES	3	small box on the imaged vertex; all charge inside blue and green
+mcp2k-396057-r043	YES	TRACK	YES	2	~14-slice track charge in a blue-outline gap between two lobes, green cells over it
+mcp2k-397927-r904	NO	TRACK	YES	3	box on the blue-outlined green track, nothing outside blue
+mcp2k-97084-r016	YES	TRACK	YES	2	dark ~28-slice vertical tail below imaged blob, no blue outline; same in V
+mcp1k-49951-r004	YES	TRACK	YES	2	dark ~25-slice vertical tail below imaged track end, no blue outline
+mcp2k-75554-r011	YES	TRACK	YES	3	~40-slice track segment with no blue outline continuing the imaged track
+mcp2k-389225-r905	NO	TRACK	YES	3	box on blue-outlined track with green cells; nothing uncovered
+mcp1k-353729-r052	NO	SHOWER	YES	2	diffuse shower band enveloped by blue outlines, only faint halo outside
+mcp2k-403397-r033	YES	TRACK	YES	2	~24-slice track charge with no blue contour between two blue lobes
+nuecc48-90055-r000	YES	TRACK	YES	3	long dark track over ~100 slices, no blue outline, continues imaged track below
+mcp2k-178548-r036	YES	TRACK	YES	3	~30-slice track segment with no blue outline between two imaged blobs
+mcp2k-400185-r005	YES	TRACK	YES	3	~75-slice dark track segment, no blue outline, imaged blobs at both ends
+mcp1k-169356-r019	NO	TRACK	YES	3	box on the blue-outlined green track, nothing uncovered
+mcp2k-414200-r012	YES	TRACK	YES	2	~45-slice dark track stretch with no enclosing blue contour, imaged at both ends
+mcp2k-95899-r014	NO	TRACK	YES	2	line of green candidate cells with faint charge; nothing clearly uncovered
+mcp2k-392901-r058	NO	TRACK	YES	2	whole-panel box; both long tracks blue-outlined
+mcp2k-173671-r059	NO	TRACK	YES	3	long steep track fully blue-outlined inside the box
+mcp2k-100157-r023	YES	TRACK	YES	2	dark ~22-slice vertical tail below the imaged track end, no blue outline
+mcp2k-52693-r002	YES	TRACK	YES	3	~75-slice track segment, no blue outline, imaged blobs at both ends
+mcp2k-98382-r024	YES	TRACK	YES	3	~28-slice grey track segment in a blue-outline gap between imaged parts
+mcp1k-172266-r020	YES	TRACK	YES	3	dark ~48-slice steep track segment with no blue outline between blue lobes
+mcp2k-241626-r053	NO	SHOWER	YES	2	long shower band enveloped by blue outlines; only diffuse halo outside
+mcp1k-281505-r018	YES	TRACK	YES	3	~36-slice dark track segment with no blue outline, imaged above and below
+mcp2k-168209-r028	NO	TRACK	YES	3	box on the blue-outlined green track, nothing outside blue
+mcp2k-410064-r907	NO	NONE	YES	3	only one small imaged blue/green blob, rest of the box empty
+mcp2k-74336-r034	YES	TRACK	YES	2	faint ~40-slice track segment in a blue-outline gap, imaged at both ends
+mcp2k-70084-r010	NO	NONE	NO	2	box at dead-wire band edge, essentially empty below the imaged track end
+mcp2k-91697-r029	YES	TRACK	YES	2	~15-slice track piece with no blue contour, joins blue band above to track below
+mcp1k-394532-r049	YES	TRACK	YES	2	~18-slice vertical tail below imaged blob at dead-band edge; same streak in U
+mcp2k-280709-r007	YES	TRACK	YES	2	dark ~25-slice vertical tail below the imaged blob, no blue outline
+mcp1k-283009-r009	YES	TRACK	YES	2	dark ~15-slice vertical column below the blue band, no blue contour around it
+mcp1k-487853-r909	NO	TRACK	YES	3	box on the blue-outlined green horizontal band; rest empty

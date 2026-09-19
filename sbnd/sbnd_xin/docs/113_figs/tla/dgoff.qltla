@@ -1,0 +1,2 @@
+# doc 113: clustering-stage deghost never deletes a cluster (length_cut tiny: only clusters shorter than 1e-6 internal units are candidates)
+dg_length_cut=1e-6

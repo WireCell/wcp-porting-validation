@@ -1,0 +1,42 @@
+UNHELD flags after the halo veto: 38 groups in 30 events -- what the candidate reconstruction looks like on each
+  mcp1k    287431 UNHELD-WIDE  npts   977 Qfrac 0.98 dvtx   nan absorbed 0.00 p90dfit 341.0 | segments   2 showers  0 | nue -15.000 numu -1.942 Enu 0.0
+  mcp1k    351639 UNHELD-WIDE  npts   306 Qfrac 0.88 dvtx   nan absorbed 0.00 p90dfit  17.0 | segments   5 showers  0 | nue -15.000 numu -1.942 Enu 0.0
+  mcp2k    481014 UNHELD-WIDE  npts   109 Qfrac 0.80 dvtx   nan absorbed 0.00 p90dfit  65.7 | segments   6 showers  0 | nue -15.000 numu -1.942 Enu 0.0
+  mcp2k    100728 UNHELD-WIDE  npts   214 Qfrac 0.70 dvtx   nan absorbed 0.00 p90dfit  21.3 | segments   6 showers  0 | nue -15.000 numu -1.942 Enu 0.0
+  mcp2k    480002 UNHELD-WIDE  npts   207 Qfrac 0.63 dvtx   nan absorbed 0.00 p90dfit  34.3 | segments   6 showers  0 | nue -15.000 numu -1.942 Enu 0.0
+  mcp2k    283833 UNHELD-WIDE  npts  8779 Qfrac 0.54 dvtx   6.3 absorbed 1.00 p90dfit  19.4 | segments  18 showers 15 | nue -15.000 numu -1.481 Enu 1404.5
+  mcp2k    400349 UNHELD-TRACK npts   101 Qfrac 0.47 dvtx   nan absorbed 0.00 p90dfit 170.9 | segments   5 showers  0 | nue -15.000 numu -1.942 Enu 0.0
+  mcp2k    157215 UNHELD-TRACK npts    51 Qfrac 0.47 dvtx   nan absorbed 0.00 p90dfit 363.9 | segments   1 showers  0 | nue -15.000 numu -1.942 Enu 0.0
+  mcp2k    157215 UNHELD-TRACK npts    44 Qfrac 0.45 dvtx   nan absorbed 0.00 p90dfit 369.7 | segments   1 showers  0 | nue -15.000 numu -1.942 Enu 0.0
+  mcp2k     75795 UNHELD-WIDE  npts  3097 Qfrac 0.41 dvtx   3.3 absorbed 1.00 p90dfit  20.6 | segments  11 showers  6 | nue -15.000 numu 2.569 Enu 757.1
+  mcp2k    395079 UNHELD-WIDE  npts  2899 Qfrac 0.41 dvtx   6.1 absorbed 1.00 p90dfit  21.8 | segments  12 showers 11 | nue -15.000 numu 0.028 Enu 788.5
+  mcp1k    321107 UNHELD-WIDE  npts  2984 Qfrac 0.36 dvtx   4.8 absorbed 1.00 p90dfit  16.4 | segments   7 showers  6 | nue -15.000 numu 2.299 Enu 668.7
+  mcp2k     75052 UNHELD-WIDE  npts  1148 Qfrac 0.36 dvtx   3.4 absorbed 1.00 p90dfit  12.3 | segments  10 showers  8 | nue -15.000 numu -0.095 Enu 514.3
+  mcp2k    396323 UNHELD-WIDE  npts   904 Qfrac 0.35 dvtx   3.1 absorbed 1.00 p90dfit  12.6 | segments  12 showers  6 | nue -15.000 numu 1.396 Enu 584.9
+  mcp2k     94678 UNHELD-WIDE  npts  1089 Qfrac 0.33 dvtx   5.5 absorbed 1.00 p90dfit  12.2 | segments   4 showers  3 | nue -15.000 numu 1.801 Enu 371.9
+  mcp2k    173340 UNHELD-WIDE  npts  1161 Qfrac 0.31 dvtx   4.3 absorbed 1.00 p90dfit  13.5 | segments   4 showers  3 | nue -15.000 numu -0.288 Enu 342.1
+  mcp2k     75206 UNHELD-WIDE  npts  4315 Qfrac 0.30 dvtx   6.5 absorbed 1.00 p90dfit  40.9 | segments  28 showers 13 | nue -15.000 numu 2.308 Enu 513.0
+  mcp2k    175952 UNHELD-WIDE  npts  3353 Qfrac 0.28 dvtx   3.5 absorbed 1.00 p90dfit  15.7 | segments  16 showers  8 | nue -15.000 numu 4.469 Enu 1426.5
+  mcp2k    174164 UNHELD-WIDE  npts  1597 Qfrac 0.27 dvtx   4.0 absorbed 1.00 p90dfit  19.0 | segments  21 showers  5 | nue -8.729 numu 4.654 Enu 923.3
+  mcp1k    168614 UNHELD-WIDE  npts  1042 Qfrac 0.26 dvtx   6.3 absorbed 1.00 p90dfit  15.9 | segments   4 showers  2 | nue -15.000 numu 2.038 Enu 547.2
+  mcp2k    409052 UNHELD-WIDE  npts   637 Qfrac 0.26 dvtx   3.1 absorbed 1.00 p90dfit  13.7 | segments   2 showers  1 | nue -15.000 numu -1.292 Enu 521.7
+  mcp2k     75795 UNHELD-WIDE  npts  1583 Qfrac 0.23 dvtx  11.8 absorbed 1.00 p90dfit  18.1 | segments  11 showers  6 | nue -15.000 numu 2.569 Enu 757.1
+  mcp2k    322707 UNHELD-WIDE  npts   791 Qfrac 0.22 dvtx   5.6 absorbed 1.00 p90dfit  13.8 | segments  16 showers  7 | nue -15.000 numu 2.522 Enu 1063.5
+  mcp2k     70472 UNHELD-WIDE  npts  3905 Qfrac 0.22 dvtx   4.1 absorbed 0.99 p90dfit  17.7 | segments  17 showers 15 | nue -15.000 numu 0.778 Enu 1188.2
+  mcp2k     75206 UNHELD-WIDE  npts  2647 Qfrac 0.22 dvtx   6.2 absorbed 1.00 p90dfit  18.5 | segments  28 showers 13 | nue -15.000 numu 2.308 Enu 513.0
+  mcp1k    349461 UNHELD-WIDE  npts   704 Qfrac 0.21 dvtx   5.9 absorbed 1.00 p90dfit  12.1 | segments  12 showers  8 | nue -15.000 numu 2.881 Enu 840.3
+  mcp2k     94678 UNHELD-WIDE  npts   768 Qfrac 0.21 dvtx  10.7 absorbed 1.00 p90dfit  12.2 | segments   4 showers  3 | nue -15.000 numu 1.801 Enu 371.9
+  mcp2k    322707 UNHELD-WIDE  npts   580 Qfrac 0.20 dvtx   6.7 absorbed 1.00 p90dfit  13.6 | segments  16 showers  7 | nue -15.000 numu 2.522 Enu 1063.5
+  mcp2k    322135 UNHELD-WIDE  npts  1542 Qfrac 0.20 dvtx   4.1 absorbed 1.00 p90dfit  16.0 | segments  12 showers 10 | nue -15.000 numu 2.785 Enu 1019.2
+  mcp2k    169240 UNHELD-WIDE  npts  2270 Qfrac 0.20 dvtx   6.3 absorbed 1.00 p90dfit  23.0 | segments   6 showers  4 | nue -15.000 numu 2.809 Enu 942.4
+  mcp2k    398191 UNHELD-WIDE  npts  1913 Qfrac 0.19 dvtx   9.9 absorbed 0.79 p90dfit  13.9 | segments   9 showers  6 | nue -15.000 numu 4.367 Enu 1636.8
+  mcp1k    402880 UNHELD-WIDE  npts   360 Qfrac 0.17 dvtx   5.1 absorbed 1.00 p90dfit  12.3 | segments  18 showers 17 | nue -15.000 numu -0.917 Enu 313.5
+  mcp2k    169240 UNHELD-WIDE  npts  1327 Qfrac 0.13 dvtx   4.2 absorbed 1.00 p90dfit  20.2 | segments   6 showers  4 | nue -15.000 numu 2.809 Enu 942.4
+  mcp2k    395717 UNHELD-WIDE  npts   371 Qfrac 0.11 dvtx   8.4 absorbed 1.00 p90dfit  12.6 | segments   4 showers  2 | nue -15.000 numu -0.994 Enu 536.7
+  mcp2k    398191 UNHELD-WIDE  npts  1046 Qfrac 0.10 dvtx   4.1 absorbed 0.99 p90dfit  19.5 | segments   9 showers  6 | nue -15.000 numu 4.367 Enu 1636.8
+  mcp1k    286681 UNHELD-WIDE  npts   733 Qfrac 0.06 dvtx   3.1 absorbed 0.98 p90dfit  12.7 | segments  38 showers 12 | nue -15.000 numu 0.477 Enu 1901.1
+  mcp2k    390391 UNHELD-WIDE  npts   169 Qfrac 0.06 dvtx   7.1 absorbed 1.00 p90dfit  12.0 | segments   5 showers  2 | nue -15.000 numu 2.768 Enu 452.6
+  mcp2k    174164 UNHELD-WIDE  npts   408 Qfrac 0.04 dvtx  13.8 absorbed 1.00 p90dfit  16.0 | segments  21 showers  5 | nue -8.729 numu 4.654 Enu 923.3
+
+absorbed into a TRACK association >= 0.5: 30 of 38 groups (a shower-like or prong charge the PR swept into a track); held by nothing: 8
+showers reconstructed in these events: median 5.5 ; events with 0 showers: 8

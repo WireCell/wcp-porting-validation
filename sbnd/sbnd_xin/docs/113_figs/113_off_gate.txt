@@ -1,0 +1,11 @@
+# doc 113 runtime OFF gate: stage A (imaging + clustering/QL) with the NEW binary (libWireCellImg 90226edabb47, MaskSlices quiet_mask_window C++ default -1, IMG_EXTRA_TLA unset) vs production work-<s>-d102m on nuecc48 g0 + mcp1k g0 = 32 events. 2026-09-19_11:06:23
+nuecc48 g0: imaging npz identical 64 / 64
+16 event pairs compared (work-nuecc48-d102m vs work-nuecc48-d113rep2) ADDED in B: 0 distinct datapaths REMOVED in B: 0 distinct datapaths CHANGED content: 0 distinct datapaths 
+mcp1k g0: imaging npz identical to the old-binary rep arm 64 / 64
+16 event pairs compared (work-mcp1k-d102m vs work-mcp1k-d113rep2) ADDED in B: 0 distinct datapaths REMOVED in B: 0 distinct datapaths CHANGED content: 0 distinct datapaths 
+
+# final binary (libWireCellImg 866fb5eb5e9d, quiet_mask_window + quiet_mask_gap, both C++ default -1): arm rep3, 2026-09-19_11:38:20
+nuecc48 g0: imaging npz identical to production d102m 64 / 64
+16 event pairs compared (work-nuecc48-d102m vs work-nuecc48-d113rep3) ADDED in B: 0 distinct datapaths REMOVED in B: 0 distinct datapaths CHANGED content: 0 distinct datapaths 
+mcp1k g0: imaging npz identical to the old-binary rep arm 64 / 64
+16 event pairs compared (work-mcp1k-d102m vs work-mcp1k-d113rep3) ADDED in B: 0 distinct datapaths REMOVED in B: 0 distinct datapaths CHANGED content: 0 distinct datapaths 

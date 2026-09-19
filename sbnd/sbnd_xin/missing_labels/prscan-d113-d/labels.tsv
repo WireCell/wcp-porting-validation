@@ -1,0 +1,73 @@
+item	verdict	kind	connected	confidence	comment
+mcp1k-52085-p911	NO	HALO	YES	2	unheld ~15 cm stretch inside an otherwise fully green long track; same trajectory, not a separate particle
+mcp2k-480002-p028	YES	TRACK	YES	3	candidate's own ~280 cm straight track, essentially no green on it; only stray held dots
+mcp2k-391756-p903	YES	TRACK	YES	2	short unheld prong ~8 cm rising from the gold-star vertex, transverse to the held arm
+mcp2k-100728-p032	YES	TRACK	YES	3	long ~175 cm candidate track almost entirely unheld; only a few green dots along it
+mcp2k-481014-p042	YES	TRACK	YES	3	long curved ~130 cm candidate track plus a short z-arm, entirely unheld; green is isolated dots
+mcp2k-100564-p900	NO	HALO	YES	2	~10 cm unheld gap in the middle of an already-green long track; same trajectory
+mcp1k-352123-p019	NO	CROSSING-TRACK	YES	3	through-going ~375 cm track spanning full y range, crosses the vertex; cosmic-like
+mcp1k-282231-p053	YES	TRACK	YES	2	~8 cm unheld stub above the vertex continuing the held track's line
+mcp2k-347824-p037	NO	CROSSING-TRACK	UNSURE	2	long straight ~250 cm track crossing the window, passes ~10 cm from vertex, continues both sides
+mcp1k-287517-p035	NO	CROSSING-TRACK	YES	2	straight ~240 cm track through the vertex, continues far on both sides; cosmic-like
+mcp2k-68308-p010	NO	CROSSING-TRACK	YES	3	through-going ~400 cm track spanning the full y range past the vertex region
+nuecc48-10550-p020	NO	CROSSING-TRACK	YES	2	very long broad band at constant drift x crossing the whole window through the vertex
+mcp2k-158227-p044	YES	TRACK	YES	3	straight ~120 cm unheld track ending right at the vertex; green only beyond it
+mcp2k-165855-p901	NO	HALO	YES	2	unheld ~12 cm stretch lying on the end of an already-green track; same trajectory
+mcp1k-284657-p036	NO	CROSSING-TRACK	NO	3	very long ~350 cm straight track crossing the window, passes near but not from the vertex
+mcp2k-398191-p040	NO	CROSSING-TRACK	YES	3	straight ~230 cm track crossing through the vertex and continuing both ways
+mcp2k-157215-p007	YES	TRACK	YES	1	~17 cm vertical segment continuing the candidate's grey stub; sparse, at z~500 edge
+mcp1k-321371-p907	NO	HALO	YES	3	dense unheld blob sitting on an already-green track; width/halo of the same track
+mcp2k-400029-p034	NO	CROSSING-TRACK	YES	2	~175 cm straight track through the vertex continuing to the y=-200 boundary; cosmic-like
+mcp2k-104172-p023	YES	TRACK	YES	2	long unheld prongs from the vertex, ~80 cm down in y and a ~90 cm diagonal
+mcp2k-179369-p016	YES	TRACK	YES	2	unheld ~70 cm vertical track plus ~40 cm arm meeting just beside the vertex
+mcp1k-287431-p030	UNSURE	FRAGMENT	UNSURE	1	~50 cm slab of blobs at the x=-200 boundary beside the grey stub; lattice-like
+mcp2k-480728-p906	NO	HALO	YES	2	unheld charge lying along the two already-green arms at the vertex; same trajectories
+mcp2k-396521-p908	NO	FRAGMENT	UNSURE	2	two tiny blobs a few cm apart; no extended coherent object
+mcp2k-405707-p018	NO	CROSSING-TRACK	YES	2	~320 cm track entering at y~195 and exiting at z~0 through the vertex; cosmic
+mcp2k-100245-p031	NO	CROSSING-TRACK	YES	3	~310 cm straight track through the vertex, continues far both ways; cosmic-like
+mcp1k-351639-p017	YES	TRACK	YES	2	~230 cm unheld track down to the y=-200 boundary; held part is only a dot at its top
+mcp2k-48488-p008	NO	CROSSING-TRACK	UNSURE	3	~400 cm vertical track spanning the full y range, ~40 cm from the vertex; cosmic
+mcp1k-317741-p009	NO	CROSSING-TRACK	YES	2	~300 cm track through the vertex down to the y=-200 boundary; cosmic-like
+mcp1k-291548-p013	NO	CROSSING-TRACK	YES	3	through-going ~400 cm track spanning the full y range across the vertex
+mcp1k-280466-p033	YES	TRACK	YES	3	~300 cm track starting exactly at the vertex and running along drift; entirely unheld
+mcp2k-242814-p047	NO	HALO	YES	1	~25 cm of unheld charge interleaved with green at the vertex; looks like the held prong's width
+mcp2k-166295-p910	NO	HALO	YES	2	first ~13 cm of an already-green track at the vertex left unheld; same trajectory
+mcp2k-323171-p004	UNSURE	FRAGMENT	YES	1	~10 cm clump of unheld charge at the vertex inside the Y's grey halo; no clear prong
+mcp1k-386332-p039	NO	CROSSING-TRACK	NO	2	straight ~105 cm track at constant z passing ~10 cm from the vertex, continues both ways
+mcp2k-480002-p006	NO	NOISE	UNSURE	2	lattice-patterned slab of blobs at the x=-202 boundary, ~20 cm; not a line
+mcp2k-282909-p022	YES	SHOWER	YES	2	large unheld spray of clumps extending ~80 cm up-right from the vertex region
+mcp2k-400349-p045	YES	TRACK	YES	2	~90 cm kinked track unheld; only green is two small blobs at its lower end
+mcp2k-481014-p002	NO	NOISE	UNSURE	2	small lattice-patterned blob patch at the x=-202 boundary; no coherent line
+mcp2k-474612-p058	NO	FRAGMENT	YES	2	small ~5 cm clump at the tip of the short green track; too small
+mcp2k-181050-p043	YES	TRACK	YES	3	two clean ~20 cm unheld prongs rising straight from the vertex
+mcp1k-401252-p012	YES	SHOWER	YES	2	broad unheld spray plus an ~80 cm prong starting ~15 cm from the vertex
+mcp1k-491483-p029	NO	CROSSING-TRACK	YES	3	through-going ~400 cm straight track spanning full y range across the vertex
+mcp1k-284200-p052	NO	HALO	YES	2	clumps of unheld charge a few cm alongside the green prong at the vertex; parallel
+mcp2k-97033-p055	NO	FRAGMENT	YES	2	~7 cm clump at the end of the green track; small, attached to the held tip
+mcp1k-409634-p054	NO	FRAGMENT	YES	2	~12 cm lattice-patterned blob patch inside the candidate's green blob chain; no prong
+mcp2k-280709-p051	NO	FRAGMENT	YES	2	small ~6 cm clump at the far end of the green track at the x=-202 boundary
+nuecc48-137238-p050	YES	TRACK	UNSURE	1	~25 cm segment just below the green shower, closest approach a few cm; plausible unheld prong
+mcp1k-65999-p056	NO	HALO	YES	2	~8 cm unheld extension at the x=-200 end of an already-green track
+mcp2k-49742-p024	NO	CROSSING-TRACK	YES	3	~330 cm track through the vertex down to the y=-200 boundary; cosmic-like
+mcp1k-65289-p027	NO	CROSSING-TRACK	YES	3	through-going ~400 cm track spanning the full y range across the vertex
+mcp2k-237292-p902	NO	FRAGMENT	YES	2	~5 cm clump plus a stray dot embedded in the candidate's green band; not extended
+mcp2k-400349-p005	NO	FRAGMENT	NO	2	isolated ~8 cm blob; nothing else in the window to touch or continue
+mcp1k-401516-p014	NO	CROSSING-TRACK	YES	2	~400 cm straight track through the vertex region, only ~40 cm beyond it; cosmic-like
+mcp2k-321235-p048	YES	TRACK	YES	2	~18 cm unheld straight prong leaving the vertex along drift; green prongs go elsewhere
+mcp2k-157215-p015	YES	TRACK	YES	2	~280 cm track from the y=-200 boundary to z~500, entirely unheld; candidate's only charge
+mcp2k-395837-p025	YES	TRACK	YES	2	~240 cm track starting at the vertex, entirely unheld; green prong is a different track
+mcp1k-290052-p026	NO	CROSSING-TRACK	YES	3	through-going ~400 cm track spanning full y range across the vertex; cosmic
+mcp1k-287211-p904	NO	HALO	YES	2	top ~15 cm of an already-green track left unheld; same trajectory
+mcp1k-174422-p059	YES	TRACK	UNSURE	1	chain of three or four aligned clumps spanning ~35 cm from the vertex, opposite the green track
+mcp2k-172463-p046	NO	NOISE	YES	2	~13 cm lattice-patterned blob patch at the x=-202 boundary at the vertex; not a prong
+mcp1k-287431-p000	UNSURE	FRAGMENT	UNSURE	1	~54 cm lattice-patterned slab at the x=-202 boundary beside the grey stub; line only in x-y
+mcp2k-98947-p049	NO	FRAGMENT	NO	2	half a dozen small scattered clumps over ~50 cm; no coherent line or bundle
+mcp1k-283969-p011	NO	CROSSING-TRACK	UNSURE	2	~400 cm track spanning the full y range ~20 cm from the vertex; one cosmic among many
+mcp2k-174771-p041	NO	CROSSING-TRACK	UNSURE	2	straight ~120 cm track passing ~8 cm from the vertex, continuing on both sides
+mcp2k-100728-p003	NO	NOISE	UNSURE	2	lattice-patterned blob patch at the x~202 drift boundary, ~20 cm; not a track
+mcp2k-395597-p909	NO	HALO	YES	2	~14 cm of unheld charge hugging the green track at the vertex; width, not a prong
+mcp1k-49951-p057	NO	FRAGMENT	YES	2	two small ~4 cm clumps at the tips of the green arms at the x~202 boundary
+mcp1k-351639-p001	NO	NOISE	UNSURE	2	lattice-patterned patch at the x~202 boundary, ~15 cm, merging into a blue cluster
+ncpi0-180801-p905	NO	HALO	YES	1	dense ~15 cm patch of unheld charge inside the green shower near the vertex
+mcp2k-94942-p038	YES	TRACK	YES	3	~150 cm straight prong starting exactly at the vertex, entirely unheld
+mcp2k-398225-p021	YES	TRACK	YES	2	~260 cm unheld track leaving the vertex downward to the y=-200 boundary

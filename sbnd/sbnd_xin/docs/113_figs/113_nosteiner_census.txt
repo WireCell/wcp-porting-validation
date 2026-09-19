@@ -1,0 +1,9 @@
+candidate events (selected main cluster line) 1435: {'nuecc48': 48, 'ncpi0': 19, 'mcp1k': 462, 'mcp2k': 906}
+events where >= 1 cluster of the candidate bundle got NO Steiner graph ("only N steiner terminal(s) found (need >=2)"): 1289 = 89.8 %  {'nuecc48': 47, 'ncpi0': 19, 'mcp1k': 408, 'mcp2k': 815}
+  of which the MAIN cluster itself: 0; associated clusters only: 1289; clusters affected total 6205
+first 12: [('nuecc48', 489330, 4, 24, [30, 32, 33, 36, 38, 42]), ('nuecc48', 269774, 13, 79, [33, 35, 38, 39, 44, 46, 48, 57, 59, 63, 65, 66, 72, 76]), ('nuecc48', 342199, 20, 30, [24, 26, 41, 46, 51, 52, 53, 54, 56, 60]), ('nuecc48', 400474, 18, 54, [46, 47, 53, 54, 57, 58, 60, 65]), ('nuecc48', 469665, 15, 25, [19, 32, 34, 36, 37, 38, 39]), ('nuecc48', 131357, 12, 22, [50, 51, 52, 53, 54, 55, 56, 58, 59, 60]), ('nuecc48', 360535, 7, 37, [32, 35, 36, 43, 44, 45, 47, 48, 49, 51, 53, 54, 56, 59, 85, 88]), ('nuecc48', 447477, 11, 38, [18, 19, 36, 40, 42, 43, 44, 47, 49, 50, 53, 54, 55, 57, 59, 62]), ('nuecc48', 111412, 18, 22, [48, 49, 50, 51, 52, 53, 55, 62, 63, 64, 66]), ('nuecc48', 46363, 19, 44, [25, 48, 49, 50, 53, 57, 58, 59, 61, 62, 64, 65, 66, 67, 72, 74, 76, 77, 79, 81]), ('nuecc48', 267597, 5, 64, [11, 29, 31, 35, 39, 40, 41, 43, 44, 45, 55, 56, 58, 60, 63, 66, 69, 70, 71, 73, 75, 77, 79, 80]), ('nuecc48', 388, 23, 50, [53, 57, 58, 60, 62, 69, 70, 78, 79, 88, 89, 90])]
+
+no-graph associated clusters sized from the stage-A image: 6205 clusters; points median 0, p90 0, >= 100 pts: 0 clusters in 0 events, >= 300 pts: 0
+largest (sample event cluster npts charge main):
+
+(PR-pctree ids) no-graph associated clusters: 6205; points median 10, p90 15, max 50; >= 100 pts: 0 clusters in 0 events; >= 300 pts: 0

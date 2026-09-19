@@ -1,0 +1,49 @@
+census rows 630551; cuts: dmax 25.0 ovl 0.5 min_qfrac 0.03 min_cell 12 min_q 20000 min_ext 6
+events per sample: {'mcp1k': 1000, 'mcp2k': 2000, 'ncpi0': 19, 'nuecc48': 48}; with a PR candidate: {'mcp1k': 448, 'mcp2k': 877, 'ncpi0': 19, 'nuecc48': 48}; errors: 0
+
+class x sample: flagged EVENTS (>= 1 passing component of the class) / events with a candidate, and the median Qfrac of the flags
+class                          nuecc48                 ncpi0                 mcp1k                 mcp2k                   all
+THRESH               0/48      0.0% 0.000     0/19      0.0% 0.000     0/448     0.0% 0.000     0/877     0.0% 0.000     0/1392    0.0% 0.000
+NOBLOB-SLICE         0/48      0.0% 0.000     0/19      0.0% 0.000     5/448     1.1% 0.052    12/877     1.4% 0.053    17/1392    1.2% 0.052
+NOBLOB-INSLICE       1/48      2.1% 0.033     0/19      0.0% 0.000    13/448     2.9% 0.053    20/877     2.3% 0.039    34/1392    2.4% 0.044
+BUNDLE              25/48     52.1% 0.084     6/19     31.6% 0.077   186/448    41.5% 0.167   340/877    38.8% 0.184   557/1392   40.0% 0.170
+any imaging class (THRESH | NOBLOB-*): 47 events / 1392 = 3.4 %
+
+largest imaging-class Qfrac per flagged event: median 0.058, p90 0.136, max 0.285; >= 0.10: 11 events, >= 0.05: 29 events
+PR re-tiling recovery of the flagged imaging-class components: share of charge in T_proj_data median 0.24; components with < 50 % recovered: 69 / 106 in 34 events (the energy-relevant loss)
+NOBLOB-SLICE: 40 flags; planes with activity in their slices (median per component): {1: 2, 2: 32, 3: 6}; zero-summary cell fraction: median 0.00, share of flags with > 0.5: 0.00
+NOBLOB-INSLICE: 66 flags; planes with activity in their slices (median per component): {3: 66}; zero-summary cell fraction: median 0.00, share of flags with > 0.5: 0.00
+
+cut sweep (imaging-class flagged events / events with a candidate):
+  dmax        12: 43/1392 (3.1%)  25: 47/1392 (3.4%)  40: 47/1392 (3.4%)
+  ovl         0.3: 48/1392 (3.4%)  0.5: 47/1392 (3.4%)  0.7: 46/1392 (3.3%)
+  min_qfrac   0.01: 72/1392 (5.2%)  0.03: 47/1392 (3.4%)  0.1: 11/1392 (0.8%)
+  min_cell    8: 50/1392 (3.6%)  12: 47/1392 (3.4%)  24: 38/1392 (2.7%)
+
+flags 2908 -> /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/113_figs/113_flags.tsv; exhibits 60 -> /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/113_figs/113_exhibits.tsv
+top exhibits (rank sample event class apa plane ncell Q Qfrac wext sext f_act f_zsum nplane d_bundle):
+    0 nuecc48    90055 NOBLOB-INSLICE  1 1   203   1.82e+06  0.033   33  105 1.00 0.00 3 0.0
+    1 mcp1k     314507 NOBLOB-INSLICE  1 0   225   1.63e+06  0.139   70   72 1.00 0.00 3 0.0
+    2 mcp2k      52693 NOBLOB-INSLICE  1 1   196   1.53e+06  0.066   56   72 1.00 0.00 3 0.0
+    3 mcp2k      75554 NOBLOB-SLICE    0 0   202   1.46e+06  0.094   55   57 1.00 0.00 3 0.0
+    4 mcp1k      49951 NOBLOB-SLICE    1 1    49   1.27e+06  0.114    3   24 1.00 0.00 2 1.0
+    5 mcp2k     400185 NOBLOB-SLICE    1 1   158   1.26e+06  0.117   32   70 1.00 0.00 3 0.0
+    6 mcp2k     393089 NOBLOB-SLICE    0 2   159   1.19e+06  0.281   64   28 1.00 0.00 2 8.1
+    7 mcp2k     280709 NOBLOB-SLICE    0 0    75   1.17e+06  0.194    4   25 1.00 0.00 1 1.0
+    8 mcp2k      52693 NOBLOB-SLICE    1 0   145   1.15e+06  0.056   42   55 1.00 0.00 3 0.0
+    9 mcp1k     283009 NOBLOB-INSLICE  0 1    74   1.13e+06  0.036   11   19 1.00 0.00 3 0.0
+   10 mcp2k      70084 NOBLOB-INSLICE  0 1    51   1.09e+06  0.079    3   24 0.96 0.00 3 0.0
+   11 mcp2k      75554 NOBLOB-INSLICE  0 0   134   1.05e+06  0.067   38   38 1.00 0.00 3 0.0
+   12 mcp2k     414200 NOBLOB-INSLICE  0 0   161   1.04e+06  0.066   54   43 1.00 0.00 3 0.0
+   13 mcp1k     492649 NOBLOB-INSLICE  1 1   127   9.46e+05  0.102   47   28 1.00 0.00 3 0.0
+   14 mcp2k      95899 NOBLOB-INSLICE  0 0   122   9.09e+05  0.050   23   57 1.00 0.00 3 0.0
+   15 mcp2k     179611 NOBLOB-SLICE    1 2   110    8.6e+05  0.046   37   50 1.00 0.00 2 0.0
+   16 mcp2k      97084 NOBLOB-SLICE    1 0    48   8.48e+05  0.066    2   25 1.00 0.00 2 1.0
+   17 mcp2k      56972 NOBLOB-SLICE    1 1    67   8.21e+05  0.107    4   23 1.00 0.00 2 0.0
+   18 mcp1k     281505 NOBLOB-INSLICE  0 0   118   8.18e+05  0.092   16   32 1.00 0.00 3 0.0
+   19 mcp1k     169356 NOBLOB-INSLICE  1 0   103   7.47e+05  0.033   37   35 1.00 0.00 3 0.0
+   20 mcp1k     172266 NOBLOB-SLICE    0 0    93   6.94e+05  0.037   15   42 1.00 0.00 2 1.0
+   21 mcp1k      58607 NOBLOB-INSLICE  1 1    46    6.8e+05  0.272    6   19 1.00 0.00 3 0.0
+   22 mcp2k     395695 NOBLOB-INSLICE  1 0    85   6.61e+05  0.033    8   42 1.00 0.00 3 0.0
+   23 mcp2k     100157 NOBLOB-INSLICE  0 1    67   6.49e+05  0.060    4   20 1.00 0.00 3 0.0
+   24 mcp2k      98382 NOBLOB-INSLICE  0 0    93    6.3e+05  0.131   30   22 1.00 0.00 3 0.0

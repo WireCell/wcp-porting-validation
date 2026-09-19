@@ -1,0 +1,16 @@
+events with >= 1 adopted cluster: 8 {'mcp1k': 2, 'mcp2k': 6}; adopted clusters 10; length median 5.3 cm, closest approach median 0.54 cm
+
+adopted clusters (sample event cluster gid L d | OFF-census class | scan item & YES? | Enu OFF -> ON | nu_evaluated OFF/ON | numu OFF/ON):
+  mcp1k 174422 cl 8 gid 1000003 L 10.3 d 0.47 | NEARBY-UNMATCHED | -  | Enu 431.79193 -> 431.79193 | nu_eval 1/1 | numu 0.9551032/0.9551032
+  mcp1k 409634 cl 21 gid 1000003 L 28.7 d 0.43 | - | -  | Enu 405.90924 -> 405.90924 | nu_eval 1/1 | numu -0.4806678/-0.4806678
+  mcp1k 409634 cl 63 gid 1000003 L 3.9 d 0.47 | - | -  | Enu 405.90924 -> 405.90924 | nu_eval 1/1 | numu -0.4806678/-0.4806678
+  mcp2k 49767 cl 52 gid 1000000 L 5.1 d 2.37 | - | -  | Enu 0.0 -> 114.55363 | nu_eval 1/1 | numu -1.9416895/-2.0492668
+  mcp2k 55286 cl 24 gid 1000002 L 11.7 d 0.31 | - | -  | Enu 0.0 -> 36.385715 | nu_eval 1/1 | numu -1.9416895/-2.690058
+  mcp2k 73038 cl 23 gid 1000000 L 4.9 d 0.46 | - | -  | Enu 47.0882 -> 47.0882 | nu_eval 1/1 | numu -2.5030892/-2.5030892
+  mcp2k 99563 cl 41 gid 1000010 L 6.1 d 1.93 | - | -  | Enu 1348.7208 -> 1348.7208 | nu_eval 1/1 | numu -4.310366/-4.310366
+  mcp2k 99563 cl 44 gid 1000010 L 5.6 d 2.92 | - | -  | Enu 1348.7208 -> 1348.7208 | nu_eval 1/1 | numu -4.310366/-4.310366
+  mcp2k 162143 cl 74 gid 1000003 L 3.2 d 0.62 | - | -  | Enu 1560.9493 -> 1560.9537 | nu_eval 1/1 | numu 5.130154/5.130154
+  mcp2k 179369 cl 81 gid 1000000 L 4.7 d 2.45 | - | -  | Enu 1456.9701 -> 1456.9701 | nu_eval 1/1 | numu 3.5333562/3.5333562
+
+Enu ON - OFF on adopted events: n 8, median +0.0 MeV, mean +18.9, rose in 3, fell in 0
+events with NO adoption: 3059; Enu changed in 0 of them (|dEnu| median 0.00 MeV, max 0.0)

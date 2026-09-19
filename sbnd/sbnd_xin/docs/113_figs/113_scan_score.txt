@@ -1,0 +1,51 @@
+items 72; scanners ['a', 'b']: a labelled 72, b labelled 72
+
+scanner a: verdict by class (hidden from the scanner)
+  NOBLOB-SLICE    n= 17  YES  17 (100 %)  NO   0  UNSURE   0  <- precision (YES / all)
+  NOBLOB-INSLICE  n= 34  YES  24 (71 %)  NO   8  UNSURE   2  <- precision (YES / all)
+  CONTROL         n= 12  YES   1 (8 %)  NO  11  UNSURE   0  <- false-positive rate on covered charge
+
+scanner b: verdict by class (hidden from the scanner)
+  NOBLOB-SLICE    n= 17  YES  11 (65 %)  NO   6  UNSURE   0  <- precision (YES / all)
+  NOBLOB-INSLICE  n= 34  YES  14 (41 %)  NO  20  UNSURE   0  <- precision (YES / all)
+  CONTROL         n= 12  YES   0 (0 %)  NO  12  UNSURE   0  <- false-positive rate on covered charge
+
+agreement a vs b: identical verdict on 53 / 72; YES/YES 25, YES by either 42
+  pairs: NO/NO:28, UNSURE/NO:2, YES/NO:17, YES/YES:25
+
+consensus by class (both YES | one YES one UNSURE | one YES one NO | neither):
+  NOBLOB-SLICE    n= 17  both 11  yes+unsure 0  split 6  neither 0  -> strict precision 65 %, lenient 65 %
+  NOBLOB-INSLICE  n= 34  both 14  yes+unsure 0  split 10  neither 10  -> strict precision 41 %, lenient 41 %
+  CONTROL         n= 12  both 0  yes+unsure 0  split 1  neither 11  -> strict precision 0 %, lenient 0 %
+
+items judged YES by every scanner (item, class, plane, Q, Qfrac, kinds, comments):
+  mcp1k-172266-r020        NOBLOB-SLICE    U  Q=6.94e+05 Qfrac=0.037 PRrec=0.00  TRACK/TRACK  dark ~48-slice steep track segment with no blue outline between blue l | dark 48-slice steep track with no blue in U and W between imaged blobs
+  mcp1k-174422-r031        NOBLOB-SLICE    V  Q=5.36e+05 Qfrac=0.034 PRrec=0.00  TRACK/TRACK  dark ~35-slice straight track segment, no blue outline, continues gree | dark 35-slice diagonal un-imaged in V and W, running into the candidat
+  mcp1k-276836-r048        NOBLOB-SLICE    W  Q=2.84e+05 Qfrac=0.049 PRrec=0.38  TRACK/TRACK  ~20-slice steep track segment with no blue outline, continues imaged t | grey ~24-slice steep segment with matching blue gaps in W and V
+  mcp1k-281505-r018        NOBLOB-INSLICE  U  Q=8.18e+05 Qfrac=0.092 PRrec=0.25  TRACK/TRACK  ~36-slice dark track segment with no blue outline, imaged above and be | grey diagonal fills the blue gap between upper imaged track and lower 
+  mcp1k-314507-r001        NOBLOB-INSLICE  U  Q=1.63e+06 Qfrac=0.139 PRrec=0.07  TRACK/TRACK  long dark ~75-slice track segment, no blue outline, imaged track at bo | dark 70-wire diagonal with no blue outline joining two imaged segments
+  mcp1k-352233-r025        NOBLOB-INSLICE  V  Q=6.24e+05 Qfrac=0.134 PRrec=0.65  TRACK/TRACK  ~18-slice grey track stretch with no blue contour, imaged track above  | ~40-slice diagonal segment un-outlined in both V and W between imaged 
+  mcp1k-492649-r013        NOBLOB-INSLICE  V  Q=9.46e+05 Qfrac=0.102 PRrec=0.61  TRACK/TRACK  ~32-slice track segment above the green track end, no blue outline | dark rising diagonal in V and W with blue gap; U has no charge above s
+  mcp1k-65999-r044         NOBLOB-INSLICE  W  Q=3.51e+05 Qfrac=0.084 PRrec=0.00  TRACK/TRACK  ~25-wire horizontal band with no blue outline between two imaged piece | ~25-wire horizontal band un-imaged in W with matching gaps in U and V
+  mcp2k-178548-r036        NOBLOB-SLICE    V  Q=4.82e+05 Qfrac=0.071 PRrec=0.00  TRACK/TRACK  ~30-slice track segment with no blue outline between two imaged blobs | dark 30-slice diagonal un-outlined in V and W between imaged blobs
+  mcp2k-179611-r015        NOBLOB-SLICE    W  Q=8.6e+05 Qfrac=0.046 PRrec=0.02  TRACK/TRACK  ~55-slice track segment with no blue outline between two imaged pieces | grey 55-slice diagonal with no blue in W and V between two imaged blob
+  mcp2k-294174-r039        NOBLOB-SLICE    U  Q=4.45e+05 Qfrac=0.032 PRrec=0.00  TRACK/TRACK  straight ~25-slice track segment in blue-outline gap, continues imaged | grey ~22-slice diagonal in the blue-outline gap of the candidate track
+  mcp2k-393089-r006        NOBLOB-SLICE    W  Q=1.19e+06 Qfrac=0.281 PRrec=0.00  TRACK/TRACK  ~70-wire track segment with no blue outline between two imaged parts | dark 70-wire diagonal with no blue in W and V joining two imaged segme
+  mcp2k-400185-r005        NOBLOB-SLICE    V  Q=1.26e+06 Qfrac=0.117 PRrec=0.09  TRACK/TRACK  ~75-slice dark track segment, no blue outline, imaged blobs at both en | dark 75-slice diagonal with no blue in V and U, between imaged blobs o
+  mcp2k-400185-r042        NOBLOB-INSLICE  U  Q=3.89e+05 Qfrac=0.036 PRrec=0.32  TRACK/TRACK  ~24-slice dark track segment above the imaged track end, no blue outli | dark steep track ~25 slices above the green end, no blue; same in V or
+  mcp2k-409624-r027        NOBLOB-INSLICE  W  Q=5.92e+05 Qfrac=0.060 PRrec=0.16  TRACK/TRACK  ~55-slice vertical track segment in blue-outline gap, imaged above and | grey vertical segment ~55 slices in W and V filling the blue gap of th
+  mcp2k-414200-r012        NOBLOB-INSLICE  U  Q=1.04e+06 Qfrac=0.066 PRrec=1.00  TRACK/TRACK  ~45-slice dark track stretch with no enclosing blue contour, imaged at | ~50-wire dark diagonal with no blue in U and W; V shows matching blob 
+  mcp2k-493659-r046        NOBLOB-INSLICE  U  Q=3e+05 Qfrac=0.035 PRrec=0.49  TRACK/TRACK  faint ~25-slice segment along the track in a blue-outline gap, no gree | faint 25-slice track segment with blue gaps in all three planes
+  mcp2k-52693-r002         NOBLOB-INSLICE  V  Q=1.53e+06 Qfrac=0.066 PRrec=0.11  TRACK/TRACK  ~75-slice track segment, no blue outline, imaged blobs at both ends | ~60-wire grey diagonal, no blue outline, between imaged blobs of the c
+  mcp2k-52693-r008         NOBLOB-SLICE    U  Q=1.15e+06 Qfrac=0.056 PRrec=0.26  TRACK/TRACK  ~60-slice grey track bridging two imaged blobs, no blue outline | ~50-wire grey diagonal with no blue between two imaged blobs of the sa
+  mcp2k-74336-r034         NOBLOB-SLICE    W  Q=5.19e+05 Qfrac=0.030 PRrec=0.11  TRACK/TRACK  faint ~40-slice track segment in a blue-outline gap, imaged at both en | faint but coherent ~40-slice diagonal in W and V between two imaged bl
+  mcp2k-75554-r003         NOBLOB-SLICE    U  Q=1.46e+06 Qfrac=0.094 PRrec=0.00  TRACK/TRACK  ~60-slice grey track with no blue outline, imaged blobs at both corner | dark 58-wire diagonal segment, no blue outline, between two imaged blo
+  mcp2k-75554-r011         NOBLOB-INSLICE  U  Q=1.05e+06 Qfrac=0.067 PRrec=0.11  TRACK/TRACK  ~40-slice track segment with no blue outline continuing the imaged tra | un-imaged diagonal segment ~40 wires continuing green candidate upward
+  mcp2k-91697-r029         NOBLOB-INSLICE  U  Q=5.74e+05 Qfrac=0.058 PRrec=1.00  TRACK/TRACK  ~15-slice track piece with no blue contour, joins blue band above to t | dark ~20-slice track segment in the blue-outline gap between upper and
+  mcp2k-98382-r024         NOBLOB-INSLICE  U  Q=6.3e+05 Qfrac=0.131 PRrec=0.37  TRACK/TRACK  ~28-slice grey track segment in a blue-outline gap between imaged part | grey diagonal ~30-wire gap between imaged track and blob, no blue outl
+  nuecc48-90055-r000       NOBLOB-INSLICE  V  Q=1.82e+06 Qfrac=0.033 PRrec=0.04  TRACK/TRACK  long dark track over ~100 slices, no blue outline, continues imaged tr | dark 105-slice diagonal in V and W, no blue, joins green candidate end
+
+PR re-tiling recovery on the 41 items judged YES by either scanner: share of the un-imaged charge already in T_proj_data: median 0.11; items with < 0.5 recovered (energy-relevant loss): 32; >= 0.9: 7
+
+control items judged YES by any scanner:
+  nuecc48-267597-r903: ['YES', 'NO']  dark ~20-slice vertical fragment beside dead band, no outlin | blue-outlined green shower blob at the dead-region edge; not

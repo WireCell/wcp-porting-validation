@@ -244,6 +244,19 @@ run_group() {
         local -a _TLA=(--tla-str  "input=$GDIR/frames-dnn.tar.bz2"
                        --tla-code "anode_indices=[0,1]"
                        --tla-str  "output_dir=$GDIR")
+        # doc sbnd_xin/113: IMG_EXTRA_TLA=<file> appends one --tla-code per non-comment line to the imaging
+        # job (e.g. img_knobs={pd_dryrun:true}); the LAST block, so a file entry wins.  Unset/empty => no
+        # TLA is added => the compiled .wct-cfg-img.json is byte-identical (113_cfg_proof.txt).  Mirrors
+        # PR_EXTRA_TLA in run_pr_chain_batch.sh.
+        if [ -n "${IMG_EXTRA_TLA:-}" ]; then
+            [ -r "$IMG_EXTRA_TLA" ] || { echo "[g$K] ERROR: IMG_EXTRA_TLA unreadable: $IMG_EXTRA_TLA" >&2; return 1; }
+            local _n=0 _tl
+            while IFS= read -r _tl || [ -n "$_tl" ]; do
+                case "$_tl" in ''|\#*) continue ;; esac
+                _TLA+=(--tla-code "$_tl"); _n=$((_n+1))
+            done < "$IMG_EXTRA_TLA"
+            echo "[g$K] IMG_EXTRA_TLA: appended $_n override(s) from $IMG_EXTRA_TLA" >&2
+        fi
         local -a _CFG=()
         precompile_cfg "g$K" "$SX/wct-img-all.jsonnet" "$GDIR/.wct-cfg-img.json"
         setarch x86_64 -R python3 "$AB/timecmd.py" "$GDIR/.img.time.meta" \
@@ -300,6 +313,17 @@ print(v[0], v[1])' "$GDIR/rse.json")
                    --tla-code "rse_map=$(cat "$GDIR/rse.json")"
                    --tla-str  "save_tensors=$QL_TENSORS"
                    "${QL_BEE_TLA[@]}")
+    # doc sbnd_xin/113: QL_EXTRA_TLA=<file> appends one --tla-code per non-comment line to the Q/L job (the
+    # LAST block; unset/empty => byte-identical compiled config).  Mirrors IMG_EXTRA_TLA above.
+    if [ -n "${QL_EXTRA_TLA:-}" ]; then
+        [ -r "$QL_EXTRA_TLA" ] || { echo "[g$K] ERROR: QL_EXTRA_TLA unreadable: $QL_EXTRA_TLA" >&2; return 1; }
+        local _n=0 _tl
+        while IFS= read -r _tl || [ -n "$_tl" ]; do
+            case "$_tl" in ''|\#*) continue ;; esac
+            _TLA+=(--tla-code "$_tl"); _n=$((_n+1))
+        done < "$QL_EXTRA_TLA"
+        echo "[g$K] QL_EXTRA_TLA: appended $_n override(s) from $QL_EXTRA_TLA" >&2
+    fi
     local -a _CFG=()
     precompile_cfg "g$K" "$SX/wct-clus-matching-perevt.jsonnet" "$GDIR/.wct-cfg-ql.json"
     setarch x86_64 -R python3 "$AB/timecmd.py" "$GDIR/.ql.time.meta" \

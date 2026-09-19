@@ -1,0 +1,32 @@
+== mcp1k 287431: cls UNHELD-WIDE Qfrac 0.9782 npts 977.0 | selected 7 L 52.0 cm assoc 2 | calib main_vertex None segments 2 showers 0
+   W: [21:03:00.149] W [tracking] SbndMagnifyTrackingVisitor: fitted_charge_2d is empty
+   K: [21:02:57.604] I [  clus  ] <TaggerCheckNeutrino:pr> TaggerCheckNeutrino: [nu_per_bundle] ROW 0 gid 0 cluster 7 vertex (0.0000, 0.0000, 0.0000) cm Enu 0.0000 acts 4 ../cl
+   K: [21:03:00.142] D [  clus  ] <PrDisplayDump:pr> tagger: nue_score -15.000 numu_score -1.942 cosmict_flag 0 (flags 1-9 000000000 10 0) cosmic_flag 1 filled 0 Enu 0.0 MeV 
+== mcp1k 351639: cls UNHELD-WIDE Qfrac 0.8801 npts 306.0 | selected 9 L 19.1 cm assoc 5 | calib main_vertex None segments 5 showers 0
+   W: [21:08:15.648] W [tracking] SbndMagnifyTrackingVisitor: fitted_charge_2d is empty
+   K: [21:08:13.379] I [  clus  ] <TaggerCheckNeutrino:pr> TaggerCheckNeutrino: [nu_per_bundle] ROW 0 gid 1000000 cluster 9 vertex (0.0000, 0.0000, 0.0000) cm Enu 0.0000 acts 7
+   K: [21:08:15.627] D [  clus  ] <PrDisplayDump:pr> tagger: nue_score -15.000 numu_score -1.942 cosmict_flag 0 (flags 1-9 000000000 10 0) cosmic_flag 1 filled 0 Enu 0.0 MeV 
+== mcp2k 100728: cls UNHELD-WIDE Qfrac 0.7021 npts 214.0 | selected 8 L 18.4 cm assoc 6 | calib main_vertex None segments 6 showers 0
+   K: [21:48:16.541] W [  clus  ] <CreateSteinerGraph:pr> CreateSteinerGraph: create_steiner_tree produced no steiner_graph for main 17, skipping transfer ../clus/src/CreateSte
+   K: [21:48:16.705] W [  clus  ] <CreateSteinerGraph:prrefresh> CreateSteinerGraph: create_steiner_tree produced no steiner_graph for main 17, skipping transfer ../clus/src/Cr
+   K: [21:48:18.201] I [  clus  ] <TaggerCheckNeutrino:pr> TaggerCheckNeutrino: [nu_per_bundle] ROW 0 gid 1000004 cluster 8 vertex (0.0000, 0.0000, 0.0000) cm Enu 0.0000 acts 8
+   K: [21:48:20.579] D [  clus  ] <PrDisplayDump:pr> tagger: nue_score -15.000 numu_score -1.942 cosmict_flag 0 (flags 1-9 000000000 10 0) cosmic_flag 1 filled 0 Enu 0.0 MeV 
+== mcp2k 157215: cls UNHELD-TRACK Qfrac 0.4745 npts 51.0 | selected 1 L 27.8 cm assoc 1 | calib main_vertex None segments 1 showers 0
+   K: [21:50:59.710] I [  clus  ] <TaggerCheckNeutrino:pr> TaggerCheckNeutrino: [nu_per_bundle] ROW 0 gid 1 cluster 1 vertex (0.0000, 0.0000, 0.0000) cm Enu 0.0000 acts 5 ../cl
+   K: [21:51:01.982] D [  clus  ] <PrDisplayDump:pr> tagger: nue_score -15.000 numu_score -1.942 cosmict_flag 0 (flags 1-9 000000000 10 0) cosmic_flag 1 filled 0 Enu 0.0 MeV 
+== mcp2k 323171: cls UNHELD-WIDE Qfrac 0.0456 npts 95.0 | selected 22 L 164.3 cm assoc 7 | calib main_vertex {'cluster_id': 22, 'x': -156.97749150219232, 'y': -56.81212286207775, 'z': 54.4986754556103} segments 11 showers 7
+   W: [22:26:27.315] W [clus.NeutrinoPattern] fill_kine_tree: no geom_helper -- kine_nu_*_corr are the RAW fitted vertex despite the _corr name
+   K: [22:26:27.330] I [clus.NeutrinoPattern] kine_excluded_census: Enu=707.7 excluded=4.7 (main=0.0 other=4.7) n_excluded=2 flagged_inside_Enu=4.7 main_cid=22 n_graph_seg=11 n
+   K: [22:26:27.341] I [  clus  ] <TaggerCheckNeutrino:pr> TaggerCheckNeutrino: [nu_per_bundle] ROW 0 gid 1 cluster 22 vertex (-156.9775, -56.8121, 54.4987) cm Enu 707.6985 act
+   K: [22:26:29.560] D [  clus  ] <PrDisplayDump:pr> tagger: nue_score -15.000 numu_score 1.364 cosmict_flag 0 (flags 1-9 000000000 10 0) cosmic_flag 1 filled 0 Enu 707.7 MeV 
+== mcp2k 400349: cls UNHELD-TRACK Qfrac 0.4748 npts 101.0 | selected 11 L 17.5 cm assoc 5 | calib main_vertex None segments 5 showers 0
+   K: [22:41:35.802] I [  clus  ] <TaggerCheckNeutrino:pr> TaggerCheckNeutrino: [nu_per_bundle] ROW 0 gid 1 cluster 11 vertex (0.0000, 0.0000, 0.0000) cm Enu 0.0000 acts 7 ../c
+   K: [22:41:38.106] D [  clus  ] <PrDisplayDump:pr> tagger: nue_score -15.000 numu_score -1.942 cosmict_flag 0 (flags 1-9 000000000 10 0) cosmic_flag 1 filled 0 Enu 0.0 MeV 
+== mcp2k 480002: cls UNHELD-WIDE Qfrac 0.6274 npts 207.0 | selected 3 L 22.0 cm assoc 6 | calib main_vertex None segments 6 showers 0
+   W: [22:50:38.061] W [tracking] SbndMagnifyTrackingVisitor: fitted_charge_2d is empty
+   K: [22:50:35.670] I [  clus  ] <TaggerCheckNeutrino:pr> TaggerCheckNeutrino: [nu_per_bundle] ROW 0 gid 4 cluster 3 vertex (0.0000, 0.0000, 0.0000) cm Enu 0.0000 acts 8 ../cl
+   K: [22:50:38.050] D [  clus  ] <PrDisplayDump:pr> tagger: nue_score -15.000 numu_score -1.942 cosmict_flag 0 (flags 1-9 000000000 10 0) cosmic_flag 1 filled 0 Enu 0.0 MeV 
+== mcp2k 481014: cls UNHELD-WIDE Qfrac 0.8021 npts 109.0 | selected 7 L 16.0 cm assoc 6 | calib main_vertex None segments 6 showers 0
+   W: [22:50:57.264] W [tracking] SbndMagnifyTrackingVisitor: fitted_charge_2d is empty
+   K: [22:50:55.033] I [  clus  ] <TaggerCheckNeutrino:pr> TaggerCheckNeutrino: [nu_per_bundle] ROW 0 gid 0 cluster 7 vertex (0.0000, 0.0000, 0.0000) cm Enu 0.0000 acts 8 ../cl
+   K: [22:50:57.254] D [  clus  ] <PrDisplayDump:pr> tagger: nue_score -15.000 numu_score -1.942 cosmict_flag 0 (flags 1-9 000000000 10 0) cosmic_flag 1 filled 0 Enu 0.0 MeV 

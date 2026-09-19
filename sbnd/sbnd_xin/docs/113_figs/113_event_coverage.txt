@@ -1,0 +1,8 @@
+whole-event 2-D charge coverage by the stage-A 3-D image (L0 cells above the per-plane floor, bad and dead-blob cells excluded), all 3067 events:
+  nuecc48  n=   48  uncovered-by-any-blob / all charge: median 0.66 %  mean 0.83 %  p90 1.23 %  max 3.4 %;  total charge share 0.82 %
+  ncpi0    n=   19  uncovered-by-any-blob / all charge: median 0.75 %  mean 0.91 %  p90 1.46 %  max 2.4 %;  total charge share 0.85 %
+  mcp1k    n= 1000  uncovered-by-any-blob / all charge: median 0.75 %  mean 1.05 %  p90 1.95 %  max 11.2 %;  total charge share 1.00 %
+  mcp2k    n= 2000  uncovered-by-any-blob / all charge: median 0.75 %  mean 1.03 %  p90 1.82 %  max 14.2 %;  total charge share 0.95 %
+  all      n= 3067  uncovered-by-any-blob / all charge: median 0.75 %  mean 1.04 %  p90 1.86 %  max 14.2 %;  total charge share 0.96 %
+events with a PR candidate: 1392; the candidate holds median 10.8 % of the event charge (cosmics hold the rest)
+per-plane floor (0.5 x median active-cell charge, e per (wire, slice)): p0 median 2695, p1 median 2950, p2 median 3877

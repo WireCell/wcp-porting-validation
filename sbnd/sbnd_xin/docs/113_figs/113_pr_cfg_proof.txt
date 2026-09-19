@@ -1,0 +1,22 @@
+# doc 113 sec 7 compiled PR-job config proof, nuecc48 evt 10550: production (pr150s0) vs the ON arm (d113adopt, PR_EXTRA_TLA nu_adopt_touching=true); nodes 44 vs 43
+   other diff: TaggerCheckSTM pr [('save_stm_fit', 'True', 'None')]
+   other diff: SbndPrMagnifyTrackingVisitor pr [('output_filename', '/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-n', '/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-n'), ('provenance', "{'bdt_weights_dir': 'uboone/weights', 'cfg_tree': '/nfs/data", "{'bdt_weights_dir': 'uboone/weights', 'cfg_tree': '/nfs/data")]
+   other diff: UbooneTaggerOutputVisitor pr [('output_filename', '/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-n', '/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-n')]
+   other diff: PrDisplayDump pr [('output_filename', '/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-n', '/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-n')]
+   other diff: SbndMagnifyTrackingVisitor pr [('A', 'None', '0.93'), ('C', 'None', '0.855175'), ('Wi', 'None', '2.36e-05')]
+   other diff: PowerBoxRecombination sbnd_power_recomb [('A', '0.93', 'None'), ('C', '0.855175', 'None'), ('Wi', '2.36e-05', 'None')]
+   ('TaggerCheckSTM', ('save_stm_fit',)) 1
+   ('TaggerCheckNeutrino', ('nu_adopt_touching',)) 1
+   ('SbndPrMagnifyTrackingVisitor', ('output_filename', 'provenance')) 1
+   ('UbooneTaggerOutputVisitor', ('output_filename',)) 1
+   ('PrDisplayDump', ('output_filename',)) 1
+   ('SbndMagnifyTrackingVisitor', ('A', 'C', 'Wi', 'anodes', 'dQdx_offset', 'dQdx_scale', 'dedx_max', 'detector_volumes', 'eventNo', 'grouping', 'k', 'nticks', 'output_filename', 'p', 'pivot', 'runNo', 'subRunNo', 'track_fitting_name')) 1
+   ('PowerBoxRecombination', ('A', 'C', 'Wi', 'dedx_max', 'k', 'p', 'pivot', 'start', 'step', 'values')) 1
+   ('LinterpFunction', ('values',)) 4
+   ('LinterpFunction', ('coords', 'start', 'step', 'values')) 1
+   ('LinterpFunction', ('coords', 'values')) 4
+   ('LinterpFunction', ('coords', 'dedx_functions', 'range_functions', 'values')) 1
+   ('ParticleDataSet', ('bounds', 'dedx_functions', 'range_functions')) 1
+   ('BoxFiducial', ('anodes', 'bee_detector', 'bee_dir', 'bee_pf', 'bee_points_sets', 'bee_zip', 'bounds', 'cluster_id_order', 'dead_area_version', 'detector_volumes', 'eventNo', 'initial_index', 'inpath', 'outpath', 'perf', 'pipeline', 'runNo', 'save_deadarea', 'save_opflash', 'subRunNo', 'use_config_rse')) 1
+   ('MultiAlgBlobClustering', ('anodes', 'bee_detector', 'bee_dir', 'bee_pf', 'bee_points_sets', 'bee_zip', 'cluster_id_order', 'dead_area_version', 'detector_volumes', 'dump_mode', 'eventNo', 'initial_index', 'inpath', 'outname', 'outpath', 'perf', 'pipeline', 'prefix', 'runNo', 'save_deadarea', 'save_opflash', 'subRunNo', 'use_config_rse')) 1
+   ('TensorFileSink', ('dump_mode', 'edges', 'outname', 'prefix')) 1

@@ -1,0 +1,3 @@
+# doc 113 sec 7 stage-B runtime OFF gate: work-<s>-d113g16off (new binary libWireCellClus a48199e8288f, knob absent, manifest_gate16, NO_DL=1) vs work-<s>-pr150g16new (pr/150's gate arm at the production HEAD), arm_identity.py; allowed = the provenance strings only (Trun.cfg_tree, op_config_sha256, provenance, toolkit_git, wcp_git). 2026-09-19_13:04:08
+mcp1k identity rc=0 : # 8/8 events identical over 40 files
+mcp2k identity rc=0 : # 8/8 events identical over 40 files

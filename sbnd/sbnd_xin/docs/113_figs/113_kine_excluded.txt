@@ -1,0 +1,12 @@
+PF / kinematics stage: energy of reconstructed particles EXCLUDED from kine_reco_Enu (calib-pr kine.kine_energy_excluded), production pr150s0, events with a calib dump: 1435
+excluded / (included+excluded): median 0.000 mean 0.000; events with excluded > 10 %: 0, > 25 %: 0; excluded MeV: median 0.0, p90 0.0, max 0; total excluded / total included 0.000
+excluded particle types (pdg) over all events: []
+largest excluded energies (sample event included excluded n types max_particle):
+   nuecc48 489330 1853 0 0 [] 0
+   nuecc48 269774 2320 0 0 [] 0
+   nuecc48 342199 1159 0 0 [] 0
+   nuecc48 400474 1644 0 0 [] 0
+   nuecc48 469665 734 0 0 [] 0
+   nuecc48 131357 756 0 0 [] 0
+   nuecc48 360535 2071 0 0 [] 0
+   nuecc48 447477 966 0 0 [] 0

@@ -1,0 +1,11 @@
+item	verdict	kind	connected	confidence	comment
+mcp2k-158227-p045	YES	TRACK	YES	3	OLD-GEN stale id. 125 cm straight unheld track ending at the vertex; green continues past it
+mcp1k-409634-p054	NO	HALO	YES	2	OLD-GEN stale id. Fat unheld widening on a green track, thin in drift; imaging blob
+mcp2k-282909-p019	YES	TRACK	YES	3	OLD-GEN stale id. 300 cm straight unheld track leaving the vertex, free far end
+mcp2k-100245-p035	NO	CROSSING-TRACK	YES	3	OLD-GEN stale id. Through-going 400 cm cosmic passing straight through the vertex, both ends at boundaries
+mcp2k-93776-p906	NO	HALO	YES	3	OLD-GEN stale id. 15 cm unheld collinear gap inside a green track, green both sides
+mcp2k-400349-p046	NO	TRACK	NO	2	OLD-GEN stale id. Real 80 cm curved track but ~100 cm from candidate in z; no green
+mcp2k-481014-p044	UNSURE	TRACK	UNSURE	1	OLD-GEN stale id. 120 cm coherent track; nothing held in window; only grey dots near
+mcp2k-478088-p038	YES	TRACK	YES	3	OLD-GEN stale id. 250 cm straight unheld track starting exactly at the vertex in all views
+mcp2k-242814-p049	YES	TRACK	YES	2	OLD-GEN stale id. 25 cm unheld prong leaving the vertex toward +z, distinct from green arm
+mcp2k-280709-p051	YES	TRACK	YES	2	POST-SWAP panel. 10 cm dense unheld segment continuing the held track tip

@@ -1,0 +1,121 @@
+NEARBY clusters (touching the candidate within 5 cm, >= 40 pts, dvtx <= 30 cm): what the PR log says about each cluster id
+  NEARBY-COMPANION  mcp2k 157215 cluster 14 npts 8335 dcand 0.2 dvtx nan gid 1 -> 5 lines; tags ['STM', 'TGM', 'skip']
+         [21:50:57.526] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 14: 871 blobs -> main 561 + 2 associated cluster(s) holding 310 (real mode) 
+         [21:50:58.110] D [clus.NeutrinoPattern] component_extreme_wcps: cluster 14 1 component(s), 1 above 10.0 cm -> 4 extreme group(s)
+  NEARBY-COMPANION  mcp2k 398225 cluster 11 npts 4884 dcand 1.9 dvtx 10.0 gid 0 -> 7 lines; tags ['STM', 'TGM', 'skip']
+         [22:39:43.292] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 11: 1205 blobs -> main 522 + 7 associated cluster(s) holding 683 (real mode) 
+         [22:39:43.292] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 13: 27 blobs -> main 11 + 3 associated cluster(s) holding 16 (real mode) 
+  NEARBY-COMPANION  mcp2k 104172 cluster 17 npts 4969 dcand 3.0 dvtx 6.6 gid 0 -> 7 lines; tags ['STM', 'TGM', 'rescue', 'skip']
+         [21:50:01.134] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 17: 1094 blobs -> main 648 + 3 associated cluster(s) holding 446 (real mode) 
+         [21:50:01.159] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 17: 648 blobs -> main 587 + 16 associated cluster(s) holding 61 (real mode) 
+  NEARBY-COMPANION  mcp2k 480002 cluster 20 npts 6059 dcand 0.0 dvtx nan gid 4 -> 6 lines; tags ['STM', 'TGM', 'skip']
+         [22:50:33.783] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 20: 478 blobs -> main 472 + 1 associated cluster(s) holding 6 (real mode) 
+         [22:50:33.813] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 20: 472 blobs -> main 451 + 4 associated cluster(s) holding 21 (real mode) 
+  NEARBY-COMPANION  mcp1k 287431 cluster 18 npts 1007 dcand 0.3 dvtx nan gid 0 -> 5 lines; tags ['STM', 'TGM', 'skip']
+         [21:02:55.865] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 18: 75 blobs -> main 69 + 2 associated cluster(s) holding 6 (real mode) 
+         [21:02:55.980] D [clus.NeutrinoPattern] component_extreme_wcps: cluster 18 1 component(s), 1 above 10.0 cm -> 5 extreme group(s)
+  NEARBY-COMPANION  mcp1k 280466 cluster 12 npts 3081 dcand 0.5 dvtx 26.9 gid 2 -> 6 lines; tags ['STM', 'TGM', 'skip']
+         [20:59:19.190] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 12: 1293 blobs -> main 984 + 2 associated cluster(s) holding 309 (real mode) 
+         [20:59:19.202] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 12: 984 blobs -> main 968 + 5 associated cluster(s) holding 16 (real mode) 
+  NEARBY-COMPANION  mcp2k 481014 cluster 19 npts 1294 dcand 0.3 dvtx nan gid 0 -> 6 lines; tags ['STM', 'TGM', 'skip']
+         [22:50:53.248] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 19: 422 blobs -> main 415 + 2 associated cluster(s) holding 7 (real mode) 
+         [22:50:53.254] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 19: 415 blobs -> main 400 + 4 associated cluster(s) holding 15 (real mode) 
+  NEARBY-COMPANION  mcp2k 400349 cluster 20 npts 822 dcand 0.3 dvtx nan gid 1 -> 9 lines; tags ['STM', 'TGM']
+         [22:41:33.957] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 20: 169 blobs -> main 152 + 3 associated cluster(s) holding 17 (real mode) 
+         [22:41:33.975] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 20: 152 blobs -> main 130 + 2 associated cluster(s) holding 22 (real mode) 
+  NEARBY-COMPANION  mcp2k 172463 cluster 2 npts 144 dcand 0.4 dvtx 0.7 gid 0 -> 0 lines; tags []
+  NEARBY-COMPANION  nuecc48 137238 cluster 145 npts 67 dcand 3.5 dvtx 23.0 gid 1 -> 26 lines; tags []
+         [20:46:29.957] D [clus.NeutrinoPattern] pr30 P2 local-PCA endpoint moved 6.158 cm: (-125.13,11.75,399.52) -> (-124.82,5.61,399.37) cluster 145
+         [20:46:29.957] D [clus.NeutrinoPattern] sgp build: cluster 145 edges=97 scanned=82 penalized=59 scale=2.0 scan_ms=0.6 weak_scale=5.0 qref=6000 weak_edges=59 nq=49 q25=439
+  NEARBY-COMPANION  mcp2k 280709 cluster 5 npts 107 dcand 0.3 dvtx 17.3 gid 1 -> 0 lines; tags []
+  NEARBY-COMPANION  mcp1k 282231 cluster 8 npts 60 dcand 0.4 dvtx 0.3 gid 8 -> 0 lines; tags []
+  NEARBY-COMPANION  mcp2k 97033 cluster 4 npts 43 dcand 0.3 dvtx 17.9 gid 7 -> 3 lines; tags []
+         [21:43:45.292] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 9: 7 blobs -> main 4 + 1 associated cluster(s) holding 3 (real mode) 
+         [21:43:45.301] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 8: 7 blobs -> main 4 + 1 associated cluster(s) holding 3 (real mode) 
+  NEARBY-COMPANION  mcp1k 65999 cluster 10 npts 68 dcand 0.3 dvtx 1.7 gid 9 -> 0 lines; tags []
+  NEARBY-COMPANION  mcp2k 286296 cluster 11 npts 57 dcand 0.3 dvtx 0.7 gid 0 -> 0 lines; tags []
+  NEARBY-COMPANION  mcp2k 51260 cluster 6 npts 59 dcand 0.3 dvtx 0.2 gid 1 -> 0 lines; tags []
+  NEARBY-OTHER      mcp2k 48488 cluster 18 npts 13208 dcand 2.6 dvtx 28.8 gid 1 -> 2 lines; tags []
+         [21:20:01.658] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 18: 1234 blobs -> main 1231 + 1 associated cluster(s) holding 3 (real mode) 
+         [21:20:01.675] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 18: 1231 blobs -> main 1166 + 9 associated cluster(s) holding 65 (real mode) 
+  NEARBY-OTHER      mcp2k 68308 cluster 14 npts 4205 dcand 4.9 dvtx 25.2 gid 2 -> 1 lines; tags []
+         [21:27:39.136] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 14: 489 blobs -> main 484 + 1 associated cluster(s) holding 5 (real mode) 
+  NEARBY-OTHER      mcp1k 283969 cluster 19 npts 4564 dcand 3.2 dvtx 24.3 gid 7 -> 2 lines; tags []
+         [21:00:22.333] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 19: 837 blobs -> main 830 + 2 associated cluster(s) holding 7 (real mode) 
+         [21:00:22.353] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 19: 830 blobs -> main 777 + 7 associated cluster(s) holding 53 (real mode) 
+  NEARBY-OTHER      mcp1k 291548 cluster 5 npts 6473 dcand 4.5 dvtx 18.6 gid 4 -> 1 lines; tags []
+         [21:04:55.367] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 5: 530 blobs -> main 518 + 3 associated cluster(s) holding 12 (real mode) 
+  NEARBY-OTHER      mcp2k 179369 cluster 12 npts 8252 dcand 2.5 dvtx 6.6 gid 0 -> 151 lines; tags ['STM', 'TGM', 'rescue', 'veto']
+         [22:08:11.004] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 12: 1513 blobs -> main 1256 + 32 associated cluster(s) holding 257 (real mode) 
+         [22:08:13.184] D [clus.NeutrinoPattern] component_rescue: cluster 12 rescued 2 of 2 short component(s) path-connected to a kept one
+  NEARBY-OTHER      mcp2k 282909 cluster 22 npts 4481 dcand 0.2 dvtx 8.0 gid 2 -> 0 lines; tags []
+  NEARBY-OTHER      mcp2k 395837 cluster 9 npts 2835 dcand 0.2 dvtx 3.3 gid 2 -> 1 lines; tags []
+         [22:36:26.038] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 9: 643 blobs -> main 605 + 7 associated cluster(s) holding 38 (real mode) 
+  NEARBY-OTHER      mcp1k 65289 cluster 4 npts 4697 dcand 1.5 dvtx 8.9 gid 3 -> 1 lines; tags []
+         [20:56:09.335] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 4: 764 blobs -> main 760 + 1 associated cluster(s) holding 4 (real mode) 
+  NEARBY-OTHER      mcp1k 287517 cluster 24 npts 2589 dcand 1.8 dvtx 7.1 gid 5 -> 0 lines; tags []
+  NEARBY-OTHER      mcp1k 284657 cluster 25 npts 2621 dcand 3.2 dvtx 14.2 gid 10 -> 2 lines; tags []
+         [21:00:47.436] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 25: 554 blobs -> main 417 + 1 associated cluster(s) holding 137 (real mode) 
+         [21:00:47.454] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 25: 417 blobs -> main 413 + 1 associated cluster(s) holding 4 (real mode) 
+  NEARBY-OTHER      mcp1k 386332 cluster 6 npts 798 dcand 4.0 dvtx 10.2 gid 3 -> 1 lines; tags []
+         [21:08:45.642] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 6: 213 blobs -> main 201 + 1 associated cluster(s) holding 12 (real mode) 
+  NEARBY-OTHER      mcp2k 398191 cluster 21 npts 2135 dcand 0.2 dvtx 16.4 gid 2 -> 2 lines; tags []
+         [22:39:38.740] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 21: 801 blobs -> main 592 + 1 associated cluster(s) holding 209 (real mode) 
+         [22:39:38.757] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 21: 592 blobs -> main 588 + 2 associated cluster(s) holding 4 (real mode) 
+  NEARBY-OTHER      mcp2k 181050 cluster 18 npts 833 dcand 4.1 dvtx 6.4 gid 0 -> 0 lines; tags []
+  NEARBY-OTHER      mcp2k 158227 cluster 5 npts 1734 dcand 4.9 dvtx 13.6 gid 2 -> 1 lines; tags []
+         [21:51:07.230] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 5: 153 blobs -> main 141 + 3 associated cluster(s) holding 12 (real mode) 
+  NEARBY-OTHER      mcp1k 409634 cluster 9 npts 136 dcand 0.3 dvtx 0.9 gid 10 -> 4 lines; tags ['STM', 'TGM', 'companion']
+         [21:16:04.158] I [  clus  ] <TaggerCheckNeutrino:pr> TaggerCheckNeutrino: [nu_per_bundle] gid 10: candidate main cluster 9 (t0 1.081 us, L 15.6 cm, 0 associated) of 1 eva
+         [21:16:04.158] I [  clus  ] <TaggerCheckNeutrino:pr> TaggerCheckNeutrino: [nu_bundle_flash_group] gid 10: its candidate cluster 9 (L 15.6 cm) is folded into gid 1000003's
+  NEARBY-UNMATCHED  mcp1k 317741 cluster 12 npts 12049 dcand 0.7 dvtx 7.0 gid 1000006 -> 2 lines; tags []
+         [21:06:27.013] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 12: 1314 blobs -> main 1310 + 1 associated cluster(s) holding 4 (real mode) 
+         [21:06:27.045] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 12: 1310 blobs -> main 1308 + 2 associated cluster(s) holding 2 (real mode) 
+  NEARBY-UNMATCHED  mcp1k 401252 cluster 14 npts 4147 dcand 2.7 dvtx 24.6 gid 1000009 -> 6 lines; tags ['STM', 'TGM', 'skip']
+         [21:13:47.870] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 14: 919 blobs -> main 743 + 1 associated cluster(s) holding 176 (real mode) 
+         [21:13:47.884] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 14: 743 blobs -> main 641 + 14 associated cluster(s) holding 102 (real mode) 
+  NEARBY-UNMATCHED  mcp1k 401516 cluster 6 npts 11332 dcand 2.2 dvtx 12.8 gid 1000002 -> 0 lines; tags []
+  NEARBY-UNMATCHED  mcp1k 351639 cluster 14 npts 5747 dcand 0.3 dvtx nan gid 1000000 -> 6 lines; tags ['STM', 'TGM', 'skip']
+         [21:08:11.735] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 14: 510 blobs -> main 495 + 2 associated cluster(s) holding 15 (real mode) 
+         [21:08:11.755] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 14: 495 blobs -> main 491 + 1 associated cluster(s) holding 4 (real mode) 
+  NEARBY-UNMATCHED  mcp2k 405707 cluster 18 npts 7646 dcand 1.0 dvtx 7.2 gid 1000004 -> 1 lines; tags []
+         [22:43:17.206] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 18: 1076 blobs -> main 510 + 1 associated cluster(s) holding 566 (real mode) 
+  NEARBY-UNMATCHED  mcp1k 352123 cluster 19 npts 3823 dcand 1.0 dvtx 19.6 gid 1000005 -> 1 lines; tags []
+         [21:08:23.228] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 19: 985 blobs -> main 528 + 1 associated cluster(s) holding 457 (real mode) 
+  NEARBY-UNMATCHED  nuecc48 10550 cluster 12 npts 9382 dcand 0.3 dvtx 5.4 gid 1000002 -> 6 lines; tags ['STM', 'TGM', 'skip']
+         [20:45:43.440] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 12: 984 blobs -> main 955 + 4 associated cluster(s) holding 29 (real mode) 
+         [20:45:43.456] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 12: 955 blobs -> main 943 + 2 associated cluster(s) holding 12 (real mode) 
+  NEARBY-UNMATCHED  mcp2k 49742 cluster 19 npts 4155 dcand 4.4 dvtx 5.9 gid 1000000 -> 2 lines; tags []
+         [21:20:25.691] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 19: 783 blobs -> main 779 + 1 associated cluster(s) holding 4 (real mode) 
+         [21:20:25.696] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 19: 779 blobs -> main 731 + 9 associated cluster(s) holding 48 (real mode) 
+  NEARBY-UNMATCHED  mcp1k 290052 cluster 4 npts 5317 dcand 4.5 dvtx 16.8 gid 1000002 -> 1 lines; tags []
+         [21:04:17.342] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 4: 862 blobs -> main 830 + 7 associated cluster(s) holding 32 (real mode) 
+  NEARBY-UNMATCHED  mcp1k 491483 cluster 11 npts 4382 dcand 2.4 dvtx 3.8 gid 1000004 -> 1 lines; tags []
+         [21:18:47.795] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 11: 1088 blobs -> main 1078 + 2 associated cluster(s) holding 10 (real mode) 
+  NEARBY-UNMATCHED  mcp2k 100245 cluster 13 npts 3433 dcand 0.0 dvtx 0.7 gid 1000000 -> 2 lines; tags []
+         [21:47:40.600] D [  clus  ] <ClusteringUnmergeBundle:pr> cluster 13: 788 blobs -> main 784 + 1 associated cluster(s) holding 4 (real mode) 
+         [21:47:40.627] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 13: 784 blobs -> main 747 + 9 associated cluster(s) holding 37 (real mode) 
+  NEARBY-UNMATCHED  mcp2k 100728 cluster 9 npts 3788 dcand 0.3 dvtx nan gid 1000004 -> 8 lines; tags ['STM', 'TGM']
+         [21:48:16.380] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 9: 307 blobs -> main 283 + 6 associated cluster(s) holding 24 (real mode) 
+         [21:48:16.599] D [clus.NeutrinoPattern] component_extreme_wcps: cluster 9 1 component(s), 1 above 10.0 cm -> 5 extreme group(s)
+  NEARBY-UNMATCHED  mcp2k 400029 cluster 9 npts 1840 dcand 0.1 dvtx 3.5 gid 1000002 -> 0 lines; tags []
+  NEARBY-UNMATCHED  mcp2k 347824 cluster 20 npts 2639 dcand 0.2 dvtx 12.3 gid 1000009 -> 1 lines; tags []
+         [22:27:05.263] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 20: 695 blobs -> main 692 + 1 associated cluster(s) holding 3 (real mode) 
+  NEARBY-UNMATCHED  mcp2k 94942 cluster 8 npts 1456 dcand 0.6 dvtx 2.8 gid 1000003 -> 0 lines; tags []
+  NEARBY-UNMATCHED  mcp2k 174771 cluster 10 npts 1479 dcand 2.5 dvtx 12.6 gid 1000003 -> 1 lines; tags []
+         [22:02:25.737] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 10: 439 blobs -> main 431 + 2 associated cluster(s) holding 8 (real mode) 
+  NEARBY-UNMATCHED  mcp2k 242814 cluster 9 npts 215 dcand 0.3 dvtx 6.4 gid 1000004 -> 0 lines; tags []
+  NEARBY-UNMATCHED  mcp2k 321235 cluster 17 npts 138 dcand 3.7 dvtx 4.3 gid 1000000 -> 7 lines; tags ['STM', 'TGM', 'companion', 'cosmic', 'skip']
+         [22:24:58.651] D [clus.NeutrinoPattern] component_extreme_wcps: cluster 17 1 component(s), 1 above 10.0 cm -> 2 extreme group(s)
+         [22:24:58.651] I [clus.NeutrinoPattern] visit: TaggerCheckTGM: cluster 17 → TGM=false
+  NEARBY-UNMATCHED  mcp2k 98947 cluster 19 npts 151 dcand 0.5 dvtx 24.3 gid 1000000 -> 0 lines; tags []
+  NEARBY-UNMATCHED  mcp1k 284200 cluster 4 npts 107 dcand 0.3 dvtx 5.1 gid 1000001 -> 0 lines; tags []
+  NEARBY-UNMATCHED  mcp1k 49951 cluster 11 npts 49 dcand 0.3 dvtx 17.1 gid 1000003 -> 0 lines; tags []
+  NEARBY-UNMATCHED  mcp2k 474612 cluster 23 npts 50 dcand 1.5 dvtx 19.5 gid 1000006 -> 17 lines; tags []
+         [22:49:02.292] D [clus.NeutrinoPattern] sgp build: cluster 23 edges=77 scanned=67 penalized=67 scale=2.0 scan_ms=0.1 weak_scale=5.0 qref=6000 weak_edges=49 nq=33 q25=3821
+         [22:49:02.292] D [clus.NeutrinoPattern] pr55 do_rough_path: cluster 23 flavor=steiner_graph_gap n_vertices=33 n_edges=77 first=(694.5,1874.3,2502.8) last=(688.3,1845.7,25
+  NEARBY-UNMATCHED  mcp1k 174422 cluster 8 npts 59 dcand 0.5 dvtx 0.4 gid 1000003 -> 6 lines; tags ['STM', 'TGM', 'companion']
+         [20:58:15.471] D [  clus  ] <ClusteringUnmergeBundle:prassoc> cluster 12: 25 blobs -> main 8 + 4 associated cluster(s) holding 17 (real mode) 
+         [20:58:16.415] I [  clus  ] <TaggerCheckNeutrino:pr> TaggerCheckNeutrino: [nu_per_bundle] legacy winner is cluster 8 (L 10.3 cm); it is exempt from the 15.0 cm floor ../c
+
+summary: [(('NEARBY-UNMATCHED', 'no line'), 17), (('NEARBY-OTHER', 'no line'), 13), (('NEARBY-COMPANION', 'no line'), 8), (('NEARBY-COMPANION', 'STM,TGM,skip'), 6), (('NEARBY-UNMATCHED', 'STM,TGM,skip'), 3), (('NEARBY-COMPANION', 'STM,TGM,rescue,skip'), 1), (('NEARBY-COMPANION', 'STM,TGM'), 1), (('NEARBY-OTHER', 'STM,TGM,rescue,veto'), 1), (('NEARBY-OTHER', 'STM,TGM,companion'), 1), (('NEARBY-UNMATCHED', 'STM,TGM'), 1), (('NEARBY-UNMATCHED', 'STM,TGM,companion,cosmic,skip'), 1), (('NEARBY-UNMATCHED', 'STM,TGM,companion'), 1)]

@@ -1,0 +1,12 @@
+# doc 113 compiled-config proofs (wcsonnet, WIRECELL_PATH = toolkit/cfg : wire-cell-data : reco1 plugin share), 2026-09-19
+# baseline: cfg/pgrapher/experiment/sbnd/{img,wct-img-all}.jsonnet at toolkit ecba69ee, compiled with the nuecc48 g0 TLAs = production's .wct-cfg-img.json byte for byte
+img_pre.json md5 e481d65ca08a == work-nuecc48-d102m/g0/.wct-cfg-img.json md5 e481d65ca08a
+after threading img_knobs (ms_nthreshold / ms_default_threshold / pd_dryrun / isd_dryrun / isd_good_blob_charge_th / cs_meas_value_threshold): img_post.json md5 e481d65ca08a -> byte-identical (cmp)
+after adding ms_quiet_mask_window: img_post2.json md5 e481d65ca08a -> byte-identical (cmp)
+img_knobs={pd_dryrun:true, isd_dryrun:true, ms_nthreshold:[2.5,2.5,2.5], ms_default_threshold:[500,700,600], isd_good_blob_charge_th:150, cs_meas_value_threshold:5}: 98 nodes, node diffs = MaskSlices x8 (default_threshold, nthreshold), ProjectionDeghosting x4 (dryrun), ChargeSolving x12 (meas_value_threshold), InSliceDeghosting x6 (dryrun, good_blob_charge_th); nothing else
+img_knobs={ms_quiet_mask_window:4}: node diffs = MaskSlices slicing-apa{0,1}-ms-active_{1,2,3} only (the three 2-view branches of the active fork; masked_planes [2],[0],[1]); the 3-view branch and the 500-tick masked fork untouched
+prod_cfg_gate.py --ref ref/prod-2026-09-17b after the img.jsonnet edits: PASS 21/21 (the LArSoft one-step and the standalone consumers compile identically)
+runtime OFF gate (IMG_EXTRA_TLA unset, today's binary before the C++ change): 113_baseline_repro.txt
+OFF-BYTE-IDENTICAL-3
+img_knobs={ms_quiet_mask_window:0, ms_quiet_mask_gap:64}: node diffs = slicing-apa0-ms-active_1 ('quiet_mask_gap', 'quiet_mask_window'); slicing-apa0-ms-active_2 ('quiet_mask_gap', 'quiet_mask_window'); slicing-apa0-ms-active_3 ('quiet_mask_gap', 'quiet_mask_window'); slicing-apa1-ms-active_1 ('quiet_mask_gap', 'quiet_mask_window'); slicing-apa1-ms-active_2 ('quiet_mask_gap', 'quiet_mask_window'); slicing-apa1-ms-active_3 ('quiet_mask_gap', 'quiet_mask_window')
+after threading dg_length_cut (clus.jsonnet clus_per_face/per_apa, wct-clus-matching-perevt.jsonnet TLA, default 0 = legacy) and the runner's QL_EXTRA_TLA channel: prod_cfg_gate.py --ref ref/prod-2026-09-17b PASS 21/21 (standalone Q/L + LArSoft consumers byte-identical)

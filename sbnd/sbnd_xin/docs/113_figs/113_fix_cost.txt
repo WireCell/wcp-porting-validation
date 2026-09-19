@@ -1,0 +1,2 @@
+qp2v4 vs cf0 on mcp1k: 19 groups; blobs/group 74004 -> 102212 (ratio median 1.38, max 1.46); imaging wall 104 s -> 882 s (ratio median 8.58); maxrss 0.96 -> 5.37 GB (ratio 5.62); quiet-masked cells per slicer call median 1663069
+qpg64 vs cf0 on mcp1k: 20 groups; blobs/group 73450 -> 146344 (ratio median 1.99, max 2.18); imaging wall 105 s -> 424 s (ratio median 4.27); maxrss 0.96 -> 1.88 GB (ratio 1.93); quiet-masked cells per slicer call median 205923

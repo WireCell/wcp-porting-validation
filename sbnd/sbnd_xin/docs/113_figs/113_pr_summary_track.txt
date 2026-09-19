@@ -1,0 +1,42 @@
+events with a candidate and layers: {'mcp1k': 448, 'mcp2k': 877, 'ncpi0': 19, 'nuecc48': 48} (total 1392); rows 3071; cuts: min_pts 20 min_qfrac 0.03 min_ext 5.0 rms 0.8 dvtx 15.0 dvtx_near 30.0
+unheld charge fraction of the candidate (points > 3 cm from every held/fitted point): median 0.000, p90 0.138, > 0.10 in 173 events, > 0.25 in 84
+
+class x sample: flagged events / events with a candidate (median Qfrac of the flags)
+class                            nuecc48                 ncpi0                 mcp1k                 mcp2k                   all
+UNHELD-TRACK           0/48      0.0% 0.000     0/19      0.0% 0.000     3/448     0.7% 0.039    19/877     2.2% 0.058    22/1392    1.6% 0.052
+UNHELD-WIDE            1/48      2.1% 0.081     1/19      5.3% 0.104    34/448     7.6% 0.085    90/877    10.3% 0.107   126/1392    9.1% 0.098
+NEARBY-COMPANION       1/48      2.1% 0.042     0/19      0.0% 0.000     4/448     0.9% 0.110    12/877     1.4% 0.799    17/1392    1.2% 0.226
+NEARBY-OTHER           0/48      0.0% 0.000     0/19      0.0% 0.000     7/448     1.6% 1.528     8/877     0.9% 1.502    15/1392    1.1% 1.515
+NEARBY-UNMATCHED       1/48      2.1% 2.584     0/19      0.0% 0.000    11/448     2.5% 3.449    12/877     1.4% 0.390    24/1392    1.7% 1.720
+UNHELD-TRACK: 24 groups; npts median 80; ext median 10.4 cm; dvtx median 6.3 cm; Qfrac >= 0.10: 5; p90 dist to fit median 4.8 cm; absorbed into a track association (>= 50 % of points within 3 cm of a track-associated point): 21, held by nothing (< 10 %): 3
+UNHELD-WIDE: 173 groups; npts median 322; ext median 16.7 cm; dvtx median 5.5 cm; Qfrac >= 0.10: 84; p90 dist to fit median 7.8 cm; absorbed into a track association (>= 50 % of points within 3 cm of a track-associated point): 166, held by nothing (< 10 %): 5
+
+sweep (UNHELD-* flagged events): dvtx 10: 131  dvtx 15: 146  dvtx 25: 159  dvtx 1000000000.0: 230  |  halo 0: 146  halo 8: 62  halo 12: 30  halo 20: 10
+
+flags 255 -> docs/113_figs/113_pr_flags_track.tsv; exhibits 80 -> /home/xqian/tmp/d113/ex_track_all.tsv
+top exhibits (rank sample event class npts Q Qfrac ext rms dvtx dcand cluster):
+    0 mcp2k      70472 UNHELD-WIDE        3905   7.09e+07  0.220  126.2  6.49    4.1   0.0 -1
+    1 mcp2k     283833 UNHELD-WIDE        8779   6.93e+07  0.540  202.8  6.32    6.3   0.0 -1
+    2 mcp1k     286681 UNHELD-WIDE        2729   3.08e+07  0.255   20.5  9.18    3.1   0.0 -1
+    3 mcp2k     175952 UNHELD-WIDE        3353   2.91e+07  0.284  137.3  5.19    3.5   0.0 -1
+    4 mcp2k     395079 UNHELD-WIDE        2899   2.33e+07  0.410  106.8  6.51    6.1   0.0 -1
+    5 mcp2k     398191 UNHELD-WIDE        1913   2.26e+07  0.188   39.4  5.79    9.9   0.0 -1
+    6 mcp2k      75795 UNHELD-WIDE        3097    2.2e+07  0.414   36.0  5.81    3.3   0.0 -1
+    7 mcp1k     287431 UNHELD-WIDE         977   1.86e+07  0.978   27.9  3.87    nan   0.0 -1
+    8 mcp2k      75206 UNHELD-WIDE        4315   1.68e+07  0.296  120.8 12.00    6.5   0.0 -1
+    9 mcp1k     321107 UNHELD-WIDE        2984   1.41e+07  0.359   99.6  4.77    4.8   0.0 -1
+   10 mcp2k     402297 UNHELD-WIDE        1833   1.25e+07  0.149  122.4  2.45    4.1   0.0 -1
+   11 mcp1k     320865 UNHELD-WIDE         564   1.14e+07  0.270   19.3  2.68    6.6   0.0 -1
+   12 mcp2k     174164 UNHELD-WIDE        1597   1.06e+07  0.266   25.5  4.85    4.0   0.0 -1
+   13 mcp2k      75052 UNHELD-WIDE        1148   9.87e+06  0.358   22.9  3.11    3.4   0.0 -1
+   14 mcp1k     278420 UNHELD-WIDE         571   9.85e+06  0.206   16.6  2.46    3.7   0.0 -1
+   15 mcp2k     396323 UNHELD-WIDE         904   9.69e+06  0.349   20.3  4.44    3.1   0.0 -1
+   16 mcp2k     322135 UNHELD-WIDE        1542   9.06e+06  0.199   89.1  5.00    4.1   0.0 -1
+   17 mcp2k     169240 UNHELD-WIDE        2270   8.48e+06  0.199   58.9  6.65    6.3   0.0 -1
+   18 mcp1k     284794 UNHELD-WIDE        1778   8.37e+06  0.184   81.7  1.52    7.2   0.0 -1
+   19 mcp2k     409052 UNHELD-WIDE         637   7.62e+06  0.256   18.5  3.63    3.1   0.0 -1
+   20 nuecc48   122660 UNHELD-WIDE         525    7.1e+06  0.081    9.1  2.01   13.5   0.0 -1
+   21 mcp1k     168614 UNHELD-WIDE        1042   7.09e+06  0.258   16.2  4.36    6.3   0.0 -1
+   22 mcp2k     283849 UNHELD-WIDE        1259   6.99e+06  0.209   55.7  1.79    4.3   0.0 -1
+   23 mcp2k     179604 UNHELD-WIDE         951   6.77e+06  0.090   43.6  3.33   13.4   0.0 -1
+   24 mcp1k     394642 UNHELD-WIDE        1146   6.67e+06  0.175  101.1  3.19    6.0   0.0 -1

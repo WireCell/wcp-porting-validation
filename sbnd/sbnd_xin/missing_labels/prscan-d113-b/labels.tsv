@@ -1,0 +1,71 @@
+item	verdict	kind	connected	confidence	comment
+# 16/69 PNGs were readable during the scan; 53 never were. p029 and p911 read early then vanished, so the panel set was changing under the scan. Rows with verdict MISSING / confidence 0 were never seen and are NOT judgments.
+mcp2k-480002-p029	NO	CROSSING-TRACK	UNSURE	2	Long detector-spanning straight track; no vertex in view, candidate grey/green not locatable
+mcp1k-171600-p911	NO	HALO	YES	3	Red lies along the middle of an already-green track; not a separate object
+mcp2k-157215-p018	NO	CROSSING-TRACK	UNSURE	2	Several-hundred-cm track crossing the window; candidate not locatable at this zoom
+mcp2k-237380-p902	NO	HALO	YES	3	Red overplots the green track leaving the vertex; same object as the green
+mcp2k-48488-p010	NO	CROSSING-TRACK	UNSURE	2	400 cm track from y=+200 to y=-200, both ends at boundaries, passes near the vertex
+mcp2k-409052-p028	NO	CROSSING-TRACK	NO	3	Long straight tracks far from the candidate; no contact with green or vertex
+mcp2k-478088-p038	YES	TRACK	YES	3	Straight 250 cm track starting exactly at the vertex, free far end, no green on it
+mcp1k-282231-p053	UNSURE	FRAGMENT	YES	2	Short 10 cm stub straddling the vertex, half of it overlapping the green track
+mcp2k-90751-p015	YES	TRACK	YES	2	Long unheld track through the vertex star; red is disjoint, judged the vertex piece
+mcp1k-287431-p034	NO	FRAGMENT	NO	2	Small isolated blob at the x boundary, no candidate points nearby, no vertex in view
+mcp2k-172463-p048	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-93776-p906	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+ncpi0-180801-p905	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-94942-p041	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-49742-p025	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-323171-p006	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-491483-p033	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-317741-p011	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-398191-p023	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-351639-p022	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-172617-p907	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-51546-p004	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-174771-p043	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-284657-p036	NO	CROSSING-TRACK	YES	3	Long straight track passing through the vertex, both ends at detector boundaries
+mcp2k-347824-p040	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-181050-p031	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-157215-p009	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-291548-p017	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-68308-p014	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-98844-p904	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-290052-p027	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-100245-p035	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-481014-p003	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-400349-p007	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-236192-p900	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-287517-p030	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-51260-p056	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-351639-p001	UNSURE	FRAGMENT	UNSURE	2	Dense 13 cm blob at the head of a separate light-blue cluster; candidate only two dots 6 cm away
+mcp2k-158227-p045	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-49951-p055	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-401516-p020	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-282909-p019	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-280466-p032	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-280709-p051	NO	HALO	YES	2	Small unheld cap at the far end of a green track, about 5 cm, overlapping the green
+mcp2k-481014-p044	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-400349-p046	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-166050-p909	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-405707-p013	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-400029-p039	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-242814-p049	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-318731-p908	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-321235-p002	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-52085-p910	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-98947-p050	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+nuecc48-10550-p024	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-352123-p016	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-287431-p000	UNSURE	SHOWER	UNSURE	1	Dense flat-in-x slab 55x14 cm at the x boundary; small grey candidate streak nearby, no green in view
+mcp2k-54475-p047	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-480002-p008	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-100728-p005	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-499115-p901	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-395837-p026	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-407798-p021	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-386332-p042	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-100728-p037	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp2k-499577-p903	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-284200-p052	UNSURE	FRAGMENT	YES	2	Two compact unheld blobs at the vertex just beyond the green, about 5 cm each, no clean line
+mcp2k-179369-p012	MISSING	NONE	NONE	0	PNG not on disk; never viewed
+mcp1k-409634-p054	YES	SHOWER	YES	2	Dense 15 cm bundle touching the vertex beside the green shower, no green on it

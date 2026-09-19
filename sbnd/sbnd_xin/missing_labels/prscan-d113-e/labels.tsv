@@ -1,0 +1,73 @@
+item	verdict	kind	connected	confidence	comment
+mcp2k-398191-p004	NO	HALO	YES	2	red band co-located with green trajectory in z-y, offset only in drift view
+mcp1k-402880-p023	NO	HALO	YES	2	diffuse red scatter along whole green track inside wide degenerate blob patch
+mcp1k-351639-p039	YES	TRACK	YES	2	long dense track terminating exactly at the tiny candidate cluster, no green on it
+mcp1k-351639-p022	YES	TRACK	YES	2	dense unheld clump forming head of a track ~6 cm below candidate grey points
+mcp2k-347824-p059	NO	CROSSING-TRACK	YES	2	long straight track crosses vertex and continues far both sides, cosmic-like
+mcp2k-75862-p906	NO	HALO	YES	3	red segment sits directly on the green trajectory in all three views
+mcp1k-169620-p908	NO	HALO	YES	3	mid-track segment lying exactly on the green trajectory in all views
+mcp2k-395717-p017	UNSURE	SHOWER	YES	2	triangular red bundle ~25 cm off green line but embedded in degenerate blob lattice
+mcp1k-290052-p048	NO	CROSSING-TRACK	YES	3	full-height track y=+200 to -195 passing through vertex, through-going cosmic
+mcp1k-286681-p015	YES	TRACK	YES	2	red band runs ~40 cm left from vertex above the green arms, unheld and coherent
+mcp1k-282231-p909	NO	HALO	YES	3	mid-segment of the main trajectory, on the grey/green track in all views
+mcp1k-401516-p036	YES	TRACK	YES	2	long straight unheld track from vertex running ~380 cm down-left, ends inside
+mcp2k-396323-p011	NO	HALO	YES	2	striped ghost-point wedge left of the green arm, ambiguity pattern not a prong
+mcp2k-322707-p018	NO	HALO	YES	2	upper half of a diamond ghost lattice around a horizontal green track
+mcp1k-321107-p008	NO	HALO	YES	2	lower half of the shallow track's own wide charge band, green line through it
+mcp2k-70472-p000	NO	HALO	YES	2	red band hugs the long vertical green track over its whole length
+mcp2k-157215-p029	YES	TRACK	YES	2	coherent 16 cm vertical point line continuing the candidate grey segment, nothing held
+mcp2k-68308-p032	NO	CROSSING-TRACK	YES	3	full-height track y=+200 to -200 passing the vertex both sides, cosmic
+mcp2k-75052-p010	NO	HALO	YES	2	upper half of a parallelogram ghost lattice along a shallow green track
+mcp2k-100728-p025	UNSURE	TRACK	UNSURE	2	lozenge patch of shallow band ~5 cm above small candidate blobs, continues left
+mcp1k-71222-p902	NO	HALO	YES	3	terminal ~15 cm of the same track, directly on the grey/green trajectory
+mcp2k-179912-p900	NO	HALO	YES	3	mid-segment of the vertical track lying inside its own charge band
+mcp2k-49742-p046	NO	CROSSING-TRACK	YES	3	300 cm straight track crossing the vertex, continues both sides to detector bottom
+mcp2k-75206-p007	NO	HALO	YES	2	lower half of a long shallow track's ghost parallelogram, green line along it
+mcp1k-287431-p006	UNSURE	TRACK	UNSURE	2	55 cm vertical striped slab ~8 cm from the candidate's sliver, orientation differs
+mcp2k-169240-p013	NO	HALO	YES	2	lower lobe of the shallow track's ghost lattice, green line running through it
+mcp1k-291548-p035	NO	CROSSING-TRACK	YES	3	full-height straight track y=+200 to -200 through the vertex, through-going cosmic
+mcp2k-409052-p014	NO	HALO	YES	2	rectangular red fill at the vertex end of the green track, ghost pattern, no prong
+mcp2k-174164-p009	NO	HALO	YES	2	upper lobe of a diamond ghost lattice around a horizontal green track
+mcp1k-284657-p058	NO	CROSSING-TRACK	YES	3	long straight track from y=200 down past the vertex to y=17, continues both sides
+mcp1k-284235-p907	NO	FRAGMENT	NO	3	single tiny isolated red dot ~12 cm from the nearest green clump, not coherent
+mcp2k-395837-p047	YES	TRACK	YES	2	~200 cm unheld track emanating from the vertex downward, distinct from green prong
+mcp2k-283833-p001	NO	HALO	YES	2	red is one side of the long green track's own charge band over its full length
+mcp1k-283969-p033	NO	CROSSING-TRACK	YES	3	full-height straight track y=+200 to -190 passing through the vertex, cosmic
+mcp2k-178445-p903	NO	HALO	YES	3	red sits along the bottom of the V-shaped grey/green trajectory, own charge
+mcp2k-400029-p056	NO	CROSSING-TRACK	YES	2	~170 cm straight track through the vertex, continuing both above and below
+mcp1k-280466-p055	YES	TRACK	YES	2	long unheld track starting at the vertex, ~300 cm in drift, separate from green prong
+mcp2k-493835-p911	YES	TRACK	YES	2	~13 cm unheld stub continuing past the vertex end of the green track with a kink
+mcp2k-100728-p054	YES	TRACK	YES	3	~160 cm coherent beam-direction track, unheld, green clumps at both of its ends
+mcp2k-175952-p002	NO	HALO	YES	2	one side of the long green track's own ghost band over its whole length
+mcp1k-168614-p016	NO	HALO	YES	2	red fills the upper-left part of a diverging ghost fan around the green track
+mcp2k-398225-p043	YES	TRACK	YES	2	~250 cm unheld track starting at the vertex and running to the detector bottom
+mcp1k-317741-p031	NO	CROSSING-TRACK	YES	2	~285 cm track running 45 cm above the vertex down to the bottom, passes through
+mcp2k-395870-p901	NO	FRAGMENT	UNSURE	2	tiny few-cm red blob, no coherent structure, beside an equally small green blob
+mcp1k-349461-p020	NO	HALO	YES	2	upper lobe of a parallelogram ghost lattice along a shallow green track
+mcp2k-395079-p003	NO	HALO	YES	2	upper side of the long green track's own ghost band from the vertex down
+mcp1k-171600-p910	NO	HALO	YES	3	inner segment of the main grey/green track next to the vertex
+mcp2k-282909-p044	YES	SHOWER	YES	2	broad unheld plume fanning up from the vertex band, shower-like, extends past green
+mcp2k-405707-p040	NO	CROSSING-TRACK	YES	2	~370 cm track reaching the detector top ~25 cm past the vertex, runs to y=-118
+mcp2k-100245-p053	NO	CROSSING-TRACK	YES	3	long straight track through the vertex, ~130 cm on each side to the detector top
+mcp2k-48488-p030	NO	CROSSING-TRACK	UNSURE	3	full-height track y=+205 to -200, offset ~40 cm from vertex in drift, cosmic
+mcp1k-401252-p034	YES	SHOWER	YES	2	several coherent unheld prongs fanning from the vertex, well off the green tracks
+mcp2k-94678-p021	NO	HALO	YES	2	lower lobe of a ghost lozenge along the horizontal green track from the vertex
+mcp2k-157215-p037	NO	CROSSING-TRACK	UNSURE	2	~280 cm track boundary to boundary, no candidate grey/green visible on it
+mcp2k-481014-p024	UNSURE	FRAGMENT	YES	2	small ~14 cm diamond ghost patch abutting the candidate's tiny grey sliver
+mcp1k-61461-p904	NO	HALO	YES	2	compact red patch at the vertex inside the green track band, no separate prong
+mcp2k-173340-p019	NO	HALO	YES	2	upper lobe of a parallelogram ghost lattice along the shallow green track
+mcp2k-104172-p045	YES	TRACK	YES	2	several long unheld prongs radiating from the vertex, green holds only a clump below
+mcp2k-322135-p012	NO	HALO	YES	2	upper lobe of the shallow track's ghost band, green line running along it
+mcp2k-400349-p026	UNSURE	TRACK	UNSURE	1	window holds only this ~10 cm segment, it is the whole candidate, nothing green, no vertex
+mcp2k-480002-p050	YES	TRACK	UNSURE	2	~290 cm beam-direction track to the downstream wall, points back at green blob 20 cm off
+mcp2k-390634-p905	NO	FRAGMENT	NO	3	tiny ~2 cm isolated red blob about 12 cm off the main track, not coherent
+mcp2k-480002-p027	UNSURE	TRACK	UNSURE	2	~20 cm lozenge patch ~19 cm from the candidate green blob, continues into other cluster
+mcp2k-390391-p028	NO	HALO	YES	2	filled triangular ghost wedge beside the vertex, same lattice pattern as the grey
+nuecc48-10550-p042	NO	CROSSING-TRACK	YES	2	broad ~340 cm track crossing the vertex region and continuing far above and below
+mcp2k-75795-p005	NO	HALO	YES	2	upper-left lobe of the track's ghost band from the vertex, green line through it
+mcp1k-491483-p051	NO	CROSSING-TRACK	YES	3	full-height straight track y=+200 to -200 passing through the vertex, cosmic
+mcp1k-287431-p052	NO	HALO	YES	2	striped ghost fill flanking the candidate's own grey column, nothing held in event
+mcp2k-179369-p038	YES	TRACK	YES	2	dense ~65 cm unheld arm reaching the vertex at constant y, plus a large ghost sheet
+mcp1k-352123-p041	NO	CROSSING-TRACK	YES	3	near full-height track y=+200 to -175 passing through the vertex, cosmic
+mcp1k-65289-p049	NO	CROSSING-TRACK	YES	3	full-height track y=+200 to -200 passing straight through the vertex, cosmic
+mcp1k-287517-p057	NO	CROSSING-TRACK	YES	2	~220 cm straight track through the vertex, continuing ~60 and ~75 cm on either side

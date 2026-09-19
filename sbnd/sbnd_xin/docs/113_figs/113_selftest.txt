@@ -1,0 +1,57 @@
+== nuecc48 g0
+  slice map candidates (K, OFF, votes): [((4, 0), 2001), ((1, 2304), 71), ((1, 2307), 65)]
+  slice convention: ctpc slice_index = 4 * slicebin + 0
+  T1 activity set on ctpc-present slices: per event (mine, ctpc, only-mine, only-ctpc, value-mismatch | extra slices, extra cells, extra charge)
+     172230   42004   42004      0      0      0 |   164    265       730563
+     444187   94480   94466     14      0      0 |    35     78       293838
+        388   86095   86076     19      0      0 |    20     61       428703
+      10550   53536   53536      0      0      0 |   119    173       325975
+      46363   44666   44631     36      1      0 |   119    199       504270
+      69314   48048   48048      0      0      1 |    53    137       721322
+      90055   62121   62113      8      0      0 |   287   1190      7171978
+     122660   24675   24675      0      0      0 |   207    466      2090383
+     138009   33376   33376      0      0      0 |   169    308       799328
+     163543   46676   46676      0      0      0 |   106    204       757432
+     168596   83664   83648     16      0      0 |    11     22        86829
+     174637   46158   46158      0      0      0 |   163    228       464342
+     196649   48763   48763      0      0      0 |   129    209       493004
+     219295   78749   78731     18      0      1 |    83    115       279706
+     234638   71066   71066      0      0      0 |    68     82       157737
+     235435   51072   51072      0      0      0 |   101    211       762280
+  T1 PASS: only-mine 111, only-ctpc 1, value mismatches 2 of 915149 cells (bar 2e-4); slices with activity but absent from ctpc (no blob in any branch): 1834 slices / 3948 cells / 1.61e+07 e
+  T2 PASS: channel->wire 915039 / 915039
+  T3 blobs 90301: >=2-plane activity inside [wmin,wmax) 90301, inside [wmin,wmax] 90301, blobs with activity AT wmax 76408
+  T3 PASS (half-open; 100.00 %)
+  T5 PASS: bundle cells charge-matched 201312 / 201312 (ctpc-present); absent from ctpc (PR-filled blob-range wires) 3811; time_slice unit votes {'bin': 201312}
+  T6 PASS: bundle cells covered by stage-A blobs 198547 / 205123 = 96.79 % (bar 96 -- the PR stage re-tiles the candidate from ctpc, so its cells can exceed the stage-A blobs; uncovered within 1 wire of a blob edge: 424)
+    low coverage evt 90055: 15616/16872 (near-edge 99)
+    low coverage evt 122660: 17312/18037 (near-edge 55)
+    low coverage evt 168596: 12429/13126 (near-edge 37)
+== mcp1k g0
+  slice map candidates (K, OFF, votes): [((4, 0), 2001), ((1, 1263), 30), ((1, 1269), 29)]
+  slice convention: ctpc slice_index = 4 * slicebin + 0
+  T1 activity set on ctpc-present slices: per event (mine, ctpc, only-mine, only-ctpc, value-mismatch | extra slices, extra cells, extra charge)
+     284349   46875   46875      0      0      0 |    36     89       208229
+     284657   86185   86169     16      0      0 |     2     13        74607
+     285185   85181   85174      8      1      0 |    47     73       156732
+     285999   67106   67103      3      0      0 |    41     73       179408
+     286021   30947   30943      4      0      0 |   102    170       595621
+     286065   48870   48866      4      0      0 |   104    611      3654716
+     286197   41489   41489      0      0      0 |    53     93       242605
+     286241   56003   56004      0      1      1 |    96    192       896506
+     286329   28954   28944     10      0      0 |   221    473      6811161
+     286527   45686   45674     12      0      0 |   118    244       774647
+     286681   39662   39660      3      1      0 |   251    641      2869646
+     287099   43149   43149      0      0      0 |    57    108       259254
+     287517   83201   83191     10      0      0 |     0      0            0
+     287759   25078   25079      0      1      0 |   148    268       888212
+     287825   41015   41015      0      0      0 |   122    203       368872
+     288067   50472   50472      0      0      1 |    66    189      1050188
+  T1 PASS: only-mine 70, only-ctpc 4, value mismatches 2 of 819873 cells (bar 2e-4); slices with activity but absent from ctpc (no blob in any branch): 1464 slices / 3440 cells / 1.9e+07 e
+  T2 PASS: channel->wire 819807 / 819807
+  T3 blobs 64046: >=2-plane activity inside [wmin,wmax) 64046, inside [wmin,wmax] 64046, blobs with activity AT wmax 51987
+  T3 PASS (half-open; 100.00 %)
+  T5 PASS: bundle cells charge-matched 44782 / 44782 (ctpc-present); absent from ctpc (PR-filled blob-range wires) 1030; time_slice unit votes {'bin': 44782}
+  T6 PASS: bundle cells covered by stage-A blobs 45245 / 45812 = 98.76 % (bar 96 -- the PR stage re-tiles the candidate from ctpc, so its cells can exceed the stage-A blobs; uncovered within 1 wire of a blob edge: 42)
+    low coverage evt 286527: 1087/1158 (near-edge 7)
+VERDICT PASS

@@ -1,0 +1,23 @@
+items 30; scanners ['g', 'h']: g labelled 30, h labelled 30
+
+scanner g: verdict by class (hidden from the scanner)
+  UNHELD-TRACK    n= 22  YES   4 (18 %)  NO  18  UNSURE   0  <- precision (YES / all)
+  CONTROL         n=  8  YES   0 (0 %)  NO   8  UNSURE   0  <- false-positive rate on covered charge
+
+scanner h: verdict by class (hidden from the scanner)
+  UNHELD-TRACK    n= 22  YES   6 (27 %)  NO  14  UNSURE   2  <- precision (YES / all)
+  CONTROL         n=  8  YES   0 (0 %)  NO   8  UNSURE   0  <- false-positive rate on covered charge
+
+agreement g vs h: identical verdict on 24 / 30; YES/YES 3, YES by either 7
+  pairs: NO/NO:21, NO/UNSURE:2, NO/YES:3, YES/NO:1, YES/YES:3
+
+consensus by class (both YES | one YES one UNSURE | one YES one NO | neither):
+  UNHELD-TRACK    n= 22  both 3  yes+unsure 0  split 4  neither 15  -> strict precision 14 %, lenient 14 %
+  CONTROL         n=  8  both 0  yes+unsure 0  split 0  neither 8  -> strict precision 0 %, lenient 0 %
+
+items judged YES by every scanner (item, class, plane, Q, Qfrac, kinds, comments):
+  mcp2k-292810-p008        UNHELD-TRACK    -  Q=9.76e+05 Qfrac=0.059 PRrec=nan  TRACK/TRACK  Third prong from vertex going down ~18 cm, all red/grey with no green, | Vertical 18 cm prong descending from vertex, unheld; two other prongs 
+  mcp2k-395870-p004        UNHELD-TRACK    -  Q=1.25e+06 Qfrac=0.037 PRrec=nan  TRACK/TRACK  ~26 cm prong rising from vertex, no green along it, separate from the  | Distinct 35 cm prong rising from vertex region with no green along it
+  mcp2k-70222-p013         UNHELD-TRACK    -  Q=7.15e+05 Qfrac=0.041 PRrec=nan  TRACK/TRACK  ~25 cm unheld prong leaving vertex, diverges below/left of the green b | 25 cm unheld prong leaving vertex to the right, below the green track
+
+control items judged YES by any scanner:

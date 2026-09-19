@@ -3164,3 +3164,12 @@ Stage B on the doc 102 stage A `work-*-d102m`, toolkit `ecba69ee` (cfg threading
 - `work-{nuecc48,ncpi0,mcp1k,mcp2k}-pr150{ts0,tcsp3bw}` -- the 159-event trace subset (WCT_STEINER_GRAPH_DUMP + WCT_STM_PATH_DEBUG in stdout.log).
 - `work-{nuecc48,ncpi0,mcp1k,mcp2k}-pr150r{1,2,3,4}` -- the retune ladder on the 626-event manifest (150_pred_r2.txt).
 - **Releasable** once doc pr/150 is accepted; the evidence is committed under `docs/pr/150_figs/`.
+
+## doc sbnd_xin/113 (2026-09-19) -- missing particles: imaging census + quiet-plane knob (not viable), PR-stage census + nu_adopt_touching
+- `work-{nuecc48,mcp1k}-d113rep{,2,3}` -- stage-A reproducibility / knob-OFF gate arms (g0 only): d102m reproduced by today's binary, then by the binary with quiet_mask_window, then with quiet_mask_gap (113_figs/113_baseline_repro.txt, 113_off_gate.txt). Releasable.
+- `work-{nuecc48,mcp1k,mcp2k}-d113cf{cf0,pdoff,isdoff,dt0,th0}` -- imaging-only counterfactual arms on the 54 flagged groups (113_figs/113_counterfactual.tsv). Releasable once doc 113 is accepted.
+- `work-mcp1k-d113cfqp2v4` (40 G, 19 groups; the arm was stopped), `work-mcp1k-d113cfqpg64` (19 G, imaging + clustering), `work-mcp1k-d113cfqpg64dg` (Q/L with the clustering deghost disabled), `work-mcp1k-d113cf0tr` / `-d113cfqpg64tr` (aborted trace arms, empty) -- the quiet-plane imaging knob's arms; evidence in 113_figs/113_fix_cost.txt, 113_counterfactual_fix.tsv, 113_cluster_presence.txt. **Releasable now** (the knob is not production-viable as built; the numbers are in the doc). 70 G.
+- `work-{mcp1k,mcp2k}-d113g16off` -- stage-B knob-OFF gate (manifest_gate16, NO_DL=1) with the nu_adopt_touching binary: 16/16 identical to pr150g16new (113_figs/113_pr_off_gate.txt). Releasable.
+- `work-{nuecc48,ncpi0,mcp1k,mcp2k}-d113adopt` -- stage B on production stage A with nu_adopt_touching=true (doc 113 sec 7). Keep until the owner has read the doc.
+- `abtest/snap/d113pre`, `d113post` -- VACUOUS PDHD/PDVD imaging snapshots (the SP frames were not on disk; 113_figs/113_pdgate.txt). Safe to delete.
+- (`work-{mcp1k,mcp2k}-d113snew` predate this doc -- Sep 16, doc 109/110 era -- and are NOT part of it.)

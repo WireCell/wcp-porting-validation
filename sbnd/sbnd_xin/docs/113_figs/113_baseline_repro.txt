@@ -1,0 +1,18 @@
+# doc 113 baseline reproducibility gate: stage A (imaging + clustering/QL) of work-<s>-d102m (toolkit eacacafe, pin ~/tmp/d102m-libsnap) re-run with today's installed local/lib (toolkit HEAD ecba69ee; libWireCellImg 681378e33f0d, libWireCellClus 2efa7fa09325) on nuecc48 g0 + mcp1k g0 = 32 events, no knobs (IMG_EXTRA_TLA unset). 2026-09-19
+nuecc48 g0: imaging npz identical 64 / 64 (4 per event, numpy.array_equal on every array)
+nuecc48 g0: compiled .wct-cfg-img.json identical to production: False
+nuecc48 evt 172230: Bee clustering-global keys added by the new binary: ['opflash_time']; every production key identical: True
+16 event pairs compared (work-nuecc48-d102m vs work-nuecc48-d113rep)
+ADDED in B: 0 distinct datapaths
+REMOVED in B: 0 distinct datapaths
+CHANGED content: 0 distinct datapaths
+mcp1k g0: imaging npz not kept in production (SBND_QL_KEEP_ICLUSTER=0); pctree gate only
+mcp1k g0: compiled .wct-cfg-img.json identical to production: False
+mcp1k evt 284349: Bee clustering-global keys added by the new binary: ['opflash_time']; every production key identical: True
+16 event pairs compared (work-mcp1k-d102m vs work-mcp1k-d113rep)
+ADDED in B: 0 distinct datapaths
+REMOVED in B: 0 distinct datapaths
+CHANGED content: 0 distinct datapaths
+- work-nuecc48-d102m/g0/.wct-cfg-img.json differ: byte 345, line 30
+- work-mcp1k-d102m/g0/.wct-cfg-img.json differ: byte 345, line 30
+compiled .wct-cfg-img.json: the only differences are the absolute vs relative arm paths in inname/outname/name (the launcher passes an absolute out_root); every other byte identical -- VERDICT: stage A of d102m reproduces with today's binary, so work-<s>-d102m + work-<s>-pr150s0 are the OFF baseline.

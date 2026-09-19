@@ -1,0 +1,23 @@
+# doc sbnd_xin/113 sec 7 -- pre-registered rule for the PR-stage knob nu_adopt_touching, written 2026-09-19 13:05
+# while the ON arm (work-<s>-d113adopt, stage B on the production stage A, PR_EXTRA_TLA nu_adopt_touching=true,
+# C++ defaults dis 3 cm / length 3-100 cm / unmatched only) was running and BEFORE any of its output was read.
+
+OFF = work-<s>-pr150s0 (today's production, ref/prod-2026-09-17b).  ON = work-<s>-d113adopt.  3067 events.
+
+PRIMARY
+P1  the PR-stage census (d113_pr_uncover.py --stageB d113adopt) flags FEWER NEARBY-UNMATCHED clusters near the
+    candidate on ON than on OFF (23 events on OFF); the both-YES scan items of that class (174422, 94942, 321235,
+    401252, 351639, 100728) are adopted (log line "[nu_adopt_touching] ... adopted cluster") on ON.
+P2  on the events where a cluster was adopted, kine_reco_Enu rises (the adopted charge reaches the energy) and
+    the number of PF particles does not fall; the adopted set is listed and the scan's NO items (crossing tracks)
+    are NOT among the adopted ones (the length cap and the unmatched-only rule are the guards).
+GUARDS (pr/150 spirit, on all 3067)
+G1  labelled vertex <= 3 cm (vtx105) >= OFF - 1 %; > 10 cm movers away <= toward + 5.
+G2  nu_evaluated lost <= gained + 5; TGM evaluated flips = 0; STM / FC flips reported.
+G3  sentinels FAIL <= 1, each adjudicated.
+G4  numuCC (numu > 0.9) net within +-10; nueCC (nue > 7.0) reported; pi0 count within +-5.
+G5  |dEnu| median over unchanged candidates <= 5 MeV (the knob must be inert where nothing touches);
+    dEnu on adopted events reported separately.
+G6  PR wall median <= 1.05 x; nonzero rc = 0.
+Decision: PASS = P1, P2, G1..G6 -> recommendation to the owner (no flip by this doc).  FAIL on a guard ->
+one ladder rung (max_length 60 cm, or dis 2 cm), then stop and report.

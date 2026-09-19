@@ -1,0 +1,73 @@
+item	verdict	kind	connected	confidence	comment
+mcp1k-65289-p049	NO	CROSSING-TRACK	YES	3	Straight 400 cm track spanning full detector height through the vertex; cosmic morphology
+mcp1k-351639-p039	UNSURE	TRACK	UNSURE	1	225 cm near-vertical track down to the floor; candidate is only a few grey dots, no vertex
+mcp2k-173340-p019	NO	HALO	YES	2	Red fills the band directly above the green trajectory; one object, ~20 cm wide
+mcp2k-75795-p005	NO	HALO	YES	2	Red is the upper half of the wide band around the green prong from the vertex
+mcp1k-321107-p008	NO	HALO	YES	3	Red fills the lower half of the flat band that the green line runs through
+mcp2k-75862-p906	NO	HALO	YES	3	Red is a 20 cm segment sitting directly on the green track
+mcp1k-317741-p031	NO	CROSSING-TRACK	YES	2	340 cm straight track from the upstream wall to the floor, passing through the vertex
+mcp2k-179369-p038	YES	TRACK	YES	3	Two unheld prongs, ~70 cm each, meeting at the vertex, no green along either
+mcp1k-351639-p022	UNSURE	FRAGMENT	UNSURE	1	15 cm tip collinear with a longer neighbouring cluster, ~6 cm from two grey candidate dots
+mcp2k-94678-p021	NO	HALO	YES	2	Red is the lower half of the band around the green trajectory
+mcp1k-349461-p020	NO	HALO	YES	2	Red fills the wedge above the green line along the same track
+mcp2k-100245-p053	NO	CROSSING-TRACK	YES	3	Straight 310 cm track through the vertex, extends far on both sides
+mcp2k-322707-p018	NO	HALO	YES	2	Red is the upper half of a diamond centred on the green trajectory
+mcp2k-322135-p012	NO	HALO	YES	2	Red fills the band above the long green line from the vertex
+mcp1k-283969-p033	NO	CROSSING-TRACK	YES	3	400 cm vertical track top to bottom, passes ~10 cm from the vertex
+mcp1k-280466-p055	YES	TRACK	YES	3	300 cm unheld track leaving the vertex along drift; green prong goes the other way
+mcp2k-75052-p010	NO	HALO	YES	2	Red is the upper wedge of the diamond around the green trajectory
+mcp2k-395837-p047	YES	TRACK	YES	3	230 cm unheld track from the vertex, clearly diverging from the held green prong
+mcp1k-402880-p023	NO	HALO	YES	2	Red fills the band above the green line, grey fills below; one object
+mcp2k-75206-p007	NO	HALO	YES	2	Red is the lower half of a wide flat sheet with the green line through the middle
+mcp2k-174164-p009	NO	HALO	YES	2	Red is the upper wedge of the diamond around the green trajectory
+mcp2k-100728-p025	UNSURE	FRAGMENT	UNSURE	2	25 cm unheld clump ~5 cm from a tiny candidate blob; merges into a neighbouring blue cluster
+mcp2k-68308-p032	NO	CROSSING-TRACK	YES	3	400 cm vertical track top to bottom straight through the vertex
+mcp2k-493835-p911	YES	FRAGMENT	YES	2	13 cm unheld stub on the far side of the vertex from the green track, clear kink
+mcp1k-401516-p036	YES	TRACK	YES	3	445 cm unheld track starting at the vertex, both ends contained
+mcp2k-396323-p011	NO	HALO	YES	3	Red sits exactly on the green track in x-y; the fan is only the drift-degenerate spread
+mcp2k-283833-p001	NO	HALO	YES	3	Red is the left half of the 30 cm band the green line runs along
+mcp2k-395717-p017	NO	HALO	YES	2	Red is the drift-direction wedge beside the candidate's own green track
+mcp1k-171600-p910	NO	HALO	YES	3	Red is an 18 cm segment lying on the green track
+nuecc48-10550-p042	NO	CROSSING-TRACK	YES	3	370 cm band from the ceiling to the upstream wall, passing through the vertex
+mcp1k-284235-p907	NO	NOISE	NO	3	Single isolated point, ~12 cm from any candidate structure
+mcp1k-352123-p041	NO	CROSSING-TRACK	YES	3	380 cm near-vertical track top to near-floor, passing at the vertex
+mcp2k-104172-p045	YES	SHOWER	YES	3	Fan of unheld prongs from the vertex, ~70 cm; green holds only a separate blob
+mcp1k-401252-p034	YES	SHOWER	YES	2	Large unheld shower-like bundle ~80 cm tall beside the held green prong
+mcp2k-175952-p002	NO	HALO	YES	3	Red is the left half of the band around the long green trajectory
+mcp2k-395079-p003	NO	HALO	YES	2	Red fills the wedge above the green line of the same track
+mcp1k-291548-p035	NO	CROSSING-TRACK	YES	3	400 cm straight track top to bottom through the vertex
+mcp1k-168614-p016	NO	HALO	YES	3	Red is the fan above the green trajectory, same object
+mcp2k-347824-p059	NO	CROSSING-TRACK	YES	3	240 cm straight track from the ceiling through the vertex and well beyond
+mcp2k-398225-p043	YES	TRACK	YES	2	260 cm unheld track leaving the vertex downward; held green prong goes up-left
+mcp2k-480002-p050	NO	CROSSING-TRACK	UNSURE	2	290 cm track from the x=-200 wall to the z=500 wall; candidate is a few green dots
+mcp1k-61461-p904	NO	FRAGMENT	YES	2	Small 15 cm blob filling the junction between two held green tracks
+mcp1k-284657-p058	NO	CROSSING-TRACK	YES	3	210 cm straight track from the ceiling through the vertex and 70 cm beyond
+mcp2k-481014-p024	NO	FRAGMENT	UNSURE	2	15 cm diamond blob at the kink of a neighbouring blue track; nothing held in window
+mcp1k-169620-p908	NO	HALO	YES	3	Red is a 12 cm segment lying on the green track
+mcp2k-70472-p000	NO	HALO	YES	2	Red is the left half of the band around the green trajectory from the vertex
+mcp2k-282909-p044	YES	SHOWER	YES	2	Unheld shower clumps spreading ~80 cm beyond the green envelope from the vertex region
+mcp2k-48488-p030	NO	CROSSING-TRACK	UNSURE	3	400 cm vertical track top to bottom passing ~20 cm from the vertex
+mcp2k-400029-p056	NO	CROSSING-TRACK	YES	2	180 cm straight track through the vertex, 110 cm on the far side
+mcp2k-398191-p004	NO	HALO	YES	2	Red fills the band below the green line of the same track
+mcp1k-71222-p902	NO	FRAGMENT	YES	2	15 cm unheld tip continuing the same green track past its far end
+mcp1k-287431-p052	UNSURE	FRAGMENT	YES	2	50 cm unheld vertical band overlapping the grey track; no green anywhere in window
+mcp2k-390634-p905	NO	NOISE	NO	3	Single isolated point ~13 cm off the held track
+mcp1k-491483-p051	NO	CROSSING-TRACK	YES	3	Straight 480 cm track bottom to top through the vertex
+mcp2k-405707-p040	NO	CROSSING-TRACK	YES	2	320 cm track from near the ceiling past the vertex down to the z=0 wall
+mcp1k-282231-p909	NO	HALO	YES	3	Red is a 15 cm segment lying on the green track below the vertex
+mcp2k-390391-p028	NO	HALO	YES	2	Red is a 25 cm wedge on the band beside the vertex, same object
+mcp2k-395870-p901	NO	NOISE	NO	3	Single isolated point, empty 75 cm window otherwise
+mcp2k-480002-p027	NO	FRAGMENT	NO	2	25 cm flat clump abutting a blue cluster, ~13 cm from the small held blob
+mcp1k-286681-p015	UNSURE	FRAGMENT	YES	1	45 cm unheld band on the upper edge of a large held mass, reaching the vertex
+mcp2k-169240-p013	NO	HALO	YES	2	Red is the lower half of the band the green line runs through
+mcp2k-100728-p054	YES	TRACK	YES	2	175 cm unheld track along z, both ends contained, green dots held at each end
+mcp1k-287517-p057	NO	CROSSING-TRACK	YES	2	230 cm straight track through the vertex up to the ceiling
+mcp2k-49742-p046	NO	CROSSING-TRACK	YES	3	300 cm track from the x wall through the vertex down to the floor
+mcp1k-290052-p048	NO	CROSSING-TRACK	YES	3	400 cm straight track top to bottom straight through the vertex
+mcp2k-157215-p037	NO	CROSSING-TRACK	NO	3	280 cm track from the z=500 wall to the floor; no candidate structure in the window
+mcp2k-178445-p903	NO	HALO	YES	3	Red is an 18 cm segment lying along the bottom of the V-shaped green track
+mcp2k-409052-p014	NO	HALO	YES	3	Red fills the band below the green trajectory leaving the vertex
+mcp2k-157215-p029	UNSURE	FRAGMENT	UNSURE	1	17 cm segment collinear with a neighbouring blue track, ~7 cm below the grey candidate
+mcp2k-400349-p026	NO	FRAGMENT	NO	2	Isolated 10 cm stub alone in the window; nothing held, nothing else nearby
+mcp2k-179912-p900	NO	HALO	YES	3	Red is a 17 cm segment lying on the green track above the vertex
+mcp1k-287431-p006	UNSURE	FRAGMENT	UNSURE	1	56 cm unheld vertical band at the x wall, ~12 cm from a small grey candidate segment

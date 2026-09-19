@@ -1,0 +1,43 @@
+items 72; scanners ['e', 'f']: e labelled 72, f labelled 72
+
+scanner e: verdict by class (hidden from the scanner)
+  UNHELD-TRACK    n=  2  YES   1 (50 %)  NO   0  UNSURE   1  <- precision (YES / all)
+  UNHELD-WIDE     n= 28  YES   2 (7 %)  NO  21  UNSURE   5  <- precision (YES / all)
+  NEARBY-COMPANION n=  6  YES   4 (67 %)  NO   2  UNSURE   0  <- precision (YES / all)
+  NEARBY-OTHER    n= 10  YES   3 (30 %)  NO   7  UNSURE   0  <- precision (YES / all)
+  NEARBY-UNMATCHED n= 14  YES   4 (29 %)  NO  10  UNSURE   0  <- precision (YES / all)
+  CONTROL         n= 12  YES   1 (8 %)  NO  11  UNSURE   0  <- false-positive rate on covered charge
+
+scanner f: verdict by class (hidden from the scanner)
+  UNHELD-TRACK    n=  2  YES   0 (0 %)  NO   1  UNSURE   1  <- precision (YES / all)
+  UNHELD-WIDE     n= 28  YES   0 (0 %)  NO  24  UNSURE   4  <- precision (YES / all)
+  NEARBY-COMPANION n=  6  YES   3 (50 %)  NO   2  UNSURE   1  <- precision (YES / all)
+  NEARBY-OTHER    n= 10  YES   3 (30 %)  NO   7  UNSURE   0  <- precision (YES / all)
+  NEARBY-UNMATCHED n= 14  YES   3 (21 %)  NO  10  UNSURE   1  <- precision (YES / all)
+  CONTROL         n= 12  YES   1 (8 %)  NO  11  UNSURE   0  <- false-positive rate on covered charge
+
+agreement e vs f: identical verdict on 62 / 72; YES/YES 10, YES by either 15
+  pairs: NO/NO:50, NO/UNSURE:1, UNSURE/NO:4, UNSURE/UNSURE:2, YES/NO:1, YES/UNSURE:4, YES/YES:10
+
+consensus by class (both YES | one YES one UNSURE | one YES one NO | neither):
+  UNHELD-TRACK    n=  2  both 0  yes+unsure 1  split 0  neither 1  -> strict precision 0 %, lenient 50 %
+  UNHELD-WIDE     n= 28  both 0  yes+unsure 2  split 0  neither 26  -> strict precision 0 %, lenient 7 %
+  NEARBY-COMPANION n=  6  both 3  yes+unsure 0  split 1  neither 2  -> strict precision 50 %, lenient 50 %
+  NEARBY-OTHER    n= 10  both 3  yes+unsure 0  split 0  neither 7  -> strict precision 30 %, lenient 30 %
+  NEARBY-UNMATCHED n= 14  both 3  yes+unsure 1  split 0  neither 10  -> strict precision 21 %, lenient 29 %
+  CONTROL         n= 12  both 1  yes+unsure 0  split 0  neither 11  -> strict precision 8 %, lenient 8 %
+
+items judged YES by every scanner (item, class, plane, Q, Qfrac, kinds, comments):
+  mcp1k-280466-p055        NEARBY-COMPANION -  Q=1.97e+07 Qfrac=1.723 PRrec=nan  TRACK/TRACK  long unheld track starting at the vertex, ~300 cm in drift, separate f | 300 cm unheld track leaving the vertex along drift; green prong goes t
+  mcp1k-401252-p034        NEARBY-UNMATCHED -  Q=7.36e+07 Qfrac=7.110 PRrec=nan  SHOWER/SHOWER  several coherent unheld prongs fanning from the vertex, well off the g | Large unheld shower-like bundle ~80 cm tall beside the held green pron
+  mcp1k-401516-p036        NEARBY-UNMATCHED -  Q=6.6e+07 Qfrac=3.381 PRrec=nan  TRACK/TRACK  long straight unheld track from vertex running ~380 cm down-left, ends | 445 cm unheld track starting at the vertex, both ends contained
+  mcp2k-100728-p054        NEARBY-UNMATCHED -  Q=2.18e+07 Qfrac=12.380 PRrec=nan  TRACK/TRACK  ~160 cm coherent beam-direction track, unheld, green clumps at both of | 175 cm unheld track along z, both ends contained, green dots held at e
+  mcp2k-104172-p045        NEARBY-COMPANION -  Q=4.28e+07 Qfrac=1.415 PRrec=nan  TRACK/SHOWER  several long unheld prongs radiating from the vertex, green holds only | Fan of unheld prongs from the vertex, ~70 cm; green holds only a separ
+  mcp2k-179369-p038        NEARBY-OTHER    -  Q=5.64e+07 Qfrac=1.603 PRrec=nan  TRACK/TRACK  dense ~65 cm unheld arm reaching the vertex at constant y, plus a larg | Two unheld prongs, ~70 cm each, meeting at the vertex, no green along 
+  mcp2k-282909-p044        NEARBY-OTHER    -  Q=4.55e+07 Qfrac=1.502 PRrec=nan  SHOWER/SHOWER  broad unheld plume fanning up from the vertex band, shower-like, exten | Unheld shower clumps spreading ~80 cm beyond the green envelope from t
+  mcp2k-395837-p047        NEARBY-OTHER    -  Q=4.14e+07 Qfrac=4.300 PRrec=nan  TRACK/TRACK  ~200 cm unheld track emanating from the vertex downward, distinct from | 230 cm unheld track from the vertex, clearly diverging from the held g
+  mcp2k-398225-p043        NEARBY-COMPANION -  Q=5.26e+07 Qfrac=1.304 PRrec=nan  TRACK/TRACK  ~250 cm unheld track starting at the vertex and running to the detecto | 260 cm unheld track leaving the vertex downward; held green prong goes
+  mcp2k-493835-p911        CONTROL         -  Q=0 Qfrac=0.000 PRrec=nan  TRACK/FRAGMENT  ~13 cm unheld stub continuing past the vertex end of the green track w | 13 cm unheld stub on the far side of the vertex from the green track, 
+
+control items judged YES by any scanner:
+  mcp2k-493835-p911: ['YES', 'YES']  ~13 cm unheld stub continuing past the vertex end of the gre | 13 cm unheld stub on the far side of the vertex from the gre

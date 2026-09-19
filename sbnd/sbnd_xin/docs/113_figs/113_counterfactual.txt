@@ -1,0 +1,10 @@
+
+verdict (first arm covering >= 50 % of the component charge) by class: n components / charge share
+  NOBLOB-SLICE    n=  40  cf0: 0 (0 %)  isdoff: 0 (0 %)  pdoff: 0 (0 %)  dt0: 0 (0 %)  th0: 1 (1 %)  TILING: 39 (99 %)
+  NOBLOB-INSLICE  n=  66  cf0: 2 (2 %)  isdoff: 0 (0 %)  pdoff: 0 (0 %)  dt0: 0 (0 %)  th0: 2 (1 %)  TILING: 62 (97 %)
+mean covered-charge fraction per arm (all flagged components):
+  cf0     0.026  (>= 0.5 in 2 / 106)
+  isdoff  0.027  (>= 0.5 in 2 / 106)
+  pdoff   0.050  (>= 0.5 in 1 / 106)
+  dt0     0.026  (>= 0.5 in 2 / 106)
+  th0     0.119  (>= 0.5 in 5 / 106)
