@@ -28,6 +28,7 @@ write into an existing output dir.
 | Where is the truth (type, Enu, vertex)? | **Only in Bee**, in `bee/bee_<tag>.zip::data/0/0-mc.json`. The tracking-pr ROOT files carry **no** truth branches. |
 | Does mc.json hold truth or reco particle flow? | **Both, in one tree.** The truth interaction nodes (id 9000000+) come from larwirecell's `TensorSetLabeler`. Our reco PF is grafted under a single `reco nu …` node (id 19999999, children ≥ 20000000), or a `no reco neutrino candidate (…)` marker replaces it. Each node is unambiguous by id and text (section 2.2). |
 | Vertex quality / numuCC / nueCC selection (FV 5<\|x\|<190, \|y\|<190, 10<z<450 cm; match = vertex within 5 cm) | Vertex within 5 cm for 67.7 % of true ν in the FV (80.0 % numuCC). numuCC with `numu_score>0.9`: efficiency **69.0 %**, purity **86.3 %**. nueCC with `nue_score>7.0`: 11/31 = 35.5 % efficiency and 11/12 purity, which is statistics-limited in this BNB sample (section 5.5). Requiring true Edep > 100 MeV in the signal raises the vertex number to 73.5 % and leaves both selections unchanged. At `nue_score>4.0` the nueCC purity is 14/22 = 63.6 % (efficiency 14/31) (section 5.6). Without the true-vs-reco vertex match, numuCC reads efficiency 77.0 % and purity 94.7 % (event level); the nueCC numbers are unchanged (section 5.7). |
+| Why do 20 of the 31 true nueCC fail `nue_score > 7.0`? | **7 never get a candidate vertex within 5 cm:** 2 have no in-window candidate, 1 has the wrong cluster picked, and 4 have the vertex 17–35 cm off. **13 have a good vertex but fail the score:** 10 have the EM shower misreconstructed (`nue_score` < 4), and 3 sit just below the cut (4–7). The categories were assigned by hand. The per-event list and a Bee set are in section 5.8 and `sbnd_xin/bee/d107nue31/d107nue31.index.txt`. |
 | Is the PR candidate the non-cosmic one? | **Yes, in 6236/6236 rows, by construction.** The per-bundle `pick()` skips any activity with TGM, STM or `lm_flag>0` (section 3). The informative numbers are the residuals in section 4. |
 
 ## 1. The sample
@@ -424,6 +425,7 @@ interactions, and 31 of them in the FV.
 - **The 7.0 cut:** of the 32 matched true nueCC candidates (any vertex position), the scores sorted are 3×(−15), −9.1 … 6.6, then 7.16, 9.6, 10.5 … 14.95. So 13 of 32 pass.
 - **Candidates passing looser cuts** (reco vertex in FV): 67 at `nue_score > 0`, 22 at > 4, 12 at > 7.
 - **Weights:** the scores come from the uBooNE-trained BDT weights (section 5.2).
+- **Why the other 20 fail:** see section 5.8, event by event, with the Bee set.
 
 A proper nueCC efficiency/purity needs the intrinsic-nue sample (doc 102's nueCC
 set) for signal and this sample for the numu/NC/cosmic background.
@@ -553,6 +555,90 @@ nueCC vertex or in an event with no nueCC in the FV at all.
 
 So the three numuCC columns bracket the answer. The 5 cm match is the strict bound
 (69.0 % / 86.3 %); dropping the match gives about 77 % / 95 %.
+
+## 5.8 The 31 true nueCC event by event: why 20 fail the cut (owner follow-up)
+
+These are the 31 signal nueCC of section 5.5: true nueCC with the vertex in the FV. All 31 also have Edep > 100 MeV, so section 5.6 has the same set.
+
+On 2026-09-14 each event was examined in its Bee display and its `mc.json`, comparing the truth with the reconstructed particle flow, and given a failure category.
+- **Bee set (31 events, uploaded 2026-09-14):** https://www.phy.bnl.gov/twister/bee/set/27f7c3e0-2c54-4ef2-aed6-d32799a8f991/event/list/ . The set is in the order of the table below, so Bee event *i* is row *i*.
+- **Annotated index:** `sbnd_xin/bee/d107nue31/d107nue31.index.txt` (wcp `30121ad8`). It has one row per event with the category, the truth, the vertex distance, both scores, the reconstructed particles at the vertex, and the nue sub-tagger flags that are 0.
+
+**Measured vs judged.** The categories are **hand-assigned**. They are not an owner scan, and no script produces them. The numbers were re-checked on 2026-09-19:
+- **Vertex distance and scores:** all 31 index rows match `products/d107/candidates.tsv` (distance from the reco to the true vertex, `nue_score`, `numu_score`).
+- **Failing flags:** the flags listed as failing match the `T_tagger` flags that are 0 in the event's `tracking-pr` ROOT file for all 29 events that have a `T_tagger` row. The flags checked are mip, mip_quality, gap, pio, br1–br4, stem_len, lem, vis, hol, lol, tro, stw, spt, sig, mgo, mgt, anc, cme, brm and stem_dir.
+- **One index omission:** row 7 also fails **br2** (`br_filled` = 1, `br2_flag` = 0). The table below includes it; the committed index file does not.
+
+### How the categories add up to section 5.5
+
+| Stage | Category | Events | Bee # |
+|---|---|---|---|
+| **No candidate within 5 cm (7)** | No in-window candidate: the cluster nearest the ν (7–22 cm away) is 340–478 cm long and matched to an out-of-window flash | 2 | 0–1 |
+| | Wrong cluster: the ν piece (0.6 cm from the true vertex) lost "longest wins" to an 85 cm activity in the same flash bundle | 1 | 2 |
+| | Vertex 17–35 cm off: 3 on the right cluster, 1 moved off the ν piece onto another cluster | 4 | 3–6 |
+| **Candidate within 5 cm, `nue_score` < 4 (10)** | EM reconstruction; subcategories listed below | 10 | 7–16 |
+| **Candidate within 5 cm, 4 < `nue_score` < 7 (3)** | Just below the cut, with the electron energy right | 3 | 17–19 |
+| **Selected, `nue_score` > 7 (11)** | | 11 | 20–30 |
+
+- **The funnel:** 2 + 1 + 4 = 7 events have no candidate within 5 cm, so 31 − 7 = **24**. That is the "candidate vertex within 5 cm" row of section 5.5 Q4.
+- **The 13 score failures:** 24 = 11 selected + 3 just below + 10 EM, so the 13 of 24 that fail the score cut (11/24 = 45.8 %) are the 10 EM cases plus the 3 near misses.
+- **The looser cut:** at `nue_score > 4.0` the 3 near misses pass, which gives the 14/31 of section 5.6.
+- **The 10 EM cases:**
+  - shower energy too low: 2 (#9, #12);
+  - shower split, with a pion reconstructed as a muon: 2 (#10, #13);
+  - a π⁰ or extra photon present: 3 (#7, #15, #16);
+  - stem not MIP-like: 1 (#8);
+  - two true photons found but the electron over-collected: 1 (#11);
+  - a 103 MeV electron beside a 474 MeV π⁻: 1 (#14).
+- **Three events never get a nue score** (#2, #4, #5, `nue_score` = −15). `T_tagger` has `mip_filled` = 0 and `br_filled` = 0: no electron shower is found at the reco vertex, so the nue BDT never runs and −15 is its default (doc 112).
+- **Failing sub-tagger flags on the 13 events with a matched candidate (#7–19):**
+  - mip: 6 (#8, 12, 13, 14, 15, 16)
+  - cme: 4 (#9, 10, 13, 15)
+  - stem_dir: 4 (#7, 11, 15, 17)
+  - br3, br4, gap, mgt, mip_quality, tro: 2 each
+  - br2, hol, lem: 1 each
+  - none: #19 (score 6.56)
+
+### The 20 that fail
+
+In the "True" column, the mode is followed by the true Eν and the true electron kinetic energy, both in MeV. Other notable true particles are in parentheses. "vtx" is the distance from the reco to the true vertex in cm. The note is the index's evidence text; PF means the reconstructed particle flow.
+
+| Bee # | Event | Category | True | vtx | nue | numu | Note |
+|---|---|---|---|---|---|---|---|
+| 0 | `r713_s5_e5` | NO CANDIDATE | RES 853 MeV, e- 204 | - | - | - | no in-window candidate: nearest cluster (21.8 cm) is 478 cm long and matched to a flash at 144.7 us; the only in-window activity is a 1.5 cm blob with lm_flag=1 |
+| 1 | `r715_s99_e39` | NO CANDIDATE | QE 826 MeV, e- 589 | - | - | - | 0 in-window mains: the nu charge is 7.0 cm from a 340 cm cluster matched to a flash at 48.5 us |
+| 2 | `r480_s49_e45` | WRONG CLUSTER | QE 333 MeV, e- 236 | 135.9 | -15 | 0.83 | the nu piece (33.4 cm activity, 0.6 cm from the true vertex) lost "longest wins" to an 85 cm activity of the same flash bundle; PR cosmic tagger fires on the pick |
+| 3 | `r717_s40_e27` | VERTEX MOVED OFF THE NU PIECE | QE 464 MeV, e- 344 | 17.0 | -11.78 | -1.53 | nu attached to a 430 cm STM-tagged cosmic (vetoed); the 32.6 cm companion (1.0 cm from the true vertex) was selected, but the final main cluster/vertex sits 17 cm away (cluster 60, 38 cm from the true vertex); shower as pi0; fails mip, pio, stw |
+| 4 | `r711_s8_e28` | VERTEX MISPLACED | RES 989 MeV, e- 247 | 32.5 | -15 | -0.13 | right cluster (contains the true vertex) but reco vertex 32 cm away; no e- shower at the reco vertex |
+| 5 | `r716_s81_e4` | VERTEX MISPLACED | QE 359 MeV, e- 290 | 34.7 | -15 | -0.18 | right cluster, vertex 35 cm away; no e- shower at the reco vertex; PF has mu-/pi+ nodes with no true muon or pion |
+| 6 | `r713_s81_e37` | VERTEX MISPLACED | MEC 1417 MeV, e- 1227 | 19.1 | 2.21 | -0.22 | right cluster, vertex 19 cm off; shower found but split (869+100+27 vs 1227); no failing sub-flag, low BDT score |
+| 7 | `r713_s47_e30` | EM MISRECO, pi0 in final state | RES 906 MeV, e- 170 (+pi0 89) | 0.9 | 1.32 | 1.15 | primary e- 142 MeV next to a reconstructed pi0; fails gap, br2, stem_dir (br2 missing from the index) |
+| 8 | `r714_s30_e17` | EM STEM NOT MIP-LIKE | RES 1951 MeV, e- 656 (+pi+ 365, 286) | 0.2 | 2.57 | 1.55 | e- found (540 vs 656) but fails mip (stem dQ/dx); the two true pi+ appear as mu- 161, pi+ 107, pi+ 45 |
+| 9 | `r714_s38_e41` | SHOWER ENERGY LOW | DIS 4438 MeV, e- 1237 (+pi+ 2006, p 1028) | 2.5 | -1.42 | 1.31 | shower 448 vs 1237; no pi+ track in the PF (two neutron nodes 378/496 MeV); fails br4, cme; numu_cc_flag on |
+| 10 | `r715_s66_e15` | SHOWER SPLIT + MUON-LIKE PION | DIS 2487 MeV, e- 542 (+pi+ 1337) | 1.2 | 2.68 | 3.62 | shower split into e- 358 + gamma 364; muon-like track mu- 802 (true pi+ 1337); fails cme; numu_cc_flag on |
+| 11 | `r718_s14_e22` | TWO PHOTONS + ELECTRON | MEC 1820 MeV, e- 661 (+gamma 453, 405) | 1.0 | 3.04 | -1.11 | both true photons found (335/438) but e- over-collected (889 vs 661); fails gap, stem_dir |
+| 12 | `r718_s35_e16` | SHOWER ENERGY LOW | QE 810 MeV, e- 348 | 0.5 | -2.74 | 0.61 | e- 115 vs 348; PF has pi+ 136 with no true pion; fails mip, br3, hol |
+| 13 | `r719_s17_e35` | SHOWER SPLIT + MUON-LIKE PION | DIS 1099 MeV, e- 299 (+pi+ 225) | 0.7 | -1.58 | 1.89 | e- split (132+46 vs 299); muon-like track mu- 205 (true pi+ 225); fails mip, cme; numu_cc_flag on |
+| 14 | `r719_s22_e22` | LOW-ENERGY ELECTRON | RES 1041 MeV, e- 103 (+pi- 474) | 0.4 | -7.34 | 0.48 | 103 MeV electron beside a 474 MeV pi-; fails mip, br3, lem |
+| 15 | `r720_s39_e3` | EXTRA PHOTON / pi0-LIKE | DIS 2252 MeV, e- 272 (+pi+ 207, pi- 138, 396) | 1.5 | -9.13 | 2.65 | e- energy right (267 vs 272) but an extra gamma 261 + pi0 120 and a mu- 238 (no true muon); fails mip, tro, mgt, cme, stem_dir |
+| 16 | `r720_s68_e10` | pi0 CONFUSION | RES 1596 MeV, e- 722 (+pi0 449) | 4.5 | -4.16 | -0.82 | electron and pi0 photons share energy (e- 439 vs 722, gamma 729); fails mip, mip_quality, mgt |
+| 17 | `r717_s80_e46` | MARGINAL 4&lt;nue&lt;7 | DIS 3524 MeV, e- 597 | 1.8 | 4.86 | 1.00 | e- right (611 vs 597); extra mu- 186 (no true muon); fails mip_quality, stem_dir |
+| 18 | `r711_s57_e6` | MARGINAL 4&lt;nue&lt;7 | QE 2039 MeV, e- 1387 (+p 612) | 0.8 | 5.59 | -0.66 | e- right (1426 vs 1387); the 612 MeV proton is absent from the PF; fails br4, tro |
+| 19 | `r716_s54_e16` | MARGINAL 4&lt;nue&lt;7 | RES 2264 MeV, e- 1799 | 3.2 | 6.56 | -1.81 | e- right (1831 vs 1799); no failing sub-flag; BDT just below 7 |
+
+**The 11 selected (#20–30)** have vertices 0.3–2.8 cm from the true vertex and `nue_score` from 7.16 to 13.13. The index marks six as clean (#23, 24, 26, 27, 29, 30), with the reconstructed electron energy within 12 % of the truth. The other five:
+- **#20** passes just above the cut (7.16), even though it fails mip, mip_quality and hol and has a 68 MeV mu- stub.
+- **#21** has both true pions missing from the PF and fails cme.
+- **#22** fails gap.
+- **#25** is an anti-νe CC (e+ 691 MeV, energy right), which the sign-blind flavour naming counts as nueCC.
+- **#28** is selected with half the true shower energy (234 vs 458 MeV).
+
+**Reading.** Of the 20 failures:
+- **7 are upstream of the nue BDT:** candidate selection or vertex placement. None of these can be recovered by moving the score cut.
+- **10 are EM reconstruction around a good vertex:** a split or under-collected shower, pion/π⁰ confusion, or a stem that is not MIP-like.
+- **3 are score-level near misses.**
+
+These are 31 events from a BNB sample, so the category fractions carry the same statistics caveat as section 5.5. They show which failure modes to look for in the intrinsic-nue sample; they do not measure how often each happens.
 
 ## 6. Open items (reported, not fixed)
 
