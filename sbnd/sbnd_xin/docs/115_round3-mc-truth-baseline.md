@@ -361,6 +361,13 @@ The νμCC purity in this sample is **47/296 = 15.9 %** and is not a defect: it 
 sample, so almost everything a νμ cut selects is a true νeCC. It is quoted only to show the
 νμ and νe selections are not disjoint at these working points.
 
+> **The same caveat applies to the 97.8 % above, in the other direction — see §13.2.** That
+> purity is computed inside `mc-nuecc` alone, where by construction almost every event is an
+> intrinsic νe CC; no νμ/NC sample was mixed in and scaled. On a common POT exposure the
+> central value is **~62 %**, and the νμ/NC background is *one event* of mc-cv, so this round
+> does not measure the νeCC purity at all. The **efficiencies** in this section carry no
+> normalisation and are unaffected.
+
 ## 8. The neutrino vertex
 
 Distance from each in-FV true vertex to the **nearest** candidate vertex in its event — a
@@ -415,9 +422,14 @@ read from the census — not the gates that happened to produce a candidate. `do
 88 candidate rows in total, of which only 2 get a νe BDT score evaluated at all (2.3 %).
 The five νμ-selected gates have `kine_reco_Enu` 517–1559 MeV, median 1112 MeV.
 
-**Zero of 1 000 cosmic-only gates pass the νeCC selection at either working point.** With no POT
-or trigger normalisation available in the staged sample this is a rate per gate and nothing
-more — but as a rate it is the number a later round is scored against.
+**Zero of 1 000 cosmic-only gates pass the νeCC selection at either working point.** As a rate
+per gate this is the number a later round is scored against.
+
+> **Superseded in part — see §13.** This section originally added "with no POT or trigger
+> normalisation available in the staged sample". The POT half of that is wrong: the MC reco1
+> files carry `sumdata::POTSummary`. §13.3 scales these rates onto the MC exposure and finds
+> the cosmic-only contamination of the νμCC selection is **~20 %**. The rates above are
+> unchanged and are exactly what §13.3 consumes.
 
 ## 10. The working points are uncalibrated — score scans
 
@@ -491,3 +503,222 @@ numbers here are comparable to doc 107's, and the all-ν vertex number needs the
    Reported, not fixed:
    the doc-107 script is that round's record and stays byte-untouched (M10).
 
+
+## 13. Addendum 2026-09-20 — POT normalisation, and what it does to the two purities
+
+Three questions from the owner sent me back to a number this round had recorded as
+unavailable. **It is available**: every MC reco1 file carries
+`sumdata::POTSummary_generator__GenieGen.` in its `SubRuns` tree. §9's sentence "with no POT
+or trigger normalisation available in the staged sample" is **wrong for the POT half** and is
+superseded by this section. Nothing measured in §§6–11 changes — every rate, efficiency and
+in-sample purity above stands exactly as written. What changes is what two of them *mean*.
+
+### 13.1 The POT, and the evidence that it is usable
+
+| sample | files | events | total POT | POT/event |
+|---|---:|---:|---:|---:|
+| `mc-cv` | 154 | 2 017 | 1.116251e17 | 5.534e13 |
+| `mc-nuecc` | 225 | 2 001 | 4.050539e19 | 2.024e16 |
+
+`w = POT_cv / POT_nuecc = 2.7558e-3` (1/362.9) is the weight that puts the exclusive
+intrinsic-νe sample on the CV sample's exposure. Three checks before it is used:
+
+1. **No double-counted POT.** 154 distinct `(run, subrun)` across the 154 cv files and 225
+   across the 225 nuecc files — one subrun per file (§4.2's census), so the per-subrun
+   `totpot` values sum without overlap.
+2. **No filter between gen and reco1**, tested rather than assumed. Events per file vary
+   widely (5–22 cv, 3–17 nuecc) and so, for `cv`, does POT per file (5.96–9.66e14; `nuecc`'s
+   is flat to ±1 %). The test that settles it is the Poisson pull of each file's event
+   count against its **own** POT times the global rate:
+
+   | | files | rate | mean pull | RMS pull | pull range |
+   |---|---:|---|---:|---:|---|
+   | `cv` | 154 | 1.8069e-14 ν/POT | +0.014 | 1.006 | [-2.36, +2.87] |
+   | `nuecc` | 225 | 4.9401e-17 νeCC/POT | -0.000 | 0.966 | [-1.98, +2.75] |
+
+   Unit RMS and zero mean over 154 and 225 files: the event count is exactly Poisson at its
+   file's POT. A filter between gen and reco1 would have shown up as a negative mean pull
+   (events removed at unchanged POT) or as excess variance. This is the condition under which
+   total-POT / total-events is the exposure. It also reproduces the intrinsic-νe fraction of
+   BNB interactions independently: 4.9401e-17 / 1.8069e-14 = **2.73e-3**, against the
+   exposure ratio `w` = 2.76e-3.
+3. **The two samples agree where they overlap.** mc-nuecc scaled by `w` predicts
+   **4.16** true νeCC in the FV inside mc-cv; mc-cv contains **5**. The same scaling is what
+   §13.2 and §13.3 rest on.
+
+Both samples are the same production family (`prodgenie_corsika_proton_rockbox0p1`, CV vs
+`EX_nuecc`), so the CORSIKA overlay and rockbox volume are common and the weight is a pure
+exposure ratio.
+
+Derived exposure, used in §13.3: at the BNB nominal **5e12 POT/spill**, the mc-cv POT is
+**22 325 beam gates**. Every number in §13.3 scales linearly with that assumption.
+
+### 13.2 The νeCC purity in §7 is an in-sample number, not a physical one
+
+§7's **97.8 %** is computed entirely inside `mc-nuecc`, where by construction almost every
+event *is* an intrinsic νe CC. §7 already states this logic in the other direction — "the νμCC
+purity in this sample is 15.9 % and is not a defect: it is an intrinsic-νe sample" — and the
+same sentence is owed where it *inflates* the νe number. No νμ/NC sample was mixed in and
+scaled.
+
+POT-weighting the two samples to the mc-cv exposure (signal from mc-nuecc, whose statistics are
+363× better; non-νe background from mc-cv; the cv νeCC candidates dropped to avoid
+double-counting the signal):
+
+| at the mc-cv POT | `nue_score > 7` | `nue_score > 4` |
+|---|---:|---:|
+| signal, true νeCC in FV selected (mc-nuecc × `w`) | 1.70 | 2.02 |
+| background inside the νe sample (× `w`) | 0.04 | 0.13 |
+| non-νe background (mc-cv, at its own POT) | **1** | **3** |
+| cosmic-only gates (beam-off) | 0 observed / 1000 | 0 observed / 1000 |
+| POT-weighted purity | **62 %** | **39 %** |
+
+**The honest headline is that this round does not measure the νeCC purity.** The background
+is *one event* at `>7` and three at `>4`, from a sample whose POT is 363× smaller than the
+signal sample's. The 68 % Poisson band on one event alone puts the purity anywhere in
+**[40, 98] %**. The beam-off arm adds nothing: 0/1000 gates is a 68 % upper limit of ~1.1
+per 1000, which at 22 325 gates is ≤ 25·`f` events — larger than the entire 1.70-event signal
+for any `f` above ~0.07, and `f` is unknown (§13.3). So:
+
+- `nue_score > 7` rejects νμCC/NC hard — **1 fake out of 557 νμCC + 221 NC in the FV** at the
+  cv exposure. That is a real, useful statement and it is all mc-cv's POT can support.
+- Measuring the νeCC purity needs the **full CV production**, not 1.1e17 POT, and a beam-off
+  sample far larger than 1 000 gates. Neither is a reconstruction problem.
+
+Open item raised by the cross-check: mc-cv selects **4 of its 5** true νeCC at `>7` where
+mc-nuecc gives 40.9 %. Binomial p ≈ 0.09 for 4/5 at p = 0.409 — a 1.3σ fluctuation on five
+events, and the §13.1 denominator check validates the *rate*, not the *spectrum*. Not
+significant, but it is the one place the two samples could disagree in shape and it is not
+excluded by anything measured here.
+
+### 13.3 Beam-off scaled to the MC exposure — the νμCC contamination
+
+§9's 0.50 % per gate, scaled to 22 325 gates, is **111.6 cosmic-only selected events** against
+mc-cv's **448** ν-induced ones — *if* one off-beam event corresponds to one beam gate
+(`f = 1`). **`f` is the missing input of this section and it is not measured here.**
+
+What the sample does say: **485 of the 1 000 off-beam events have no in-window flash group at
+all** (502 have exactly one, 13 have two), from `T_flash.in_window`. That is *consistent with*
+a zero-bias beam-gate-equivalent stream, i.e. `f ≈ 1`, but it is **not proof**:
+`T_flash.in_window` counts flashes WCT reconstructed above `flash_minPE = 50` inside the window
+*this chain* defines, which is not the SBND hardware trigger — different threshold, different
+PMT logic, different gate. A hardware trigger firing on light that WCT later reconstructs below
+50 PE, or outside its window, produces exactly this histogram. So the table below is the
+result and the ladder under it is the honest reading, with `f = 1` as one endpoint.
+
+At `f = 1`:
+
+| νμCC selection at the mc-cv POT (22 325 gates) | events | share |
+|---|---:|---:|
+| true νμCC in FV, matched — **signal** | 387 | **69.2 %** |
+| ν-induced background (NC, νe, out-of-FV, misplaced vertex) | 61 | 10.9 % |
+| — of which CORSIKA cosmic fakes *inside* ν gates | 17 | 3.0 % |
+| **cosmic-only gates, from beam-off** | **111.6** | **19.9 %** |
+| total selected | 559.6 | |
+
+**At `f = 1` the purity is 86.4 % → 69.2 %, a 17-point drop, with ~20 % cosmic-only
+contamination — the endpoint of the ladder, not a measurement.**
+The two cosmic components are additive and distinct: the 3.0 % is CORSIKA overlaid on a gate
+that *does* contain a neutrino (already inside §6's 86.4 %), the 19.9 % is gates with no
+neutrino at all (outside it, and invisible to any MC-only number).
+
+Sensitivity to `f`, the off-beam events per beam gate, and to POT/spill (both linear):
+
+| `f` | cosmic-only | contamination | purity |
+|---:|---:|---:|---:|
+| 1.00 | 111.6 | 19.9 % | 69.2 % |
+| 0.30 | 33.5 | 7.0 % | 80.4 % |
+| 0.10 | 11.2 | 2.4 % | 84.3 % |
+| 0.03 | 3.3 | 0.7 % | 85.7 % |
+
+**One line would close this exactly**: the off-beam gate count (or beam-gate-equivalent
+exposure / live-time) behind the 1 000 staged events, and the POT/spill of the CV production.
+Worth asking the sample's author rather than assuming.
+
+A second caveat sits on the cosmic *rate* itself, independent of `f`: the off-beam arm is
+**Run-1 data** (`v10_14_02_02`) and the MC is **SBND2026A Gen2** (`v10_14_02_03/05`) —
+different noise, different dead channels, different detector conditions. The 0.50 %/gate is
+measured in the real detector, which is the right thing for a cosmic background, but it is not
+measured under the conditions the MC simulates.
+
+### 13.4 What this does not change
+
+§§6–11 are rates and in-sample efficiencies and purities and are unaffected. The νμCC
+**efficiency** (69.5 %) is a per-signal-interaction number with no normalisation in it at all.
+The νeCC **efficiency** (40.9 % / 48.6 %) likewise. Only the two *purities* are re-read here,
+and §9's rates per gate are exactly the input §13.3 consumes.
+
+Open items this section adds to §12:
+
+6. **The off-beam gate count behind the 1 000 staged events** (and the CV production's
+   POT/spill) turns §13.3's ~20 % from an estimate into a measurement. One line from the
+   sample's author.
+7. **The νeCC purity needs the full CV production.** At 1.1e17 POT the νμ/NC background under
+   `nue_score > 7` is one event. No reconstruction change is involved.
+8. **A beam-off arm of 1 000 gates cannot constrain the νe cosmic background** — its 68 %
+   upper limit at the MC exposure is ≤ 25·`f` events against a 1.70-event signal, and `f` is
+   itself unknown. Both the gate count and the sample size need to grow.
+9. **The ±1.5 cm data CPA face is applied to MC too** (§13.5), unconditionally. Unexamined.
+10. **mc-cv selects 4 of its 5 νeCC where mc-nuecc gives 40.9 %** (p ≈ 0.09). The exposure
+    cross-check validates the rate, not the spectrum; this is the one place the two samples
+    could differ in shape and nothing here excludes it.
+
+### 13.5 MC vs data: every reality-dependent setting, and the ones that are not
+
+§2 records `reality = sim` for both MC arms and `data` for beam-off. What that actually
+switches, traced to the config and then **confirmed in the products**, not assumed:
+
+| stage | setting | MC (`sim`) | beam-off (`data`) | where |
+|---|---|---|---|---|
+| dump | TPC product names | `simtpc2d…DetSim` | `sptpc2d…Reco1` | `--mc`, §3 |
+| dump | `caf_offset_mode` | `none` | `product` → per-event `FrameShiftInfo::fFrameApplyAtCaf` | `--mc`, §3 |
+| imaging | — | *no reality dependence at all* | same | `wct-img-all.jsonnet` takes no `reality` TLA |
+| Q/L | per-TPC transverse `pos_offset` (y,z) | **(0.000, 0.000) cm** both anodes | **(−0.110, +0.670)** TPC0 / **(+0.110, −0.670)** TPC1 | `qlmatching.jsonnet`, logged per event |
+| Q/L | `QtoL` predicted-light scale | 1.0 | 0.86 | `qlmatching.jsonnet` `data_qtol` |
+| Q/L | `data` flag | false → MC PMT-saturation branch live | true | `QLMatching.cxx:1739` |
+| clus / PR | `pos_offset_on` | false | true | `clus.jsonnet` `reco` block, the single place grouping every reality toggle |
+| clus / PR | `use_sce` | false | false | same block — **both realities cluster in `x_t0cor`** |
+
+The `pos_offset` row is the one the owner asked about (the shift between the two TPC volumes),
+and it is verified directly in the run logs rather than inferred from the config:
+
+```
+work-r3cv-d115/f000/g0   anode 0 pos_offset (dy,dz) = (0.000,0.000) cm
+work-r3nue-d115/f000/g0  anode 0 pos_offset (dy,dz) = (0.000,0.000) cm
+work-r3off-d115/g0       anode 0 pos_offset (dy,dz) = (-0.110,0.670) cm
+                         anode 1 pos_offset (dy,dz) = (0.110,-0.670) cm
+```
+
+**Timing.** The chain does not re-reference the TPC clock per reality — `clus.jsonnet`'s
+`time_offset = -205 µs` is `sim.tick0_time` and is applied to **both**. Data is brought into
+that frame from the other side, by shifting its *flash* times with the FrameShift CAF offset,
+which is exactly why MC needs `caf_offset_mode=none` and data needs `product`. Two
+measurements say this worked rather than merely compiled:
+
+- **V11** (§5): `flash_time_us` − true ν time = **+0.1360 µs** (cv) and **+0.1355 µs** (nuecc),
+  against doc 108 §3.5's independently measured +0.136 µs. A mis-referenced MC clock could not
+  land on that.
+- Candidate flash times occupy the same window in both realities: **0.20–1.74 µs** in `cv`
+  (the BNB spill) and **0.20–2.19 µs** in beam-off (flat cosmics across the gate). Without the
+  data-side CAF offset the beam-off flashes would not be in the MC's window at all.
+
+**What is *not* reality-gated, and probably should be looked at.** In `clus.jsonnet`'s `dvm()`
+only the `pos_offset` keys are conditional. The per-TPC drift bounds are not: both realities
+carve out the **data CPA face at ∓1.5 cm** (`FV_xmax = −2.5` cm for TPC0, `FV_xmin = +2.5` cm
+for TPC1, the measured DENT-gap geometry plus a 1 cm inset). MC's cathode is at x = 0 by
+construction, so MC is being given a ±1.5 cm data misalignment it does not have — a ~3 cm dead
+band straddling the cathode. This round did not investigate it and nothing above is corrected
+for it; it is listed here because it is the one MC/data asymmetry the audit found that is
+*not* switched by `reality`, and it sits exactly where §8's cathode-region vertex losses are.
+
+### Repro for this section
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+# POT per sample (bare ROOT; sumdata::POTSummary is read through the file's own StreamerInfo)
+root -l -b -q 'scripts/d115/pot_sum.C("<file list>")'
+# in-window flash multiplicity, MC vs beam-off
+root -l -b -q 'scripts/d115/flash_window.C("work-r3off-d115pr/pr_evt*/tracking-pr.root")'
+# the arithmetic of 13.1-13.3
+python3 scripts/d115/normalisation.py
+```

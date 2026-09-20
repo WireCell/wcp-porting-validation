@@ -7,9 +7,12 @@ candidate -- and a candidate that passes the selection -- into a beam gate that 
 neutrino at all.  Every rate here is per beam gate, with a 68 % Wilson interval, so a later
 round can be scored against it directly.
 
-No POT or trigger normalisation is applied: the staged sample does not carry the numbers that
-would let a rate be turned into a prediction for the MC selection, and inventing one would be
-worse than leaving it out.  What is here is a rate per gate and nothing more.
+No POT or trigger normalisation is applied HERE: what this script emits is a rate per gate and
+nothing more, which is the right thing for it to own.  The normalisation itself was found later
+and lives in scripts/d115/normalisation.py (doc 115 sec 13): the MC reco1 files DO carry
+sumdata::POTSummary, so these rates can be -- and are -- scaled onto the MC exposure.  At the
+mc-cv POT the numu rate below is ~20 % of the selected numuCC sample.  Do not read the rates
+here as if no normalisation existed; read sec 13.
 
 Definitions are doc 107 sec 5.5's, so the beam-off numbers sit in the same frame as the MC ones:
   FV         5 < |x| < 190, |y| < 190, 10 < z < 450 cm
