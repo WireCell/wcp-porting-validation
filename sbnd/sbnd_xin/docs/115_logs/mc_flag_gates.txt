@@ -1,0 +1,49 @@
+# doc 115 -- gates for the additive --mc flag on run_chain_group.sh
+# produced 2026-09-19T18:15:16-07:00
+# toolkit HEAD 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47
+# libsnap ~/tmp/d115-libsnap (TOOLKIT_HEAD 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47)
+
+== V1  compiled-config proof, --mc NOT given ==
+   pristine run_chain_group.sh vs HEAD, same data reco1 file (nuecc48), --size 16 --groups 0 --to img
+   .wct-cfg-dump.json  IDENTICAL after out_root normalisation  2797 B  sha b9ab25b27661a52c
+   .wct-cfg-img.json   IDENTICAL after out_root normalisation  161883 B sha 4758f4898d0b5c83
+   raw byte diff of the dump config with only the out_root path substituted: empty
+   bonus, same two arms' imaging products (member content, .npz are zips -- M2):
+     icluster-apa0-active.npz 192 members 3bd4912514d0017e  IDENTICAL
+     icluster-apa0-masked.npz 144 members 448728ef5cda8723  IDENTICAL
+     icluster-apa1-active.npz 192 members 4f5971b9963d94fb  IDENTICAL
+     icluster-apa1-masked.npz 144 members ed40e8d69f3b51a8  IDENTICAL
+   both arms rc=0.
+
+== V2a  MC reco1 dump equivalence ==
+   file: mc-cv reco1-detsim-g4-gen-Gen2_2026-0252-9914-bf88-bb4e.root (18 entries, run 719 subrun 45)
+   A: ./run_reco1_dump.sh -mc -caf none -t d115v2 <file>          (the established doc-67/93 MC path)
+   B: ./run_chain_group.sh <file> <out> sim --mc --size 1000 ...  (the new group-mode path)
+   hash_archive.py member content, A vs B:
+     frames-dnn.tar.bz2   IDENTICAL  90 members  413c1385473f8d3702980a14592e5b2aa5a54fec4affe572edbd7bf0ccd5b0d6
+     opflash_apa0.tar.gz  IDENTICAL  54 members  3f61e8344e1d788225b4d0cb92e3e24045ecb2bd341782b547fa934909130b9e
+     opflash_apa1.tar.gz  IDENTICAL  54 members  df10ad4a6736ddcb5085a263a9d19e96b1cb0fd605fb94365b9ff83725e24d19
+
+== V2b  MC group mode == per-event through imaging AND Q/L ==
+   doc 92 sec 3.2 records group == per-event for DATA; this extends it to MC (reality=sim).
+   A: SBND_INPUT_DIR=extracted-d115v2 ./run_img_evt.sh mc <i>; ./run_ql_evt.sh mc -save-pctree <i>
+   B: the same 3 events out of the group-mode arm above
+   pctree-evt<ID>.tar.gz, hash_archive.py member content:
+     evt3   406 members  0085cffc7fafd14377d008ad6d8468d2b692277654ddf093b803a61e20bedff3  IDENTICAL
+     evt10  406 members  2380820858baee4d42621754fad20444053cf8355ed7c20608142409b3652908  IDENTICAL
+     evt12  408 members  2fa8c7344b7089a1a42a83c0cfc11d50c90909d50568c9323f45ed2e26ca1e9f  IDENTICAL
+   3/3 identical, 0 differ.
+
+== prod_cfg_gate BEFORE the campaign ==
+reference : ref/prod-2026-09-17b
+cfg tree  : /nfs/data/1/xqian/toolkit-dev/toolkit/cfg
+compiling : /home/xqian/tmp/prodcfg-b7j0_86g
+checked   : 21 artifacts
+PASS -- the compiled operating point matches prod-2026-09-17b
+
+== prod_cfg_gate AFTER the campaign (d115 V9) ==
+reference : ref/prod-2026-09-17b
+cfg tree  : /nfs/data/1/xqian/toolkit-dev/toolkit/cfg
+compiling : /home/xqian/tmp/prodcfg-s4vq4ft1
+checked   : 21 artifacts
+PASS -- the compiled operating point matches prod-2026-09-17b

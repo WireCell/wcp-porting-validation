@@ -1,0 +1,80 @@
+# doc 115 campaign record -- stage A, the products gates, stage B
+# toolkit HEAD before and after: 0a2807f4 / 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47
+
+########## stage A cv  2026-09-19T18:15:55-07:00
+=== d115 stage A: sample=cv files=154 jobs=16 reality=sim mc=1
+=== libsnap: /home/xqian/tmp/d115-libsnap (toolkit 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47)
+=== toolkit HEAD before: 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47
+=== out: /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-r3cv-d115
+=== toolkit HEAD after : 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47
+=== stage A cv finished in 1839 s
+=== ql_evt dirs: 2017 (expect 2017)
+########## stage A cv rc=0 2026-09-19T18:46:34-07:00
+########## gate cv
+cv: expected=2017 ql_evt_dirs=2017 short_groups=0 missing=0 empty=0 files_with_surplus=0
+cv: STAGE-A COMPLETE
+########## gate cv rc=0
+########## stage A nuecc  2026-09-19T18:46:34-07:00
+=== d115 stage A: sample=nuecc files=225 jobs=16 reality=sim mc=1
+=== libsnap: /home/xqian/tmp/d115-libsnap (toolkit 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47)
+=== toolkit HEAD before: 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47
+=== out: /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-r3nue-d115
+=== toolkit HEAD after : 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47
+=== stage A nuecc finished in 2262 s
+=== ql_evt dirs: 2001 (expect 2001)
+########## stage A nuecc rc=0 2026-09-19T19:24:16-07:00
+########## gate nuecc
+nuecc: expected=2001 ql_evt_dirs=2001 short_groups=0 missing=0 empty=0 files_with_surplus=0
+nuecc: STAGE-A COMPLETE
+########## gate nuecc rc=0
+########## stage A off  2026-09-19T19:24:16-07:00
+=== d115 stage A: sample=off files=1 jobs=16 reality=data mc=0
+=== libsnap: /home/xqian/tmp/d115-libsnap (toolkit 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47)
+=== toolkit HEAD before: 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47
+=== out: /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-r3off-d115
+=== toolkit HEAD after : 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47
+=== stage A off finished in 1075 s
+=== ql_evt dirs: 1000 (expect 1000)
+########## stage A off rc=0 2026-09-19T19:42:11-07:00
+########## gate off
+off: expected=1000 ql_evt_dirs=1000 short_groups=0 missing=0 empty=0 files_with_surplus=0
+off: STAGE-A COMPLETE
+########## gate off rc=0
+########## ALL STAGE A DONE 2026-09-19T19:42:11-07:00
+
+== stage B ==
+/home/xqian/tmp/d115-stageB-nuecc.log:=== d115 stage B: sample=nuecc reality=sim PR_JOBS=12
+/home/xqian/tmp/d115-stageB-nuecc.log:=== libsnap: /home/xqian/tmp/d115-libsnap (toolkit 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47)
+/home/xqian/tmp/d115-stageB-nuecc.log:=== toolkit HEAD before: 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47
+/home/xqian/tmp/d115-stageB-nuecc.log:=== stage-A sub-roots: 225
+/home/xqian/tmp/d115-stageB-nuecc.log:=== merging the per-file nusel tables
+/home/xqian/tmp/d115-stageB-nuecc.log:=== toolkit HEAD after : 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47
+/home/xqian/tmp/d115-stageB-nuecc.log:=== stage B nuecc finished in 3783 s
+/home/xqian/tmp/d115-stageB-nuecc.log:=== pr_evt dirs : 2001
+/home/xqian/tmp/d115-stageB-nuecc.log:=== rc!=0 events: 0
+/home/xqian/tmp/d115-stageB-nuecc.log:STAGEB NUECC RC=0
+/home/xqian/tmp/d115-stageB-off.log:=== d115 stage B: sample=off reality=data PR_JOBS=16
+/home/xqian/tmp/d115-stageB-off.log:=== libsnap: /home/xqian/tmp/d115-libsnap (toolkit 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47)
+/home/xqian/tmp/d115-stageB-off.log:=== toolkit HEAD before: 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47
+/home/xqian/tmp/d115-stageB-off.log:=== stage-A sub-roots: 1
+/home/xqian/tmp/d115-stageB-off.log:=== merging the per-file nusel tables
+/home/xqian/tmp/d115-stageB-off.log:=== toolkit HEAD after : 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47
+/home/xqian/tmp/d115-stageB-off.log:=== stage B off finished in 758 s
+/home/xqian/tmp/d115-stageB-off.log:=== pr_evt dirs : 1000
+/home/xqian/tmp/d115-stageB-off.log:=== rc!=0 events: 0
+/home/xqian/tmp/d115-stageB-off.log:STAGEB OFF RC=0
+/home/xqian/tmp/d115-stageB-cv.log:=== d115 stage B: sample=cv reality=sim PR_JOBS=16
+/home/xqian/tmp/d115-stageB-cv.log:=== libsnap: /home/xqian/tmp/d115-libsnap (toolkit 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47)
+/home/xqian/tmp/d115-stageB-cv.log:=== toolkit HEAD before: 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47
+/home/xqian/tmp/d115-stageB-cv.log:=== stage-A sub-roots: 154
+/home/xqian/tmp/d115-stageB-cv.log:=== merging the per-file nusel tables
+/home/xqian/tmp/d115-stageB-cv.log:=== toolkit HEAD after : 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47
+/home/xqian/tmp/d115-stageB-cv.log:=== stage B cv finished in 2859 s
+/home/xqian/tmp/d115-stageB-cv.log:=== pr_evt dirs : 2017
+/home/xqian/tmp/d115-stageB-cv.log:=== rc!=0 events: 0
+/home/xqian/tmp/d115-stageB-cv.log:STAGEB CV RC=0
+
+== V5: stage-B per-event exit codes, read directly off rc.txt ==
+  work-r3cv-d115pr: pr_evt=2017  rc!=0=0
+  work-r3nue-d115pr: pr_evt=2001  rc!=0=0
+  work-r3off-d115pr: pr_evt=1000  rc!=0=0

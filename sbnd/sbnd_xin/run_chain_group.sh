@@ -23,8 +23,10 @@
 #
 # Usage:
 #   ./run_chain_group.sh <reco1.root> <out_root> <data|sim> [--size G] [--group K]
-#                        [--groups K1,K2,...] [--from img|ql] [--to img|ql]
+#                        [--groups K1,K2,...] [--from img|ql] [--to img|ql] [--mc]
 #
+#   --mc         the input is an SBND *MC* reco1 file (doc 115).  See the full
+#                note below --fsproduct.  Unset => not one TLA changes.
 #   --size G     events per group (default 16; see docs/76 round 2 for why)
 #   --entries N  entries in the art file (default: read from the file)
 #   --group K    run only group K (0-based).  Default: every group in the file.
@@ -36,6 +38,33 @@
 #                '...__FRAMESHIFT.'; the NCpi0 sideband file carries
 #                '...__FILTERFRAMESHIFT.' instead (doc 71 sec 3), and the
 #                dump ABORTS rather than silently falling back.
+#
+#   --mc         read SBND *MC* reco1 product names and drop the FrameShift
+#                re-reference.  Added 2026-09-19 for the doc-115 round-3 MC
+#                samples; before it, this driver could only read SBND *data*
+#                reco1 files, because the dump stage below hardcoded both the
+#                data product names (via the TLAs' '' default, i.e. the C++
+#                defaults sptpc2d/dnnsp under process Reco1) and
+#                caf_offset_mode=product.  MC carries the same three TPC
+#                products under the DetSim process and the simtpc2d label, and
+#                carries no sbnd::timing::FrameShiftInfo at all -- so on MC the
+#                old code path aborts in the dump rather than falling back.
+#                --mc appends exactly the four TLAs run_reco1_dump.sh's -mc
+#                branch has always used (doc 67 sec 2):
+#                  wire_product=recob::Wires_simtpc2d_dnnsp_DetSim.
+#                  badmask_product=ints_simtpc2d_badmasks_DetSim.
+#                  summary_product=doubles_simtpc2d_wienersummary_DetSim.
+#                  caf_offset_mode=none
+#                and nothing else: flash_process stays 'Reco1' (the opflashtpc<N>
+#                process name is the same in MC and data), and --mc says nothing
+#                about `reality`, which remains the positional data|sim argument
+#                -- an MC arm passes `sim`, gating the data-only pos_offset
+#                transverse correction (doc pr/38 round 3).
+#                Additive and default OFF, the same shape as IMG_EXTRA_TLA /
+#                QL_EXTRA_TLA below (doc 113): with --mc absent not one TLA
+#                changes and the compiled .wct-cfg-dump.json is byte-identical
+#                (doc 115 V1).  --mc is REFUSED with --fsproduct, which only
+#                means anything under caf_offset_mode=product.
 #   --gbase N    offset the g<K> directory NAMES by N (entry ranges are
 #                unaffected).  A sample split across several reco1 files --
 #                mcp2k is two 1000-entry parts -- is one invocation per
@@ -81,6 +110,9 @@ GSIZE=16; ONLY=""; FROM=img; TO=ql; LAYOUT=group
 # what this runner did before --fsproduct existed.
 FSPRODUCT=''
 GBASE=0
+# doc 115.  0 => the dump stage's TLA list is exactly what it was before --mc
+# existed, so the compiled config is byte-identical for every data arm.
+MC=0
 while [ $# -gt 0 ]; do
     case "$1" in
         --size)   GSIZE=$2; shift 2;;
@@ -92,10 +124,20 @@ while [ $# -gt 0 ]; do
         --layout) LAYOUT=$2; shift 2;;
         --gbase)  GBASE=$2; shift 2;;
         --fsproduct) FSPRODUCT=$2; shift 2;;
+        --mc)     MC=1; shift;;
         -h|--help) usage 0;;
         *) echo "ERROR: unknown argument: $1" >&2; usage;;
     esac
 done
+
+# doc 115: --fsproduct names the FrameShiftInfo product read under
+# caf_offset_mode=product, and --mc sets caf_offset_mode=none.  Together they
+# are a contradiction, and the silent winner would be whichever line comes last
+# in the TLA array -- refuse instead.
+if [ "$MC" = 1 ] && [ -n "$FSPRODUCT" ]; then
+    echo "ERROR: --mc and --fsproduct are mutually exclusive (MC has no FrameShiftInfo product)." >&2
+    exit 1
+fi
 
 # M13: a fresh out_root, or one this script made.
 if [ -e "$OUTROOT" ] && [ -n "$(ls -A "$OUTROOT" 2>/dev/null)" ] \
@@ -118,7 +160,7 @@ else
 fi
 [ "${NENT:-0}" -gt 0 ] || { echo "ERROR: cannot read entry count from $INPUT (pass --entries N)" >&2; exit 1; }
 NGROUP=$(( (NENT + GSIZE - 1) / GSIZE ))
-echo "input=$INPUT entries=$NENT group_size=$GSIZE groups=$NGROUP reality=$REALITY"
+echo "input=$INPUT entries=$NENT group_size=$GSIZE groups=$NGROUP reality=$REALITY mc=$MC"
 
 if [ -n "$ONLY" ]; then
     IFS=, read -r -a GIDS <<< "$ONLY"
@@ -201,11 +243,26 @@ run_group() {
     fi
     if [ "$FROM" = img ] && [ ! -s "$GDIR/frames-dnn.tar.bz2" ]; then
         local FS_TLA=(); [ -n "$FSPRODUCT" ] && FS_TLA=(--tla-str "frameshift_product=$FSPRODUCT")
+        # doc 115 --mc.  CAF_MODE carries the value this stage has always passed
+        # so that exactly ONE caf_offset_mode TLA is emitted either way -- rather
+        # than appending a second one and relying on which of two contradictory
+        # --tla-str wins.  MC_TLA is empty unless --mc was given, so a data arm's
+        # TLA list is unchanged element for element and the compiled
+        # .wct-cfg-dump.json is byte-identical (V1).
+        local CAF_MODE=product
+        local -a MC_TLA=()
+        if [ "$MC" = 1 ]; then
+            CAF_MODE=none
+            MC_TLA=(--tla-str "wire_product=recob::Wires_simtpc2d_dnnsp_DetSim."
+                    --tla-str "badmask_product=ints_simtpc2d_badmasks_DetSim."
+                    --tla-str "summary_product=doubles_simtpc2d_wienersummary_DetSim.")
+        fi
         local -a _TLA=(--tla-str "input=$INPUT"
                        --tla-str "output_dir=$GDIR"
-                       --tla-str "caf_offset_mode=product"
+                       --tla-str "caf_offset_mode=$CAF_MODE"
                        --tla-str "caf_offset_override=0"
                        "${FS_TLA[@]}"
+                       "${MC_TLA[@]}"
                        --tla-str "entry=-1"
                        --tla-str "entry_begin=$BEG"
                        --tla-str "entry_count=$GSIZE")
