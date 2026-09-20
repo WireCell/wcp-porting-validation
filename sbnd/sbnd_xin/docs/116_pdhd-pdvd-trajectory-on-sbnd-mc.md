@@ -43,6 +43,12 @@ baseline. Sec 15 answers the three follow-up
 questions in order — yes, `tfull` contains `charge_stepped` (15.1); the beam-off rate is not worse
 and probably slightly better but unresolvable on 5 gates, and at the fixed cut most of the move is a
 working-point shift (15.2); and the recommendation stands, with what would change it (15.4).
+Sec 16 answers a further question — whether the doc pr/150 result on 3 067 data events is consistent
+with this MC round. It is on the closure clauses and on both selections; the one disagreement is the
+data vertex metric, whose reference point is measured here to be the **old configuration's own
+answer** on 78 % of the labels, and where the MC instead finds the trajectory places the vertex
+significantly **more precisely** (νe, ≤ 1 cm: 37.1 → 41.4 %, p 0.0003) — a gain the 5 cm working
+point of M7/M8 is saturated against. Sec 16.4 withdraws one unsourced number from sec 11.
 
 ## 0. Repro
 
@@ -73,6 +79,9 @@ python3 scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-17b; echo rc=$?     
 # 4. cost and the beam-off working point (secs 14, 15; read the records the arms already wrote)
 python3 scripts/d116/perf_cost.py cv nuecc off > $D/116_cost.txt                   # sec 14
 python3 scripts/d116/off_roc.py > $D/116_off_roc.txt                               # sec 15.2
+# 5. the doc pr/150 (data) vs MC consistency question (sec 16)
+python3 scripts/d116/vtx_vs_threshold.py    > $D/116_vtx_threshold.txt             # sec 16.3
+python3 scripts/d116/label_anchor_census.py > $D/116_label_anchor.txt              # sec 16.2
 ```
 
 Tables: `products/d116/<sample>-<cell>/`. Figures: `docs/116_sel/`, `docs/116_sel_edep100/`,
@@ -476,10 +485,11 @@ penalising any refit (189 of 823 clicks lie within 0.05 cm of the `s0` vertex); 
 
 `scripts/d116/stageB_cell.sh`, `scripts/d116/analyze_cell.sh`, `scripts/d116/cfg_proof.sh`,
 `scripts/d116/traj_eval.py`, `scripts/d116/perf_cost.py`, `scripts/d116/off_roc.py`,
+`scripts/d116/vtx_vs_threshold.py`, `scripts/d116/label_anchor_census.py`,
 `d116_compare.py`, `d116_movers.py`; `docs/116_figs/tla/`,
 `116_pred.txt` + `.sha256`, `116_cfg_proof.txt`, `116_compare.{txt,tsv,md}`, `116_movers_*.{txt,tsv}`,
-`116_cost.txt`, `116_off_roc.txt`, `traj/*.tsv`; `docs/116_{sel,sel_edep100,vtx,scan,time,off}/`;
-`products/d116/<sample>-<cell>/`.
+`116_cost.txt`, `116_off_roc.txt`, `116_vtx_threshold.txt`, `116_label_anchor.txt`, `traj/*.tsv`;
+`docs/116_{sel,sel_edep100,vtx,scan,time,off}/`; `products/d116/<sample>-<cell>/`.
 Nothing under `docs/115_*`, `products/d115/`, `scripts/d115/`, the doc-115 or pr/149–150 records,
 or any toolkit file is modified.
 
@@ -671,3 +681,106 @@ knobs: `charge_stepped` alone tops out at 1.91 GiB.
    in beam-off gates with a reco vertex in the FV (25 → 17, sec 8). Cheap is not harmless. It is
    the knob whose cost does not argue against putting it in a next round — not a recommendation to
    turn it on now.
+
+## 16. Is the data result (doc pr/150, 3 067 events) consistent with this MC round? (owner question, 2026-09-20)
+
+Added 2026-09-20. Sec 11 answered this qualitatively and flagged one number that "does not
+transfer". The owner asked for the answer itself, so this section puts both rounds' numbers side by
+side, and settles the one disagreement with a measurement rather than a suspicion.
+
+```bash
+python3 scripts/d116/vtx_vs_threshold.py > docs/116_figs/116_vtx_threshold.txt   # sec 16.2
+```
+
+### 16.1 Three of the four comparable observables agree
+
+| observable | data, doc pr/150 (3 067 evt, `s0` → `tfull`) | MC, this doc (`baseline` → `tfull`) | agree? |
+|---|---|---|---|
+| trajectory closure, W-plane rows > 1 wire off | 0.97 → 0.68 % (−30 %) | 0.81 → 0.54 % `cv` (−33 %), 2.13 → 1.44 % `nuecc` (−32 %) | **yes**, same factor |
+| νμCC selection | 789 → 791, exchange 77 lost / 79 gained, p 0.94 | 387 → 390 of 557, −39/+42, p 0.82 | **yes**, no net change on a ~10 % exchange |
+| νeCC selection | 36 → 42, 4/10, p 0.18 (12–18 exchanged: weak) | 618 → 630 of 1 511, −168/+180, p 0.56 | **yes**, and the MC round has the statistics the data round could not have |
+| vertex | ≤ 3 cm of the hand click 677 → **609** of 823 (−8.3 pt) | ≤ 3 cm of the true vertex 510 → 505 `cv` (−0.6 pt, p 0.69), 1 030 → 1 064 `nuecc` (+2.1 pt, p 0.073) | **no** — sec 16.2 |
+
+The cosmic side has no counterpart in pr/150 (its data arms are beam events, not off-beam gates),
+but the mechanism matches: on data the STM/candidate churn is symmetric (lost 42 / gained 51 on
+`csp3bw`) and on the 1 000 off-beam gates here the νμ-selected count moves 5 → 4 with no νe gate in
+any cell (sec 8, sec 15.2).
+
+### 16.2 The vertex disagreement is in the reference point, and it is now measured
+
+pr/150's metric is "the arm's own candidate vertex within 3 cm of the hand label". **What is a hand
+label here?** Every one of the 825 `vtx105` label files
+(`vertex_labels/vtxscan-vtx105-{mcp1k,mcp2k,mcp2k-auto,mcp2k-ragree,delta}/labels-evt*.json`) records
+`picks[0].kind = "candidate"`: the scanner selected a row from the **base arm's candidate list**, not
+a free 3-D point. Measuring each pick against that same base arm's shipped main vertex:
+
+| label source | n | pick **is exactly** the base arm's main vertex (0.000 cm) | within 3 cm of it | median |
+|---|---:|---:|---:|---:|
+| human | 575 | **415 (72.2 %)** | 431 (75.0 %) | 0.000 cm |
+| ai-scanner | 249 | 231 (92.8 %) | 240 (96.4 %) | 0.000 cm |
+| all | 824 | **646 (78.4 %)** | 671 (81.4 %) | 0.000 cm |
+
+So on about three quarters of the labelled events the data metric asks *"does the new arm still have
+a candidate within 3 cm of the vertex the old configuration shipped?"* — a self-agreement metric
+with respect to the configuration being replaced, not an accuracy metric. Any change that
+re-segments and moves the vertex is charged a loss even when it moves **toward** the truth. That is
+the structural reason a −8.3 pt data fall sits beside a −0.6 / +2.1 pt MC result at the same
+threshold, and it is the corrected form of the claim sec 11 made (see sec 16.4).
+
+**This does not make the data fall an artefact outright.** pr/150 sec 4.3 ran a blind two-arm scan
+precisely to defeat the anchor: shown both renderings without knowing which was which, the scanner
+sided with the click on the "away" movers **16 : 9** and with the new arm's own vertex on the
+"toward" movers 10 : 7. So part of the data loss is a real re-decision that a human judges against
+the new trajectory. The honest reading is that the click-anchored **magnitude** is inflated by
+construction while a small real residual remains — 50 decisive movers of 823 events.
+
+Sample composition carries the rest. The data is the νμ stream; its MC analogue is `cv`, and there
+the MC agrees with "no gain, perhaps a small loss" (−0.6 pt at 3 cm, −1.1 at 5 cm, neither
+separable). The significant gain below is on the intrinsic-νe sample, of which the data round holds
+48 events.
+
+### 16.3 What the MC sees that the data metric could not: the vertex gets *more precise*
+
+`docs/116_figs/116_vtx_threshold.txt`. Same construction as M7/M8 (nearest candidate vertex to the
+true vertex, paired per interaction, exact sign test), read at the threshold pr/150 used and below
+it. `nuecc`, 1 626 true interactions in the FV:
+
+| threshold | baseline | `cs` | `p3bw` | `csp3bw` | `tfull` |
+|---|---:|---:|---:|---:|---:|
+| ≤ 1 cm | 603 (37.1 %) | 616 (+0.8, p 0.52) | 605 (+0.1, p 0.96) | 648 (**+2.8**, p 0.015) | **673 (+4.3 pt, −147/+217, p 0.00029)** |
+| ≤ 2 cm | 915 (56.3 %) | 896 (−1.2) | 928 (+0.8) | 931 (+1.0) | **959 (+2.7 pt, p 0.026)** |
+| ≤ 3 cm | 1 030 (63.3 %) | 1 015 (−0.9) | 1 056 (+1.6) | 1 039 (+0.6) | 1 064 (+2.1, p 0.073) |
+| ≤ 5 cm (= M8) | 1 122 (69.0 %) | 1 110 (−0.7) | 1 134 (+0.7) | 1 120 (−0.1) | 1 133 (+0.7, p 0.57) |
+| median distance, interactions matched < 10 cm in both | 0.960 cm | 0.880 | 0.930 | 0.840 | **0.840 (565 closer / 448 further, p 0.00026)** |
+
+**Two IMPROVED verdicts under the frozen rule** (|Δ| > 0.5 pt with a zero floor, p < 0.05): `tfull`
+at 1 cm and at 2 cm, and `csp3bw` at 1 cm. They are not doc-116 pre-registered metrics — M7/M8 fixed
+the threshold at 5 cm — but they are not post-hoc either: the distance distribution below 5 cm
+("median and the < 1 / < 2 / < 3 cm fractions — a chain can improve the placement without crossing
+the 5 cm threshold, and that must be visible") was frozen in doc **117**'s pre-registration
+(`docs/117_figs/117_pred.sha256`, `1a7570c4…`, 12:54) **before** this table was computed. The
+multiplicity is 5 thresholds × 5 cells × 2 samples = 50 tests; p 0.00029 and p 0.00026 survive a
+Bonferroni threshold of 0.001, and the four `cv` p-values at the same thresholds do not.
+
+What makes it credible beyond the p-value is the **dose-response**: the 1 cm gain follows the
+trajectory ladder of sec 6 — single knobs ≈ 0 (`cs` +0.8, `p3bw` +0.1), both knobs +2.8, both plus
+the fit keys +4.3 — which is the ordering the closure clauses themselves have, and the ordering a
+genuine trajectory effect must have. On `cv` the same column is +2.6 pt at 1 cm (p 0.11) and slightly
+negative at 3–5 cm: not separable, consistent with the data stream's null.
+
+**So the MC and the data are consistent on everything they can both measure, and the one place they
+disagree is the one place the data metric cannot answer**: whether a moved vertex moved toward the
+truth. The MC says that on νe-like events it does, significantly, and that at the 5 cm working point
+the improvement is invisible because the metric is saturated there.
+
+### 16.4 Correction to sec 11
+
+Sec 11 states: *"Doc pr/150 sec 4.2 already suspected the click-anchored 3 cm criterion of
+penalising any refit (189 of 823 clicks lie within 0.05 cm of the `s0` vertex)."* **The parenthetical
+is wrong and is withdrawn.** pr/150 sec 4.2 is the STM verdict margin and the vertex-mover taxonomy;
+it contains no such number, and "189 of 823" appears nowhere in that doc. The sourced statement
+nearest to it is pr/150 sec 4.3 on the stage-1 pilot: *"On 9 of the 25 items the pick coincides with
+that arm's own main vertex to < 0.05 cm"*. The correct measurement of the anchoring, on the labels
+themselves rather than on a scan subset, is sec 16.2's **646 of 824 (78.4 %) exactly, 415 of 575
+(72.2 %) among human labels** — which is stronger than the withdrawn claim, and checkable with the
+command in the Repro block. The rest of sec 11 stands.

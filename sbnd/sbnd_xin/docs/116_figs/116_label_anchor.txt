@@ -1,0 +1,11 @@
+# doc 116 sec 16.2 -- vtx105 label picks against the base arm's own main vertex
+tags      : vtxscan-vtx105-mcp1k vtxscan-vtx105-mcp2k vtxscan-vtx105-mcp2k-auto vtxscan-vtx105-mcp2k-ragree vtxscan-vtx105-delta
+label files: 825   without a pick: 0   pick kinds: {'candidate': 825}
+
+| label source | n | pick IS the base arm's main vertex (0.000 cm) | within 3 cm | median |
+|---|---:|---:|---:|---:|
+| ai-scanner | 249 | 231 (92.8 %) | 240 (96.4 %) | 0.000 cm |
+| human | 575 | 415 (72.2 %) | 431 (75.0 %) | 0.000 cm |
+| all | 824 | 646 (78.4 %) | 671 (81.4 %) | 0.000 cm |
+
+p90 19.97 cm   max 513.5 cm

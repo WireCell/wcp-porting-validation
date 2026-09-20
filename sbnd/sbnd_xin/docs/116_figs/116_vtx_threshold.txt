@@ -1,0 +1,35 @@
+# doc 116 sec 16 -- the MC vertex metric at pr/150's threshold as well as doc 116's
+# match = the nearest candidate vertex within T cm of the true vertex (the same
+# construction as pr/150's click-anchored metric, with truth in place of the click).
+
+## cv: 783 true interactions with the vertex in the FV
+| T (cm) | baseline | s0rep | cs | p3bw | csp3bw | tfull |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 308/783 = 39.3 % | 308 (+0.0 pt, -0/+0, p 1) | 312 (+0.5 pt, -64/+68, p 0.79) | 298 (-1.3 pt, -75/+65, p 0.45) | 314 (+0.8 pt, -67/+73, p 0.67) | 328 (+2.6 pt, -61/+81, p 0.11) |
+| 2 | 459/783 = 58.6 % | 459 (+0.0 pt, -0/+0, p 1) | 450 (-1.1 pt, -70/+61, p 0.48) | 450 (-1.1 pt, -67/+58, p 0.47) | 443 (-2.0 pt, -78/+62, p 0.2) | 460 (+0.1 pt, -58/+59, p 1) |
+| 3 | 510/783 = 65.1 % | 510 (+0.0 pt, -0/+0, p 1) | 497 (-1.7 pt, -63/+50, p 0.26) | 501 (-1.1 pt, -52/+43, p 0.41) | 490 (-2.6 pt, -72/+52, p 0.088) | 505 (-0.6 pt, -53/+48, p 0.69) |
+| 5 | 543/783 = 69.3 % | 543 (+0.0 pt, -0/+0, p 1) | 537 (-0.8 pt, -46/+40, p 0.59) | 538 (-0.6 pt, -42/+37, p 0.65) | 531 (-1.5 pt, -52/+40, p 0.25) | 534 (-1.1 pt, -43/+34, p 0.36) |
+| 10 | 574/783 = 73.3 % | 574 (+0.0 pt, -0/+0, p 1) | 561 (-1.7 pt, -46/+33, p 0.18) | 570 (-0.5 pt, -31/+27, p 0.69) | 558 (-2.0 pt, -44/+28, p 0.076) | 570 (-0.5 pt, -31/+27, p 0.69) |
+
+median nearest-candidate distance (cm), interactions matched within 10 cm in BOTH arms:
+  s0rep    n=  574  baseline 0.900 -> cell 0.900   closer/further 0/0  sign p 1
+  cs       n=  528  baseline 0.890 -> cell 0.830   closer/further 249/243  sign p 0.822
+  p3bw     n=  543  baseline 0.890 -> cell 0.930   closer/further 231/241  sign p 0.679
+  csp3bw   n=  530  baseline 0.900 -> cell 0.830   closer/further 249/239  sign p 0.684
+  tfull    n=  543  baseline 0.890 -> cell 0.850   closer/further 274/242  sign p 0.172
+
+## nuecc: 1626 true interactions with the vertex in the FV
+| T (cm) | baseline | s0rep | cs | p3bw | csp3bw | tfull |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 603/1626 = 37.1 % | 603 (+0.0 pt, -0/+0, p 1) | 616 (+0.8 pt, -167/+180, p 0.52) | 605 (+0.1 pt, -164/+166, p 0.96) | 648 (+2.8 pt, -143/+188, p 0.015) | 673 (+4.3 pt, -147/+217, p 0.00029) |
+| 2 | 915/1626 = 56.3 % | 915 (+0.0 pt, -0/+0, p 1) | 896 (-1.2 pt, -188/+169, p 0.34) | 928 (+0.8 pt, -179/+192, p 0.53) | 931 (+1.0 pt, -164/+180, p 0.42) | 959 (+2.7 pt, -165/+209, p 0.026) |
+| 3 | 1030/1626 = 63.3 % | 1030 (+0.0 pt, -0/+0, p 1) | 1015 (-0.9 pt, -181/+166, p 0.45) | 1056 (+1.6 pt, -160/+186, p 0.18) | 1039 (+0.6 pt, -163/+172, p 0.66) | 1064 (+2.1 pt, -153/+187, p 0.073) |
+| 5 | 1122/1626 = 69.0 % | 1122 (+0.0 pt, -0/+0, p 1) | 1110 (-0.7 pt, -164/+152, p 0.54) | 1134 (+0.7 pt, -140/+152, p 0.52) | 1120 (-0.1 pt, -148/+146, p 0.95) | 1133 (+0.7 pt, -147/+158, p 0.57) |
+| 10 | 1186/1626 = 72.9 % | 1186 (+0.0 pt, -0/+0, p 1) | 1190 (+0.2 pt, -138/+142, p 0.86) | 1188 (+0.1 pt, -129/+131, p 0.95) | 1193 (+0.4 pt, -129/+136, p 0.71) | 1205 (+1.2 pt, -129/+148, p 0.28) |
+
+median nearest-candidate distance (cm), interactions matched within 10 cm in BOTH arms:
+  s0rep    n= 1186  baseline 0.980 -> cell 0.980   closer/further 0/0  sign p 1
+  cs       n= 1048  baseline 0.960 -> cell 0.880   closer/further 531/455  sign p 0.0169
+  p3bw     n= 1057  baseline 0.940 -> cell 0.930   closer/further 489/483  sign p 0.873
+  csp3bw   n= 1057  baseline 0.960 -> cell 0.840   closer/further 545/461  sign p 0.00884
+  tfull    n= 1057  baseline 0.960 -> cell 0.840   closer/further 565/448  sign p 0.000264
