@@ -715,10 +715,27 @@ for it; it is listed here because it is the one MC/data asymmetry the audit foun
 
 ```bash
 cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-# POT per sample (bare ROOT; sumdata::POTSummary is read through the file's own StreamerInfo)
-root -l -b -q 'scripts/d115/pot_sum.C("<file list>")'
-# in-window flash multiplicity, MC vs beam-off
+# POT per sample (bare ROOT; sumdata::POTSummary is read through the file's own
+# StreamerInfo, so no LArSoft and no dictionary is needed).  One ROW line per file:
+# events and POT, which is what the 13.1 Poisson pull test consumes.
+for s in mc-cv mc-nuecc; do
+    ls $PWD/xin-round3-samples/$s/reco1/*.root > ~/tmp/d115-$s.lst
+    root -l -b -q "scripts/d115/pot_sum.C(\"$HOME/tmp/d115-$s.lst\")" | grep -E '^ROW|^FILES'
+done
+
+# 13.1 Poisson pull of each file's event count against its OWN POT
+root -l -b -q "scripts/d115/pot_sum.C(\"$HOME/tmp/d115-mc-cv.lst\")" 2>/dev/null \
+  | awk '/^ROW/{k++; n[k]=$2; p[k]=$3; N+=$2; P+=$3}
+         END{r=N/P; for(i=1;i<=k;i++){e=p[i]*r; z=(n[i]-e)/sqrt(e); s+=z; s2+=z*z}
+             printf "files %d  mean pull %+.3f  rms %.3f\n", k, s/k, sqrt(s2/k)}'
+
+# 13.3 in-window flash-group multiplicity, beam-off (and the same on work-r3cv-d115pr/f*)
 root -l -b -q 'scripts/d115/flash_window.C("work-r3off-d115pr/pr_evt*/tracking-pr.root")'
-# the arithmetic of 13.1-13.3
+
+# the arithmetic of 13.1-13.3 (reads no arm; every input is quoted at the top of the file)
 python3 scripts/d115/normalisation.py
+
+# 13.5 the reality audit, read out of the run logs rather than the config
+grep -h pos_offset work-r3{cv,nue}-d115/f000/g0/wct_ql.log work-r3off-d115/g0/wct_ql.log \
+  | sed 's/.*anode/anode/' | sort -u
 ```
