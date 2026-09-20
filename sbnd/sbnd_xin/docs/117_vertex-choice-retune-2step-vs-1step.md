@@ -270,9 +270,20 @@ keeping events whose vertex would otherwise land far enough off that the νe BDT
 `scripts/d117/traj_eval.py` (doc pr/150's instrument, reused as a module), the pre-registered P3 of
 `117_pred_b.txt`. Two results, each replicated on both trajectories:
 
-**The dual chain does not touch the trajectory.** `c2` → `c1e` on cv: every clause flat, largest
-|p| = 0.14, and only ~45 of 890 common events differ on any clause at all. That is the control that
-lets the grid be read as a factorial — the second pass is a vertex-choice mechanism and nothing else.
+**The dual chain does not touch the trajectory**, on both samples and both trajectories — four
+independent comparisons, **not one clause below p 0.05 in any of them**:
+
+| comparison | n common | smallest p over the 14 clauses | that clause |
+|---|---:|---:|---|
+| `c2` → `c1e`, cv | 890 | 0.14 | qneg |
+| `c2` → `c1e`, nuecc | 1 806 | 0.11 | uncov |
+| `t2` → `t1e`, cv | 915 | 0.064 | R2D_V |
+| `t2` → `t1e`, nuecc | 1 832 | 0.070 | qneg |
+
+The row-weighted values are identical to the fourth decimal (e.g. nuecc `R2D_W` 0.0213 → 0.0213,
+`qneg` 0.0821 → 0.0821, `med_d_W` 0.2409 → 0.2410). That is the control that lets the grid be read
+as a factorial — the second pass is a vertex-choice mechanism and nothing else, exactly as the code
+says it should be (it runs its own `TrackFitting` and hands back only a vertex position).
 
 **`fit_exclusion=false` changes the fit, in both directions.** `t2` → `t1x` on `nuecc` (1 800+
 events with a main-cluster fit):
@@ -309,10 +320,14 @@ needs no control at all.
 | `t1e` | 12.27 s | 0.95 | 6.80 s | 2.91 s | 0.89 | 2.21 |
 | `t1x` | 11.83 s | 0.92 | 6.10 s | 2.87 s | 0.88 | 2.20 |
 
-The second pass is **~3 s of the 9.4 s tagger visit ≈ 23 % of the whole PR job** on νe-like events
-(the census's own `off_ms` says 2.58 core-h of `c2` nuecc's 7.17, i.e. 36 % — the two instruments
-bracket it because `off_ms` is measured under the doc-115 load and the TICK difference under this
-round's). On `cv` it is 20 %. Memory is unchanged by the chain in every cell; the νe tail at
+The second pass is **~3 s of the 9.4 s tagger visit ≈ 23 % of the whole PR job** on νe-like events,
+and **20 %** on `cv`. Its own clock says more: `dual_chain.off_ms` totals 2.58 core-h of `c2`
+nuecc's 7.17 (36 %). The two numbers are not the same measurement and should not be averaged — the
+TICK difference is `c2` **minus** `c1e`, i.e. what the job saves when the pass is removed, while
+`off_ms` is the pass's own wall time inside `c2`. They differ by whatever the surviving single pass
+does *more* of when it has no proposal to snap to (and by the different load the two arms ran
+under). The conservative number for a profiling budget is the difference, 23 %; the upper bound on
+what could be recovered if the pass became free is 36 %. Memory is unchanged by the chain in every cell; the νe tail at
 2.2 GiB belongs to the trajectory (doc 116 sec 14), not to the vertex chain.
 
 So the arithmetic the owner's profiling round faces: **23 % of the PR job buys 1.7–2.1 pt of νeCC
@@ -377,6 +392,14 @@ this round pre-registered as **secondary**. The frozen table in `117_pred.txt` t
 **HOLD** — a package is adopted only if a *primary* metric improves or it is cheaper, and neither
 holds.
 
+**Say plainly why HOLD wins here.** It is not that the evidence is weak: the gain is significant on
+two different constructions of the same quantity (nearest candidate and the selected candidate's own
+vertex), on 1 626 and 562 interactions, with p 0.00027 and 0.00026, and it is dose-responsive in the
+knobs. HOLD wins because **this round pre-registered that metric as secondary** — a rule about this
+round's discipline, written before any number existed, not a statement about the physics. Promoting
+it after seeing the result is exactly what the pre-registration exists to prevent; running it again
+with the metric declared primary is what converts it.
+
 **Recommendation.** Do not flip yet, and do not let that read as "the evidence is unchanged" — it
 is not. Run the confirmation round, which is small because everything for it exists:
 
@@ -416,7 +439,7 @@ order of how much the measurements here support them:
 | `117_pred.txt` ADOPT table | no cell qualifies: none has a primary IMPROVED, and the only cheaper cells (`c1e`, `c1x`, `t1e`, `t1x`) either degrade a primary or trade closure |
 | `117_pred_b.txt` P1: "`c1e`/`t1e` expected WORSE on the vertex" | **confirmed** on the current trajectory (p 0.010–0.018 at 1–3 cm), same sign and not separable on the new one |
 | `117_pred_b.txt` P2: "does the exclusion-free single pass recover it?" | on the current trajectory yes (`c1x` ≈ `c2`); on the new one no (`t1x` is DEGRADED vs `t2`) |
-| `117_pred_b.txt` P3: closure graded on all four cells | done, sec 6 — the trade is real and replicated |
+| `117_pred_b.txt` P3: closure graded on all four cells | done, sec 6 — 8 comparisons (4 cells × 2 samples): the exclusion trade is real and replicated, the dual chain is flat in all four of its own |
 | `117_pred_b.txt` P4: cost as a stated outcome | done, sec 7 |
 | the zero-cost proxy (`117_dual_census.txt`) predicted the transfers are net-favourable | confirmed by the arms: removing them degrades νeCC efficiency and the vertex |
 
