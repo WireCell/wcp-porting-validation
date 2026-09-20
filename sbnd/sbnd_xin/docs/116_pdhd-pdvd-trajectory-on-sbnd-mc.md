@@ -47,7 +47,7 @@ Sec 16 answers a further question — whether the doc pr/150 result on 3 067 dat
 with this MC round. It is on the closure clauses and on both selections; the one disagreement is the
 data vertex metric, whose reference point is measured here to be the **old configuration's own
 answer** on 78 % of the labels, and where the MC instead finds the trajectory places the vertex
-significantly **more precisely** (νe, ≤ 1 cm: 37.1 → 41.4 %, p 0.0003) — a gain the 5 cm working
+significantly **more precisely** (νe, < 1 cm: 36.8 → 41.1 %, p 0.0003) — a gain the 5 cm working
 point of M7/M8 is saturated against. Sec 16.4 withdraws one unsourced number from sec 11.
 
 ## 0. Repro
@@ -699,7 +699,7 @@ python3 scripts/d116/vtx_vs_threshold.py > docs/116_figs/116_vtx_threshold.txt  
 | trajectory closure, W-plane rows > 1 wire off | 0.97 → 0.68 % (−30 %) | 0.81 → 0.54 % `cv` (−33 %), 2.13 → 1.44 % `nuecc` (−32 %) | **yes**, same factor |
 | νμCC selection | 789 → 791, exchange 77 lost / 79 gained, p 0.94 | 387 → 390 of 557, −39/+42, p 0.82 | **yes**, no net change on a ~10 % exchange |
 | νeCC selection | 36 → 42, 4/10, p 0.18 (12–18 exchanged: weak) | 618 → 630 of 1 511, −168/+180, p 0.56 | **yes**, and the MC round has the statistics the data round could not have |
-| vertex | ≤ 3 cm of the hand click 677 → **609** of 823 (−8.3 pt) | ≤ 3 cm of the true vertex 510 → 505 `cv` (−0.6 pt, p 0.69), 1 030 → 1 064 `nuecc` (+2.1 pt, p 0.073) | **no** — sec 16.2 |
+| vertex | ≤ 3 cm of the hand click 677 → **609** of 823 (−8.3 pt) | < 3 cm of the true vertex 505 → 503 `cv` (−0.3 pt, p 0.92), 1 030 → 1 063 `nuecc` (+2.0 pt, p 0.082) | **no** — sec 16.2 |
 
 The cosmic side has no counterpart in pr/150 (its data arms are beam events, not off-beam gates),
 but the mechanism matches: on data the STM/candidate churn is symmetric (lost 42 / gained 51 on
@@ -747,14 +747,18 @@ it. `nuecc`, 1 626 true interactions in the FV:
 
 | threshold | baseline | `cs` | `p3bw` | `csp3bw` | `tfull` |
 |---|---:|---:|---:|---:|---:|
-| ≤ 1 cm | 603 (37.1 %) | 616 (+0.8, p 0.52) | 605 (+0.1, p 0.96) | 648 (**+2.8**, p 0.015) | **673 (+4.3 pt, −147/+217, p 0.00029)** |
-| ≤ 2 cm | 915 (56.3 %) | 896 (−1.2) | 928 (+0.8) | 931 (+1.0) | **959 (+2.7 pt, p 0.026)** |
-| ≤ 3 cm | 1 030 (63.3 %) | 1 015 (−0.9) | 1 056 (+1.6) | 1 039 (+0.6) | 1 064 (+2.1, p 0.073) |
-| ≤ 5 cm (= M8) | 1 122 (69.0 %) | 1 110 (−0.7) | 1 134 (+0.7) | 1 120 (−0.1) | 1 133 (+0.7, p 0.57) |
+| < 1 cm | 599 (36.8 %) | 612 (+0.8, p 0.52) | 595 (−0.2, p 0.87) | 640 (**+2.5**, p 0.027) | **669 (+4.3 pt, −145/+215, p 0.00027)** |
+| < 2 cm | 913 (56.2 %) | 895 (−1.1) | 928 (+0.9) | 930 (+1.0) | **958 (+2.8 pt, p 0.023)** |
+| < 3 cm | 1 030 (63.3 %) | 1 015 (−0.9) | 1 056 (+1.6) | 1 039 (+0.6) | 1 063 (+2.0, p 0.082) |
+| < 5 cm (= M8) | 1 122 (69.0 %) | 1 110 (−0.7) | 1 133 (+0.7) | 1 119 (−0.2) | 1 133 (+0.7, p 0.57) |
 | median distance, interactions matched < 10 cm in both | 0.960 cm | 0.880 | 0.930 | 0.840 | **0.840 (565 closer / 448 further, p 0.00026)** |
 
+The threshold test is strict (`d < T`), which is doc 107's own convention, so the `< 5 cm` row
+reproduces M8 exactly (1 122 → 1 133, −147/+158) and the `cv` one reproduces M7 (539 → 533,
+−42/+36) — a built-in check on the script.
+
 **Two IMPROVED verdicts under the frozen rule** (|Δ| > 0.5 pt with a zero floor, p < 0.05): `tfull`
-at 1 cm and at 2 cm, and `csp3bw` at 1 cm. They are not doc-116 pre-registered metrics — M7/M8 fixed
+at 1 cm (p 0.00027) and at 2 cm (p 0.023), and `csp3bw` at 1 cm (p 0.027). They are not doc-116 pre-registered metrics — M7/M8 fixed
 the threshold at 5 cm — but they are not post-hoc either: the distance distribution below 5 cm
 ("median and the < 1 / < 2 / < 3 cm fractions — a chain can improve the placement without crossing
 the 5 cm threshold, and that must be visible") was frozen in doc **117**'s pre-registration
@@ -762,11 +766,14 @@ the 5 cm threshold, and that must be visible") was frozen in doc **117**'s pre-r
 multiplicity is 5 thresholds × 5 cells × 2 samples = 50 tests; p 0.00029 and p 0.00026 survive a
 Bonferroni threshold of 0.001, and the four `cv` p-values at the same thresholds do not.
 
-What makes it credible beyond the p-value is the **dose-response**: the 1 cm gain follows the
-trajectory ladder of sec 6 — single knobs ≈ 0 (`cs` +0.8, `p3bw` +0.1), both knobs +2.8, both plus
-the fit keys +4.3 — which is the ordering the closure clauses themselves have, and the ordering a
-genuine trajectory effect must have. On `cv` the same column is +2.6 pt at 1 cm (p 0.11) and slightly
-negative at 3–5 cm: not separable, consistent with the data stream's null.
+What makes it credible beyond the p-value is the **dose-response**: the 1 cm gain is super-additive
+in the two knobs and largest with the fit keys — single knobs ≈ 0 (`cs` +0.8, `p3bw` −0.2), both
+knobs +2.5, both plus the fit keys +4.3 — which is the shape a genuine trajectory effect has and a
+fluctuation has no reason to. It is **not** a simple function of the closure number: at the
+single-knob level the ordering differs (sec 6 has `p3bw` closing R2D_W better than `cs`, 1.80 vs
+1.93 %, while contributing the less of the two here), so what the vertex precision responds to is the
+*combination*, not the W-plane residual on its own. On `cv` the same column is +2.8 pt at 1 cm
+(p 0.078) and slightly negative at 3–5 cm: not separable, consistent with the data stream's null.
 
 **So the MC and the data are consistent on everything they can both measure, and the one place they
 disagree is the one place the data metric cannot answer**: whether a moved vertex moved toward the

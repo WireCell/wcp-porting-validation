@@ -2,6 +2,10 @@
 """doc sbnd_xin/116 sec 16: the vertex metric as a function of the match threshold, so the MC
 result can be compared with doc pr/150's DATA result on the same construction.
 
+The threshold test is STRICT (d < T), which is doc 107's own convention (d116_compare.Arm.
+matched_keys uses 0 <= d < 5), so the T = 5 row reproduces M7 / M8 exactly -- a built-in check.
+An earlier revision of this script used d <= T and its T = 5 row missed M7 by 4 events on cv.
+
 pr/150 scored the vertex on data as "the arm's own candidate vertex nearest the hand-scan click,
 within 3 cm" (677 -> 620 of 823, a 6.9 pt fall).  Doc 116 scored it on MC as "the nearest candidate
 vertex within 5 cm of the GENIE vertex" (M7/M8, not separable).  The two differ in the reference
@@ -11,9 +15,9 @@ same nearest-candidate distance -- so the MC metric can be recomputed at pr/150'
 and 2 cm, with the same paired exchange and the same exact sign test.
 
 If the MC also falls at 3 cm, the two experiments agree and doc 116's 5 cm choice hid it.  If it
-does not, the data fall is a property of the click anchor (pr/150 sec 4.2: 189 of 823 clicks lie
-within 0.05 cm of the s0 vertex, so any refit moves away from its own anchor), not of the
-trajectory.
+does not, the data fall is a property of the click anchor -- and sec 16.2 measures that anchor on
+the labels themselves (scripts/d116/label_anchor_census.py: 646 of 824 picks, 78.4 %, sit at exactly
+0.000 cm from the base arm's own main vertex), not of the trajectory.
 
 Usage: python3 scripts/d116/vtx_vs_threshold.py [--cells ...] > docs/116_figs/116_vtx_threshold.txt
 """
@@ -50,6 +54,8 @@ def load(path):
             d = None
             if r.get("event_has_candidate") == "1" and r.get("min_cand_dist_cm") not in ("", None):
                 d = float(r["min_cand_dist_cm"])
+                if d < 0:            # doc 107's matched_keys tests 0 <= d < T; a negative
+                    d = None         # distance is the no-candidate sentinel, not a match
             out[k] = d
     return out
 
@@ -74,7 +80,7 @@ def main():
                 arms[c] = load(p)
         for T in THRESH:
             row = [f"| {T:.0f} "]
-            kb = sum(1 for d in B.values() if d is not None and d <= T)
+            kb = sum(1 for d in B.values() if d is not None and d < T)
             row.append(f"| {kb}/{len(B)} = {100.0*kb/len(B):.1f} % ")
             for c in a.cells:
                 A = arms.get(c)
@@ -82,10 +88,10 @@ def main():
                     row.append("| n/a ")
                     continue
                 ks = sorted(set(A) & set(B))
-                ka = sum(1 for k in ks if A[k] is not None and A[k] <= T)
-                kbb = sum(1 for k in ks if B[k] is not None and B[k] <= T)
-                lost = sum(1 for k in ks if (B[k] is not None and B[k] <= T) and not (A[k] is not None and A[k] <= T))
-                gain = sum(1 for k in ks if (A[k] is not None and A[k] <= T) and not (B[k] is not None and B[k] <= T))
+                ka = sum(1 for k in ks if A[k] is not None and A[k] < T)
+                kbb = sum(1 for k in ks if B[k] is not None and B[k] < T)
+                lost = sum(1 for k in ks if (B[k] is not None and B[k] < T) and not (A[k] is not None and A[k] < T))
+                gain = sum(1 for k in ks if (A[k] is not None and A[k] < T) and not (B[k] is not None and B[k] < T))
                 p = sign_p(min(lost, gain), lost + gain)
                 row.append(f"| {ka} ({100.0*(ka-kbb)/len(ks):+.1f} pt, -{lost}/+{gain}, p {p:.2g}) ")
             print("".join(row) + "|")
@@ -96,7 +102,7 @@ def main():
             if A is None:
                 continue
             ks = [k for k in sorted(set(A) & set(B))
-                  if B[k] is not None and A[k] is not None and B[k] <= 10 and A[k] <= 10]
+                  if B[k] is not None and A[k] is not None and B[k] < 10 and A[k] < 10]
             db = sorted(B[k] for k in ks)
             da = sorted(A[k] for k in ks)
             n = len(ks)
