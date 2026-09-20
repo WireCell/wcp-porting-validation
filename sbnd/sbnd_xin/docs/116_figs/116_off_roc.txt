@@ -1,0 +1,25 @@
+# doc 116 sec 15.2 -- numuCC efficiency (mc-cv, 557 signal) against beam-off gate count
+# (1000 Run-1 off-beam gates), both from the same arm's numu BDT score scan.
+# production cut = 0.9
+
+baseline at cut 0.9: eff 387/557 = 69.5 %, beam-off 5/1000
+
+## at the production cut, and at cuts matched to the baseline's beam-off count
+| arm | cut 0.9: eff | cut 0.9: gates | cut where gates <= 5 | eff there | cut where gates <= 4 | eff there | cut where gates <= 3 | eff there |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| baseline | 387/557 = 69.5 % | 5 | +0.3 | 415/557 = 74.5 % | +1.5 | 349/557 = 62.7 % | +2.2 | 305/557 = 54.8 % |
+| s0rep | 387/557 = 69.5 % | 5 | +0.3 | 415/557 = 74.5 % | +1.5 | 349/557 = 62.7 % | +2.2 | 305/557 = 54.8 % |
+| cs | 385/557 = 69.1 % | 4 | +0.4 | 419/557 = 75.2 % | +0.8 | 393/557 = 70.6 % | +1.2 | 367/557 = 65.9 % |
+| p3bw | 382/557 = 68.6 % | 2 | -0.4 | 436/557 = 78.3 % | +0.0 | 423/557 = 75.9 % | +0.0 | 423/557 = 75.9 % |
+| csp3bw | 378/557 = 67.9 % | 4 | +0.3 | 407/557 = 73.1 % | +0.5 | 399/557 = 71.6 % | +1.0 | 375/557 = 67.3 % |
+| tfull | 390/557 = 70.0 % | 4 | +0.5 | 405/557 = 72.7 % | +0.7 | 399/557 = 71.6 % | +2.2 | 306/557 = 54.9 % |
+
+## at the cut where each arm first matches the baseline's selected signal count
+| arm | cut with >= 387 selected numuCC | eff | beam-off gates there |
+|---|---:|---:|---:|
+| baseline | +0.9 | 387/557 = 69.5 % | 5/1000 |
+| s0rep | +0.9 | 387/557 = 69.5 % | 5/1000 |
+| cs | +0.8 | 393/557 = 70.6 % | 4/1000 |
+| p3bw | +0.6 | 391/557 = 70.2 % | 3/1000 |
+| csp3bw | +0.7 | 387/557 = 69.5 % | 4/1000 |
+| tfull | +0.9 | 390/557 = 70.0 % | 4/1000 |

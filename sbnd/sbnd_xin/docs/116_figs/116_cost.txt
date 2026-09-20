@@ -1,0 +1,69 @@
+# doc 116 sec 14 -- cost of each cell, from the per-event records already on disk
+# wall = .time.meta (whole PR step, I/O contention included); tick = the wire-cell job's
+# own TICK ladder; rss = getrusage CHILDREN high-water; memlad = the job's MEM ladder max.
+
+## cv: 2017 events, 929 of them run the neutrino tagger > 50 ms
+| arm | wall mean | tick mean (s) | tick p99 | tick sum (core-h) | tick mean / s0rep | tick mean, tagger subset | RSS p50 | RSS p99 | RSS max | RSS > 1.5 / > 2.0 GiB | MEM-ladder max |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| baseline | 9.7 s | 3.26 | 16.8 | 1.83 | 1.078 | 6.50 | 0.44 | 1.26 | 1.33 | 0 / 0 | 1.21 |
+| s0rep | 22.2 s | 3.02 | 15.6 | 1.69 | 1.000 | 6.01 | 0.44 | 1.27 | 1.35 | 0 / 0 | 1.22 |
+| cs | 35.3 s | 3.42 | 20.3 | 1.91 | 1.130 | 6.71 | 0.45 | 1.27 | 1.35 | 0 / 0 | 1.22 |
+| p3bw | 17.3 s | 3.10 | 16.0 | 1.73 | 1.024 | 6.10 | 0.44 | 1.26 | 1.35 | 0 / 0 | 1.22 |
+| csp3bw | 35.3 s | 3.33 | 17.7 | 1.86 | 1.100 | 6.50 | 0.47 | 1.27 | 1.35 | 0 / 0 | 1.21 |
+| tfull | 22.8 s | 3.34 | 17.5 | 1.87 | 1.104 | 6.51 | 0.47 | 1.28 | 1.37 | 0 / 0 | 1.23 |
+
+### cv: where the time goes -- per-stage seconds, mean (median) over all events
+| stage | baseline | s0rep | cs | p3bw | csp3bw | tfull |
+|---|---|---|---|---|---|---|
+| loaded live | 0.07 (0.06) | 0.07 (0.06) | 0.07 (0.06) | 0.07 (0.07) | 0.07 (0.06) | 0.07 (0.06) |
+| CreateSteinerGraph:pr | 0.12 (0.05) | 0.12 (0.05) | 0.30 (0.10) | 0.12 (0.05) | 0.32 (0.11) | 0.33 (0.11) |
+| CreateSteinerGraph:prrefresh | 0.04 (0.00) | 0.03 (0.00) | 0.10 (0.00) | 0.03 (0.00) | 0.10 (0.00) | 0.10 (0.00) |
+| TaggerCheckNeutrino:pr | 1.58 (0.00) | 1.42 (0.00) | 1.54 (0.00) | 1.44 (0.00) | 1.43 (0.00) | 1.46 (0.00) |
+| TaggerCheckSTM:pr | 0.04 (0.00) | 0.04 (0.00) | 0.03 (0.00) | 0.04 (0.00) | 0.03 (0.00) | 0.03 (0.00) |
+| TaggerCheckTGM:pr | 0.02 (0.00) | 0.02 (0.00) | 0.02 (0.00) | 0.02 (0.00) | 0.02 (0.00) | 0.02 (0.00) |
+| UbooneNumuBDTScorer:pr | 0.14 (0.00) | 0.13 (0.00) | 0.13 (0.00) | 0.13 (0.00) | 0.13 (0.00) | 0.13 (0.00) |
+| UbooneNueBDTScorer:pr | 0.94 (0.00) | 0.90 (0.00) | 0.92 (0.00) | 0.93 (0.00) | 0.92 (0.00) | 0.90 (0.00) |
+
+## nuecc: 2001 events, 1867 of them run the neutrino tagger > 50 ms
+| arm | wall mean | tick mean (s) | tick p99 | tick sum (core-h) | tick mean / s0rep | tick mean, tagger subset | RSS p50 | RSS p99 | RSS max | RSS > 1.5 / > 2.0 GiB | MEM-ladder max |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| baseline | 18.6 s | 12.90 | 76.8 | 7.17 | 0.899 | 13.78 | 1.15 | 1.33 | 1.51 | 1 / 0 | 1.43 |
+| s0rep | 20.7 s | 14.36 | 90.0 | 7.98 | 1.000 | 15.34 | 1.16 | 1.35 | 1.52 | 2 / 0 | 1.44 |
+| cs | 25.5 s | 19.09 | 126.6 | 10.61 | 1.330 | 20.37 | 1.16 | 1.51 | 1.91 | 21 / 0 | 1.73 |
+| p3bw | 23.7 s | 13.17 | 80.9 | 7.32 | 0.917 | 14.04 | 1.15 | 1.34 | 1.52 | 1 / 0 | 1.45 |
+| csp3bw | 23.6 s | 17.49 | 108.8 | 9.72 | 1.218 | 18.64 | 1.15 | 1.59 | 2.20 | 34 / 5 | 2.03 |
+| tfull | 23.2 s | 17.13 | 108.2 | 9.52 | 1.193 | 18.27 | 1.17 | 1.60 | 2.21 | 34 / 5 | 2.04 |
+
+### nuecc: where the time goes -- per-stage seconds, mean (median) over all events
+| stage | baseline | s0rep | cs | p3bw | csp3bw | tfull |
+|---|---|---|---|---|---|---|
+| loaded live | 0.07 (0.07) | 0.08 (0.07) | 0.08 (0.07) | 0.08 (0.07) | 0.08 (0.07) | 0.08 (0.07) |
+| CreateSteinerGraph:pr | 0.48 (0.28) | 0.55 (0.31) | 1.57 (0.87) | 0.52 (0.31) | 1.64 (0.92) | 1.63 (0.92) |
+| CreateSteinerGraph:prrefresh | 0.29 (0.16) | 0.32 (0.18) | 1.08 (0.54) | 0.30 (0.16) | 1.11 (0.55) | 1.10 (0.56) |
+| TaggerCheckNeutrino:pr | 9.40 (4.82) | 10.58 (5.23) | 13.48 (5.94) | 9.50 (4.84) | 11.80 (5.46) | 11.51 (5.27) |
+| TaggerCheckSTM:pr | 0.05 (0.01) | 0.06 (0.01) | 0.06 (0.01) | 0.05 (0.01) | 0.06 (0.01) | 0.06 (0.01) |
+| TaggerCheckTGM:pr | 0.08 (0.04) | 0.09 (0.04) | 0.09 (0.04) | 0.08 (0.04) | 0.09 (0.04) | 0.09 (0.04) |
+| UbooneNumuBDTScorer:pr | 0.25 (0.26) | 0.27 (0.27) | 0.27 (0.27) | 0.26 (0.26) | 0.27 (0.27) | 0.26 (0.27) |
+| UbooneNueBDTScorer:pr | 1.79 (1.89) | 1.87 (1.95) | 1.90 (1.98) | 1.86 (1.96) | 1.90 (1.98) | 1.86 (1.94) |
+
+## off: 1000 events, 59 of them run the neutrino tagger > 50 ms
+| arm | wall mean | tick mean (s) | tick p99 | tick sum (core-h) | tick mean / s0rep | tick mean, tagger subset | RSS p50 | RSS p99 | RSS max | RSS > 1.5 / > 2.0 GiB | MEM-ladder max |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| baseline | 10.9 s | 1.02 | 11.1 | 0.28 | 1.028 | 7.43 | 0.37 | 1.23 | 1.37 | 0 / 0 | 1.24 |
+| s0rep | 9.5 s | 0.99 | 10.9 | 0.28 | 1.000 | 7.29 | 0.38 | 1.24 | 1.38 | 0 / 0 | 1.26 |
+| cs | 12.1 s | 1.26 | 11.1 | 0.35 | 1.273 | 8.02 | 0.38 | 1.20 | 1.35 | 0 / 0 | 1.23 |
+| p3bw | 9.3 s | 1.03 | 11.3 | 0.29 | 1.042 | 7.22 | 0.38 | 1.22 | 1.34 | 0 / 0 | 1.22 |
+| csp3bw | 13.0 s | 1.29 | 12.2 | 0.36 | 1.301 | 8.22 | 0.38 | 1.23 | 1.39 | 0 / 0 | 1.27 |
+| tfull | 18.7 s | 1.24 | 12.4 | 0.34 | 1.248 | 7.86 | 0.38 | 1.22 | 1.37 | 0 / 0 | 1.24 |
+
+### off: where the time goes -- per-stage seconds, mean (median) over all events
+| stage | baseline | s0rep | cs | p3bw | csp3bw | tfull |
+|---|---|---|---|---|---|---|
+| loaded live | 0.08 (0.07) | 0.07 (0.07) | 0.08 (0.07) | 0.08 (0.07) | 0.08 (0.07) | 0.08 (0.07) |
+| CreateSteinerGraph:pr | 0.15 (0.02) | 0.14 (0.02) | 0.36 (0.03) | 0.15 (0.02) | 0.38 (0.03) | 0.36 (0.02) |
+| CreateSteinerGraph:prrefresh | 0.01 (0.00) | 0.01 (0.00) | 0.02 (0.00) | 0.01 (0.00) | 0.02 (0.00) | 0.02 (0.00) |
+| TaggerCheckNeutrino:pr | 0.24 (0.00) | 0.24 (0.00) | 0.26 (0.00) | 0.23 (0.00) | 0.25 (0.00) | 0.24 (0.00) |
+| TaggerCheckSTM:pr | 0.01 (0.00) | 0.01 (0.00) | 0.02 (0.00) | 0.02 (0.00) | 0.01 (0.00) | 0.01 (0.00) |
+| TaggerCheckTGM:pr | 0.03 (0.00) | 0.03 (0.00) | 0.03 (0.00) | 0.03 (0.00) | 0.03 (0.00) | 0.03 (0.00) |
+| UbooneNumuBDTScorer:pr | 0.02 (0.00) | 0.02 (0.00) | 0.02 (0.00) | 0.02 (0.00) | 0.02 (0.00) | 0.02 (0.00) |
+| UbooneNueBDTScorer:pr | 0.17 (0.00) | 0.16 (0.00) | 0.17 (0.00) | 0.17 (0.00) | 0.17 (0.00) | 0.17 (0.00) |

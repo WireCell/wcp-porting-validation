@@ -32,6 +32,18 @@ The trajectory earns nothing at the selection level until the vertex-choice stag
 against it — and this round delivers the truth-adjudicated mover set that retune needs
 (`116_figs/116_movers_*.tsv`), which doc pr/150 could only get from a blind hand scan.
 
+**Added 2026-09-20 (owner follow-up):** sec 14 costs every cell in CPU and memory. The **CPU** is
+`charge_stepped` and nothing else — `tfull` is +10 % of the PR-stage compute on `cv` and +19 % on
+`nuecc`, entirely in the two Steiner graph builds it triples, while `p3bw` and the fit keys are
+free. The **memory tail is a different story**: the median is untouched everywhere and the
+production-like `cv` mix never exceeds 1.37 GiB in any cell, but on the intrinsic-νe sample the two
+knobs *together* push the maximum 1.52 → 2.21 GiB with 5 events of 2001 above 2 GiB — where
+`charge_stepped` alone reaches 1.91 GiB and crosses 2 GiB never, and `p3bw` alone stays at the
+baseline. Sec 15 answers the three follow-up
+questions in order — yes, `tfull` contains `charge_stepped` (15.1); the beam-off rate is not worse
+and probably slightly better but unresolvable on 5 gates, and at the fixed cut most of the move is a
+working-point shift (15.2); and the recommendation stands, with what would change it (15.4).
+
 ## 0. Repro
 
 From `wcp-porting-img/sbnd/sbnd_xin`, toolkit `apply-pointcloud` at `0a2807f4`, the doc-115 pin
@@ -58,6 +70,9 @@ for s in cv nuecc; do for c in tfull csp3bw cs p3bw; do python3 d116_movers.py -
 python3 scripts/d116/traj_eval.py extract --arm-dir work-r3cv-d115pr  --label cv-baseline    # sec 6 (and nuecc, and each cell)
 python3 scripts/d116/traj_eval.py compare --a cv-baseline --b cv-tfull
 python3 scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-17b; echo rc=$?        # PASS 21/21 after
+# 4. cost and the beam-off working point (secs 14, 15; read the records the arms already wrote)
+python3 scripts/d116/perf_cost.py cv nuecc off > $D/116_cost.txt                   # sec 14
+python3 scripts/d116/off_roc.py > $D/116_off_roc.txt                               # sec 15.2
 ```
 
 Tables: `products/d116/<sample>-<cell>/`. Figures: `docs/116_sel/`, `docs/116_sel_edep100/`,
@@ -460,8 +475,199 @@ penalising any refit (189 of 823 clicks lie within 0.05 cm of the `s0` vertex); 
 ## 13. Files
 
 `scripts/d116/stageB_cell.sh`, `scripts/d116/analyze_cell.sh`, `scripts/d116/cfg_proof.sh`,
-`scripts/d116/traj_eval.py`, `d116_compare.py`, `d116_movers.py`; `docs/116_figs/tla/`,
+`scripts/d116/traj_eval.py`, `scripts/d116/perf_cost.py`, `scripts/d116/off_roc.py`,
+`d116_compare.py`, `d116_movers.py`; `docs/116_figs/tla/`,
 `116_pred.txt` + `.sha256`, `116_cfg_proof.txt`, `116_compare.{txt,tsv,md}`, `116_movers_*.{txt,tsv}`,
-`traj/*.tsv`; `docs/116_{sel,sel_edep100,vtx,scan,time,off}/`; `products/d116/<sample>-<cell>/`.
+`116_cost.txt`, `116_off_roc.txt`, `traj/*.tsv`; `docs/116_{sel,sel_edep100,vtx,scan,time,off}/`;
+`products/d116/<sample>-<cell>/`.
 Nothing under `docs/115_*`, `products/d115/`, `scripts/d115/`, the doc-115 or pr/149–150 records,
 or any toolkit file is modified.
+
+## 14. Cost: CPU and memory per event
+
+Added 2026-09-20 on the owner's question. Two instruments, both already written for every event of
+every arm — nothing was re-run for this section (`scripts/d116/perf_cost.py` →
+`docs/116_figs/116_cost.txt`):
+
+- `.time.meta` (`abtest/timecmd.py`) wraps the **whole** per-event PR step — untar of the stage-A
+  pctree, the wire-cell job, tar of the outputs — and records `wall_s` and `maxrss_kb` =
+  `getrusage(RUSAGE_CHILDREN).ru_maxrss`, a kernel high-water mark (not the 2 s `VmHWM` sampler of
+  `run_pr_evt.sh`, which under-reports the tail).
+- the job's own `TICK: <total> ms (this: <dt> ms) <stage>` ladder in `wct_pr_evt*.log` — the
+  wire-cell compute, stage by stage — and its `MEM: … res=…K` ladder.
+
+**The wall is read with a control, never on its own.** The doc-116 arms ran 3–8 lock-sharing
+workers per cell; the doc-115 baseline arms ran one driver. `s0rep`, byte-identically the
+production configuration, has a mean `wall_s` of **22.2 s** on `cv` against the baseline's **9.7 s**
+— that factor of 2.3 is I/O contention, not physics. The TICK ladder survives the difference
+(`s0rep` within 10 % of the baseline on all three samples), so **every ratio below is quoted
+against `s0rep`**, and the residual baseline/`s0rep` spread, ±10 %, is this instrument's resolution.
+
+| sample | arm | TICK mean (s) | / `s0rep` | p99 (s) | peak RSS p50 | p99 | max | events > 1.5 / > 2.0 GiB |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| `cv` | baseline | 3.26 | 1.078 | 16.8 | 0.44 | 1.26 | 1.33 | 0 / 0 |
+| | `s0rep` | 3.02 | 1.000 | 15.6 | 0.44 | 1.27 | 1.35 | 0 / 0 |
+| | `cs` | 3.42 | **1.130** | 20.3 | 0.45 | 1.27 | 1.35 | 0 / 0 |
+| | `p3bw` | 3.10 | 1.024 | 16.0 | 0.44 | 1.26 | 1.35 | 0 / 0 |
+| | `csp3bw` | 3.33 | 1.100 | 17.7 | 0.47 | 1.27 | 1.35 | 0 / 0 |
+| | `tfull` | 3.34 | **1.104** | 17.5 | 0.47 | 1.28 | 1.37 | 0 / 0 |
+| `nuecc` | baseline | 12.90 | 0.899 | 76.8 | 1.15 | 1.33 | 1.51 | 1 / 0 |
+| | `s0rep` | 14.36 | 1.000 | 90.0 | 1.16 | 1.35 | 1.52 | 2 / 0 |
+| | `cs` | 19.09 | **1.330** | 126.6 | 1.16 | 1.51 | 1.91 | 21 / 0 |
+| | `p3bw` | 13.17 | 0.917 | 80.9 | 1.15 | 1.34 | 1.52 | 1 / 0 |
+| | `csp3bw` | 17.49 | 1.218 | 108.8 | 1.15 | 1.59 | 2.20 | 34 / 5 |
+| | `tfull` | 17.13 | **1.193** | 108.2 | 1.17 | 1.60 | 2.21 | 34 / 5 |
+| `off` | baseline | 1.02 | 1.028 | 11.1 | 0.37 | 1.23 | 1.37 | 0 / 0 |
+| | `s0rep` | 0.99 | 1.000 | 10.9 | 0.38 | 1.24 | 1.38 | 0 / 0 |
+| | `cs` | 1.26 | **1.273** | 11.1 | 0.38 | 1.20 | 1.35 | 0 / 0 |
+| | `p3bw` | 1.03 | 1.042 | 11.3 | 0.38 | 1.22 | 1.34 | 0 / 0 |
+| | `csp3bw` | 1.29 | 1.301 | 12.2 | 0.38 | 1.23 | 1.39 | 0 / 0 |
+| | `tfull` | 1.24 | **1.248** | 12.4 | 0.38 | 1.22 | 1.37 | 0 / 0 |
+
+The `off` arms ran **one worker each**, in doc 115 and here, so their +25–30 % is not a
+multi-worker artefact; it is an independent confirmation of the `nuecc` number measured under
+completely different load.
+
+**Where the time goes, and which knob spends it.** Per-stage means on `nuecc`
+(`116_cost.txt`, medians in the file):
+
+| stage | baseline | `s0rep` | `cs` | `p3bw` | `csp3bw` | `tfull` |
+|---|---:|---:|---:|---:|---:|---:|
+| `CreateSteinerGraph:pr` | 0.48 | 0.55 | **1.57** | 0.52 | 1.64 | 1.63 |
+| `CreateSteinerGraph:prrefresh` | 0.29 | 0.32 | **1.08** | 0.30 | 1.11 | 1.10 |
+| `TaggerCheckNeutrino:pr` | 9.40 | 10.58 | **13.48** | 9.50 | 11.80 | 11.51 |
+| `UbooneNueBDTScorer:pr` | 1.79 | 1.87 | 1.90 | 1.86 | 1.90 | 1.86 |
+| `UbooneNumuBDTScorer:pr`, `TaggerCheckSTM/TGM`, `loaded live` | ≤ 0.25 | ≤ 0.27 | ≤ 0.27 | ≤ 0.26 | ≤ 0.27 | ≤ 0.26 |
+
+The whole CPU cost is **`charge_stepped`**: it triples both Steiner graph builds (×2.9 and ×3.4 over
+`s0rep`) and adds ~3 s to the tagger that walks the resulting trajectory. `p3bw` — the priced
+seed and `prefer3` admission — leaves every stage where it was; it is **free**. Adding the fit keys
+(`tfull` vs `csp3bw`) costs nothing measurable. The cost is also **sub-additive**: `cs` alone
+(×1.330) is the *most* expensive cell, and adding `p3bw` on top of it brings the total down to
+×1.218 — the priced seed admits fewer terminals into the bigger graph. This is the same cost PDVD
+measured in doc pdvd/102, one of the reasons `charge_stepped` was not flipped there; SBND reproduces
+it with the stage named.
+
+**The totals close on the stage deltas, which is what makes them a measurement.** The control
+itself moves (baseline/`s0rep` 0.899–1.078), so a bare ratio of totals would be within a factor of
+its own resolution on `cv`. It is not, because the two terms have different signatures. The
+environment term is a roughly **uniform** scaling of every stage (`nuecc`, baseline → `s0rep`:
+Steiner ×1.15, prrefresh ×1.10, tagger ×1.13, νe BDT ×1.04); the knob term is **localised**
+(Steiner ×2.9, prrefresh ×3.4, every other stage ≤ ×1.03). And the localised deltas sum to the
+observed total on both samples: `cv` +0.21 (Steiner) + 0.07 (prrefresh) + 0.04 (tagger) = **+0.32 s**
+against an observed 3.34 − 3.02 = +0.32; `nuecc` +1.08 + 0.78 + 0.93 = **+2.79 s** against an
+observed 17.13 − 14.36 = +2.77. On `cv` the baseline and `s0rep` agree to the hundredth on
+`CreateSteinerGraph:pr` (0.12 = 0.12), i.e. that stage carries no environment term there at all.
+
+**Memory, and it does not follow the CPU.** The median is flat everywhere (0.44 GiB `cv`,
+1.15 → 1.17 `nuecc`, 0.38 `off`; at most +0.02), and the production-like `cv` mix and the beam-off
+gates do not move at all — max 1.33 → 1.37 GiB, not one event above 1.5 GiB in any cell. Only the
+νe-rich tail moves, and there the two knobs are **super-additive**, which is the opposite of what
+the CPU does:
+
+| `nuecc` | baseline | `s0rep` | `cs` | `p3bw` | `csp3bw` | `tfull` |
+|---|---:|---:|---:|---:|---:|---:|
+| peak RSS p99 (GiB) | 1.33 | 1.35 | 1.51 | 1.34 | 1.59 | 1.60 |
+| peak RSS max | 1.51 | 1.52 | 1.91 | 1.52 | **2.20** | **2.21** |
+| events > 1.5 / > 2.0 GiB | 1 / 0 | 2 / 0 | 21 / **0** | 1 / 0 | 34 / **5** | 34 / **5** |
+
+`charge_stepped` alone is the whole CPU cost but never crosses 2 GiB; `p3bw` alone is free in CPU
+*and* sits on the baseline in memory; the 2.2 GiB events exist only when both are on. So the CPU
+attribution does not carry over — whoever later adopts `cs` on its own inherits the compute cost
+and not this tail, and whoever adopts the pair inherits both. Two independent instruments agree on
+the worst event (`getrusage` 2.21 GiB for the whole step, the in-job `MEM` ladder 2.04 GiB for
+wire-cell alone), so the growth is inside the job, not in a tar step. For a production budget: on a
+`cv`-like mix a 1.5 GiB per-process cap holds in every cell; on νe-like events a 2 GiB cap holds
+today (max 1.52 GiB) and would be exceeded by ~0.25 % of events with both knobs on; 2.5 GiB holds
+either way. These are one-event-per-process jobs; a batching driver must apply the cap to the batch.
+
+**In whole-chain terms.** Doc 115 sec 5 costs stage A at 11.6 core-s/event on `cv` (imaging
+13 732 s + clustering/Q-L 9 628 s over 2017 events) and 14.6 on `nuecc`, against a PR step of 9.7 /
+18.6 s. The knobs touch only the PR job's compute, so `tfull` adds **+0.3 s/event on `cv`** (≈ 1.5 %
+of the ~21 s chain) and **+2.8 s/event on `nuecc`** (≈ 8 % of the ~33 s chain). Stage A is
+byte-identical — no knob in any cell is read before the PR job.
+
+## 15. The owner's follow-up questions (2026-09-20)
+
+### 15.1 Does `tfull` include `charge_stepped`? Yes — it is all three changes at once.
+
+`docs/116_figs/tla/tfull.tla` is byte-identical to `csp3bw.tla`:
+`retile_sampler_strategy='charge_stepped'` **(a)** plus `steiner_blank_plane_mode='prefer3'`,
+`steiner_base_weight_blank_alpha=0.5`, `steiner_base_weight_scope='tree+path'` **(b)**, and the
+launcher adds the runtime fit JSON **(c)** from the sibling `tfull.tfjson`. Sec 2's compile proof
+shows it: the `tfull` standalone sha `577dc21ec8c5a45e` differs from `csp3bw`'s
+`3db5df01e33ff853` **only** by `trackfitting_config_file`, and both carry the `live-cs-*` sampler
+swap that `cs` alone introduces. So `cs` ⊂ `csp3bw` ⊂ `tfull`, sec 9's decomposition says which
+part does what, and sec 14 says which part costs what (the CPU is all `cs`; the memory tail takes
+`cs` and `p3bw` together).
+
+### 15.2 Is the beam-off data better or worse?
+
+Directionally better in every cell, by an amount this sample cannot resolve, and at the fixed
+production cut most of it is a **working-point shift** rather than a better selection
+(`docs/116_figs/116_off_roc.txt`, `scripts/d116/off_roc.py`: the νμ BDT score scan of the same arm
+on both axes — true νμCC efficiency on `mc-cv`, beam-off gate rate on the same 1 000 gates):
+
+| cell | νμCC eff at the production cut 0.9 | beam-off gates at 0.9 | paired exchange | exact sign p | cut that matches the baseline's 387 selected νμCC | gates there |
+|---|---:|---:|---:|---:|---:|---:|
+| baseline | 387/557 = 69.5 % | 5 | — | — | +0.9 | 5 |
+| `s0rep` | 387/557 = 69.5 % | 5 | −0/+0 | 1.000 | +0.9 | 5 |
+| `cs` | 385/557 = 69.1 % | 4 | −3/+2 | 1.000 | +0.8 (393 sel) | 4 |
+| `p3bw` | 382/557 = 68.6 % | **2** | −4/+1 | 0.375 | +0.6 (391 sel) | 3 |
+| `csp3bw` | 378/557 = 67.9 % | 4 | −2/+1 | 1.000 | +0.7 (387 sel) | 4 |
+| `tfull` | **390/557 = 70.0 %** | 4 | −1/+0 | 1.000 | +0.9 (390 sel) | 4 |
+
+Three of the four knob cells shed cosmic gates **while shedding signal** at the same cut — `p3bw`
+−0.90 pt of νμCC efficiency for 5 → 2 gates, `csp3bw` −1.62 pt for 5 → 4 — and since the cut is a
+free knob, that on its own is a move along the curve, not a better curve. `tfull` is the only cell
+that moves both the right way at the production cut (+0.54 pt and 5 → 4). Re-reading the scan at
+**matched signal** removes the working-point objection and the direction survives — every knob cell
+reaches the baseline's 387 selected νμCC with 1–2 fewer cosmic gates than the baseline's 5 — but
+1–2 gates out of 5 is inside the Poisson error on 5 (±2.2), no paired exchange comes near p < 0.05
+(`p3bw`'s 0.375 is the smallest), and the pre-registration counts a beam-off change only from **5**
+gates, which is exactly what there is. Neither νe cut admits a single cosmic gate in any cell
+(0/1000 everywhere), so the νe side says nothing at all. The honest summary: **not worse, probably
+slightly better, unmeasurable here** — settling it needs more off-beam gates, which is doc 115's
+open item 3 (the gate count `f`) turned into a statistics requirement.
+
+One observation from the same scan, **not** a cut recommendation: the baseline's beam-off count is
+**flat at 5 gates from cut +0.3 all the way to +0.9**, while its νμCC efficiency falls over that
+range from 74.5 % to 69.5 %. The cosmic axis simply has no resolution over the region where the
+working point lives — which is the cleanest statement of why a 1–2 gate difference between cells
+carries no information, and also why the cut cannot be re-optimised on this table: the cut is set
+against the mc-cv background, an axis this table does not show.
+
+### 15.3 Running time and memory
+
+Sec 14. In one line: the trajectory costs **+10 % of the PR-stage compute on `cv`** and **+19 % on
+`nuecc`** (`tfull` against the `s0rep` control, the stage deltas closing on the totals), all of the
+CPU being `charge_stepped` tripling the two Steiner graph builds — `p3bw` and the fit keys are free
+— while memory keeps its median and its `cv` maximum (1.37 GiB, as the baseline) and moves only the
+νe tail, 1.52 → 2.21 GiB with 5 events of 2001 above 2 GiB, which unlike the CPU takes **both**
+knobs: `charge_stepped` alone tops out at 1.91 GiB.
+
+### 15.4 Do I recommend changing the SBND baseline? No — not on this evidence.
+
+1. **Nothing measurable is bought.** Eight primary metrics, every one "not separable" under the
+   pre-registered rule, in every cell (secs 5, 9). The noise floor is **zero** (sec 4), so this is
+   not the resolution of the measurement — the changes genuinely do not move the selection.
+2. **Something is paid.** Sec 14's CPU and memory, and — larger — the churn: 10–13 % of the
+   selected signal changes identity (sec 5), so every number downstream that was tuned against the
+   current trajectory (the uBooNE BDT operating points, doc 107's cut package, doc 115's baseline
+   itself) would need re-validating for no measured gain. Doc pr/150 reached the same verdict on
+   data by hand scan; this round reaches it with truth.
+3. **The argument for flipping is maintenance, not physics** — one trajectory configuration across
+   PDHD, PDVD and SBND. It is a real argument, but the knobs are default-OFF TLAs threaded in
+   `ecba69ee`, so SBND can adopt it at any later date at no code cost; nothing is lost by waiting
+   for a round that shows a gain.
+4. **What would change the answer**, in order: (a) the vertex-choice re-tune against the new
+   trajectory (sec 10.3) — two thirds of the movers are CHOICE, so the chooser is where a gain
+   would come from, and the truth-adjudicated mover set it needs is delivered here; (b) more
+   off-beam gates, to give sec 15.2 the power to resolve a 5 → 3 move; (c) a νe-side sample large
+   enough that ±1.5 pt is not one sigma of the exchange.
+5. **A caveat on `p3bw`**, so the cost table is not misread as a partial-adoption recommendation:
+   it is the only knob that is free in CPU and memory and it carries the largest cosmic drop, but
+   it also has the **worst** νμCC efficiency at the production cut (−0.90 pt) and the largest fall
+   in beam-off gates with a reco vertex in the FV (25 → 17, sec 8). Cheap is not harmless. It is
+   the knob whose cost does not argue against putting it in a next round — not a recommendation to
+   turn it on now.
