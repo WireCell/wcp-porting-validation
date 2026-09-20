@@ -1,0 +1,48 @@
+# doc sbnd_xin/117 -- PRE-REGISTRATION B, frozen 2026-09-20 13:16, sha256 in 117_pred_b.sha256.
+# Written AFTER the zero-cost census of 117_pred.txt's last block was computed
+# (docs/117_figs/117_dual_census.txt) and BEFORE any doc-117 cell was analysed: at this moment
+# `products/d117/` does not exist, `work-r3cv-d117c1x` is the only complete arm (2017/2017, rc!=0
+# = 0) and no selection, vertex or closure number of this round has been computed.  117_pred.txt
+# stands unchanged; this file records that the LIVE HYPOTHESIS FLIPPED, so that the cell results
+# cannot be read as a surprise rationalised afterwards.  (Same device as doc pr/150's
+# 150_pred_r2.txt.)
+#
+# WHAT THE CENSUS SAID (117_dual_census.txt, exact, no new compute)
+# The second (exclusion-free) pass runs on 97-100 % of the events that have a scoreboard, proposes
+# a vertex on essentially all of them, and its proposal is accepted (snapped within 2 cm of a
+# production candidate) on 445-669 events per arm.  On the subset where the accepted snap actually
+# MOVED the pick away from the composite rerank winner, the transferred vertex is closer to a true
+# in-FV vertex than the composite winner would have been:
+#     c2 cv    159 closer / 58 further   p 4.6e-12
+#     c2 nuecc 318 closer / 164 further  p 2.1e-12
+#     t2 cv    172 closer / 51 further   p 1.6e-16
+#     t2 nuecc 294 closer / 157 further  p 1.1e-10
+# and the second pass costs a median 1.6-3.2 s/event, 0.53-3.16 core-h per arm (33-36 % of the
+# arm's whole PR compute on `nuecc`, against doc 116 sec 14's TICK totals).
+# This is a PROXY (the no-dual arm's own acceptance logic -- the min_accept floor, the distance
+# gate, the traditional fallback -- is not replayed), which is exactly what c1e / t1e measure.
+#
+# THE FLIP
+# 117_pred.txt predicted "if the dual chain is worth its second pass, the transfers it makes are
+# net-favourable on truth (p < 0.05)".  That prediction is CONFIRMED, decisively and on all four
+# arm/sample combinations.  Therefore, before the cells are read:
+#
+#   P1  c1e and t1e (dual pass OFF, exclusion ON) are expected to be WORSE than c2 / t2 on the
+#       vertex metrics -- most visibly at the tight thresholds (1-3 cm), since the transfers move
+#       the pick by a median of 0.3-0.5 cm.  A null here would mean the proxy overstates the
+#       transfer (the fallback recovers it); a loss confirms the second pass earns its cost.
+#   P2  The round's remaining question becomes the one the owner asked second: does the ONE-step
+#       EXCLUSION-FREE chain (c1x / t1x) recover what dropping the second pass costs?  It is the
+#       same fit the second pass uses, applied to the whole event instead of only as a proposal --
+#       doc pr/112's data hand-scan ranked it above the dual chain (812 vs 805 of 1011) on a metric
+#       doc 116 sec 16.2 has since shown to be anchored, so it needs truth to be settled.
+#   P3  `fit_exclusion=false` is NOT only a vertex knob: it reverts an SBND production flip made on
+#       FIT quality (doc pr/98 sec 7).  The closure clauses (scripts/d117/traj_eval.py, the pr/150
+#       instrument) are therefore graded on all four cells, and a cell that gains vertices while
+#       losing closure is reported as the trade it is, not as a win.
+#   P4  Cost is a stated outcome, not a footnote: the 1-step cells should be ~33 % cheaper on
+#       `nuecc` (the off_ms above), and doc 116 sec 14's instrument (the in-job TICK ladder, with
+#       the same-conditions caveat) measures it on the arms themselves.
+#
+# Nothing else changes: the metrics, the floor, the verdict rule and the recommendation table of
+# 117_pred.txt are unchanged, and no parameter is tuned to make a number look right.

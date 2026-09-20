@@ -1,0 +1,63 @@
+# doc 107 sec 5.5 -- selection numbers (d107_selection.py)
+FV 5<|x|<190, |y|<190, 10<z<450 cm; match = reco vertex within 5.0 cm; intervals are 68% Wilson
+truth interactions 3786, in FV 1626; candidates 1924, reco vertex in FV 1527
+
+## Q1 vertex within 5 cm, true vertex in FV
+all true nu in FV:               1096/1626 = 67.4% [66.2, 68.6]
+  ... in events with a candidate: 1096/1581 = 69.3% [68.2, 70.5]
+  numuCC :                       51/90 = 56.7% [51.4, 61.8]
+  NC     :                       4/25 = 16.0% [10.0, 24.6]
+  nueCC  :                       1041/1511 = 68.9% [67.7, 70.1]
+  Edep [0,100) MeV:          0/8 = 0.0% [0.0, 11.1]
+  Edep [100,300) MeV:          32/67 = 47.8% [41.7, 53.9]
+  Edep [300,inf) MeV:          1064/1551 = 68.6% [67.4, 69.8]
+
+## numuCC: numu_score > 0.9 and reco vertex in FV; signal = true numuCC in FV
+true numuCC in FV: 90
+  candidate vertex within 5 cm:              51/90 = 56.7% [51.4, 61.8]
+  ... and reco vertex in FV:                 50/90 = 55.6% [50.3, 60.7]
+  ... and numu_score > 0.9 (EFFICIENCY):      46/90 = 51.1% [45.9, 56.3]
+  score-cut efficiency given a matched FV candidate: 46/50 = 92.0% [87.3, 95.1]
+selected candidates: 289 (in 285 events)
+  PURITY (signal):                           46/289 = 15.9% [13.9, 18.2]
+  background nueCC in FV                    190 (65.7%)
+  background no true vertex within 5 cm      52 (18.0%)
+  background true vertex outside FV           1 (0.3%)
+    unmatched: nearest true vertex 20-50 cm is nueCC      22
+    unmatched: nearest true vertex 5-20 cm  is nueCC      19
+    unmatched: nearest true vertex 5-20 cm  is numuCC      3
+    unmatched: nearest true vertex >50 cm   is nueCC       7
+    unmatched: nearest true vertex >50 cm   is numuCC      1
+  (no reco-FV requirement: 387 candidates, signal 47/387 = 12.1% [10.6, 13.9])
+  -- no vertex requirement (sec 5.7) --
+  event-level EFFICIENCY:                    54/90 = 60.0% [54.8, 65.0]
+  event-level PURITY:                        57/289 = 19.7% [17.5, 22.2]
+  nearest-truth (any distance) EFFICIENCY:   49/90 = 54.4% [49.2, 59.6]
+  nearest-truth (any distance) PURITY:       49/289 = 17.0% [14.9, 19.3]
+    event-level background: event has other-flavour CC in FV                     227
+    event-level background: event has no true nu in FV (out-of-FV nu / cosmic)     5
+    event-level gain over 5 cm match: nearest true vertex 20-50 cm is not signal     1
+    event-level gain over 5 cm match: nearest true vertex 5-20 cm  is     signal     3
+    event-level gain over 5 cm match: nearest true vertex 5-20 cm  is not signal     1
+    event-level gain over 5 cm match: nearest true vertex <5 cm    is not signal     6
+
+## nueCC: nue_score > 7 and reco vertex in FV; signal = true nueCC in FV
+true nueCC in FV: 1511
+  candidate vertex within 5 cm:              1041/1511 = 68.9% [67.7, 70.1]
+  ... and reco vertex in FV:                 1040/1511 = 68.8% [67.6, 70.0]
+  ... and nue_score > 7 (EFFICIENCY):      592/1511 = 39.2% [37.9, 40.4]
+  score-cut efficiency given a matched FV candidate: 592/1040 = 56.9% [55.4, 58.5]
+selected candidates: 607 (in 607 events)
+  PURITY (signal):                           592/607 = 97.5% [96.8, 98.1]
+  background true vertex outside FV          10 (1.6%)
+  background no true vertex within 5 cm       5 (0.8%)
+    unmatched: nearest true vertex 5-20 cm  is nueCC       5
+  (no reco-FV requirement: 692 candidates, signal 592/692 = 85.5% [84.2, 86.8])
+  -- no vertex requirement (sec 5.7) --
+  event-level EFFICIENCY:                    596/1511 = 39.4% [38.2, 40.7]
+  event-level PURITY:                        596/607 = 98.2% [97.6, 98.7]
+  nearest-truth (any distance) EFFICIENCY:   596/1511 = 39.4% [38.2, 40.7]
+  nearest-truth (any distance) PURITY:       596/607 = 98.2% [97.6, 98.7]
+    event-level background: event has no true nu in FV (out-of-FV nu / cosmic)    10
+    event-level background: event has only NC in FV                                1
+    event-level gain over 5 cm match: nearest true vertex 5-20 cm  is     signal     4

@@ -1,0 +1,62 @@
+# doc 107 sec 5.5 -- selection numbers (d107_selection.py)
+FV 5<|x|<190, |y|<190, 10<z<450 cm; match = reco vertex within 5.0 cm; intervals are 68% Wilson
+truth interactions 3647, in FV 783; candidates 967, reco vertex in FV 721
+
+## Q1 vertex within 5 cm, true vertex in FV
+all true nu in FV:               536/783 = 68.5% [66.8, 70.1]
+  ... in events with a candidate: 536/690 = 77.7% [76.1, 79.2]
+  numuCC :                       460/557 = 82.6% [80.9, 84.1]
+  NC     :                       71/221 = 32.1% [29.1, 35.3]
+  nueCC  :                       5/5 = 100.0% [83.3, 100.0]
+  Edep [0,100) MeV:          7/74 = 9.5% [6.6, 13.4]
+  Edep [100,300) MeV:          69/126 = 54.8% [50.3, 59.1]
+  Edep [300,inf) MeV:          460/583 = 78.9% [77.2, 80.5]
+
+## numuCC: numu_score > 0.9 and reco vertex in FV; signal = true numuCC in FV
+true numuCC in FV: 557
+  candidate vertex within 5 cm:              460/557 = 82.6% [80.9, 84.1]
+  ... and reco vertex in FV:                 457/557 = 82.0% [80.4, 83.6]
+  ... and numu_score > 0.9 (EFFICIENCY):      388/557 = 69.7% [67.7, 71.6]
+  score-cut efficiency given a matched FV candidate: 388/457 = 84.9% [83.2, 86.5]
+selected candidates: 454 (in 449 events)
+  PURITY (signal):                           388/454 = 85.5% [83.7, 87.0]
+  background no true vertex within 5 cm      52 (11.5%)
+  background NC in FV                        11 (2.4%)
+  background true vertex outside FV           2 (0.4%)
+  background nueCC in FV                      1 (0.2%)
+    unmatched: nearest true vertex 20-50 cm is NC          2
+    unmatched: nearest true vertex 20-50 cm is numuCC      8
+    unmatched: nearest true vertex 5-20 cm  is NC          2
+    unmatched: nearest true vertex 5-20 cm  is numuCC     24
+    unmatched: nearest true vertex >50 cm   is NC          4
+    unmatched: nearest true vertex >50 cm   is numuCC     12
+  (no reco-FV requirement: 556 candidates, signal 390/556 = 70.1% [68.2, 72.0])
+  -- no vertex requirement (sec 5.7) --
+  event-level EFFICIENCY:                    434/557 = 77.9% [76.1, 79.6]
+  event-level PURITY:                        428/454 = 94.3% [93.1, 95.3]
+  nearest-truth (any distance) EFFICIENCY:   427/557 = 76.7% [74.8, 78.4]
+  nearest-truth (any distance) PURITY:       428/454 = 94.3% [93.1, 95.3]
+    event-level background: event has only NC in FV                               19
+    event-level background: event has no true nu in FV (out-of-FV nu / cosmic)     6
+    event-level background: event has other-flavour CC in FV                       1
+    event-level gain over 5 cm match: nearest true vertex 20-50 cm is     signal     6
+    event-level gain over 5 cm match: nearest true vertex 5-20 cm  is     signal    23
+    event-level gain over 5 cm match: nearest true vertex >50 cm   is     signal    11
+
+## nueCC: nue_score > 7 and reco vertex in FV; signal = true nueCC in FV
+true nueCC in FV: 5
+  candidate vertex within 5 cm:              5/5 = 100.0% [83.3, 100.0]
+  ... and reco vertex in FV:                 5/5 = 100.0% [83.3, 100.0]
+  ... and nue_score > 7 (EFFICIENCY):      4/5 = 80.0% [57.9, 92.1]
+  score-cut efficiency given a matched FV candidate: 4/5 = 80.0% [57.9, 92.1]
+selected candidates: 5 (in 5 events)
+  PURITY (signal):                           4/5 = 80.0% [57.9, 92.1]
+  background no true vertex within 5 cm       1 (20.0%)
+    unmatched: nearest true vertex 20-50 cm is NC          1
+  (no reco-FV requirement: 6 candidates, signal 4/6 = 66.7% [46.3, 82.3])
+  -- no vertex requirement (sec 5.7) --
+  event-level EFFICIENCY:                    4/5 = 80.0% [57.9, 92.1]
+  event-level PURITY:                        4/5 = 80.0% [57.9, 92.1]
+  nearest-truth (any distance) EFFICIENCY:   4/5 = 80.0% [57.9, 92.1]
+  nearest-truth (any distance) PURITY:       4/5 = 80.0% [57.9, 92.1]
+    event-level background: event has only NC in FV                                1

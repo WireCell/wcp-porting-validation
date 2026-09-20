@@ -1,0 +1,45 @@
+# d117 cfg proof  toolkit=0a2807f4  wcp=14dafc63  2026-09-20_12:53
+## (a) standalone compile, reality=sim, runner _optla form
+null    rc=0  sha=4ee005c935dac7df
+c1e  rc=0  sha=6b729e097dab7328  tla=[--tla-code dl_vtx_dual_chain=false]
+c1x  rc=0  sha=254528c52d52d137  tla=[--tla-code dl_vtx_dual_chain=false --tla-code fit_exclusion=false]
+t1e  rc=0  sha=dbd0a6352c56f9c3  tla=[--tla-str trackfitting_config=/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/149_figs/149_tf_sbnd_kf.json --tla-code retile_sampler_strategy='charge_stepped' --tla-code steiner_blank_plane_mode='prefer3' --tla-code steiner_base_weight_blank_alpha=0.5 --tla-code steiner_base_weight_scope='tree+path' --tla-code dl_vtx_dual_chain=false]
+t1x  rc=0  sha=4ddd562e6564543e  tla=[--tla-str trackfitting_config=/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/149_figs/149_tf_sbnd_kf.json --tla-code retile_sampler_strategy='charge_stepped' --tla-code steiner_blank_plane_mode='prefer3' --tla-code steiner_base_weight_blank_alpha=0.5 --tla-code steiner_base_weight_scope='tree+path' --tla-code dl_vtx_dual_chain=false --tla-code fit_exclusion=false]
+-- node diff null -> c1e: only null []  only c1e []
+   changed node TaggerCheckNeutrino:pr: keys ['dl_vtx_dual_chain'] -> [None]
+   changed nodes: 1
+-- node diff null -> c1x: only null []  only c1x []
+   changed node TaggerCheckNeutrino:pr: keys ['dl_vtx_dual_chain', 'fit_exclusion'] -> [None, None]
+   changed nodes: 1
+-- node diff null -> t1e: only null ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0']  only t1e ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']
+   changed node CreateSteinerGraph:pr: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'] -> [0.5, 'tree+path', 'prefer3']
+   changed node CreateSteinerGraph:prrefresh: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'] -> [0.5, 'tree+path', 'prefer3']
+   changed node ImproveCluster_2:pr: keys ['samplers'] -> ['[{"apa": 0, "face": 0, "name": "BlobSampler:live-cs-apa0-0"}, {"apa": 1, "face": 0, "name": "BlobSampler:live-cs-apa1...']
+   changed node SbndPrMagnifyTrackingVisitor:pr: keys ['provenance'] -> ['{"bdt_weights_dir": "uboone/weights", "dl_weights": "uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth", "nue_xgboost_x...']
+   changed node TaggerCheckNeutrino:pr: keys ['dl_vtx_dual_chain', 'trackfitting_config_file'] -> [None, '/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/149_figs/149_tf_sbnd_kf.json']
+   changed node TaggerCheckSTM:pr: keys ['trackfitting_config_file'] -> ['/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/149_figs/149_tf_sbnd_kf.json']
+   changed nodes: 6
+-- node diff null -> t1x: only null ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0']  only t1x ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']
+   changed node CreateSteinerGraph:pr: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'] -> [0.5, 'tree+path', 'prefer3']
+   changed node CreateSteinerGraph:prrefresh: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'] -> [0.5, 'tree+path', 'prefer3']
+   changed node ImproveCluster_2:pr: keys ['samplers'] -> ['[{"apa": 0, "face": 0, "name": "BlobSampler:live-cs-apa0-0"}, {"apa": 1, "face": 0, "name": "BlobSampler:live-cs-apa1...']
+   changed node SbndPrMagnifyTrackingVisitor:pr: keys ['provenance'] -> ['{"bdt_weights_dir": "uboone/weights", "dl_weights": "uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth", "nue_xgboost_x...']
+   changed node TaggerCheckNeutrino:pr: keys ['dl_vtx_dual_chain', 'fit_exclusion', 'trackfitting_config_file'] -> [None, None, '/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/149_figs/149_tf_sbnd_kf.json']
+   changed node TaggerCheckSTM:pr: keys ['trackfitting_config_file'] -> ['/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/149_figs/149_tf_sbnd_kf.json']
+   changed nodes: 6
+## (b) the arms' own .d109-opcfg.json vs the doc-115 baseline arm's
+-- cv baseline work-r3cv-d115pr/f000 sha=399badee163e0f4d
+   c1e: arm not run
+   c1x: arm not run
+   t1e: arm not run
+   t1x: arm not run
+-- nuecc baseline work-r3nue-d115pr/f000 sha=399badee163e0f4d
+   c1e: arm not run
+   c1x: arm not run
+   t1e: arm not run
+   t1x: arm not run
+-- off baseline work-r3off-d115pr sha=adfa7d4e41a7dda9
+   c1e: arm not run
+   c1x: arm not run
+   t1e: arm not run
+   t1x: arm not run

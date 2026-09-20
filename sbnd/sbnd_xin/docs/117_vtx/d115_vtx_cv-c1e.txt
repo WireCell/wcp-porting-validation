@@ -1,0 +1,13 @@
+# doc 115 vertex assessment -- sample cv-c1e
+# FV 5<|x|<190, |y|<190, 10<z<450 cm; distance = to the NEAREST candidate vertex
+# true interactions with the vertex in the FV: 783
+
+population                     N  matched <5 cm                   5-20    20-50      >50  no cand
+-------------------------------------------------------------------------------------------------
+all true nu in FV            783    536 =  68.5 % [66.8,70.1]       51       40       59       97
+numuCC                       557    460 =  82.6 % [80.9,84.1]       32       16       26       23
+nueCC                          5      5 = 100.0 % [83.3,100.0]        0        0        0        0
+NC                           221     71 =  32.1 % [29.1,35.3]       19       24       33       74
+Edep < 100 MeV                74      7 =   9.5 % [ 6.6,13.4]        1        4        9       53
+100 <= Edep < 300 MeV        126     69 =  54.8 % [50.3,59.1]       12        8       14       23
+Edep >= 300 MeV              583    460 =  78.9 % [77.2,80.5]       38       28       36       21

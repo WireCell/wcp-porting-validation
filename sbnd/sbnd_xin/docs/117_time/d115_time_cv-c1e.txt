@@ -1,0 +1,9 @@
+# doc 115 flash-time <-> true-time association -- sample cv-c1e
+# reference: doc 108 sec 3.5, +0.136 us on the LArSoft-chain sample
+
+matched candidate rows with a truth time: 655
+flash_time_us - true T (us):  min -1.0351  p05 0.1328  median 0.1360  p95 0.1399  max 1.3886
+within 0.1 us of the median: 647/655 = 98.8 %
+offset vs the doc-108 reference: +0.0000 us
+
+VERDICT PASS (|median - reference| < 0.010 us)

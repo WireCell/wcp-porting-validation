@@ -1,0 +1,236 @@
+# doc 117 -- the vertex-chain grid, paired per true interaction (d117_compare.py)
+# selection logic, Arm and the exact sign test are d116_compare.py's, imported unmodified.
+# floor = 0 (doc 116 sec 4, same pin/box); rule: |delta| > 0.5 pp AND p < 0.05.
+arms: c2[cv,nuecc,off]; t2[cv,nuecc,off]; c1e[cv,nuecc,off]; c1x[cv,nuecc,off]; t1e[cv,nuecc,off]; t1x[cv,nuecc,off]
+c2 reproduces docs/115_sel (387/557, 387/448; 618/1511, 618/632; 734/1511, 734/781)  OK
+
+## primary metrics (doc 107 definitions, doc 116 M1-M8)
+  id  metric                                            cell   vs base           base           cell    delta -lost/+gain       p  verdict
+  M1  numuCC efficiency (cv, numu > 0.9)                 t2     vs c2     387/557  = 69.5%   390/557  = 70.0%   +0.54  -39/+42     0.824  not separable
+  M1  numuCC efficiency (cv, numu > 0.9)                 c1e    vs c2     387/557  = 69.5%   388/557  = 69.7%   +0.18  -12/+13     1.000  not separable
+  M1  numuCC efficiency (cv, numu > 0.9)                 c1x    vs c2     387/557  = 69.5%   390/557  = 70.0%   +0.54  -15/+18     0.728  not separable
+  M1  numuCC efficiency (cv, numu > 0.9)                 t1e    vs c2     387/557  = 69.5%   389/557  = 69.8%   +0.36  -43/+45     0.915  not separable
+  M1  numuCC efficiency (cv, numu > 0.9)                 t1x    vs c2     387/557  = 69.5%   388/557  = 69.7%   +0.18  -41/+42     1.000  not separable
+  M1  numuCC efficiency (cv, numu > 0.9)                 t1e    vs t2     390/557  = 70.0%   389/557  = 69.8%   -0.18  -12/+11     1.000  not separable
+  M1  numuCC efficiency (cv, numu > 0.9)                 t1x    vs t2     390/557  = 70.0%   388/557  = 69.7%   -0.36  -16/+14     0.856  not separable
+  M1  numuCC efficiency (cv, numu > 0.9)                 c1x    vs c1e    388/557  = 69.7%   390/557  = 70.0%   +0.36  -27/+29     0.894  not separable
+  M1  numuCC efficiency (cv, numu > 0.9)                 t1x    vs t1e    389/557  = 69.8%   388/557  = 69.7%   -0.18  -26/+25     1.000  not separable
+  M2  numuCC in-sample purity (cv)                       t2     vs c2     387/448  = 86.4%   390/450  = 86.7%   +0.28  -29/+30     1.000  not separable
+  M2  numuCC in-sample purity (cv)                       c1e    vs c2     387/448  = 86.4%   388/454  = 85.5%   -0.92  -14/+9      0.405  not separable
+  M2  numuCC in-sample purity (cv)                       c1x    vs c2     387/448  = 86.4%   390/451  = 86.5%   +0.09  -11/+11     1.000  not separable
+  M2  numuCC in-sample purity (cv)                       t1e    vs c2     387/448  = 86.4%   389/454  = 85.7%   -0.70  -36/+32     0.716  not separable
+  M2  numuCC in-sample purity (cv)                       t1x    vs c2     387/448  = 86.4%   388/443  = 87.6%   +1.20  -26/+32     0.512  not separable
+  M2  numuCC in-sample purity (cv)                       t1e    vs t2     390/450  = 86.7%   389/454  = 85.7%   -0.98  -14/+9      0.405  not separable
+  M2  numuCC in-sample purity (cv)                       t1x    vs t2     390/450  = 86.7%   388/443  = 87.6%   +0.92   -8/+13     0.383  not separable
+  M2  numuCC in-sample purity (cv)                       c1x    vs c1e    388/454  = 85.5%   390/451  = 86.5%   +1.01  -16/+21     0.511  not separable
+  M2  numuCC in-sample purity (cv)                       t1x    vs t1e    389/454  = 85.7%   388/443  = 87.6%   +1.90  -13/+23     0.132  not separable
+  M3  nueCC efficiency (nuecc, nue > 7)                  t2     vs c2     618/1511 = 40.9%   630/1511 = 41.7%   +0.79 -168/+180    0.555  not separable
+  M3  nueCC efficiency (nuecc, nue > 7)                  c1e    vs c2     618/1511 = 40.9%   592/1511 = 39.2%   -1.72  -65/+39     0.014  DEGRADED
+  M3  nueCC efficiency (nuecc, nue > 7)                  c1x    vs c2     618/1511 = 40.9%   605/1511 = 40.0%   -0.86 -100/+87     0.380  not separable
+  M3  nueCC efficiency (nuecc, nue > 7)                  t1e    vs c2     618/1511 = 40.9%   612/1511 = 40.5%   -0.40 -177/+171    0.789  not separable
+  M3  nueCC efficiency (nuecc, nue > 7)                  t1x    vs c2     618/1511 = 40.9%   623/1511 = 41.2%   +0.33 -172/+177    0.830  not separable
+  M3  nueCC efficiency (nuecc, nue > 7)                  t1e    vs t2     630/1511 = 41.7%   612/1511 = 40.5%   -1.19  -62/+44     0.098  not separable
+  M3  nueCC efficiency (nuecc, nue > 7)                  t1x    vs t2     630/1511 = 41.7%   623/1511 = 41.2%   -0.46  -97/+90     0.661  not separable
+  M3  nueCC efficiency (nuecc, nue > 7)                  c1x    vs c1e    592/1511 = 39.2%   605/1511 = 40.0%   +0.86 -126/+139    0.461  not separable
+  M3  nueCC efficiency (nuecc, nue > 7)                  t1x    vs t1e    612/1511 = 40.5%   623/1511 = 41.2%   +0.73 -125/+136    0.536  not separable
+  M4  nueCC in-sample purity (nuecc, > 7)                t2     vs c2     618/632  = 97.8%   630/649  = 97.1%   -0.71  -14/+9      0.405  not separable
+  M4  nueCC in-sample purity (nuecc, > 7)                c1e    vs c2     618/632  = 97.8%   592/607  = 97.5%   -0.26   -4/+3      1.000  not separable
+  M4  nueCC in-sample purity (nuecc, > 7)                c1x    vs c2     618/632  = 97.8%   605/626  = 96.6%   -1.14  -11/+4      0.118  not separable
+  M4  nueCC in-sample purity (nuecc, > 7)                t1e    vs c2     618/632  = 97.8%   612/631  = 97.0%   -0.80  -14/+9      0.405  not separable
+  M4  nueCC in-sample purity (nuecc, > 7)                t1x    vs c2     618/632  = 97.8%   623/642  = 97.0%   -0.74  -12/+7      0.359  not separable
+  M4  nueCC in-sample purity (nuecc, > 7)                t1e    vs t2     630/649  = 97.1%   612/631  = 97.0%   -0.08   -5/+5      1.000  not separable
+  M4  nueCC in-sample purity (nuecc, > 7)                t1x    vs t2     630/649  = 97.1%   623/642  = 97.0%   -0.03   -8/+8      1.000  not separable
+  M4  nueCC in-sample purity (nuecc, > 7)                c1x    vs c1e    592/607  = 97.5%   605/626  = 96.6%   -0.88  -13/+7      0.263  not separable
+  M4  nueCC in-sample purity (nuecc, > 7)                t1x    vs t1e    612/631  = 97.0%   623/642  = 97.0%   +0.05  -10/+10     1.000  not separable
+  M5  nueCC efficiency (nuecc, nue > 4)                  t2     vs c2     734/1511 = 48.6%   757/1511 = 50.1%   +1.52 -172/+195    0.251  not separable
+  M5  nueCC efficiency (nuecc, nue > 4)                  c1e    vs c2     734/1511 = 48.6%   702/1511 = 46.5%   -2.12  -76/+44     0.004  DEGRADED
+  M5  nueCC efficiency (nuecc, nue > 4)                  c1x    vs c2     734/1511 = 48.6%   727/1511 = 48.1%   -0.46  -98/+91     0.663  not separable
+  M5  nueCC efficiency (nuecc, nue > 4)                  t1e    vs c2     734/1511 = 48.6%   742/1511 = 49.1%   +0.53 -183/+191    0.717  not separable
+  M5  nueCC efficiency (nuecc, nue > 4)                  t1x    vs c2     734/1511 = 48.6%   753/1511 = 49.8%   +1.26 -179/+198    0.354  not separable
+  M5  nueCC efficiency (nuecc, nue > 4)                  t1e    vs t2     757/1511 = 50.1%   742/1511 = 49.1%   -0.99  -65/+50     0.191  not separable
+  M5  nueCC efficiency (nuecc, nue > 4)                  t1x    vs t2     757/1511 = 50.1%   753/1511 = 49.8%   -0.26  -96/+92     0.827  not separable
+  M5  nueCC efficiency (nuecc, nue > 4)                  c1x    vs c1e    702/1511 = 46.5%   727/1511 = 48.1%   +1.65 -126/+151    0.149  not separable
+  M5  nueCC efficiency (nuecc, nue > 4)                  t1x    vs t1e    742/1511 = 49.1%   753/1511 = 49.8%   +0.73 -133/+144    0.548  not separable
+  M6  nueCC in-sample purity (nuecc, > 4)                t2     vs c2     734/781  = 94.0%   757/803  = 94.3%   +0.29  -31/+32     1.000  not separable
+  M6  nueCC in-sample purity (nuecc, > 4)                c1e    vs c2     734/781  = 94.0%   702/759  = 92.5%   -1.49  -22/+12     0.121  not separable
+  M6  nueCC in-sample purity (nuecc, > 4)                c1x    vs c2     734/781  = 94.0%   727/778  = 93.4%   -0.54  -24/+20     0.652  not separable
+  M6  nueCC in-sample purity (nuecc, > 4)                t1e    vs c2     734/781  = 94.0%   742/794  = 93.5%   -0.53  -38/+33     0.635  not separable
+  M6  nueCC in-sample purity (nuecc, > 4)                t1x    vs c2     734/781  = 94.0%   753/806  = 93.4%   -0.56  -37/+31     0.545  not separable
+  M6  nueCC in-sample purity (nuecc, > 4)                t1e    vs t2     757/803  = 94.3%   742/794  = 93.5%   -0.82  -20/+14     0.392  not separable
+  M6  nueCC in-sample purity (nuecc, > 4)                t1x    vs t2     757/803  = 94.3%   753/806  = 93.4%   -0.85  -26/+19     0.371  not separable
+  M6  nueCC in-sample purity (nuecc, > 4)                c1x    vs c1e    702/759  = 92.5%   727/778  = 93.4%   +0.95  -29/+35     0.532  not separable
+  M6  nueCC in-sample purity (nuecc, > 4)                t1x    vs t1e    742/794  = 93.5%   753/806  = 93.4%   -0.03  -33/+32     1.000  not separable
+  M7  vertex < 5 cm, all true nu in FV (cv)              t2     vs c2     539/783  = 68.8%   533/783  = 68.1%   -0.77  -42/+36     0.572  not separable
+  M7  vertex < 5 cm, all true nu in FV (cv)              c1e    vs c2     539/783  = 68.8%   536/783  = 68.5%   -0.38  -22/+19     0.755  not separable
+  M7  vertex < 5 cm, all true nu in FV (cv)              c1x    vs c2     539/783  = 68.8%   539/783  = 68.8%   +0.00   -6/+6      1.000  not separable
+  M7  vertex < 5 cm, all true nu in FV (cv)              t1e    vs c2     539/783  = 68.8%   529/783  = 67.6%   -1.28  -48/+38     0.332  not separable
+  M7  vertex < 5 cm, all true nu in FV (cv)              t1x    vs c2     539/783  = 68.8%   530/783  = 67.7%   -1.15  -45/+36     0.374  not separable
+  M7  vertex < 5 cm, all true nu in FV (cv)              t1e    vs t2     533/783  = 68.1%   529/783  = 67.6%   -0.51  -19/+15     0.608  not separable
+  M7  vertex < 5 cm, all true nu in FV (cv)              t1x    vs t2     533/783  = 68.1%   530/783  = 67.7%   -0.38   -8/+5      0.581  not separable
+  M7  vertex < 5 cm, all true nu in FV (cv)              c1x    vs c1e    536/783  = 68.5%   539/783  = 68.8%   +0.38  -24/+27     0.780  not separable
+  M7  vertex < 5 cm, all true nu in FV (cv)              t1x    vs t1e    529/783  = 67.6%   530/783  = 67.7%   +0.13  -23/+24     1.000  not separable
+  M8  vertex < 5 cm, all true nu in FV (nuecc)           t2     vs c2    1122/1626 = 69.0%  1133/1626 = 69.7%   +0.68 -147/+158    0.567  not separable
+  M8  vertex < 5 cm, all true nu in FV (nuecc)           c1e    vs c2    1122/1626 = 69.0%  1096/1626 = 67.4%   -1.60  -97/+71     0.053  not separable
+  M8  vertex < 5 cm, all true nu in FV (nuecc)           c1x    vs c2    1122/1626 = 69.0%  1114/1626 = 68.5%   -0.49  -34/+26     0.366  not separable
+  M8  vertex < 5 cm, all true nu in FV (nuecc)           t1e    vs c2    1122/1626 = 69.0%  1117/1626 = 68.7%   -0.31 -157/+152    0.820  not separable
+  M8  vertex < 5 cm, all true nu in FV (nuecc)           t1x    vs c2    1122/1626 = 69.0%  1114/1626 = 68.5%   -0.49 -161/+153    0.693  not separable
+  M8  vertex < 5 cm, all true nu in FV (nuecc)           t1e    vs t2    1133/1626 = 69.7%  1117/1626 = 68.7%   -0.98  -93/+77     0.250  not separable
+  M8  vertex < 5 cm, all true nu in FV (nuecc)           t1x    vs t2    1133/1626 = 69.7%  1114/1626 = 68.5%   -1.17  -38/+19     0.016  DEGRADED
+  M8  vertex < 5 cm, all true nu in FV (nuecc)           c1x    vs c1e   1096/1626 = 67.4%  1114/1626 = 68.5%   +1.11 -101/+119    0.252  not separable
+  M8  vertex < 5 cm, all true nu in FV (nuecc)           t1x    vs t1e   1117/1626 = 68.7%  1114/1626 = 68.5%   -0.18 -110/+107    0.892  not separable
+
+## the vertex at four thresholds (117_pred.txt secondary; doc 116 sec 16.3 construction)
+### cv
+  T(cm)  cell   vs base      base             cell        delta -lost/+gain       p  verdict
+      1  t2     vs c2     303/783  = 38.7%   325/783  = 41.5%   +2.81  -60/+82    0.07765  not separable
+      1  c1e    vs c2     303/783  = 38.7%   304/783  = 38.8%   +0.13  -16/+17          1  not separable
+      1  c1x    vs c2     303/783  = 38.7%   290/783  = 37.0%   -1.66  -40/+27     0.1421  not separable
+      1  t1e    vs c2     303/783  = 38.7%   317/783  = 40.5%   +1.79  -63/+77     0.2718  not separable
+      1  t1x    vs c2     303/783  = 38.7%   312/783  = 39.8%   +1.15  -60/+69     0.4814  not separable
+      1  t1e    vs t2     325/783  = 41.5%   317/783  = 40.5%   -1.02  -20/+12     0.2153  not separable
+      1  t1x    vs t2     325/783  = 41.5%   312/783  = 39.8%   -1.66  -42/+29     0.1539  not separable
+      1  c1x    vs c1e    304/783  = 38.8%   290/783  = 37.0%   -1.79  -56/+42     0.1888  not separable
+      1  t1x    vs t1e    317/783  = 40.5%   312/783  = 39.8%   -0.64  -49/+44     0.6785  not separable
+      2  t2     vs c2     453/783  = 57.9%   458/783  = 58.5%   +0.64  -56/+61     0.7117  not separable
+      2  c1e    vs c2     453/783  = 57.9%   450/783  = 57.5%   -0.38  -22/+19     0.7552  not separable
+      2  c1x    vs c2     453/783  = 57.9%   454/783  = 58.0%   +0.13  -21/+22          1  not separable
+      2  t1e    vs c2     453/783  = 57.9%   453/783  = 57.9%   +0.00  -65/+65          1  not separable
+      2  t1x    vs c2     453/783  = 57.9%   450/783  = 57.5%   -0.38  -59/+56     0.8522  not separable
+      2  t1e    vs t2     458/783  = 58.5%   453/783  = 57.9%   -0.64  -21/+16     0.5114  not separable
+      2  t1x    vs t2     458/783  = 58.5%   450/783  = 57.5%   -1.02  -25/+17       0.28  not separable
+      2  c1x    vs c1e    450/783  = 57.5%   454/783  = 58.0%   +0.51  -37/+41     0.7343  not separable
+      2  t1x    vs t1e    453/783  = 57.9%   450/783  = 57.5%   -0.38  -40/+37     0.8199  not separable
+      3  t2     vs c2     505/783  = 64.5%   503/783  = 64.2%   -0.26  -51/+49     0.9204  not separable
+      3  c1e    vs c2     505/783  = 64.5%   501/783  = 64.0%   -0.51  -26/+22     0.6655  not separable
+      3  c1x    vs c2     505/783  = 64.5%   502/783  = 64.1%   -0.38  -14/+11       0.69  not separable
+      3  t1e    vs c2     505/783  = 64.5%   499/783  = 63.7%   -0.77  -59/+53     0.6368  not separable
+      3  t1x    vs c2     505/783  = 64.5%   504/783  = 64.4%   -0.13  -51/+50          1  not separable
+      3  t1e    vs t2     503/783  = 64.2%   499/783  = 63.7%   -0.51  -22/+18     0.6358  not separable
+      3  t1x    vs t2     503/783  = 64.2%   504/783  = 64.4%   +0.13  -13/+14          1  not separable
+      3  c1x    vs c1e    501/783  = 64.0%   502/783  = 64.1%   +0.13  -32/+33          1  not separable
+      3  t1x    vs t1e    499/783  = 63.7%   504/783  = 64.4%   +0.64  -30/+35     0.6201  not separable
+      5  t2     vs c2     539/783  = 68.8%   533/783  = 68.1%   -0.77  -42/+36     0.5716  not separable
+      5  c1e    vs c2     539/783  = 68.8%   536/783  = 68.5%   -0.38  -22/+19     0.7552  not separable
+      5  c1x    vs c2     539/783  = 68.8%   539/783  = 68.8%   +0.00   -6/+6           1  not separable
+      5  t1e    vs c2     539/783  = 68.8%   529/783  = 67.6%   -1.28  -48/+38     0.3318  not separable
+      5  t1x    vs c2     539/783  = 68.8%   530/783  = 67.7%   -1.15  -45/+36     0.3742  not separable
+      5  t1e    vs t2     533/783  = 68.1%   529/783  = 67.6%   -0.51  -19/+15     0.6076  not separable
+      5  t1x    vs t2     533/783  = 68.1%   530/783  = 67.7%   -0.38   -8/+5      0.5811  not separable
+      5  c1x    vs c1e    536/783  = 68.5%   539/783  = 68.8%   +0.38  -24/+27     0.7798  not separable
+      5  t1x    vs t1e    529/783  = 67.6%   530/783  = 67.7%   +0.13  -23/+24          1  not separable
+  median nearest-candidate distance (cm) on the interactions both arms place within 10 cm:
+    t2     vs c2    n=  540  0.900 -> 0.860   closer/further 274/240   sign p 0.145
+    c1e    vs c2    n=  552  0.900 -> 0.890   closer/further 19/14   sign p 0.487
+    c1x    vs c2    n=  564  0.900 -> 0.960   closer/further 203/218   sign p 0.495
+    t1e    vs c2    n=  536  0.900 -> 0.900   closer/further 265/243   sign p 0.351
+    t1x    vs c2    n=  537  0.900 -> 0.850   closer/further 261/248   sign p 0.595
+    t1e    vs t2    n=  555  0.890 -> 0.900   closer/further 18/16   sign p 0.864
+    t1x    vs t2    n=  562  0.870 -> 0.860   closer/further 199/205   sign p 0.804
+    c1x    vs c1e   n=  547  0.890 -> 0.960   closer/further 204/210   sign p 0.806
+    t1x    vs t1e   n=  548  0.900 -> 0.860   closer/further 199/194   sign p 0.84
+### nuecc
+  T(cm)  cell   vs base      base             cell        delta -lost/+gain       p  verdict
+      1  t2     vs c2     599/1626 = 36.8%   669/1626 = 41.1%   +4.31 -145/+215  0.0002653  IMPROVED
+      1  c1e    vs c2     599/1626 = 36.8%   573/1626 = 35.2%   -1.60  -61/+35    0.01035  DEGRADED
+      1  c1x    vs c2     599/1626 = 36.8%   601/1626 = 37.0%   +0.12  -92/+94     0.9416  not separable
+      1  t1e    vs c2     599/1626 = 36.8%   654/1626 = 40.2%   +3.38 -158/+213  0.004987  IMPROVED
+      1  t1x    vs c2     599/1626 = 36.8%   637/1626 = 39.2%   +2.34 -164/+202   0.05296  not separable
+      1  t1e    vs t2     669/1626 = 41.1%   654/1626 = 40.2%   -0.92  -55/+40     0.1505  not separable
+      1  t1x    vs t2     669/1626 = 41.1%   637/1626 = 39.2%   -1.97 -100/+68    0.01651  DEGRADED
+      1  c1x    vs c1e    573/1626 = 35.2%   601/1626 = 37.0%   +1.72 -115/+143   0.09258  not separable
+      1  t1x    vs t1e    654/1626 = 40.2%   637/1626 = 39.2%   -1.05 -130/+113    0.3047  not separable
+      2  t2     vs c2     913/1626 = 56.2%   958/1626 = 58.9%   +2.77 -166/+211   0.02332  IMPROVED
+      2  c1e    vs c2     913/1626 = 56.2%   878/1626 = 54.0%   -2.15  -97/+62   0.006823  DEGRADED
+      2  c1x    vs c2     913/1626 = 56.2%   907/1626 = 55.8%   -0.37  -74/+68     0.6749  not separable
+      2  t1e    vs c2     913/1626 = 56.2%   945/1626 = 58.1%   +1.97 -179/+211    0.1164  not separable
+      2  t1x    vs c2     913/1626 = 56.2%   932/1626 = 57.3%   +1.17 -181/+200    0.3565  not separable
+      2  t1e    vs t2     958/1626 = 58.9%   945/1626 = 58.1%   -0.80  -85/+72     0.3382  not separable
+      2  t1x    vs t2     958/1626 = 58.9%   932/1626 = 57.3%   -1.60  -64/+38    0.01292  DEGRADED
+      2  c1x    vs c1e    878/1626 = 54.0%   907/1626 = 55.8%   +1.78 -125/+154    0.0935  not separable
+      2  t1x    vs t1e    945/1626 = 58.1%   932/1626 = 57.3%   -0.80 -128/+115    0.4415  not separable
+      3  t2     vs c2    1030/1626 = 63.3%  1063/1626 = 65.4%   +2.03 -153/+186   0.08206  not separable
+      3  c1e    vs c2    1030/1626 = 63.3%   998/1626 = 61.4%   -1.97 -102/+70    0.01783  DEGRADED
+      3  c1x    vs c2    1030/1626 = 63.3%  1026/1626 = 63.1%   -0.25  -55/+51     0.7709  not separable
+      3  t1e    vs c2    1030/1626 = 63.3%  1050/1626 = 64.6%   +1.23 -170/+190    0.3166  not separable
+      3  t1x    vs c2    1030/1626 = 63.3%  1044/1626 = 64.2%   +0.86 -175/+189    0.4957  not separable
+      3  t1e    vs t2    1063/1626 = 65.4%  1050/1626 = 64.6%   -0.80  -88/+75     0.3473  not separable
+      3  t1x    vs t2    1063/1626 = 65.4%  1044/1626 = 64.2%   -1.17  -45/+26    0.03193  DEGRADED
+      3  c1x    vs c1e    998/1626 = 61.4%  1026/1626 = 63.1%   +1.72 -121/+149    0.1002  not separable
+      3  t1x    vs t1e   1050/1626 = 64.6%  1044/1626 = 64.2%   -0.37 -116/+110    0.7395  not separable
+      5  t2     vs c2    1122/1626 = 69.0%  1133/1626 = 69.7%   +0.68 -147/+158     0.567  not separable
+      5  c1e    vs c2    1122/1626 = 69.0%  1096/1626 = 67.4%   -1.60  -97/+71    0.05343  not separable
+      5  c1x    vs c2    1122/1626 = 69.0%  1114/1626 = 68.5%   -0.49  -34/+26     0.3663  not separable
+      5  t1e    vs c2    1122/1626 = 69.0%  1117/1626 = 68.7%   -0.31 -157/+152      0.82  not separable
+      5  t1x    vs c2    1122/1626 = 69.0%  1114/1626 = 68.5%   -0.49 -161/+153    0.6929  not separable
+      5  t1e    vs t2    1133/1626 = 69.7%  1117/1626 = 68.7%   -0.98  -93/+77     0.2499  not separable
+      5  t1x    vs t2    1133/1626 = 69.7%  1114/1626 = 68.5%   -1.17  -38/+19    0.01635  DEGRADED
+      5  c1x    vs c1e   1096/1626 = 67.4%  1114/1626 = 68.5%   +1.11 -101/+119    0.2517  not separable
+      5  t1x    vs t1e   1117/1626 = 68.7%  1114/1626 = 68.5%   -0.18 -110/+107     0.892  not separable
+  median nearest-candidate distance (cm) on the interactions both arms place within 10 cm:
+    t2     vs c2    n= 1057  0.960 -> 0.840   closer/further 565/448   sign p 0.000264
+    c1e    vs c2    n= 1093  0.970 -> 0.970   closer/further 38/61   sign p 0.0265
+    c1x    vs c2    n= 1166  0.980 -> 0.970   closer/further 496/483   sign p 0.701
+    t1e    vs c2    n= 1043  0.970 -> 0.840   closer/further 560/442   sign p 0.000216
+    t1x    vs c2    n= 1046  0.970 -> 0.870   closer/further 553/437   sign p 0.000253
+    t1e    vs t2    n= 1115  0.850 -> 0.870   closer/further 38/42   sign p 0.738
+    t1x    vs t2    n= 1171  0.870 -> 0.920   closer/further 452/526   sign p 0.0195
+    c1x    vs c1e   n= 1075  0.970 -> 0.970   closer/further 461/464   sign p 0.948
+    t1x    vs t1e   n= 1084  0.860 -> 0.880   closer/further 431/491   sign p 0.0519
+
+## chosen-vertex accuracy: the SELECTED candidate's vertex, signal selected in both arms
+  cv    numu>0.9  t2     vs c2    n= 348  median 0.830 -> 0.760 cm   <1cm 209->228   <3cm 332->337   closer/further 185/141   sign p 0.0171
+  cv    numu>0.9  c1e    vs c2    n= 375  median 0.790 -> 0.790 cm   <1cm 229->227   <3cm 357->357   closer/further 5/6   sign p 1
+  cv    numu>0.9  c1x    vs c2    n= 372  median 0.810 -> 0.810 cm   <1cm 226->215   <3cm 355->355   closer/further 140/151   sign p 0.558
+  cv    numu>0.9  t1e    vs c2    n= 344  median 0.810 -> 0.770 cm   <1cm 208->222   <3cm 328->334   closer/further 177/144   sign p 0.0739
+  cv    numu>0.9  t1x    vs c2    n= 346  median 0.800 -> 0.790 cm   <1cm 211->218   <3cm 329->336   closer/further 174/153   sign p 0.269
+  cv    numu>0.9  t1e    vs t2    n= 378  median 0.770 -> 0.790 cm   <1cm 243->241   <3cm 361->362   closer/further 8/5   sign p 0.581
+  cv    numu>0.9  t1x    vs t2    n= 374  median 0.770 -> 0.790 cm   <1cm 242->235   <3cm 357->359   closer/further 134/143   sign p 0.631
+  cv    numu>0.9  c1x    vs c1e   n= 361  median 0.800 -> 0.810 cm   <1cm 220->212   <3cm 344->345   closer/further 138/144   sign p 0.766
+  cv    numu>0.9  t1x    vs t1e   n= 363  median 0.780 -> 0.790 cm   <1cm 232->230   <3cm 347->349   closer/further 132/136   sign p 0.855
+  nuecc nue>7.0  t2     vs c2    n= 450  median 0.800 -> 0.740 cm   <1cm 275->295   <3cm 435->439   closer/further 245/179   sign p 0.00157
+  nuecc nue>7.0  c1e    vs c2    n= 553  median 0.800 -> 0.820 cm   <1cm 335->335   <3cm 531->532   closer/further 3/6   sign p 0.508
+  nuecc nue>7.0  c1x    vs c2    n= 518  median 0.770 -> 0.750 cm   <1cm 317->327   <3cm 497->500   closer/further 213/214   sign p 1
+  nuecc nue>7.0  t1e    vs c2    n= 441  median 0.800 -> 0.750 cm   <1cm 266->286   <3cm 423->428   closer/further 245/172   sign p 0.000409
+  nuecc nue>7.0  t1x    vs c2    n= 446  median 0.800 -> 0.700 cm   <1cm 273->301   <3cm 433->434   closer/further 241/176   sign p 0.00169
+  nuecc nue>7.0  t1e    vs t2    n= 568  median 0.750 -> 0.750 cm   <1cm 374->371   <3cm 555->554   closer/further 5/4   sign p 1
+  nuecc nue>7.0  t1x    vs t2    n= 533  median 0.740 -> 0.740 cm   <1cm 350->342   <3cm 520->518   closer/further 198/233   sign p 0.101
+  nuecc nue>7.0  c1x    vs c1e   n= 466  median 0.790 -> 0.760 cm   <1cm 286->293   <3cm 446->447   closer/further 194/203   sign p 0.688
+  nuecc nue>7.0  t1x    vs t1e   n= 487  median 0.730 -> 0.720 cm   <1cm 325->315   <3cm 475->475   closer/further 185/215   sign p 0.147
+  nuecc nue>4.0  t2     vs c2    n= 562  median 0.850 -> 0.780 cm   <1cm 327->359   <3cm 532->544   closer/further 308/223   sign p 0.00026
+  nuecc nue>4.0  c1e    vs c2    n= 658  median 0.850 -> 0.850 cm   <1cm 380->382   <3cm 619->622   closer/further 9/12   sign p 0.664
+  nuecc nue>4.0  c1x    vs c2    n= 636  median 0.840 -> 0.830 cm   <1cm 365->374   <3cm 600->606   closer/further 266/264   sign p 0.965
+  nuecc nue>4.0  t1e    vs c2    n= 551  median 0.850 -> 0.780 cm   <1cm 317->348   <3cm 520->532   closer/further 306/216   sign p 9.45e-05
+  nuecc nue>4.0  t1x    vs c2    n= 555  median 0.850 -> 0.780 cm   <1cm 315->349   <3cm 527->530   closer/further 301/218   sign p 0.000311
+  nuecc nue>4.0  t1e    vs t2    n= 692  median 0.790 -> 0.790 cm   <1cm 432->430   <3cm 670->667   closer/further 9/9   sign p 1
+  nuecc nue>4.0  t1x    vs t2    n= 661  median 0.790 -> 0.790 cm   <1cm 409->406   <3cm 639->634   closer/further 257/290   sign p 0.171
+  nuecc nue>4.0  c1x    vs c1e   n= 576  median 0.840 -> 0.840 cm   <1cm 334->336   <3cm 543->545   closer/further 242/253   sign p 0.653
+  nuecc nue>4.0  t1x    vs t1e   n= 609  median 0.790 -> 0.770 cm   <1cm 381->378   <3cm 588->587   closer/further 242/269   sign p 0.25
+
+## beam-off gates (paired by gate; the pre-registration counts a change only from 5 gates)
+  t2     vs c2    numu > 0.9  : 5/1000 -> 4/1000   -1/+0 gates   sign p 1
+  t2     vs c2    nue > 7.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1
+  t2     vs c2    nue > 4.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1
+  c1e    vs c2    numu > 0.9  : 5/1000 -> 4/1000   -1/+0 gates   sign p 1
+  c1e    vs c2    nue > 7.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1
+  c1e    vs c2    nue > 4.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1
+  c1x    vs c2    numu > 0.9  : 5/1000 -> 7/1000   -0/+2 gates   sign p 0.5
+  c1x    vs c2    nue > 7.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1
+  c1x    vs c2    nue > 4.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1
+  t1e    vs c2    numu > 0.9  : 5/1000 -> 6/1000   -1/+2 gates   sign p 1
+  t1e    vs c2    nue > 7.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1
+  t1e    vs c2    nue > 4.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1
+  t1x    vs c2    numu > 0.9  : 5/1000 -> 6/1000   -1/+2 gates   sign p 1
+  t1x    vs c2    nue > 7.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1
+  t1x    vs c2    nue > 4.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1
+  t1e    vs t2    numu > 0.9  : 4/1000 -> 6/1000   -0/+2 gates   sign p 0.5
+  t1e    vs t2    nue > 7.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1
+  t1e    vs t2    nue > 4.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1
+  t1x    vs t2    numu > 0.9  : 4/1000 -> 6/1000   -1/+3 gates   sign p 0.625
+  t1x    vs t2    nue > 7.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1
+  t1x    vs t2    nue > 4.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1
+  c1x    vs c1e   numu > 0.9  : 4/1000 -> 7/1000   -0/+3 gates   sign p 0.25
+  c1x    vs c1e   nue > 7.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1
+  c1x    vs c1e   nue > 4.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1
+  t1x    vs t1e   numu > 0.9  : 6/1000 -> 6/1000   -3/+3 gates   sign p 1
+  t1x    vs t1e   nue > 7.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1
+  t1x    vs t1e   nue > 4.0  : 0/1000 -> 0/1000   -0/+0 gates   sign p 1

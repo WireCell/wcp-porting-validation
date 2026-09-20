@@ -1,0 +1,126 @@
+# doc sbnd_xin/117 -- PRE-REGISTRATION, frozen before the first arm of this round was launched.
+# Written 2026-09-20 ~12:55, sha256 in 117_pred.sha256.  Nothing below is edited afterwards; if a
+# definition turns out to be wrong it is superseded IN THE DOC with the reason, not rewritten here.
+#
+# Owner ask (2026-09-20), three parts:
+#   (1) do the vertex-choice re-tune round doc 116 sec 10.3 recommended, and see if it boosts the
+#       final performance;
+#   (2) inside that, evaluate the 2-STEP CHAIN against the 1-STEP CHAIN (exclude fit);
+#   (3) answer: even if there is no clear improvement, since the track trajectory IS better, is it
+#       better to make the change anyway?
+#
+# READING OF (2), stated here so it can be judged later.  "2-step chain" = the SBND production
+# vertex chain today: the DUAL CHAIN of doc pr/112 sec 11 -- a second, exclusion-free PR pass
+# suggests the neutrino vertex and the production (exclusion-ON) pass decides, operating point
+# dl_vtx_dual_chain=true, dual_chain_mode='snap', transfer on, D=2.0 cm ("snapD2", owner flip
+# 2026-08-23).  "1-step chain (exclude fit)" = ONE pass with the dual pass off; "(exclude fit)" =
+# that pass is the EXCLUSION-FREE one (fit_exclusion=false), i.e. doc pr/112's `nofitx` arm, which
+# on the data hand-scan metric scored best of the five strategies (812 of 1011, against snapD2's
+# 805 and the single exclusion-ON chain's 777; pr/112 sec 12.2).  Both halves of that sentence are
+# separable knobs, so the round runs the 2x3 grid below rather than the single contrast.
+#
+# ============================ THE GRID ============================
+# trajectory (rows) x vertex chain (columns).  Two corners already exist and are NOT re-run.
+#
+#                       | 2-step (dual, snapD2)     | 1-step, exclusion ON | 1-step, exclusion-free
+#   current trajectory  | c2 = doc-115 baseline     | c1e   NEW            | c1x   NEW
+#   PDHD/PDVD (`tfull`) | t2 = doc-116 tfull arms   | t1e   NEW            | t1x   NEW
+#
+#   c1e  dl_vtx_dual_chain=false
+#   c1x  dl_vtx_dual_chain=false, fit_exclusion=false
+#   t1e  tfull's 4 trajectory keys + trackfitting JSON + dl_vtx_dual_chain=false
+#   t1x  t1e + fit_exclusion=false
+# Compiled-config proof of all four: docs/117_figs/117_cfg_proof.txt (standalone half run before
+# this file was frozen; null sha 4ee005c935dac7df == doc 116's, c1e touches exactly one key of one
+# node).  Samples, stage A, pin, output set: identical to docs 115 and 116 (cv 2017, nuecc 2001,
+# off 1000; toolkit 0a2807f4; libWireCellClus.so md5 71ebd5ae...).
+#
+# ============================ PRIMARY METRICS ============================
+# Doc-107 definitions, unchanged, as doc 116 used them (d117_compare.py duplicates them verbatim):
+#   M1  numuCC efficiency, cv, numu_score > 0.9 AND reco vertex in FV        (denominator 557)
+#   M2  numuCC in-sample purity, cv
+#   M3  nueCC efficiency, nuecc, nue_score > 7                               (denominator 1511)
+#   M4  nueCC in-sample purity, > 7
+#   M5  nueCC efficiency, nuecc, nue_score > 4
+#   M6  nueCC in-sample purity, > 4
+#   M7  vertex within 5 cm of truth, all true nu in FV, cv                   (denominator 783)
+#   M8  vertex within 5 cm of truth, all true nu in FV, nuecc                (denominator 1626)
+# M7/M8 are THE metric this round targets: the re-tune is of the vertex chooser, and doc 116 sec 7
+# showed two thirds of its movers are CHOICE.  M1-M6 are the guard: a vertex gain that costs
+# selection efficiency or purity is not a gain.
+# Secondary, reported and not graded: numuCC on the nuecc arm, nueCC on the cv arm, the per-class
+# and per-Edep vertex bands, the score scans, the flash-time association, the exposure-weighted
+# purities (doc 115 sec 13 method, f = 1), and the vertex-distance distribution below 5 cm
+# (median and the < 1 / < 2 / < 3 cm fractions -- a chain can improve the placement without
+# crossing the 5 cm threshold, and that must be visible).
+#
+# ============================ NOISE FLOOR ============================
+# Doc 116 sec 4 measured it on this pin, this box and these inputs: the production configuration
+# re-run (`s0rep`) reproduced the baseline candidate and truth tables ROW FOR ROW on all three
+# samples, every metric exchange -0/+0.  This round therefore adopts FLOOR = 0 and does not spend
+# an arm on a second s0rep.  It is verified instead: ONE nuecc sub-root of t1x is re-run into a
+# throwaway out_root after the cell completes and its candidates.tsv compared row for row.  If
+# that re-run is NOT identical, the floor is re-measured with a full s0rep-style arm before any
+# verdict is issued.
+#
+# ============================ VERDICT RULE (frozen) ============================
+# For each primary metric and each cell, against the corner named as its base:
+#   IMPROVED / DEGRADED  iff  |delta| > 2 x floor  (floor 0 => |delta| > 0.5 percentage points)
+#                        AND  the exact two-sided sign test on the paired per-interaction exchange
+#                             gives p < 0.05.
+#   NOT SEPARABLE        otherwise.
+# The paired exchange is the doc-116 one: signal interactions selected in A only / in B only (for a
+# purity, the events where one arm has more selected background candidates; for the vertex, the
+# interactions matched within 5 cm in one arm only).
+# Two bases are reported for every cell, both frozen here:
+#   vs c2 (the doc-115 baseline = what SBND ships today) -- the decision-relevant comparison;
+#   vs its own row corner (c1e/c1x vs c2; t1e/t1x vs t2) -- isolates the chain change from the
+#   trajectory change, so the 2x3 grid reads as a factorial.
+# A beam-off change counts only from 5 gates (doc 116 sec 15.2: the baseline's gate count is flat
+# at 5 over the whole cut region, so 1-2 gates carry no information).
+#
+# ============================ WHAT THE ROUND RECOMMENDS ============================
+# The recommendation is decided by this table, written before any number of this round exists.
+# "Package" = a (trajectory, chain) cell.
+#   ADOPT a package iff  (i) no primary metric is DEGRADED against c2, AND
+#                        (ii) at least one of:
+#                             (a) a primary metric is IMPROVED against c2,
+#                             (b) the package is strictly cheaper than c2 in per-event PR compute
+#                                 (doc 116 sec 14 instrument: the in-job TICK ladder, quoted against
+#                                 a same-conditions control) and no memory tail regression,
+#                             (c) it removes a known structural liability (a pass that exists only
+#                                 to compensate for something the other half now does better).
+#   HOLD otherwise.
+# The owner's question (3) is answered against the same table and the following, also frozen here:
+# a better trajectory is NOT by itself a reason to adopt, because doc 116 measured that it buys no
+# selection change while re-deciding 10-13 % of the selected signal, and that churn has a cost --
+# every downstream number tuned against the current trajectory needs re-validating.  The reasons
+# that COULD carry a neutral-metric adoption, and which this round measures rather than asserts:
+#   R1 cost: a package that is both better in closure and cheaper is worth adopting on cost alone;
+#   R2 uniformity: one trajectory configuration across PDHD, PDVD and SBND has a maintenance value
+#      that is real but is not a physics argument, and it stays available at zero code cost because
+#      the knobs are default-OFF TLAs -- so it never expires and never forces the decision;
+#   R3 headroom: if the better trajectory is what makes a LATER re-tune reachable (e.g. the 1-step
+#      chain only works on the better trajectory), adopting the pair is a physics argument;
+#   R4 a defect: if the current chain is found to be compensating for a trajectory defect that the
+#      new trajectory removes, adoption is a simplification and not a tuning choice.
+# Any of R1/R3/R4 that this round's numbers support is stated with the number; R2 is stated as what
+# it is.  No parameter is tuned to make a metric look right (CLAUDE.md sec 5 rule 7), and a rung
+# that fails is reported as failing.
+#
+# ============================ ZERO-COST PREDICTION (frozen before it is computed) ============
+# The existing c2 and t2 arms already record, per event, what the dual chain did: the calib dump's
+# vertex_scoreboard.dual_chain block (agree / transferred / d / nearest_id / off_ms).  Joined with
+# truth this says whether each transfer moved the vertex CLOSER to or FURTHER from the true vertex.
+# PREDICTION, recorded before the harvest is run: if the dual chain is worth its second pass, the
+# transfers it makes are net-favourable on truth (more moved closer than further, sign test
+# p < 0.05).  If they are net-neutral, the 1-step cells should land inside their own churn -- and
+# the round becomes a cost question, not a physics one.
+#
+# ============================ WHAT IS NOT DONE ============================
+# - No toolkit C++ or jsonnet change.  Every cell is existing default-OFF TLAs.
+# - No re-tune of dl_vtx_min_accept_score: doc pr/112 sec 12.4 measured it in BOTH directions
+#   (lower -> -84 on 1025 events; raise -> inert under snap) and it is not the lever.
+# - No new hand scan: truth adjudicates every mover here.
+# - Profiling / optimisation of the chain (the owner's "after that, if things are good") is a
+#   SEPARATE later round; this one only reports the cost it measures with doc 116's instrument.

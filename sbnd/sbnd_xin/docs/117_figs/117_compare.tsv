@@ -1,0 +1,172 @@
+metric	cell	base	sample	k_base	n_base	k_cell	n_cell	delta_pp	lost	gained	p	verdict
+M1	t2	c2	cv	387	557	390	557	0.539	39	42	0.8243	not separable
+M1	c1e	c2	cv	387	557	388	557	0.180	12	13	1	not separable
+M1	c1x	c2	cv	387	557	390	557	0.539	15	18	0.7283	not separable
+M1	t1e	c2	cv	387	557	389	557	0.359	43	45	0.9152	not separable
+M1	t1x	c2	cv	387	557	388	557	0.180	41	42	1	not separable
+M1	t1e	t2	cv	390	557	389	557	-0.180	12	11	1	not separable
+M1	t1x	t2	cv	390	557	388	557	-0.359	16	14	0.8555	not separable
+M1	c1x	c1e	cv	388	557	390	557	0.359	27	29	0.8939	not separable
+M1	t1x	t1e	cv	389	557	388	557	-0.180	26	25	1	not separable
+M2	t2	c2	cv	387	448	390	450	0.283	29	30	1	not separable
+M2	c1e	c2	cv	387	448	388	454	-0.921	14	9	0.4049	not separable
+M2	c1x	c2	cv	387	448	390	451	0.091	11	11	1	not separable
+M2	t1e	c2	cv	387	448	389	454	-0.701	36	32	0.7163	not separable
+M2	t1x	c2	cv	387	448	388	443	1.201	26	32	0.5118	not separable
+M2	t1e	t2	cv	390	450	389	454	-0.984	14	9	0.4049	not separable
+M2	t1x	t2	cv	390	450	388	443	0.918	8	13	0.3833	not separable
+M2	c1x	c1e	cv	388	454	390	451	1.012	16	21	0.5114	not separable
+M2	t1x	t1e	cv	389	454	388	443	1.902	13	23	0.1325	not separable
+M3	t2	c2	nuecc	618	1511	630	1511	0.794	168	180	0.5555	not separable
+M3	c1e	c2	nuecc	618	1511	592	1511	-1.721	65	39	0.01384	DEGRADED
+M3	c1x	c2	nuecc	618	1511	605	1511	-0.860	100	87	0.3803	not separable
+M3	t1e	c2	nuecc	618	1511	612	1511	-0.397	177	171	0.7887	not separable
+M3	t1x	c2	nuecc	618	1511	623	1511	0.331	172	177	0.8305	not separable
+M3	t1e	t2	nuecc	630	1511	612	1511	-1.191	62	44	0.09824	not separable
+M3	t1x	t2	nuecc	630	1511	623	1511	-0.463	97	90	0.6609	not separable
+M3	c1x	c1e	nuecc	592	1511	605	1511	0.860	126	139	0.4611	not separable
+M3	t1x	t1e	nuecc	612	1511	623	1511	0.728	125	136	0.536	not separable
+M4	t2	c2	nuecc	618	632	630	649	-0.712	14	9	0.4049	not separable
+M4	c1e	c2	nuecc	618	632	592	607	-0.256	4	3	1	not separable
+M4	c1x	c2	nuecc	618	632	605	626	-1.139	11	4	0.1185	not separable
+M4	t1e	c2	nuecc	618	632	612	631	-0.796	14	9	0.4049	not separable
+M4	t1x	c2	nuecc	618	632	623	642	-0.744	12	7	0.3593	not separable
+M4	t1e	t2	nuecc	630	649	612	631	-0.084	5	5	1	not separable
+M4	t1x	t2	nuecc	630	649	623	642	-0.032	8	8	1	not separable
+M4	c1x	c1e	nuecc	592	607	605	626	-0.883	13	7	0.2632	not separable
+M4	t1x	t1e	nuecc	612	631	623	642	0.052	10	10	1	not separable
+M5	t2	c2	nuecc	734	1511	757	1511	1.522	172	195	0.2508	not separable
+M5	c1e	c2	nuecc	734	1511	702	1511	-2.118	76	44	0.004455	DEGRADED
+M5	c1x	c2	nuecc	734	1511	727	1511	-0.463	98	91	0.6626	not separable
+M5	t1e	c2	nuecc	734	1511	742	1511	0.529	183	191	0.7174	not separable
+M5	t1x	c2	nuecc	734	1511	753	1511	1.257	179	198	0.3539	not separable
+M5	t1e	t2	nuecc	757	1511	742	1511	-0.993	65	50	0.1915	not separable
+M5	t1x	t2	nuecc	757	1511	753	1511	-0.265	96	92	0.8269	not separable
+M5	c1x	c1e	nuecc	702	1511	727	1511	1.655	126	151	0.1492	not separable
+M5	t1x	t1e	nuecc	742	1511	753	1511	0.728	133	144	0.548	not separable
+M6	t2	c2	nuecc	734	781	757	803	0.289	31	32	1	not separable
+M6	c1e	c2	nuecc	734	781	702	759	-1.492	22	12	0.1214	not separable
+M6	c1x	c2	nuecc	734	781	727	778	-0.537	24	20	0.6516	not separable
+M6	t1e	c2	nuecc	734	781	742	794	-0.531	38	33	0.6353	not separable
+M6	t1x	c2	nuecc	734	781	753	806	-0.558	37	31	0.5446	not separable
+M6	t1e	t2	nuecc	757	803	742	794	-0.821	20	14	0.3915	not separable
+M6	t1x	t2	nuecc	757	803	753	806	-0.847	26	19	0.3713	not separable
+M6	c1x	c1e	nuecc	702	759	727	778	0.955	29	35	0.5323	not separable
+M6	t1x	t1e	nuecc	742	794	753	806	-0.027	33	32	1	not separable
+M7	t2	c2	cv	539	783	533	783	-0.766	42	36	0.5716	not separable
+M7	c1e	c2	cv	539	783	536	783	-0.383	22	19	0.7552	not separable
+M7	c1x	c2	cv	539	783	539	783	0.000	6	6	1	not separable
+M7	t1e	c2	cv	539	783	529	783	-1.277	48	38	0.3318	not separable
+M7	t1x	c2	cv	539	783	530	783	-1.149	45	36	0.3742	not separable
+M7	t1e	t2	cv	533	783	529	783	-0.511	19	15	0.6076	not separable
+M7	t1x	t2	cv	533	783	530	783	-0.383	8	5	0.5811	not separable
+M7	c1x	c1e	cv	536	783	539	783	0.383	24	27	0.7798	not separable
+M7	t1x	t1e	cv	529	783	530	783	0.128	23	24	1	not separable
+M8	t2	c2	nuecc	1122	1626	1133	1626	0.677	147	158	0.567	not separable
+M8	c1e	c2	nuecc	1122	1626	1096	1626	-1.599	97	71	0.05343	not separable
+M8	c1x	c2	nuecc	1122	1626	1114	1626	-0.492	34	26	0.3663	not separable
+M8	t1e	c2	nuecc	1122	1626	1117	1626	-0.308	157	152	0.82	not separable
+M8	t1x	c2	nuecc	1122	1626	1114	1626	-0.492	161	153	0.6929	not separable
+M8	t1e	t2	nuecc	1133	1626	1117	1626	-0.984	93	77	0.2499	not separable
+M8	t1x	t2	nuecc	1133	1626	1114	1626	-1.169	38	19	0.01635	DEGRADED
+M8	c1x	c1e	nuecc	1096	1626	1114	1626	1.107	101	119	0.2517	not separable
+M8	t1x	t1e	nuecc	1117	1626	1114	1626	-0.185	110	107	0.892	not separable
+VTX1	t2	c2	cv	303	783	325	783	2.810	60	82	0.07765	not separable
+VTX1	c1e	c2	cv	303	783	304	783	0.128	16	17	1	not separable
+VTX1	c1x	c2	cv	303	783	290	783	-1.660	40	27	0.1421	not separable
+VTX1	t1e	c2	cv	303	783	317	783	1.788	63	77	0.2718	not separable
+VTX1	t1x	c2	cv	303	783	312	783	1.149	60	69	0.4814	not separable
+VTX1	t1e	t2	cv	325	783	317	783	-1.022	20	12	0.2153	not separable
+VTX1	t1x	t2	cv	325	783	312	783	-1.660	42	29	0.1539	not separable
+VTX1	c1x	c1e	cv	304	783	290	783	-1.788	56	42	0.1888	not separable
+VTX1	t1x	t1e	cv	317	783	312	783	-0.639	49	44	0.6785	not separable
+VTX2	t2	c2	cv	453	783	458	783	0.639	56	61	0.7117	not separable
+VTX2	c1e	c2	cv	453	783	450	783	-0.383	22	19	0.7552	not separable
+VTX2	c1x	c2	cv	453	783	454	783	0.128	21	22	1	not separable
+VTX2	t1e	c2	cv	453	783	453	783	0.000	65	65	1	not separable
+VTX2	t1x	c2	cv	453	783	450	783	-0.383	59	56	0.8522	not separable
+VTX2	t1e	t2	cv	458	783	453	783	-0.639	21	16	0.5114	not separable
+VTX2	t1x	t2	cv	458	783	450	783	-1.022	25	17	0.28	not separable
+VTX2	c1x	c1e	cv	450	783	454	783	0.511	37	41	0.7343	not separable
+VTX2	t1x	t1e	cv	453	783	450	783	-0.383	40	37	0.8199	not separable
+VTX3	t2	c2	cv	505	783	503	783	-0.255	51	49	0.9204	not separable
+VTX3	c1e	c2	cv	505	783	501	783	-0.511	26	22	0.6655	not separable
+VTX3	c1x	c2	cv	505	783	502	783	-0.383	14	11	0.69	not separable
+VTX3	t1e	c2	cv	505	783	499	783	-0.766	59	53	0.6368	not separable
+VTX3	t1x	c2	cv	505	783	504	783	-0.128	51	50	1	not separable
+VTX3	t1e	t2	cv	503	783	499	783	-0.511	22	18	0.6358	not separable
+VTX3	t1x	t2	cv	503	783	504	783	0.128	13	14	1	not separable
+VTX3	c1x	c1e	cv	501	783	502	783	0.128	32	33	1	not separable
+VTX3	t1x	t1e	cv	499	783	504	783	0.639	30	35	0.6201	not separable
+VTX5	t2	c2	cv	539	783	533	783	-0.766	42	36	0.5716	not separable
+VTX5	c1e	c2	cv	539	783	536	783	-0.383	22	19	0.7552	not separable
+VTX5	c1x	c2	cv	539	783	539	783	0.000	6	6	1	not separable
+VTX5	t1e	c2	cv	539	783	529	783	-1.277	48	38	0.3318	not separable
+VTX5	t1x	c2	cv	539	783	530	783	-1.149	45	36	0.3742	not separable
+VTX5	t1e	t2	cv	533	783	529	783	-0.511	19	15	0.6076	not separable
+VTX5	t1x	t2	cv	533	783	530	783	-0.383	8	5	0.5811	not separable
+VTX5	c1x	c1e	cv	536	783	539	783	0.383	24	27	0.7798	not separable
+VTX5	t1x	t1e	cv	529	783	530	783	0.128	23	24	1	not separable
+VTX1	t2	c2	nuecc	599	1626	669	1626	4.305	145	215	0.0002653	IMPROVED
+VTX1	c1e	c2	nuecc	599	1626	573	1626	-1.599	61	35	0.01035	DEGRADED
+VTX1	c1x	c2	nuecc	599	1626	601	1626	0.123	92	94	0.9416	not separable
+VTX1	t1e	c2	nuecc	599	1626	654	1626	3.383	158	213	0.004987	IMPROVED
+VTX1	t1x	c2	nuecc	599	1626	637	1626	2.337	164	202	0.05296	not separable
+VTX1	t1e	t2	nuecc	669	1626	654	1626	-0.923	55	40	0.1505	not separable
+VTX1	t1x	t2	nuecc	669	1626	637	1626	-1.968	100	68	0.01651	DEGRADED
+VTX1	c1x	c1e	nuecc	573	1626	601	1626	1.722	115	143	0.09258	not separable
+VTX1	t1x	t1e	nuecc	654	1626	637	1626	-1.046	130	113	0.3047	not separable
+VTX2	t2	c2	nuecc	913	1626	958	1626	2.768	166	211	0.02332	IMPROVED
+VTX2	c1e	c2	nuecc	913	1626	878	1626	-2.153	97	62	0.006823	DEGRADED
+VTX2	c1x	c2	nuecc	913	1626	907	1626	-0.369	74	68	0.6749	not separable
+VTX2	t1e	c2	nuecc	913	1626	945	1626	1.968	179	211	0.1164	not separable
+VTX2	t1x	c2	nuecc	913	1626	932	1626	1.169	181	200	0.3565	not separable
+VTX2	t1e	t2	nuecc	958	1626	945	1626	-0.800	85	72	0.3382	not separable
+VTX2	t1x	t2	nuecc	958	1626	932	1626	-1.599	64	38	0.01292	DEGRADED
+VTX2	c1x	c1e	nuecc	878	1626	907	1626	1.784	125	154	0.0935	not separable
+VTX2	t1x	t1e	nuecc	945	1626	932	1626	-0.800	128	115	0.4415	not separable
+VTX3	t2	c2	nuecc	1030	1626	1063	1626	2.030	153	186	0.08206	not separable
+VTX3	c1e	c2	nuecc	1030	1626	998	1626	-1.968	102	70	0.01783	DEGRADED
+VTX3	c1x	c2	nuecc	1030	1626	1026	1626	-0.246	55	51	0.7709	not separable
+VTX3	t1e	c2	nuecc	1030	1626	1050	1626	1.230	170	190	0.3166	not separable
+VTX3	t1x	c2	nuecc	1030	1626	1044	1626	0.861	175	189	0.4957	not separable
+VTX3	t1e	t2	nuecc	1063	1626	1050	1626	-0.800	88	75	0.3473	not separable
+VTX3	t1x	t2	nuecc	1063	1626	1044	1626	-1.169	45	26	0.03193	DEGRADED
+VTX3	c1x	c1e	nuecc	998	1626	1026	1626	1.722	121	149	0.1002	not separable
+VTX3	t1x	t1e	nuecc	1050	1626	1044	1626	-0.369	116	110	0.7395	not separable
+VTX5	t2	c2	nuecc	1122	1626	1133	1626	0.677	147	158	0.567	not separable
+VTX5	c1e	c2	nuecc	1122	1626	1096	1626	-1.599	97	71	0.05343	not separable
+VTX5	c1x	c2	nuecc	1122	1626	1114	1626	-0.492	34	26	0.3663	not separable
+VTX5	t1e	c2	nuecc	1122	1626	1117	1626	-0.308	157	152	0.82	not separable
+VTX5	t1x	c2	nuecc	1122	1626	1114	1626	-0.492	161	153	0.6929	not separable
+VTX5	t1e	t2	nuecc	1133	1626	1117	1626	-0.984	93	77	0.2499	not separable
+VTX5	t1x	t2	nuecc	1133	1626	1114	1626	-1.169	38	19	0.01635	DEGRADED
+VTX5	c1x	c1e	nuecc	1096	1626	1114	1626	1.107	101	119	0.2517	not separable
+VTX5	t1x	t1e	nuecc	1117	1626	1114	1626	-0.185	110	107	0.892	not separable
+SELVTX_numu0.9	t2	c2	cv	209	348	228	348	5.460	141	185	0.01711	-
+SELVTX_numu0.9	c1e	c2	cv	229	375	227	375	-0.533	6	5	1	-
+SELVTX_numu0.9	c1x	c2	cv	226	372	215	372	-2.957	151	140	0.5578	-
+SELVTX_numu0.9	t1e	c2	cv	208	344	222	344	4.070	144	177	0.07392	-
+SELVTX_numu0.9	t1x	c2	cv	211	346	218	346	2.023	153	174	0.2687	-
+SELVTX_numu0.9	t1e	t2	cv	243	378	241	378	-0.529	5	8	0.5811	-
+SELVTX_numu0.9	t1x	t2	cv	242	374	235	374	-1.872	143	134	0.6308	-
+SELVTX_numu0.9	c1x	c1e	cv	220	361	212	361	-2.216	144	138	0.766	-
+SELVTX_numu0.9	t1x	t1e	cv	232	363	230	363	-0.551	136	132	0.8546	-
+SELVTX_nue7.0	t2	c2	nuecc	275	450	295	450	4.444	179	245	0.001565	-
+SELVTX_nue7.0	c1e	c2	nuecc	335	553	335	553	0.000	6	3	0.5078	-
+SELVTX_nue7.0	c1x	c2	nuecc	317	518	327	518	1.931	214	213	1	-
+SELVTX_nue7.0	t1e	c2	nuecc	266	441	286	441	4.535	172	245	0.0004093	-
+SELVTX_nue7.0	t1x	c2	nuecc	273	446	301	446	6.278	176	241	0.001691	-
+SELVTX_nue7.0	t1e	t2	nuecc	374	568	371	568	-0.528	4	5	1	-
+SELVTX_nue7.0	t1x	t2	nuecc	350	533	342	533	-1.501	233	198	0.1014	-
+SELVTX_nue7.0	c1x	c1e	nuecc	286	466	293	466	1.502	203	194	0.6881	-
+SELVTX_nue7.0	t1x	t1e	nuecc	325	487	315	487	-2.053	215	185	0.147	-
+SELVTX_nue4.0	t2	c2	nuecc	327	562	359	562	5.694	223	308	0.0002598	-
+SELVTX_nue4.0	c1e	c2	nuecc	380	658	382	658	0.304	12	9	0.6636	-
+SELVTX_nue4.0	c1x	c2	nuecc	365	636	374	636	1.415	264	266	0.9654	-
+SELVTX_nue4.0	t1e	c2	nuecc	317	551	348	551	5.626	216	306	9.449e-05	-
+SELVTX_nue4.0	t1x	c2	nuecc	315	555	349	555	6.126	218	301	0.0003105	-
+SELVTX_nue4.0	t1e	t2	nuecc	432	692	430	692	-0.289	9	9	1	-
+SELVTX_nue4.0	t1x	t2	nuecc	409	661	406	661	-0.454	290	257	0.1712	-
+SELVTX_nue4.0	c1x	c1e	nuecc	334	576	336	576	0.347	253	242	0.6531	-
+SELVTX_nue4.0	t1x	t1e	nuecc	381	609	378	609	-0.493	269	242	0.25	-

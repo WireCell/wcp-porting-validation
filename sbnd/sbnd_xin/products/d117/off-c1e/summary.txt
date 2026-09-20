@@ -1,0 +1,19 @@
+arm /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-r3off-d117c1e
+truth (none)
+files 1000
+
+activities                                       330
+activities_all_roles                             701
+candidate_rows                                   88
+cluster_id vs selected: same                     88
+companions                                       371
+events                                           1000
+events_with_truth=0                              1000
+has_T_tagger=0                                   913
+has_T_tagger=1                                   87
+prov dl_weights = uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth 1000
+prov nue_xgboost_xml = uboone/weights/XGB_nue_seed2_0923.xml 1000
+prov numu_xgboost_xml = uboone/weights/numu_scalars_scores_0923.xml 1000
+prov op_config_sha256 = 2d90f9e8a2093fa244c70ce43418b825c167a26ce7a53d8d0c56f41d01698089 1000
+prov toolkit_git = 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47 1000
+prov wct_version = apply-pointcloud-0.35.0-1367-g772c753d 1000

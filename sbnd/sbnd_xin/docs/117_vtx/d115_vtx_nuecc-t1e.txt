@@ -1,0 +1,13 @@
+# doc 115 vertex assessment -- sample nuecc-t1e
+# FV 5<|x|<190, |y|<190, 10<z<450 cm; distance = to the NEAREST candidate vertex
+# true interactions with the vertex in the FV: 1626
+
+population                     N  matched <5 cm                   5-20    20-50      >50  no cand
+-------------------------------------------------------------------------------------------------
+all true nu in FV           1626   1117 =  68.7 % [67.5,69.8]      150      161      154       44
+numuCC                        90     49 =  54.4 % [49.2,59.6]        5        4       29        3
+nueCC                       1511   1064 =  70.4 % [69.2,71.6]      143      157      108       39
+NC                            25      4 =  16.0 % [10.0,24.6]        2        0       17        2
+Edep < 100 MeV                 8      0 =   0.0 % [ 0.0,11.1]        0        0        7        1
+100 <= Edep < 300 MeV         67     31 =  46.3 % [40.3,52.4]       14        6       11        5
+Edep >= 300 MeV             1551   1086 =  70.0 % [68.8,71.2]      136      155      136       38

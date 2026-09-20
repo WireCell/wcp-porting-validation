@@ -1,0 +1,109 @@
+# doc 117 sec 3 -- the 2-step (dual) chain census, from the arms that already ran
+
+## c2 (doc-115 baseline) / cv: 2017 events, 955 with a filled scoreboard
+  routes                   : dl-dual-snap-accept=860, dl-dual-snap-reject-accept=34, dl-not-run=26, dl-dual-snap-reject=17, dl-veto-protected=15, dl-rerank-reject=3
+  second pass ran          : 929 (97.3 %)
+  ... proposed a vertex    : 926
+  ... chains agreed        : 897
+  ... transfer accepted    : 445
+  ... and it MOVED the pick: 346  (the rest snapped onto the composite winner)
+  transfer distance (cm)   : median 0.325  p90 1.31  max 12.73
+  second-pass cost off_ms  : median 1799  p90 3281  sum 0.58 core-h over the arm
+  PROXY truth score on the 346 events where the transfer moved the pick:
+    transferred vertex is CLOSER to a true in-FV vertex than the composite winner: 159
+    FURTHER: 58   same: 1   no truth key: 128
+    exact two-sided sign test p = 4.64e-12
+
+## c2 (doc-115 baseline) / nuecc: 2001 events, 1870 with a filled scoreboard
+  routes                   : dl-dual-snap-accept=1661, dl-dual-snap-reject-accept=162, dl-dual-snap-reject=37, dl-veto-protected=7, dl-not-run=3
+  second pass ran          : 1867 (99.8 %)
+  ... proposed a vertex    : 1867
+  ... chains agreed        : 1753
+  ... transfer accepted    : 669
+  ... and it MOVED the pick: 614  (the rest snapped onto the composite winner)
+  transfer distance (cm)   : median 0.497  p90 2.07  max 11.15
+  second-pass cost off_ms  : median 2895  p90 10444  sum 2.58 core-h over the arm
+  PROXY truth score on the 614 events where the transfer moved the pick:
+    transferred vertex is CLOSER to a true in-FV vertex than the composite winner: 318
+    FURTHER: 164   same: 0   no truth key: 132
+    exact two-sided sign test p = 2.09e-12
+
+## t2 (doc-116 tfull) / cv: 2017 events, 952 with a filled scoreboard
+  routes                   : dl-dual-snap-accept=880, dl-dual-snap-reject-accept=22, dl-not-run=21, dl-dual-snap-reject=13, dl-veto-protected=13, dl-rerank-reject=3
+  second pass ran          : 931 (97.8 %)
+  ... proposed a vertex    : 928
+  ... chains agreed        : 901
+  ... transfer accepted    : 452
+  ... and it MOVED the pick: 349  (the rest snapped onto the composite winner)
+  transfer distance (cm)   : median 0.272  p90 1.27  max 6.93
+  second-pass cost off_ms  : median 1573  p90 2945  sum 0.53 core-h over the arm
+  PROXY truth score on the 349 events where the transfer moved the pick:
+    transferred vertex is CLOSER to a true in-FV vertex than the composite winner: 172
+    FURTHER: 51   same: 1   no truth key: 125
+    exact two-sided sign test p = 1.58e-16
+
+## t2 (doc-116 tfull) / nuecc: 2001 events, 1869 with a filled scoreboard
+  routes                   : dl-dual-snap-accept=1699, dl-dual-snap-reject-accept=122, dl-dual-snap-reject=37, dl-veto-protected=7, dl-not-run=4
+  second pass ran          : 1865 (99.8 %)
+  ... proposed a vertex    : 1865
+  ... chains agreed        : 1762
+  ... transfer accepted    : 611
+  ... and it MOVED the pick: 572  (the rest snapped onto the composite winner)
+  transfer distance (cm)   : median 0.413  p90 1.80  max 10.67
+  second-pass cost off_ms  : median 3249  p90 13439  sum 3.16 core-h over the arm
+  PROXY truth score on the 572 events where the transfer moved the pick:
+    transferred vertex is CLOSER to a true in-FV vertex than the composite winner: 294
+    FURTHER: 157   same: 0   no truth key: 121
+    exact two-sided sign test p = 1.1e-10
+
+## c2 (doc-115 baseline) / off: 1000 events, 87 with a filled scoreboard
+  routes                   : dl-dual-snap-accept=49, dl-not-run=28, dl-rerank-reject=7, dl-dual-snap-reject=3
+  second pass ran          : 59 (67.8 %)
+  ... proposed a vertex    : 52
+  ... chains agreed        : 50
+  ... transfer accepted    : 47
+  ... and it MOVED the pick: 41  (the rest snapped onto the composite winner)
+  transfer distance (cm)   : median 0.000  p90 1.70  max 2.53
+  second-pass cost off_ms  : median 1440  p90 3922  sum 0.04 core-h over the arm
+
+## t2 (doc-116 tfull) / off: 1000 events, 85 with a filled scoreboard
+  routes                   : dl-dual-snap-accept=46, dl-not-run=27, dl-dual-snap-reject=6, dl-rerank-reject=4, dl-dual-snap-reject-accept=1, dl-veto-protected=1
+  second pass ran          : 58 (68.2 %)
+  ... proposed a vertex    : 54
+  ... chains agreed        : 48
+  ... transfer accepted    : 47
+  ... and it MOVED the pick: 38  (the rest snapped onto the composite winner)
+  transfer distance (cm)   : median 0.000  p90 2.25  max 3.71
+  second-pass cost off_ms  : median 1478  p90 4280  sum 0.04 core-h over the arm
+
+## c1e / nuecc: 2001 events, 1870 with a filled scoreboard
+  routes                   : dl-rerank-accept=1464, dl-rerank-reject=392, dl-veto-protected=11, dl-not-run=3
+  second pass ran          : 0 (0.0 %)
+  ... proposed a vertex    : 0
+  ... chains agreed        : 0
+  ... transfer accepted    : 0
+  ... and it MOVED the pick: 0  (the rest snapped onto the composite winner)
+
+## c1x / nuecc: 2001 events, 1870 with a filled scoreboard
+  routes                   : dl-rerank-accept=1467, dl-rerank-reject=391, dl-veto-protected=9, dl-not-run=3
+  second pass ran          : 0 (0.0 %)
+  ... proposed a vertex    : 0
+  ... chains agreed        : 0
+  ... transfer accepted    : 0
+  ... and it MOVED the pick: 0  (the rest snapped onto the composite winner)
+
+## t1e / nuecc: 2001 events, 1869 with a filled scoreboard
+  routes                   : dl-rerank-accept=1495, dl-rerank-reject=364, dl-veto-protected=6, dl-not-run=4
+  second pass ran          : 0 (0.0 %)
+  ... proposed a vertex    : 0
+  ... chains agreed        : 0
+  ... transfer accepted    : 0
+  ... and it MOVED the pick: 0  (the rest snapped onto the composite winner)
+
+## t1x / nuecc: 2001 events, 1869 with a filled scoreboard
+  routes                   : dl-rerank-accept=1516, dl-rerank-reject=345, dl-veto-protected=4, dl-not-run=4
+  second pass ran          : 0 (0.0 %)
+  ... proposed a vertex    : 0
+  ... chains agreed        : 0
+  ... transfer accepted    : 0
+  ... and it MOVED the pick: 0  (the rest snapped onto the composite winner)

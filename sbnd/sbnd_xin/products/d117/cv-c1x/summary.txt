@@ -1,0 +1,22 @@
+arm /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-r3cv-d117c1x
+truth /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/products/d115/cv/truth_base.tsv
+files 2017
+
+activities                                       3307
+activities_all_roles                             10544
+candidate_events_not_in_truth                    0
+candidate_rows                                   967
+cluster_id vs selected: in_act_not_selected      14
+cluster_id vs selected: not_in_act               41
+cluster_id vs selected: same                     912
+companions                                       7237
+events                                           2017
+events_with_truth=1                              2017
+has_T_tagger=0                                   1062
+has_T_tagger=1                                   955
+prov dl_weights = uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth 2017
+prov nue_xgboost_xml = uboone/weights/XGB_nue_seed2_0923.xml 2017
+prov numu_xgboost_xml = uboone/weights/numu_scalars_scores_0923.xml 2017
+prov op_config_sha256 = 808a9dbc19c2d44260a5dbff7aca6db4ff615e04c45714d695a37ff347437ae7 2017
+prov toolkit_git = 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47 2017
+prov wct_version = apply-pointcloud-0.35.0-1367-g772c753d 2017

@@ -1,0 +1,7 @@
+# doc 115 score scan -- sample cv-t1x
+# candidates 965, truth interactions 3647
+# nue BDT evaluated (nue_score != -15): 90/965 = 9.3 %
+
+numu_score > 0.9   efficiency 388/557 = 69.7 % [67.7, 71.6]   purity 388/443 = 87.6 % [85.9, 89.1]
+nue_score > 4     efficiency 2/5 = 40.0 % [21.6, 61.7]   purity 2/6 = 33.3 % [17.7, 53.7]
+nue_score > 7     efficiency 2/5 = 40.0 % [21.6, 61.7]   purity 2/2 = 100.0 % [66.7, 100.0]
