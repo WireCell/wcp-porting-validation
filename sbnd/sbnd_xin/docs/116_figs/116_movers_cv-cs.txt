@@ -1,0 +1,65 @@
+# doc 116 movers -- sample cv, baseline vs cs, adjudicated by truth (d116_movers.py)
+baseline products/d115/cv (2017 event dirs)   cell products/d116/cv-cs (2017 event dirs)
+true interactions in FV: 783
+
+## 1. vertex within 5 cm: baseline 539  cell 534  lost 47  gained 42  both 492
+### LOST (matched in baseline only) -- classified in the CELL arm: 47
+  class:        no candidate 1  not evaluated 0  CHOICE 35  STRUCTURE-near 4  STRUCTURE 7
+  by true class:
+    NC             CHOICE 13  STRUCTURE 3   (n=16)
+    numuCC         no candidate 1  CHOICE 22  STRUCTURE-near 4  STRUCTURE 4   (n=31)
+  by Edep bin:
+    100-300        CHOICE 6  STRUCTURE-near 2  STRUCTURE 2   (n=10)
+    <100           CHOICE 1   (n=1)
+    >=300          no candidate 1  CHOICE 28  STRUCTURE-near 2  STRUCTURE 5   (n=36)
+  cathode band:
+    bulk           no candidate 1  CHOICE 32  STRUCTURE-near 4  STRUCTURE 7   (n=44)
+    cathode |x|<15 CHOICE 3   (n=3)
+  other arm's nearest-candidate band:
+    20-50          CHOICE 14  STRUCTURE-near 2  STRUCTURE 3   (n=19)
+    5-20           CHOICE 16  STRUCTURE-near 2  STRUCTURE 2   (n=20)
+    >50            CHOICE 5   (n=5)
+    no cand        no candidate 1  STRUCTURE 2   (n=3)
+  DL route (own arm -> other arm), top 6: dl-dual-snap-accept/dl->dl-dual-snap-accept/dl: 31; dl-dual-snap-accept/dl->dl-dual-snap-reject/nodl: 4; dl-dual-snap-accept/dl->dl-veto-protected/nodl: 3; dl-dual-snap-reject-accept/dl->dl-dual-snap-accept/dl: 2; dl-dual-snap-accept/dl->dl-dual-snap-reject-accept/dl: 2; dl-dual-snap-accept/dl->dl-not-run/nodl: 2
+### GAINED (matched in cell only) -- classified in the BASELINE arm: 42
+  class:        no candidate 1  not evaluated 0  CHOICE 31  STRUCTURE-near 1  STRUCTURE 9
+  by true class:
+    NC             CHOICE 8  STRUCTURE 3   (n=11)
+    numuCC         no candidate 1  CHOICE 23  STRUCTURE-near 1  STRUCTURE 6   (n=31)
+  by Edep bin:
+    100-300        no candidate 1  CHOICE 6   (n=7)
+    <100           STRUCTURE 2   (n=2)
+    >=300          CHOICE 25  STRUCTURE-near 1  STRUCTURE 7   (n=33)
+  cathode band:
+    bulk           no candidate 1  CHOICE 30  STRUCTURE-near 1  STRUCTURE 8   (n=40)
+    cathode |x|<15 CHOICE 1  STRUCTURE 1   (n=2)
+  other arm's nearest-candidate band:
+    20-50          CHOICE 7  STRUCTURE 2   (n=9)
+    5-20           CHOICE 15  STRUCTURE-near 1  STRUCTURE 4   (n=20)
+    >50            CHOICE 9  STRUCTURE 1   (n=10)
+    no cand        no candidate 1  STRUCTURE 2   (n=3)
+  DL route (own arm -> other arm), top 6: dl-dual-snap-accept/dl->dl-dual-snap-accept/dl: 31; dl-dual-snap-reject-accept/dl->dl-dual-snap-accept/dl: 4; dl-veto-protected/nodl->dl-dual-snap-accept/dl: 2; dl-dual-snap-accept/dl->dl-not-run/nodl: 2; dl-dual-snap-accept/dl->dl-dual-snap-reject/nodl: 1; dl-dual-snap-accept/dl->-: 1
+
+## 2. numuCC selected (numu_score > 0.9, reco vertex in FV): signal 557; baseline 387  cell 385  lost 43  gained 41
+### LOST -- first failing stage in the CELL arm: 43
+  stage: score below cut 24  not matched (< 5 cm) 18  no candidate 1
+  score delta (other - own) on the score-stage movers: median -1.689, min -3.202, max -0.156
+  reco_Enu delta (MeV) on those: median -9.9, |d|>25 MeV in 18/24
+  tagger sub-scores / flags that changed (count over score-stage movers), top 12: numu_1_score 24, numu_score 24, br3_3_score 10, lol_1_score 10, nue_score 10, pio_2_score 10, sig_2_score 10, tro_1_score 10, tro_4_score 10, lol_2_score 9, numu_3_score 7, stw_2_score 7
+### GAINED -- first failing stage in the BASELINE arm: 41
+  stage: not matched (< 5 cm) 22  score below cut 19
+  score delta (other - own) on the score-stage movers: median -1.788, min -7.301, max -0.027
+  reco_Enu delta (MeV) on those: median -155.5, |d|>25 MeV in 15/19
+  tagger sub-scores / flags that changed (count over score-stage movers), top 12: numu_1_score 19, numu_score 19, cosmict_8_filled 8, numu_3_score 7, numu_2_score 6, cosmict_2_filled 5, cosmict_3_filled 5, cosmict_4_filled 5, cosmict_5_filled 5, cosmict_6_filled 3, cosmict_flag 3, cosmict_flag_2 3
+
+## 2. nueCC selected (nue_score > 7, reco vertex in FV): signal 5; baseline 4  cell 4  lost 0  gained 0
+### LOST -- first failing stage in the CELL arm: 0
+  stage: 
+### GAINED -- first failing stage in the BASELINE arm: 0
+  stage: 
+
+## 2. nueCC selected (nue_score > 4, reco vertex in FV): signal 5; baseline 4  cell 4  lost 0  gained 0
+### LOST -- first failing stage in the CELL arm: 0
+  stage: 
+### GAINED -- first failing stage in the BASELINE arm: 0
+  stage: 

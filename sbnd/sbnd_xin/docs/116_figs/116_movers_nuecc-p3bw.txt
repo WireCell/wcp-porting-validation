@@ -1,0 +1,73 @@
+# doc 116 movers -- sample nuecc, baseline vs p3bw, adjudicated by truth (d116_movers.py)
+baseline products/d115/nuecc (2001 event dirs)   cell products/d116/nuecc-p3bw (2001 event dirs)
+true interactions in FV: 1626
+
+## 1. vertex within 5 cm: baseline 1122  cell 1133  lost 141  gained 152  both 981
+### LOST (matched in baseline only) -- classified in the CELL arm: 141
+  class:        no candidate 2  not evaluated 0  CHOICE 96  STRUCTURE-near 25  STRUCTURE 18
+  by true class:
+    NC             STRUCTURE 1   (n=1)
+    nueCC          no candidate 2  CHOICE 93  STRUCTURE-near 25  STRUCTURE 16   (n=136)
+    numuCC         CHOICE 3  STRUCTURE 1   (n=4)
+  by Edep bin:
+    100-300        no candidate 1  CHOICE 6  STRUCTURE-near 2  STRUCTURE 1   (n=10)
+    >=300          no candidate 1  CHOICE 90  STRUCTURE-near 23  STRUCTURE 17   (n=131)
+  cathode band:
+    bulk           no candidate 2  CHOICE 94  STRUCTURE-near 24  STRUCTURE 16   (n=136)
+    cathode |x|<15 CHOICE 2  STRUCTURE-near 1  STRUCTURE 2   (n=5)
+  other arm's nearest-candidate band:
+    20-50          CHOICE 39  STRUCTURE-near 8  STRUCTURE 4   (n=51)
+    5-20           CHOICE 40  STRUCTURE-near 12  STRUCTURE 11   (n=63)
+    >50            CHOICE 17  STRUCTURE-near 5  STRUCTURE 3   (n=25)
+    no cand        no candidate 2   (n=2)
+  DL route (own arm -> other arm), top 6: dl-dual-snap-accept/dl->dl-dual-snap-accept/dl: 97; dl-dual-snap-accept/dl->dl-dual-snap-reject-accept/dl: 14; dl-dual-snap-accept/dl->dl-dual-snap-reject/nodl: 9; dl-dual-snap-reject-accept/dl->dl-dual-snap-accept/dl: 8; dl-dual-snap-reject/nodl->dl-dual-snap-accept/dl: 5; dl-dual-snap-reject/nodl->dl-dual-snap-reject-accept/dl: 2
+### GAINED (matched in cell only) -- classified in the BASELINE arm: 152
+  class:        no candidate 1  not evaluated 0  CHOICE 97  STRUCTURE-near 33  STRUCTURE 21
+  by true class:
+    nueCC          no candidate 1  CHOICE 95  STRUCTURE-near 31  STRUCTURE 21   (n=148)
+    numuCC         CHOICE 2  STRUCTURE-near 2   (n=4)
+  by Edep bin:
+    100-300        CHOICE 4   (n=4)
+    >=300          no candidate 1  CHOICE 93  STRUCTURE-near 33  STRUCTURE 21   (n=148)
+  cathode band:
+    bulk           no candidate 1  CHOICE 87  STRUCTURE-near 32  STRUCTURE 21   (n=141)
+    cathode |x|<15 CHOICE 10  STRUCTURE-near 1   (n=11)
+  other arm's nearest-candidate band:
+    20-50          CHOICE 44  STRUCTURE-near 6  STRUCTURE 4   (n=54)
+    5-20           CHOICE 37  STRUCTURE-near 21  STRUCTURE 13   (n=71)
+    >50            CHOICE 16  STRUCTURE-near 6  STRUCTURE 4   (n=26)
+    no cand        no candidate 1   (n=1)
+  DL route (own arm -> other arm), top 6: dl-dual-snap-accept/dl->dl-dual-snap-accept/dl: 114; dl-dual-snap-accept/dl->dl-dual-snap-reject-accept/dl: 18; dl-dual-snap-reject-accept/dl->dl-dual-snap-accept/dl: 6; dl-dual-snap-accept/dl->dl-dual-snap-reject/nodl: 5; dl-dual-snap-reject-accept/dl->dl-dual-snap-reject-accept/dl: 2; dl-dual-snap-accept/dl->dl-veto-protected/nodl: 2
+
+## 2. numuCC selected (numu_score > 0.9, reco vertex in FV): signal 90; baseline 47  cell 49  lost 3  gained 5
+### LOST -- first failing stage in the CELL arm: 3
+  stage: not matched (< 5 cm) 3
+### GAINED -- first failing stage in the BASELINE arm: 5
+  stage: not matched (< 5 cm) 3  score below cut 2
+  score delta (other - own) on the score-stage movers: median -1.722, min -3.067, max -1.722
+  reco_Enu delta (MeV) on those: median +41.5, |d|>25 MeV in 1/2
+  tagger sub-scores / flags that changed (count over score-stage movers), top 12: numu_1_score 2, numu_3_score 2, numu_score 2, numu_2_score 1
+
+## 2. nueCC selected (nue_score > 7, reco vertex in FV): signal 1511; baseline 618  cell 636  lost 165  gained 183
+### LOST -- first failing stage in the CELL arm: 165
+  stage: score below cut 97  not matched (< 5 cm) 68
+  score delta (other - own) on the score-stage movers: median -7.188, min -30.352, max -0.135
+  reco_Enu delta (MeV) on those: median -21.0, |d|>25 MeV in 78/97
+  tagger sub-scores / flags that changed (count over score-stage movers), top 12: br3_3_score 97, nue_score 97, numu_1_score 97, numu_score 97, sig_2_score 97, tro_1_score 97, tro_4_score 97, pio_2_score 95, br3_5_score 91, lol_2_score 91, br3_6_score 90, tro_5_score 90
+### GAINED -- first failing stage in the BASELINE arm: 183
+  stage: score below cut 102  not matched (< 5 cm) 80  no candidate 1
+  score delta (other - own) on the score-stage movers: median -8.346, min -30.176, max -0.328
+  reco_Enu delta (MeV) on those: median -19.1, |d|>25 MeV in 81/102
+  tagger sub-scores / flags that changed (count over score-stage movers), top 12: numu_1_score 102, numu_score 102, br3_3_score 101, nue_score 101, sig_2_score 101, tro_1_score 101, tro_4_score 101, pio_2_score 97, br3_5_score 92, br3_6_score 92, tro_5_score 92, lol_2_score 91
+
+## 2. nueCC selected (nue_score > 4, reco vertex in FV): signal 1511; baseline 734  cell 745  lost 178  gained 189
+### LOST -- first failing stage in the CELL arm: 178
+  stage: score below cut 92  not matched (< 5 cm) 85  no candidate 1
+  score delta (other - own) on the score-stage movers: median -19.994, min -30.352, max -1.523
+  reco_Enu delta (MeV) on those: median -21.5, |d|>25 MeV in 81/92
+  tagger sub-scores / flags that changed (count over score-stage movers), top 12: br3_3_score 92, nue_score 92, numu_1_score 92, numu_score 92, sig_2_score 92, tro_1_score 92, tro_4_score 92, pio_2_score 91, lol_1_score 89, lol_2_score 85, br3_5_score 83, br3_6_score 82
+### GAINED -- first failing stage in the BASELINE arm: 189
+  stage: not matched (< 5 cm) 96  score below cut 92  no candidate 1
+  score delta (other - own) on the score-stage movers: median -12.850, min -30.176, max -1.024
+  reco_Enu delta (MeV) on those: median -42.9, |d|>25 MeV in 80/92
+  tagger sub-scores / flags that changed (count over score-stage movers), top 12: numu_score 92, br3_3_score 91, nue_score 91, numu_1_score 91, sig_2_score 91, tro_1_score 91, tro_4_score 91, pio_2_score 86, lol_2_score 85, br3_5_score 82, lol_1_score 82, br3_6_score 81

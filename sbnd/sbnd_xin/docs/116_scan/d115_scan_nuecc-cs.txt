@@ -1,0 +1,7 @@
+# doc 115 score scan -- sample nuecc-cs
+# candidates 1927, truth interactions 3786
+# nue BDT evaluated (nue_score != -15): 1354/1927 = 70.3 %
+
+numu_score > 0.9   efficiency 48/90 = 53.3 % [48.1, 58.5]   purity 48/290 = 16.6 % [14.5, 18.8]
+nue_score > 4     efficiency 735/1511 = 48.6 % [47.4, 49.9]   purity 735/795 = 92.5 % [91.5, 93.3]
+nue_score > 7     efficiency 606/1511 = 40.1 % [38.9, 41.4]   purity 606/628 = 96.5 % [95.7, 97.2]

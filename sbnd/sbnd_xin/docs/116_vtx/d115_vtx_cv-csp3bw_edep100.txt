@@ -1,0 +1,13 @@
+# doc 115 vertex assessment -- sample cv-csp3bw_edep100, Edep > 100 MeV
+# FV 5<|x|<190, |y|<190, 10<z<450 cm; distance = to the NEAREST candidate vertex
+# true interactions with the vertex in the FV: 709
+
+population                     N  matched <5 cm                   5-20    20-50      >50  no cand
+-------------------------------------------------------------------------------------------------
+all true nu in FV            709    522 =  73.6 % [71.9,75.2]       52       39       52       44
+numuCC                       557    452 =  81.1 % [79.4,82.7]       33       18       30       24
+nueCC                          5      4 =  80.0 % [57.9,92.1]        0        1        0        0
+NC                           147     66 =  44.9 % [40.8,49.0]       19       20       22       20
+Edep < 100 MeV                 0      0 =   nan % [ nan, nan]        0        0        0        0
+100 <= Edep < 300 MeV        126     66 =  52.4 % [47.9,56.8]       13       10       16       21
+Edep >= 300 MeV              583    456 =  78.2 % [76.5,79.9]       39       29       36       23

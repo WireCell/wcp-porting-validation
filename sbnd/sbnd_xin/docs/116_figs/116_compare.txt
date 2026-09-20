@@ -1,0 +1,147 @@
+# doc 116 -- every study cell vs the doc-115 baseline, paired per true interaction (d116_compare.py)
+FV 5<|x|<190, |y|<190, 10<z<450 cm; match = reco vertex within 5 cm; selection = score cut AND reco vertex in FV; sign test = exact two-sided on the discordant pairs; floor = |s0rep - baseline|
+baseline reproduces docs/115_sel: numuCC 387/557, 387/448; nueCC 618/1511, 618/632; >4 734/1511, 734/781  OK
+arms found: s0rep: cv,nuecc,off; cs: cv,nuecc,off; p3bw: cv,nuecc,off; csp3bw: cv,nuecc,off; tfull: cv,nuecc,off
+
+## noise floor: s0rep vs baseline (same config, same binary, same input; DL vertex not bit-stable)
+  M1  numuCC efficiency (cv, numu > 0.9)               387/557 -> 387/557  delta +0.00 pp  exchange -0/+0
+  M2  numuCC in-sample purity (cv)                     387/448 -> 387/448  delta +0.00 pp  exchange -0/+0
+  M3  nueCC efficiency (nuecc, nue > 7)                618/1511 -> 618/1511  delta +0.00 pp  exchange -0/+0
+  M4  nueCC in-sample purity (nuecc, > 7)              618/632 -> 618/632  delta +0.00 pp  exchange -0/+0
+  M5  nueCC efficiency (nuecc, nue > 4)                734/1511 -> 734/1511  delta +0.00 pp  exchange -0/+0
+  M6  nueCC in-sample purity (nuecc, > 4)              734/781 -> 734/781  delta +0.00 pp  exchange -0/+0
+  M7  vertex < 5 cm, all true nu in FV (cv)            539/783 -> 539/783  delta +0.00 pp  exchange -0/+0
+  M8  vertex < 5 cm, all true nu in FV (nuecc)         1122/1626 -> 1122/1626  delta +0.00 pp  exchange -0/+0
+  S1  numuCC efficiency on the nuecc arm (90 signal)   47/90 -> 47/90  delta +0.00 pp  exchange -0/+0
+  S2  nueCC efficiency on the cv arm (5 signal)        4/5 -> 4/5  delta +0.00 pp  exchange -0/+0
+  S3  vertex < 5 cm, true numuCC in FV (cv)            463/557 -> 463/557  delta +0.00 pp  exchange -0/+0
+  S4  vertex < 5 cm, true NC in FV (cv)                71/221 -> 71/221  delta +0.00 pp  exchange -0/+0
+  S5  vertex < 5 cm, true nueCC in FV (nuecc)          1067/1511 -> 1067/1511  delta +0.00 pp  exchange -0/+0
+
+## primary
+  id  metric                                           cell          baseline           cell    delta -lost/+gain       p  floor  verdict
+  M1  numuCC efficiency (cv, numu > 0.9)               s0rep    387/557=69.5%  387/557=69.5%   +0.00     -0/+0   1.000   0.00  (floor)
+  M1  numuCC efficiency (cv, numu > 0.9)               cs       387/557=69.5%  385/557=69.1%   -0.36   -43/+41   0.913   0.00  not separable
+  M1  numuCC efficiency (cv, numu > 0.9)               p3bw     387/557=69.5%  382/557=68.6%   -0.90   -39/+34   0.640   0.00  not separable
+  M1  numuCC efficiency (cv, numu > 0.9)               csp3bw   387/557=69.5%  378/557=67.9%   -1.62   -45/+36   0.374   0.00  not separable
+  M1  numuCC efficiency (cv, numu > 0.9)               tfull    387/557=69.5%  390/557=70.0%   +0.54   -39/+42   0.824   0.00  not separable
+  M2  numuCC in-sample purity (cv)                     s0rep    387/448=86.4%  387/448=86.4%   +0.00     -0/+0   1.000   0.00  (floor)
+  M2  numuCC in-sample purity (cv)                     cs       387/448=86.4%  385/442=87.1%   +0.72   -24/+28   0.678   0.00  not separable
+  M2  numuCC in-sample purity (cv)                     p3bw     387/448=86.4%  382/437=87.4%   +1.03   -27/+33   0.519   0.00  not separable
+  M2  numuCC in-sample purity (cv)                     csp3bw   387/448=86.4%  378/443=85.3%   -1.06   -33/+29   0.704   0.00  not separable
+  M2  numuCC in-sample purity (cv)                     tfull    387/448=86.4%  390/450=86.7%   +0.28   -29/+30   1.000   0.00  not separable
+  M3  nueCC efficiency (nuecc, nue > 7)                s0rep   618/1511=40.9% 618/1511=40.9%   +0.00     -0/+0   1.000   0.00  (floor)
+  M3  nueCC efficiency (nuecc, nue > 7)                cs      618/1511=40.9% 606/1511=40.1%   -0.79 -181/+169   0.557   0.00  not separable
+  M3  nueCC efficiency (nuecc, nue > 7)                p3bw    618/1511=40.9% 636/1511=42.1%   +1.19 -165/+183   0.362   0.00  not separable
+  M3  nueCC efficiency (nuecc, nue > 7)                csp3bw  618/1511=40.9% 632/1511=41.8%   +0.93 -159/+173   0.476   0.00  not separable
+  M3  nueCC efficiency (nuecc, nue > 7)                tfull   618/1511=40.9% 630/1511=41.7%   +0.79 -168/+180   0.555   0.00  not separable
+  M4  nueCC in-sample purity (nuecc, > 7)              s0rep    618/632=97.8%  618/632=97.8%   +0.00     -0/+0   1.000   0.00  (floor)
+  M4  nueCC in-sample purity (nuecc, > 7)              cs       618/632=97.8%  606/628=96.5%   -1.29    -16/+8   0.152   0.00  not separable
+  M4  nueCC in-sample purity (nuecc, > 7)              p3bw     618/632=97.8%  636/653=97.4%   -0.39   -14/+11   0.690   0.00  not separable
+  M4  nueCC in-sample purity (nuecc, > 7)              csp3bw   618/632=97.8%  632/654=96.6%   -1.15    -15/+7   0.134   0.00  not separable
+  M4  nueCC in-sample purity (nuecc, > 7)              tfull    618/632=97.8%  630/649=97.1%   -0.71    -14/+9   0.405   0.00  not separable
+  M5  nueCC efficiency (nuecc, nue > 4)                s0rep   734/1511=48.6% 734/1511=48.6%   +0.00     -0/+0   1.000   0.00  (floor)
+  M5  nueCC efficiency (nuecc, nue > 4)                cs      734/1511=48.6% 735/1511=48.6%   +0.07 -187/+188   1.000   0.00  not separable
+  M5  nueCC efficiency (nuecc, nue > 4)                p3bw    734/1511=48.6% 745/1511=49.3%   +0.73 -178/+189   0.602   0.00  not separable
+  M5  nueCC efficiency (nuecc, nue > 4)                csp3bw  734/1511=48.6% 749/1511=49.6%   +0.99 -175/+190   0.464   0.00  not separable
+  M5  nueCC efficiency (nuecc, nue > 4)                tfull   734/1511=48.6% 757/1511=50.1%   +1.52 -172/+195   0.251   0.00  not separable
+  M6  nueCC in-sample purity (nuecc, > 4)              s0rep    734/781=94.0%  734/781=94.0%   +0.00     -0/+0   1.000   0.00  (floor)
+  M6  nueCC in-sample purity (nuecc, > 4)              cs       734/781=94.0%  735/795=92.5%   -1.53   -45/+32   0.171   0.00  not separable
+  M6  nueCC in-sample purity (nuecc, > 4)              p3bw     734/781=94.0%  745/796=93.6%   -0.39   -36/+32   0.716   0.00  not separable
+  M6  nueCC in-sample purity (nuecc, > 4)              csp3bw   734/781=94.0%  749/812=92.2%   -1.74   -45/+29   0.081   0.00  not separable
+  M6  nueCC in-sample purity (nuecc, > 4)              tfull    734/781=94.0%  757/803=94.3%   +0.29   -31/+32   1.000   0.00  not separable
+  M7  vertex < 5 cm, all true nu in FV (cv)            s0rep    539/783=68.8%  539/783=68.8%   +0.00     -0/+0   1.000   0.00  (floor)
+  M7  vertex < 5 cm, all true nu in FV (cv)            cs       539/783=68.8%  534/783=68.2%   -0.64   -47/+42   0.672   0.00  not separable
+  M7  vertex < 5 cm, all true nu in FV (cv)            p3bw     539/783=68.8%  533/783=68.1%   -0.77   -43/+37   0.576   0.00  not separable
+  M7  vertex < 5 cm, all true nu in FV (cv)            csp3bw   539/783=68.8%  529/783=67.6%   -1.28   -52/+42   0.353   0.00  not separable
+  M7  vertex < 5 cm, all true nu in FV (cv)            tfull    539/783=68.8%  533/783=68.1%   -0.77   -42/+36   0.572   0.00  not separable
+  M8  vertex < 5 cm, all true nu in FV (nuecc)         s0rep   1122/1626=69.0% 1122/1626=69.0%   +0.00     -0/+0   1.000   0.00  (floor)
+  M8  vertex < 5 cm, all true nu in FV (nuecc)         cs      1122/1626=69.0% 1110/1626=68.3%   -0.74 -164/+152   0.536   0.00  not separable
+  M8  vertex < 5 cm, all true nu in FV (nuecc)         p3bw    1122/1626=69.0% 1133/1626=69.7%   +0.68 -141/+152   0.559   0.00  not separable
+  M8  vertex < 5 cm, all true nu in FV (nuecc)         csp3bw  1122/1626=69.0% 1119/1626=68.8%   -0.18 -148/+145   0.907   0.00  not separable
+  M8  vertex < 5 cm, all true nu in FV (nuecc)         tfull   1122/1626=69.0% 1133/1626=69.7%   +0.68 -147/+158   0.567   0.00  not separable
+
+## secondary (reported, not graded)
+  id  metric                                           cell          baseline           cell    delta -lost/+gain       p  floor  verdict
+  S1  numuCC efficiency on the nuecc arm (90 signal)   s0rep      47/90=52.2%    47/90=52.2%   +0.00     -0/+0   1.000   0.00  (floor)
+  S1  numuCC efficiency on the nuecc arm (90 signal)   cs         47/90=52.2%    48/90=53.3%   +1.11     -5/+6   1.000   0.00  --
+  S1  numuCC efficiency on the nuecc arm (90 signal)   p3bw       47/90=52.2%    49/90=54.4%   +2.22     -3/+5   0.727   0.00  --
+  S1  numuCC efficiency on the nuecc arm (90 signal)   csp3bw     47/90=52.2%    45/90=50.0%   -2.22     -6/+4   0.754   0.00  --
+  S1  numuCC efficiency on the nuecc arm (90 signal)   tfull      47/90=52.2%    47/90=52.2%   +0.00     -6/+6   1.000   0.00  --
+  S2  nueCC efficiency on the cv arm (5 signal)        s0rep        4/5=80.0%      4/5=80.0%   +0.00     -0/+0   1.000   0.00  (floor)
+  S2  nueCC efficiency on the cv arm (5 signal)        cs           4/5=80.0%      4/5=80.0%   +0.00     -0/+0   1.000   0.00  --
+  S2  nueCC efficiency on the cv arm (5 signal)        p3bw         4/5=80.0%      4/5=80.0%   +0.00     -0/+0   1.000   0.00  --
+  S2  nueCC efficiency on the cv arm (5 signal)        csp3bw       4/5=80.0%      3/5=60.0%  -20.00     -1/+0   1.000   0.00  --
+  S2  nueCC efficiency on the cv arm (5 signal)        tfull        4/5=80.0%      4/5=80.0%   +0.00     -0/+0   1.000   0.00  --
+  S3  vertex < 5 cm, true numuCC in FV (cv)            s0rep    463/557=83.1%  463/557=83.1%   +0.00     -0/+0   1.000   0.00  (floor)
+  S3  vertex < 5 cm, true numuCC in FV (cv)            cs       463/557=83.1%  463/557=83.1%   +0.00   -31/+31   1.000   0.00  --
+  S3  vertex < 5 cm, true numuCC in FV (cv)            p3bw     463/557=83.1%  452/557=81.1%   -1.97   -34/+23   0.185   0.00  --
+  S3  vertex < 5 cm, true numuCC in FV (cv)            csp3bw   463/557=83.1%  452/557=81.1%   -1.97   -38/+27   0.215   0.00  --
+  S3  vertex < 5 cm, true numuCC in FV (cv)            tfull    463/557=83.1%  457/557=82.0%   -1.08   -30/+24   0.497   0.00  --
+  S4  vertex < 5 cm, true NC in FV (cv)                s0rep     71/221=32.1%   71/221=32.1%   +0.00     -0/+0   1.000   0.00  (floor)
+  S4  vertex < 5 cm, true NC in FV (cv)                cs        71/221=32.1%   66/221=29.9%   -2.26   -16/+11   0.442   0.00  --
+  S4  vertex < 5 cm, true NC in FV (cv)                p3bw      71/221=32.1%   76/221=34.4%   +2.26    -9/+14   0.405   0.00  --
+  S4  vertex < 5 cm, true NC in FV (cv)                csp3bw    71/221=32.1%   73/221=33.0%   +0.90   -13/+15   0.851   0.00  --
+  S4  vertex < 5 cm, true NC in FV (cv)                tfull     71/221=32.1%   71/221=32.1%   +0.00   -12/+12   1.000   0.00  --
+  S5  vertex < 5 cm, true nueCC in FV (nuecc)          s0rep   1067/1511=70.6% 1067/1511=70.6%   +0.00     -0/+0   1.000   0.00  (floor)
+  S5  vertex < 5 cm, true nueCC in FV (nuecc)          cs      1067/1511=70.6% 1058/1511=70.0%   -0.60 -157/+148   0.647   0.00  --
+  S5  vertex < 5 cm, true nueCC in FV (nuecc)          p3bw    1067/1511=70.6% 1079/1511=71.4%   +0.79 -136/+148   0.514   0.00  --
+  S5  vertex < 5 cm, true nueCC in FV (nuecc)          csp3bw  1067/1511=70.6% 1069/1511=70.7%   +0.13 -141/+143   0.953   0.00  --
+  S5  vertex < 5 cm, true nueCC in FV (nuecc)          tfull   1067/1511=70.6% 1077/1511=71.3%   +0.66 -141/+151   0.598   0.00  --
+
+## vertex movers (true nu in FV; nearest-candidate distance): baseline matched -> cell band, and the reverse
+  cs/cv: matched 539 -> 534  lost 47  gained 42
+     numuCC  lost -> [5-20:13  20-50:12  >50:3  no cand:3]   gained from [5-20:16  20-50:5  >50:8  no cand:2]
+     NC      lost -> [5-20:7  20-50:7  >50:2]   gained from [5-20:4  20-50:4  >50:2  no cand:1]
+  cs/nuecc: matched 1122 -> 1110  lost 164  gained 152
+     numuCC  lost -> [5-20:2  20-50:1  >50:3]   gained from [5-20:3]
+     nueCC   lost -> [5-20:66  20-50:67  >50:24]   gained from [5-20:67  20-50:52  >50:28  no cand:1]
+     NC      lost -> [5-20:1]   gained from [>50:1]
+  p3bw/cv: matched 539 -> 533  lost 43  gained 37
+     numuCC  lost -> [5-20:15  20-50:9  >50:6  no cand:4]   gained from [5-20:14  20-50:3  >50:4  no cand:2]
+     NC      lost -> [5-20:5  20-50:4]   gained from [5-20:7  20-50:4  >50:3]
+  p3bw/nuecc: matched 1122 -> 1133  lost 141  gained 152
+     numuCC  lost -> [5-20:2  >50:2]   gained from [5-20:2  20-50:2]
+     nueCC   lost -> [5-20:61  20-50:50  >50:23  no cand:2]   gained from [5-20:69  20-50:52  >50:26  no cand:1]
+     NC      lost -> [20-50:1]   gained from []
+  csp3bw/cv: matched 539 -> 529  lost 52  gained 42
+     numuCC  lost -> [5-20:16  20-50:10  >50:8  no cand:4]   gained from [5-20:11  20-50:6  >50:8  no cand:2]
+     nueCC   lost -> [20-50:1]   gained from []
+     NC      lost -> [5-20:6  20-50:7]   gained from [5-20:8  20-50:3  >50:2  no cand:2]
+  csp3bw/nuecc: matched 1122 -> 1119  lost 148  gained 145
+     numuCC  lost -> [5-20:2  20-50:1  >50:4]   gained from [5-20:2]
+     nueCC   lost -> [5-20:48  20-50:66  >50:27]   gained from [5-20:64  20-50:41  >50:36  no cand:2]
+  tfull/cv: matched 539 -> 533  lost 42  gained 36
+     numuCC  lost -> [5-20:17  20-50:4  >50:6  no cand:3]   gained from [5-20:9  20-50:6  >50:7  no cand:2]
+     NC      lost -> [5-20:7  20-50:4  >50:1]   gained from [5-20:7  20-50:2  >50:2  no cand:1]
+  tfull/nuecc: matched 1122 -> 1133  lost 147  gained 158
+     numuCC  lost -> [5-20:2  >50:4]   gained from [5-20:4  20-50:1  >50:1]
+     nueCC   lost -> [5-20:55  20-50:54  >50:32]   gained from [5-20:66  20-50:54  >50:30  no cand:1]
+     NC      lost -> []   gained from [>50:1]
+
+## beam-off: gates with a selected candidate (reco vertex in FV), paired by gate
+  s0rep   numu > 0.9 : 5/1000 -> 5/1000 = 0.50 % [0.32, 0.78]   -0/+0 gates
+  s0rep   nue > 7   : 0/1000 -> 0/1000 = 0.00 % [0.00, 0.10]   -0/+0 gates
+  s0rep   nue > 4   : 0/1000 -> 0/1000 = 0.00 % [0.00, 0.10]   -0/+0 gates
+  cs      numu > 0.9 : 5/1000 -> 4/1000 = 0.40 % [0.24, 0.66]   -3/+2 gates
+  cs      nue > 7   : 0/1000 -> 0/1000 = 0.00 % [0.00, 0.10]   -0/+0 gates
+  cs      nue > 4   : 0/1000 -> 0/1000 = 0.00 % [0.00, 0.10]   -0/+0 gates
+  p3bw    numu > 0.9 : 5/1000 -> 2/1000 = 0.20 % [0.10, 0.40]   -4/+1 gates
+  p3bw    nue > 7   : 0/1000 -> 0/1000 = 0.00 % [0.00, 0.10]   -0/+0 gates
+  p3bw    nue > 4   : 0/1000 -> 0/1000 = 0.00 % [0.00, 0.10]   -0/+0 gates
+  csp3bw  numu > 0.9 : 5/1000 -> 4/1000 = 0.40 % [0.24, 0.66]   -2/+1 gates
+  csp3bw  nue > 7   : 0/1000 -> 0/1000 = 0.00 % [0.00, 0.10]   -0/+0 gates
+  csp3bw  nue > 4   : 0/1000 -> 0/1000 = 0.00 % [0.00, 0.10]   -0/+0 gates
+  tfull   numu > 0.9 : 5/1000 -> 4/1000 = 0.40 % [0.24, 0.66]   -1/+0 gates
+  tfull   nue > 7   : 0/1000 -> 0/1000 = 0.00 % [0.00, 0.10]   -0/+0 gates
+  tfull   nue > 4   : 0/1000 -> 0/1000 = 0.00 % [0.00, 0.10]   -0/+0 gates
+
+## exposure-weighted purities (doc 115 sec 13 method; POT and gate constants from scripts/d115/normalisation.py)
+  w(nuecc->cv) = 2.7558e-03; beam gates at 5e+12 POT/spill = 22325; f = 1 (off-beam events per gate, unmeasured)
+  cell      numuCC pur in-sample->f=1    nueCC>7 common-exposure    nueCC>4 common-exposure
+  baseline 86.4 -> 69.2 % (cosmic 111.6)  62.1 % (S 1.70, cv bkg 1)  39.3 % (S 2.02, cv bkg 3)
+  s0rep    86.4 -> 69.2 % (cosmic 111.6)  62.1 % (S 1.70, cv bkg 1)  39.3 % (S 2.02, cv bkg 3)
+  cs       87.1 -> 72.5 % (cosmic 89.3)  96.5 % (S 1.67, cv bkg 0)  39.0 % (S 2.03, cv bkg 3)
+  p3bw     87.4 -> 79.3 % (cosmic 44.7)  62.6 % (S 1.75, cv bkg 1)  39.5 % (S 2.05, cv bkg 3)
+  csp3bw   85.3 -> 71.0 % (cosmic 89.3)  96.6 % (S 1.74, cv bkg 0)  33.1 % (S 2.06, cv bkg 4)
+  tfull    86.7 -> 72.3 % (cosmic 89.3)  62.3 % (S 1.74, cv bkg 1)  40.0 % (S 2.09, cv bkg 3)

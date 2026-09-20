@@ -1,0 +1,49 @@
+# d116 cfg proof  toolkit=0a2807f4  wcp=5f8601b1  2026-09-20_11:33
+## (a) standalone compile, reality=sim, runner _optla form
+null    rc=0  sha=4ee005c935dac7df
+s0rep  rc=0  sha=4ee005c935dac7df  tla=[]
+cs  rc=0  sha=c511b50a94995e19  tla=[--tla-code retile_sampler_strategy='charge_stepped']
+p3bw  rc=0  sha=66528b404bca3edc  tla=[--tla-code steiner_blank_plane_mode='prefer3' --tla-code steiner_base_weight_blank_alpha=0.5 --tla-code steiner_base_weight_scope='tree+path']
+csp3bw  rc=0  sha=3db5df01e33ff853  tla=[--tla-code retile_sampler_strategy='charge_stepped' --tla-code steiner_blank_plane_mode='prefer3' --tla-code steiner_base_weight_blank_alpha=0.5 --tla-code steiner_base_weight_scope='tree+path']
+tfull  rc=0  sha=577dc21ec8c5a45e  tla=[--tla-str trackfitting_config=/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/149_figs/149_tf_sbnd_kf.json --tla-code retile_sampler_strategy='charge_stepped' --tla-code steiner_blank_plane_mode='prefer3' --tla-code steiner_base_weight_blank_alpha=0.5 --tla-code steiner_base_weight_scope='tree+path']
+-- node diff null -> s0rep: only null []  only s0rep []
+   changed nodes: 0  IDENTICAL
+-- node diff null -> cs: only null ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0']  only cs ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']
+   changed node ImproveCluster_2:pr: keys ['samplers'] -> ['[{"apa": 0, "face": 0, "name": "BlobSampler:live-cs-apa0-0"}, {"apa": 1, "face": 0, "name": "BlobSampler:live-cs-apa1...']
+   changed nodes: 1
+-- node diff null -> p3bw: only null []  only p3bw []
+   changed node CreateSteinerGraph:pr: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'] -> [0.5, 'tree+path', 'prefer3']
+   changed node CreateSteinerGraph:prrefresh: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'] -> [0.5, 'tree+path', 'prefer3']
+   changed nodes: 2
+-- node diff null -> csp3bw: only null ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0']  only csp3bw ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']
+   changed node CreateSteinerGraph:pr: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'] -> [0.5, 'tree+path', 'prefer3']
+   changed node CreateSteinerGraph:prrefresh: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'] -> [0.5, 'tree+path', 'prefer3']
+   changed node ImproveCluster_2:pr: keys ['samplers'] -> ['[{"apa": 0, "face": 0, "name": "BlobSampler:live-cs-apa0-0"}, {"apa": 1, "face": 0, "name": "BlobSampler:live-cs-apa1...']
+   changed nodes: 3
+-- node diff null -> tfull: only null ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0']  only tfull ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']
+   changed node CreateSteinerGraph:pr: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'] -> [0.5, 'tree+path', 'prefer3']
+   changed node CreateSteinerGraph:prrefresh: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'] -> [0.5, 'tree+path', 'prefer3']
+   changed node ImproveCluster_2:pr: keys ['samplers'] -> ['[{"apa": 0, "face": 0, "name": "BlobSampler:live-cs-apa0-0"}, {"apa": 1, "face": 0, "name": "BlobSampler:live-cs-apa1...']
+   changed node SbndPrMagnifyTrackingVisitor:pr: keys ['provenance'] -> ['{"bdt_weights_dir": "uboone/weights", "dl_weights": "uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth", "nue_xgboost_x...']
+   changed node TaggerCheckNeutrino:pr: keys ['trackfitting_config_file'] -> ['/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/149_figs/149_tf_sbnd_kf.json']
+   changed node TaggerCheckSTM:pr: keys ['trackfitting_config_file'] -> ['/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/149_figs/149_tf_sbnd_kf.json']
+   changed nodes: 6
+## (b) the arms' own .d109-opcfg.json vs the doc-115 baseline arm's
+-- cv baseline work-r3cv-d115pr/f000 sha=399badee163e0f4d
+   s0rep: 154 sub-root(s), distinct sha ['399badee163e0f4d']; only base [] only cell []; changed []
+   cs: 154 sub-root(s), distinct sha ['c5f5312fbb87b55d']; only base ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0'] only cell ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']; changed [('ImproveCluster_2:pr', ['samplers'])]
+   p3bw: 154 sub-root(s), distinct sha ['872186ed00979a25']; only base [] only cell []; changed [('CreateSteinerGraph:pr', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode']), ('CreateSteinerGraph:prrefresh', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'])]
+   csp3bw: 154 sub-root(s), distinct sha ['6089ecad115d3197']; only base ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0'] only cell ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']; changed [('CreateSteinerGraph:pr', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode']), ('CreateSteinerGraph:prrefresh', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode']), ('ImproveCluster_2:pr', ['samplers'])]
+   tfull: 154 sub-root(s), distinct sha ['e7bcc88b0ba426a0']; only base ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0'] only cell ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']; changed [('CreateSteinerGraph:pr', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode']), ('CreateSteinerGraph:prrefresh', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode']), ('ImproveCluster_2:pr', ['samplers']), ('SbndPrMagnifyTrackingVisitor:pr', ['provenance']), ('TaggerCheckNeutrino:pr', ['trackfitting_config_file']), ('TaggerCheckSTM:pr', ['trackfitting_config_file'])]
+-- nuecc baseline work-r3nue-d115pr/f000 sha=399badee163e0f4d
+   s0rep: 225 sub-root(s), distinct sha ['399badee163e0f4d']; only base [] only cell []; changed []
+   cs: 225 sub-root(s), distinct sha ['c5f5312fbb87b55d']; only base ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0'] only cell ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']; changed [('ImproveCluster_2:pr', ['samplers'])]
+   p3bw: 225 sub-root(s), distinct sha ['872186ed00979a25']; only base [] only cell []; changed [('CreateSteinerGraph:pr', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode']), ('CreateSteinerGraph:prrefresh', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'])]
+   csp3bw: 225 sub-root(s), distinct sha ['6089ecad115d3197']; only base ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0'] only cell ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']; changed [('CreateSteinerGraph:pr', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode']), ('CreateSteinerGraph:prrefresh', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode']), ('ImproveCluster_2:pr', ['samplers'])]
+   tfull: 225 sub-root(s), distinct sha ['e7bcc88b0ba426a0']; only base ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0'] only cell ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']; changed [('CreateSteinerGraph:pr', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode']), ('CreateSteinerGraph:prrefresh', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode']), ('ImproveCluster_2:pr', ['samplers']), ('SbndPrMagnifyTrackingVisitor:pr', ['provenance']), ('TaggerCheckNeutrino:pr', ['trackfitting_config_file']), ('TaggerCheckSTM:pr', ['trackfitting_config_file'])]
+-- off baseline work-r3off-d115pr sha=adfa7d4e41a7dda9
+   s0rep: 1 sub-root(s), distinct sha ['adfa7d4e41a7dda9']; only base [] only cell []; changed []
+   cs: 1 sub-root(s), distinct sha ['fbd239a0e6c8d427']; only base ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0'] only cell ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']; changed [('ImproveCluster_2:pr', ['samplers'])]
+   p3bw: 1 sub-root(s), distinct sha ['9d13714a93fcbbf6']; only base [] only cell []; changed [('CreateSteinerGraph:pr', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode']), ('CreateSteinerGraph:prrefresh', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode'])]
+   csp3bw: 1 sub-root(s), distinct sha ['972231b088a80b66']; only base ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0'] only cell ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']; changed [('CreateSteinerGraph:pr', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode']), ('CreateSteinerGraph:prrefresh', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode']), ('ImproveCluster_2:pr', ['samplers'])]
+   tfull: 1 sub-root(s), distinct sha ['393be7a1ed4b5d50']; only base ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0'] only cell ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']; changed [('CreateSteinerGraph:pr', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode']), ('CreateSteinerGraph:prrefresh', ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode']), ('ImproveCluster_2:pr', ['samplers']), ('SbndPrMagnifyTrackingVisitor:pr', ['provenance']), ('TaggerCheckNeutrino:pr', ['trackfitting_config_file']), ('TaggerCheckSTM:pr', ['trackfitting_config_file'])]

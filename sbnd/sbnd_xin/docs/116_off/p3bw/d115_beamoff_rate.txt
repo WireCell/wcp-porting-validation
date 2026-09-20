@@ -1,0 +1,22 @@
+doc 115 -- beam-off (off-beam data) baseline
+source: /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/products/d116/off-p3bw/candidates.tsv
+
+Beam gates processed:                       1000
+Candidate rows (T_tagger rows):             87
+nue BDT evaluated (nue_score != -15):       5/87 = 5.75 % [3.72, 8.78]
+
+Per-gate rates (68 % Wilson):
+  gate has >= 1 neutrino candidate:         86/1000 = 8.60 % [7.75, 9.53]
+  ... with the reco vertex in the FV:       17/1000 = 1.70 % [1.34, 2.16]
+  ... and numu_score > 0.9  (SELECTED):     2/1000 = 0.20 % [0.10, 0.40]
+  ... and nue_score > 7    (SELECTED):     0/1000 = 0.00 % [0.00, 0.10]
+  ... and nue_score > 4    (SELECTED):     0/1000 = 0.00 % [0.00, 0.10]
+
+Score distributions over candidate rows:
+  numu_score            min -3.86  q25 -1.94  med -1.94  q75 -0.88  max 2.66
+  nue_score (filled)    min -15.78  q25 -15.14  med -13.14  q75 -4.16  max 0.22
+
+kine_reco_Enu (MeV) of the SELECTED candidates:
+  numu > 0.9   n=2  min 894.50  q25 894.50  med 1113.00  q75 1113.00  max 1113.00
+  nue > 7     n=0  n/a
+  nue > 4     n=0  n/a

@@ -1,0 +1,22 @@
+arm /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-r3nue-d116p3bw
+truth /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/products/d115/nuecc/truth_base.tsv
+files 2001
+
+activities                                       10764
+activities_all_roles                             59254
+candidate_events_not_in_truth                    0
+candidate_rows                                   1927
+cluster_id vs selected: in_act_not_selected      60
+cluster_id vs selected: not_in_act               187
+cluster_id vs selected: same                     1680
+companions                                       48490
+events                                           2001
+events_with_truth=1                              2001
+has_T_tagger=0                                   129
+has_T_tagger=1                                   1872
+prov dl_weights = uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth 2001
+prov nue_xgboost_xml = uboone/weights/XGB_nue_seed2_0923.xml 2001
+prov numu_xgboost_xml = uboone/weights/numu_scalars_scores_0923.xml 2001
+prov op_config_sha256 = 872186ed00979a25b0c7549faa3e384b98b436ac852094269b0e90a78792a106 2001
+prov toolkit_git = 0a2807f4ed43d4d6c7f539dbe0167bfe52892e47 2001
+prov wct_version = apply-pointcloud-0.35.0-1367-g772c753d 2001

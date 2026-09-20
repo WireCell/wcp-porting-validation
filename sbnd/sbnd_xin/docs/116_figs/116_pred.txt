@@ -1,0 +1,72 @@
+doc sbnd_xin/116 -- pre-registration, written before the first study arm is launched
+========================================================================================
+
+Question (owner, 2026-09-20): do the PDHD/PDVD trajectory changes -- (a) the charge_stepped retile
+sampler, (b) the Steiner terminal admission prefer3 + base-graph pricing alpha 0.5 / tree+path,
+(c) the two lattice fit keys fit_weight_pow 1.5 / assoc_cont_center 1 -- improve SBND's FINAL results
+(neutrino selection efficiency / purity, vertex), now that the round-3 MC gives truth?  Doc pr/150
+measured them on data with hand labels only.
+
+Samples and baseline: doc 115 (mc-cv 2017 evt, mc-nuecc 2001 evt, beam-off 1000 gates), baseline
+arms work-r3{cv,nue,off}-d115pr, toolkit 0a2807f4, pin ~/tmp/d115-libsnap (Clus md5 71ebd5aeb386),
+op_config_sha256 399badee16 (MC) / adfa7d4e41 (off).  Stage A is shared: every cell re-runs stage B
+only, on the same pctrees, with the same binary.  The ONLY difference between arms is the TLA set.
+
+Cells (docs/116_figs/tla/, byte-copies of doc pr/150's):
+  s0rep   production, re-run                    = the DL-vertex noise floor (CLAUDE.md M4)
+  cs      retile_sampler_strategy='charge_stepped'                                        (a)
+  p3bw    steiner_blank_plane_mode='prefer3', _base_weight_blank_alpha=0.5, _scope='tree+path'  (b)
+  csp3bw  cs + p3bw                              = the doc-116 trajectory T
+  tfull   csp3bw + SBND_TRACKFIT_JSON=docs/pr/149_figs/149_tf_sbnd_kf.json                (a)+(b)+(c)
+          = the PDHD/PDVD production configuration on SBND (SBND already has stm_proton_muon_guard=true
+            and has no Michel stage; nothing else differs)
+
+Primary metrics (doc-107 sec 5.5 definitions, unchanged: FV 5<|x|<190, |y|<190, 10<z<450 cm; match =
+reco vertex within 5 cm of the true vertex; selection = score cut AND reco vertex in FV; sign-blind
+flavour; every in-FV interaction is its own row).  Baseline values from docs/115_sel*/:
+  M1  numuCC efficiency, mc-cv          387/557 = 69.5 %     (numu_score > 0.9)
+  M2  numuCC in-sample purity, mc-cv    387/448 = 86.4 %
+  M3  nueCC efficiency, mc-nuecc, >7    618/1511 = 40.9 %
+  M4  nueCC in-sample purity, >7        618/632 = 97.8 %
+  M5  nueCC efficiency, >4              734/1511 = 48.6 %
+  M6  nueCC in-sample purity, >4        734/781 = 94.0 %
+  M7  vertex within 5 cm, all true nu in FV, mc-cv     539/783 = 68.8 %
+  M8  vertex within 5 cm, all true nu in FV, mc-nuecc  1122/1626 = 69.0 %
+  M9  beam-off gates passing numu > 0.9 with reco vertex in FV   5/1000 = 0.50 %
+  M10 beam-off gates passing nue > 7 (and > 4)                    0/1000 (0/1000)
+
+Noise floor: for each metric, |s0rep - baseline| (same config, same binary, same input; only the
+DL/SCN vertex is not bit-stable).  Reported before any verdict.
+
+Verdict rule per metric x cell (frozen here):
+  IMPROVED / DEGRADED  iff  |delta| > 2 x noise floor (and > 0.5 percentage point for a metric whose
+                       floor is 0)  AND  the exact two-sided sign test on the paired per-interaction
+                       exchange (signal rows selected in baseline only vs cell only; for M2/M4/M6 the
+                       background rows; for M7/M8 the matched rows) gives p < 0.05.
+  NOT SEPARABLE        otherwise.  "Not separable" is never written as "unchanged".
+  For M9/M10 (1000 gates, 5 events) only a change of >= 5 gates counts, and it is reported as a rate
+  with its Wilson interval, never as a verdict.
+Overall: the trajectory is recommended for SBND only if no primary metric is DEGRADED on tfull and at
+least one is IMPROVED.  A mixed result is reported as mixed.
+
+Secondary (reported, not graded): Q1 by true class and Edep bin; the doc-115 miss taxonomy; the
+score-scan curves (efficiency/purity vs cut) baseline vs tfull; flash-time association (V11);
+exposure-weighted numuCC purity at f = 1 and the common-exposure nueCC purity (doc 115 sec 13
+method, the cell's own beam-off rate); the trajectory-closure clauses of pr150_traj_eval.py
+(R2D_W, P2, uncov, jitter) on the MC -- the "fit closes better" half of doc pr/150, now on MC.
+
+Degradation follow-up (only where a metric is DEGRADED on tfull or csp3bw):
+  origin: truth-adjudicated mover taxonomy (CHOICE / STRUCTURE / LOST-CANDIDATE as doc pr/150 sec 4,
+  by true class, Edep bin, cathode band, TPC edges) and first-failing-stage attribution for lost signal
+  (no candidate -> vertex > 5 cm -> reco vertex outside FV -> score below cut), with the moved BDT
+  inputs on the same interaction.
+  improvement attempt: at most TWO rungs from EXISTING keys, chosen by the taxonomy from
+  {steiner_terminal_min_separation=0.7 (stub branches at the vertex),
+   retile_sampler_charge_threshold=6000 (sampler density),
+   dl_vtx_min_accept_score=4.0 (DL admission; pr/150 found it makes the vertex WORSE)},
+  each a FULL cell on the degraded sample(s) (never a loser-only manifest -- the conditioning trap).
+  A rung PASSES iff every primary metric is >= its tfull value - noise floor AND the degraded metric
+  recovers >= half of its loss (baseline - tfull).  No key default and no constant is changed; a rung
+  that fails is reported as failing.
+
+Written 2026-09-20 before any docs/116 arm existed; sha256 in 116_pred.sha256.

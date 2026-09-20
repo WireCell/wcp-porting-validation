@@ -1,0 +1,81 @@
+tier	id	sample	cell	metric	base_k	base_n	cell_k	cell_n	delta_pp	lost	gained	p	floor_pp	verdict
+primary	M1	cv	s0rep	numuCC efficiency (cv, numu > 0.9)	387	557	387	557	0.000	0	0	1.0000	0.000	(floor)
+primary	M1	cv	cs	numuCC efficiency (cv, numu > 0.9)	387	557	385	557	-0.359	43	41	0.9132	0.000	not separable
+primary	M1	cv	p3bw	numuCC efficiency (cv, numu > 0.9)	387	557	382	557	-0.898	39	34	0.6400	0.000	not separable
+primary	M1	cv	csp3bw	numuCC efficiency (cv, numu > 0.9)	387	557	378	557	-1.616	45	36	0.3742	0.000	not separable
+primary	M1	cv	tfull	numuCC efficiency (cv, numu > 0.9)	387	557	390	557	0.539	39	42	0.8243	0.000	not separable
+primary	M2	cv	s0rep	numuCC in-sample purity (cv)	387	448	387	448	0.000	0	0	1.0000	0.000	(floor)
+primary	M2	cv	cs	numuCC in-sample purity (cv)	387	448	385	442	0.720	24	28	0.6778	0.000	not separable
+primary	M2	cv	p3bw	numuCC in-sample purity (cv)	387	448	382	437	1.030	27	33	0.5190	0.000	not separable
+primary	M2	cv	csp3bw	numuCC in-sample purity (cv)	387	448	378	443	-1.057	33	29	0.7035	0.000	not separable
+primary	M2	cv	tfull	numuCC in-sample purity (cv)	387	448	390	450	0.283	29	30	1.0000	0.000	not separable
+primary	M3	nuecc	s0rep	nueCC efficiency (nuecc, nue > 7)	618	1511	618	1511	0.000	0	0	1.0000	0.000	(floor)
+primary	M3	nuecc	cs	nueCC efficiency (nuecc, nue > 7)	618	1511	606	1511	-0.794	181	169	0.5566	0.000	not separable
+primary	M3	nuecc	p3bw	nueCC efficiency (nuecc, nue > 7)	618	1511	636	1511	1.191	165	183	0.3622	0.000	not separable
+primary	M3	nuecc	csp3bw	nueCC efficiency (nuecc, nue > 7)	618	1511	632	1511	0.927	159	173	0.4756	0.000	not separable
+primary	M3	nuecc	tfull	nueCC efficiency (nuecc, nue > 7)	618	1511	630	1511	0.794	168	180	0.5555	0.000	not separable
+primary	M4	nuecc	s0rep	nueCC in-sample purity (nuecc, > 7)	618	632	618	632	0.000	0	0	1.0000	0.000	(floor)
+primary	M4	nuecc	cs	nueCC in-sample purity (nuecc, > 7)	618	632	606	628	-1.288	16	8	0.1516	0.000	not separable
+primary	M4	nuecc	p3bw	nueCC in-sample purity (nuecc, > 7)	618	632	636	653	-0.388	14	11	0.6900	0.000	not separable
+primary	M4	nuecc	csp3bw	nueCC in-sample purity (nuecc, > 7)	618	632	632	654	-1.149	15	7	0.1338	0.000	not separable
+primary	M4	nuecc	tfull	nueCC in-sample purity (nuecc, > 7)	618	632	630	649	-0.712	14	9	0.4049	0.000	not separable
+primary	M5	nuecc	s0rep	nueCC efficiency (nuecc, nue > 4)	734	1511	734	1511	0.000	0	0	1.0000	0.000	(floor)
+primary	M5	nuecc	cs	nueCC efficiency (nuecc, nue > 4)	734	1511	735	1511	0.066	187	188	1.0000	0.000	not separable
+primary	M5	nuecc	p3bw	nueCC efficiency (nuecc, nue > 4)	734	1511	745	1511	0.728	178	189	0.6017	0.000	not separable
+primary	M5	nuecc	csp3bw	nueCC efficiency (nuecc, nue > 4)	734	1511	749	1511	0.993	175	190	0.4637	0.000	not separable
+primary	M5	nuecc	tfull	nueCC efficiency (nuecc, nue > 4)	734	1511	757	1511	1.522	172	195	0.2508	0.000	not separable
+primary	M6	nuecc	s0rep	nueCC in-sample purity (nuecc, > 4)	734	781	734	781	0.000	0	0	1.0000	0.000	(floor)
+primary	M6	nuecc	cs	nueCC in-sample purity (nuecc, > 4)	734	781	735	795	-1.529	45	32	0.1711	0.000	not separable
+primary	M6	nuecc	p3bw	nueCC in-sample purity (nuecc, > 4)	734	781	745	796	-0.389	36	32	0.7163	0.000	not separable
+primary	M6	nuecc	csp3bw	nueCC in-sample purity (nuecc, > 4)	734	781	749	812	-1.741	45	29	0.0805	0.000	not separable
+primary	M6	nuecc	tfull	nueCC in-sample purity (nuecc, > 4)	734	781	757	803	0.289	31	32	1.0000	0.000	not separable
+primary	M7	cv	s0rep	vertex < 5 cm, all true nu in FV (cv)	539	783	539	783	0.000	0	0	1.0000	0.000	(floor)
+primary	M7	cv	cs	vertex < 5 cm, all true nu in FV (cv)	539	783	534	783	-0.639	47	42	0.6718	0.000	not separable
+primary	M7	cv	p3bw	vertex < 5 cm, all true nu in FV (cv)	539	783	533	783	-0.766	43	37	0.5764	0.000	not separable
+primary	M7	cv	csp3bw	vertex < 5 cm, all true nu in FV (cv)	539	783	529	783	-1.277	52	42	0.3533	0.000	not separable
+primary	M7	cv	tfull	vertex < 5 cm, all true nu in FV (cv)	539	783	533	783	-0.766	42	36	0.5716	0.000	not separable
+primary	M8	nuecc	s0rep	vertex < 5 cm, all true nu in FV (nuecc)	1122	1626	1122	1626	0.000	0	0	1.0000	0.000	(floor)
+primary	M8	nuecc	cs	vertex < 5 cm, all true nu in FV (nuecc)	1122	1626	1110	1626	-0.738	164	152	0.5361	0.000	not separable
+primary	M8	nuecc	p3bw	vertex < 5 cm, all true nu in FV (nuecc)	1122	1626	1133	1626	0.677	141	152	0.5592	0.000	not separable
+primary	M8	nuecc	csp3bw	vertex < 5 cm, all true nu in FV (nuecc)	1122	1626	1119	1626	-0.185	148	145	0.9070	0.000	not separable
+primary	M8	nuecc	tfull	vertex < 5 cm, all true nu in FV (nuecc)	1122	1626	1133	1626	0.677	147	158	0.5670	0.000	not separable
+secondary	S1	nuecc	s0rep	numuCC efficiency on the nuecc arm (90 signal)	47	90	47	90	0.000	0	0	1.0000	0.000	(floor)
+secondary	S1	nuecc	cs	numuCC efficiency on the nuecc arm (90 signal)	47	90	48	90	1.111	5	6	1.0000	0.000	--
+secondary	S1	nuecc	p3bw	numuCC efficiency on the nuecc arm (90 signal)	47	90	49	90	2.222	3	5	0.7266	0.000	--
+secondary	S1	nuecc	csp3bw	numuCC efficiency on the nuecc arm (90 signal)	47	90	45	90	-2.222	6	4	0.7539	0.000	--
+secondary	S1	nuecc	tfull	numuCC efficiency on the nuecc arm (90 signal)	47	90	47	90	0.000	6	6	1.0000	0.000	--
+secondary	S2	cv	s0rep	nueCC efficiency on the cv arm (5 signal)	4	5	4	5	0.000	0	0	1.0000	0.000	(floor)
+secondary	S2	cv	cs	nueCC efficiency on the cv arm (5 signal)	4	5	4	5	0.000	0	0	1.0000	0.000	--
+secondary	S2	cv	p3bw	nueCC efficiency on the cv arm (5 signal)	4	5	4	5	0.000	0	0	1.0000	0.000	--
+secondary	S2	cv	csp3bw	nueCC efficiency on the cv arm (5 signal)	4	5	3	5	-20.000	1	0	1.0000	0.000	--
+secondary	S2	cv	tfull	nueCC efficiency on the cv arm (5 signal)	4	5	4	5	0.000	0	0	1.0000	0.000	--
+secondary	S3	cv	s0rep	vertex < 5 cm, true numuCC in FV (cv)	463	557	463	557	0.000	0	0	1.0000	0.000	(floor)
+secondary	S3	cv	cs	vertex < 5 cm, true numuCC in FV (cv)	463	557	463	557	0.000	31	31	1.0000	0.000	--
+secondary	S3	cv	p3bw	vertex < 5 cm, true numuCC in FV (cv)	463	557	452	557	-1.975	34	23	0.1849	0.000	--
+secondary	S3	cv	csp3bw	vertex < 5 cm, true numuCC in FV (cv)	463	557	452	557	-1.975	38	27	0.2145	0.000	--
+secondary	S3	cv	tfull	vertex < 5 cm, true numuCC in FV (cv)	463	557	457	557	-1.077	30	24	0.4966	0.000	--
+secondary	S4	cv	s0rep	vertex < 5 cm, true NC in FV (cv)	71	221	71	221	0.000	0	0	1.0000	0.000	(floor)
+secondary	S4	cv	cs	vertex < 5 cm, true NC in FV (cv)	71	221	66	221	-2.262	16	11	0.4421	0.000	--
+secondary	S4	cv	p3bw	vertex < 5 cm, true NC in FV (cv)	71	221	76	221	2.262	9	14	0.4049	0.000	--
+secondary	S4	cv	csp3bw	vertex < 5 cm, true NC in FV (cv)	71	221	73	221	0.905	13	15	0.8506	0.000	--
+secondary	S4	cv	tfull	vertex < 5 cm, true NC in FV (cv)	71	221	71	221	0.000	12	12	1.0000	0.000	--
+secondary	S5	nuecc	s0rep	vertex < 5 cm, true nueCC in FV (nuecc)	1067	1511	1067	1511	0.000	0	0	1.0000	0.000	(floor)
+secondary	S5	nuecc	cs	vertex < 5 cm, true nueCC in FV (nuecc)	1067	1511	1058	1511	-0.596	157	148	0.6470	0.000	--
+secondary	S5	nuecc	p3bw	vertex < 5 cm, true nueCC in FV (nuecc)	1067	1511	1079	1511	0.794	136	148	0.5140	0.000	--
+secondary	S5	nuecc	csp3bw	vertex < 5 cm, true nueCC in FV (nuecc)	1067	1511	1069	1511	0.132	141	143	0.9527	0.000	--
+secondary	S5	nuecc	tfull	vertex < 5 cm, true nueCC in FV (nuecc)	1067	1511	1077	1511	0.662	141	151	0.5985	0.000	--
+off	M9	off	s0rep	beam-off numu>0.9	5	1000	5	1000	0.000	0	0			rate
+off	M10	off	s0rep	beam-off nue>7.0	0	1000	0	1000	0.000	0	0			rate
+off	M10	off	s0rep	beam-off nue>4.0	0	1000	0	1000	0.000	0	0			rate
+off	M9	off	cs	beam-off numu>0.9	5	1000	4	1000	-0.100	3	2			rate
+off	M10	off	cs	beam-off nue>7.0	0	1000	0	1000	0.000	0	0			rate
+off	M10	off	cs	beam-off nue>4.0	0	1000	0	1000	0.000	0	0			rate
+off	M9	off	p3bw	beam-off numu>0.9	5	1000	2	1000	-0.300	4	1			rate
+off	M10	off	p3bw	beam-off nue>7.0	0	1000	0	1000	0.000	0	0			rate
+off	M10	off	p3bw	beam-off nue>4.0	0	1000	0	1000	0.000	0	0			rate
+off	M9	off	csp3bw	beam-off numu>0.9	5	1000	4	1000	-0.100	2	1			rate
+off	M10	off	csp3bw	beam-off nue>7.0	0	1000	0	1000	0.000	0	0			rate
+off	M10	off	csp3bw	beam-off nue>4.0	0	1000	0	1000	0.000	0	0			rate
+off	M9	off	tfull	beam-off numu>0.9	5	1000	4	1000	-0.100	1	0			rate
+off	M10	off	tfull	beam-off nue>7.0	0	1000	0	1000	0.000	0	0			rate
+off	M10	off	tfull	beam-off nue>4.0	0	1000	0	1000	0.000	0	0			rate

@@ -1,0 +1,160 @@
+direction	kind	run	subrun	event	idx	cls	Edep	vx	vy	vz	klass	d_other	d_main	d_main_candidate	d_any_vertex	route_own	route_other	flav	cut	stage	score_own	score_other	dEnu	tagger_changed
+LOST	vertex	712	12	35	1	numuCC	405.5	-184.5	131.0	417.9	no candidate	-1.0	-1.0	-1.0	-1.0	dl-dual-snap-reject-accept/dl	-							
+LOST	vertex	712	25	11	1	NC	256.7	126.3	-159.1	192.0	CHOICE	7.6	7.6	0.9	0.9	dl-veto-protected/nodl	dl-dual-snap-accept/dl							
+LOST	vertex	712	25	5	0	NC	426.1	-129.3	165.6	44.2	STRUCTURE	7.2	7.2	7.2	7.2	dl-dual-snap-reject/nodl	dl-dual-snap-reject/nodl							
+LOST	vertex	712	43	32	1	NC	306.9	11.4	-53.0	29.1	CHOICE	25.2	25.2	2.6	2.6	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	713	30	37	0	NC	273.3	88.9	90.1	115.5	CHOICE	19.8	19.8	0.8	0.8	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	713	38	9	0	numuCC	1425.8	36.1	-156.4	371.2	STRUCTURE	7.7	7.7	7.7	6.3	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	713	48	22	0	NC	344.5	-177.1	165.2	440.3	CHOICE	18.3	18.3	0.4	0.4	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	713	48	42	0	numuCC	577.3	-104.5	-80.5	212.7	CHOICE	5.0	5.0	0.9	0.9	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	713	51	21	0	numuCC	432.0	88.3	-8.0	24.9	CHOICE	9.2	9.2	2.0	2.0	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	713	67	34	0	numuCC	392.6	181.0	121.5	173.0	no candidate	-1.0	-1.0	-1.0	-1.0	dl-dual-snap-accept/dl	-							
+LOST	vertex	713	7	2	1	numuCC	494.6	-50.3	-99.3	237.6	STRUCTURE	7.2	7.2	12.3	7.2	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	713	70	3	0	NC	399.7	130.2	-118.8	164.6	CHOICE	5.3	5.3	1.4	0.5	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	713	72	24	0	numuCC	489.4	-164.6	67.8	39.5	CHOICE	10.4	10.4	0.4	0.4	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	713	75	37	0	numuCC	638.1	-44.2	81.2	370.7	STRUCTURE	23.4	23.4	23.4	23.4	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	713	84	1	0	NC	421.5	19.8	-30.5	308.2	CHOICE	211.9	211.9	0.4	0.4	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	713	84	47	0	NC	396.1	-155.8	190.0	27.4	CHOICE	13.1	13.1	0.5	0.5	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	713	98	22	0	NC	384.2	148.8	133.7	261.9	CHOICE	21.5	21.5	2.5	2.5	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	714	12	35	1	numuCC	1169.7	-92.3	-116.9	122.3	CHOICE	130.2	130.2	0.6	0.6	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	714	12	6	0	numuCC	1098.9	24.4	90.6	199.1	CHOICE	6.6	6.6	2.4	2.4	dl-dual-snap-accept/dl	dl-dual-snap-reject-accept/dl							
+LOST	vertex	714	4	39	0	numuCC	415.4	-114.7	-177.6	318.4	STRUCTURE	8.1	8.1	8.1	6.4	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	714	40	13	0	numuCC	225.5	-26.4	111.7	247.8	CHOICE	45.5	45.5	0.9	0.9	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	714	65	36	0	NC	408.5	-11.2	162.9	234.9	CHOICE	36.4	36.4	2.1	2.1	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	715	17	33	0	numuCC	432.0	77.2	39.3	307.6	CHOICE	7.6	7.6	1.0	1.0	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	715	59	3	0	NC	946.2	180.1	83.8	25.2	CHOICE	8.9	8.9	4.0	4.0	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	715	59	7	0	numuCC	555.0	-165.1	-168.0	206.5	CHOICE	39.6	39.6	0.5	0.5	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	715	68	50	0	numuCC	276.6	-20.8	163.5	437.6	STRUCTURE	6.2	6.2	6.2	6.2	dl-dual-snap-reject/nodl	dl-dual-snap-accept/dl							
+LOST	vertex	715	89	1	1	numuCC	247.3	106.4	-166.0	333.9	CHOICE	38.7	38.7	1.3	1.3	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	717	11	23	1	numuCC	482.3	-116.9	-54.5	416.3	STRUCTURE-near	5.4	5.4	66.6	1.8	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	717	29	47	0	numuCC	320.7	170.7	-95.5	141.1	CHOICE	463.7	463.7	0.3	0.3	dl-dual-snap-accept/dl	dl-dual-snap-reject/nodl							
+LOST	vertex	717	32	4	0	numuCC	933.6	113.9	-149.0	237.1	CHOICE	5.9	5.9	1.3	1.3	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	717	83	38	0	numuCC	563.6	11.3	129.2	191.1	CHOICE	71.3	71.3	1.3	1.3	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	717	88	38	0	numuCC	426.2	-70.0	-75.6	43.2	CHOICE	136.5	136.5	1.2	1.2	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	719	1	24	0	numuCC	167.9	-175.2	46.1	135.0	no candidate	-1.0	-1.0	-1.0	-1.0	dl-dual-snap-accept/dl	-							
+LOST	vertex	719	29	1	1	numuCC	350.1	183.0	81.0	152.3	STRUCTURE	5.2	420.2	377.3	377.3	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	719	4	40	0	numuCC	593.1	-164.5	-122.4	161.2	CHOICE	199.4	199.4	0.3	0.3	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	719	44	4	0	numuCC	635.8	-62.3	-61.1	261.5	CHOICE	5.8	5.7	2.7	0.6	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	719	44	7	2	numuCC	480.9	85.9	-145.6	447.1	CHOICE	13.1	13.1	2.2	2.2	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	719	45	42	1	numuCC	236.7	-54.3	-124.2	415.8	CHOICE	7.7	7.7	1.2	1.2	dl-veto-protected/nodl	dl-dual-snap-accept/dl							
+LOST	vertex	719	74	16	1	numuCC	948.7	-175.7	-71.6	444.1	STRUCTURE	10.0	10.0	5.6	5.6	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	719	8	46	1	numuCC	885.2	-140.7	-180.1	124.4	CHOICE	5.5	5.5	3.4	0.7	dl-dual-snap-accept/dl	dl-dual-snap-reject-accept/dl							
+LOST	vertex	720	17	19	1	NC	548.9	-20.9	155.5	261.3	CHOICE	25.5	25.5	2.3	2.3	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	vertex	720	39	45	0	numuCC	1838.8	-100.4	142.3	58.7	CHOICE	495.1	495.1	1.7	1.7	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	711	79	16	0	NC	828.3	76.9	38.6	55.6	CHOICE	79.4	79.4	1.2	1.2	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	711	90	19	1	NC	1245.4	-103.5	99.7	143.2	CHOICE	5.6	5.6	2.4	2.4	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	712	12	33	0	NC	731.0	-112.5	38.1	89.8	CHOICE	72.0	72.0	1.7	1.7	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	712	6	8	0	numuCC	640.9	27.7	-118.7	182.9	CHOICE	64.7	64.7	1.5	1.5	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	712	92	49	0	NC	234.9	8.1	55.9	390.7	CHOICE	21.9	21.9	0.8	0.8	dl-dual-snap-accept/dl	dl-dual-snap-reject/nodl							
+GAINED	vertex	712	94	11	0	numuCC	228.0	-22.9	5.3	113.7	CHOICE	46.6	46.6	0.8	0.8	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	713	10	12	0	NC	594.9	23.3	-103.1	53.3	CHOICE	5.8	5.8	3.9	3.9	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	713	20	3	1	numuCC	777.7	-153.2	-30.6	106.2	CHOICE	11.8	11.8	0.7	0.7	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	713	21	37	0	NC	795.7	-173.6	-91.1	313.8	STRUCTURE	5.3	5.3	5.7	5.3	dl-dual-snap-reject-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	713	35	17	0	numuCC	321.7	-66.2	178.2	231.3	CHOICE	85.8	85.8	1.7	1.7	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	713	48	18	0	numuCC	1065.5	163.9	-37.6	326.7	CHOICE	7.3	7.4	1.2	0.6	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	713	50	32	0	numuCC	1183.7	-138.5	169.8	214.9	CHOICE	63.8	63.8	2.0	2.0	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	713	67	36	1	numuCC	131.9	-187.8	6.6	430.1	no candidate	-1.0	-1.0	-1.0	-1.0	dl-dual-snap-reject/nodl	-							
+GAINED	vertex	713	7	6	0	NC	60.9	159.0	-59.4	157.0	STRUCTURE	38.0	38.0	8.8	8.8	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	713	70	5	0	numuCC	593.5	-169.9	-146.0	56.2	STRUCTURE	112.8	112.8	19.0	19.0	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	713	72	48	2	NC	242.2	-24.1	152.2	148.7	CHOICE	6.3	6.3	3.4	2.2	dl-dual-snap-reject/nodl	dl-dual-snap-accept/dl							
+GAINED	vertex	713	89	26	0	numuCC	884.7	91.5	114.4	434.1	STRUCTURE	109.6	109.6	6.0	6.0	dl-veto-protected/nodl	dl-dual-snap-accept/dl							
+GAINED	vertex	713	93	49	0	numuCC	440.9	24.8	-181.3	112.1	CHOICE	5.5	5.5	4.4	4.4	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	714	23	32	0	numuCC	917.8	-12.4	-36.7	46.4	CHOICE	27.4	27.5	2.4	2.4	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	715	17	14	0	numuCC	1064.3	-23.5	-102.7	207.7	CHOICE	11.4	11.4	1.1	1.1	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	715	47	27	0	numuCC	647.8	-130.1	-73.5	84.0	STRUCTURE	7.8	7.8	7.8	7.8	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	715	49	41	0	NC	264.9	-166.6	36.5	62.2	CHOICE	6.0	6.0	0.2	0.2	dl-veto-protected/nodl	dl-dual-snap-accept/dl							
+GAINED	vertex	715	58	46	0	numuCC	645.3	-140.5	-150.2	211.2	CHOICE	287.3	287.3	0.7	0.7	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	717	45	48	0	NC	25.6	186.9	-6.7	122.0	STRUCTURE	-1.0	-1.0	999.0	999.0	dl-dual-snap-accept/dl	dl-not-run/nodl							
+GAINED	vertex	717	88	33	0	NC	124.7	145.5	-18.5	198.3	CHOICE	10.8	10.8	1.0	1.0	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	717	99	27	1	NC	497.3	160.1	57.5	166.4	STRUCTURE-near	6.5	6.5	6.5	3.5	dl-dual-snap-reject/nodl	dl-veto-protected/nodl							
+GAINED	vertex	719	0	48	0	numuCC	638.5	162.3	161.6	122.5	STRUCTURE	14.2	14.2	14.2	14.2	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	719	1	17	0	numuCC	1096.0	-69.6	138.8	212.1	STRUCTURE	-1.0	-1.0	999.0	999.0	dl-dual-snap-accept/dl	dl-not-run/nodl							
+GAINED	vertex	719	19	8	0	numuCC	4325.5	151.5	-13.1	128.7	STRUCTURE-near	8.4	8.4	7.2	2.4	dl-dual-snap-accept/dl	dl-dual-snap-reject-accept/dl							
+GAINED	vertex	719	32	34	0	numuCC	310.3	7.2	-173.3	32.2	STRUCTURE	36.9	36.9	12.7	12.7	dl-veto-protected/nodl	dl-dual-snap-accept/dl							
+GAINED	vertex	719	54	5	0	numuCC	526.1	-22.3	26.9	389.0	STRUCTURE-near	5.7	5.7	5.7	0.8	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	719	74	49	1	numuCC	648.7	50.7	150.2	389.5	CHOICE	134.7	134.7	1.4	1.4	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	720	17	27	0	numuCC	220.4	-187.4	157.8	168.4	STRUCTURE	44.8	44.8	7.3	7.3	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	720	17	43	1	numuCC	226.2	147.6	-103.0	444.7	CHOICE	22.9	22.9	0.4	0.4	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	720	36	17	0	numuCC	1375.7	156.9	-82.1	408.3	CHOICE	5.1	5.1	2.0	2.0	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+GAINED	vertex	720	5	28	1	numuCC	233.7	18.8	-15.0	228.0	CHOICE	40.5	40.4	0.7	0.7	dl-dual-snap-accept/dl	dl-dual-snap-accept/dl							
+LOST	sel_numu0.9	712	12	35	1	numuCC	405.5	-184.5	131.0	417.9		-1.0				dl-dual-snap-reject-accept/dl	-	numu	0.9	no candidate	2.399	nan		
+LOST	sel_numu0.9	712	22	22	0	numuCC	845.9	-8.9	63.0	344.8		0.5				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	1.965	0.590	38.6	br3_3_score,lol_1_score,lol_2_score,nue_score,numu_1_score,numu_score,pio_2_score,sig_2_score,stw_2_score,tro_1_score,tro_4_score
+LOST	sel_numu0.9	713	38	9	0	numuCC	1425.8	36.1	-156.4	371.2		7.7				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	2.450	nan		
+LOST	sel_numu0.9	713	48	42	0	numuCC	577.3	-104.5	-80.5	212.7		5.0				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	2.422	nan		
+LOST	sel_numu0.9	713	51	21	0	numuCC	432.0	88.3	-8.0	24.9		9.2				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	3.560	nan		
+LOST	sel_numu0.9	713	51	44	0	numuCC	754.2	-132.5	148.6	437.9		0.4				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	3.515	-0.368	-77.3	cosmict_2_filled,cosmict_3_filled,cosmict_4_filled,cosmict_5_filled,numu_1_score,numu_2_score,numu_3_score,numu_score
+LOST	sel_numu0.9	713	62	22	0	numuCC	573.5	130.7	161.5	270.9		0.7				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	0.963	0.899	133.4	numu_1_score,numu_score
+LOST	sel_numu0.9	713	67	34	0	numuCC	392.6	181.0	121.5	173.0		-1.0				dl-dual-snap-accept/dl	-	numu	0.9	no candidate	2.979	nan		
+LOST	sel_numu0.9	713	7	2	1	numuCC	494.6	-50.3	-99.3	237.6		7.2				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	1.723	nan		
+LOST	sel_numu0.9	713	70	18	0	numuCC	252.0	-70.0	-16.2	328.0		0.6				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	1.356	-0.064	64.4	numu_1_score,numu_3_score,numu_score
+LOST	sel_numu0.9	713	72	24	0	numuCC	489.4	-164.6	67.8	39.5		10.4				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	3.430	nan		
+LOST	sel_numu0.9	713	75	37	0	numuCC	638.1	-44.2	81.2	370.7		23.4				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	4.328	nan		
+LOST	sel_numu0.9	713	87	5	0	numuCC	838.1	-34.0	-4.8	285.8		1.5				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	1.047	0.168	-67.5	br3_3_score,br3_5_score,br3_6_score,cosmict_2_filled,cosmict_4_filled,lol_1_score,lol_2_score,nue_score,numu_1_score,numu_3_score,numu_score,pio_2_score,sig_1_score,sig_2_score,stw_2_score,stw_4_score,tro_1_score,tro_2_score,tro_4_score,tro_5_score
+LOST	sel_numu0.9	714	12	35	1	numuCC	1169.7	-92.3	-116.9	122.3		130.2				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	4.324	nan		
+LOST	sel_numu0.9	714	12	6	0	numuCC	1098.9	24.4	90.6	199.1		6.6				dl-dual-snap-accept/dl	dl-dual-snap-reject-accept/dl	numu	0.9	not matched (< 5 cm)	4.261	nan		
+LOST	sel_numu0.9	714	4	39	0	numuCC	415.4	-114.7	-177.6	318.4		8.1				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	3.047	nan		
+LOST	sel_numu0.9	714	73	2	0	numuCC	316.2	-64.5	97.8	156.1		0.7				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	1.770	-0.118	-1.3	numu_1_score,numu_score
+LOST	sel_numu0.9	715	59	7	0	numuCC	555.0	-165.1	-168.0	206.5		39.6				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	3.924	nan		
+LOST	sel_numu0.9	715	68	44	0	numuCC	2904.3	-102.9	-139.1	254.8		1.8				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	2.754	0.679	-257.7	br3_3_score,br3_5_score,br3_6_score,cosmict_3_filled,cosmict_5_filled,lol_1_score,lol_2_score,nue_score,numu_1_score,numu_2_score,numu_3_score,numu_score,pio_2_score,sig_1_score,sig_2_score,stw_2_score,stw_3_score,stw_4_score,tro_1_score,tro_2_score,tro_4_score,tro_5_score
+LOST	sel_numu0.9	715	68	50	0	numuCC	276.6	-20.8	163.5	437.6		6.2				dl-dual-snap-reject/nodl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	4.395	nan		
+LOST	sel_numu0.9	715	89	1	1	numuCC	247.3	106.4	-166.0	333.9		38.7				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	1.948	nan		
+LOST	sel_numu0.9	717	11	23	1	numuCC	482.3	-116.9	-54.5	416.3		5.4				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	3.050	nan		
+LOST	sel_numu0.9	717	29	29	1	numuCC	773.7	-46.3	-75.9	156.0		0.5				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	3.253	0.745	74.4	cosmict_2_filled,cosmict_4_filled,numu_1_score,numu_score
+LOST	sel_numu0.9	717	32	4	0	numuCC	933.6	113.9	-149.0	237.1		5.9				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	3.331	nan		
+LOST	sel_numu0.9	717	83	38	0	numuCC	563.6	11.3	129.2	191.1		71.3				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	1.757	nan		
+LOST	sel_numu0.9	717	88	38	0	numuCC	426.2	-70.0	-75.6	43.2		136.5				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	2.139	nan		
+LOST	sel_numu0.9	719	29	1	1	numuCC	350.1	183.0	81.0	152.3		5.2				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	2.399	nan		
+LOST	sel_numu0.9	719	4	35	2	numuCC	244.7	-97.3	-55.5	265.2		0.8				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	1.242	0.503	-83.4	cosmict_6_filled,cosmict_flag,cosmict_flag_2,cosmict_flag_7,numu_1_score,numu_3_score,numu_score
+LOST	sel_numu0.9	719	4	40	0	numuCC	593.1	-164.5	-122.4	161.2		199.4				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	4.060	nan		
+LOST	sel_numu0.9	719	43	26	1	numuCC	310.9	-189.7	-174.1	220.6		0.3				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	1.432	0.005	-149.3	numu_1_score,numu_score
+LOST	sel_numu0.9	719	44	4	0	numuCC	635.8	-62.3	-61.1	261.5		5.8				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	3.043	nan		
+LOST	sel_numu0.9	719	45	42	1	numuCC	236.7	-54.3	-124.2	415.8		7.7				dl-veto-protected/nodl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	2.802	nan		
+LOST	sel_numu0.9	719	5	38	0	numuCC	328.9	70.5	-9.3	44.9		1.5				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	1.528	-0.219	31.8	numu_1_score,numu_score
+LOST	sel_numu0.9	719	74	16	1	numuCC	948.7	-175.7	-71.6	444.1		10.0				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	2.805	nan		
+LOST	sel_numu0.9	719	8	46	1	numuCC	885.2	-140.7	-180.1	124.4		5.5				dl-dual-snap-accept/dl	dl-dual-snap-reject-accept/dl	numu	0.9	not matched (< 5 cm)	2.597	nan		
+LOST	sel_numu0.9	720	45	32	1	numuCC	1185.4	107.9	-121.4	359.5		0.9				dl-dual-snap-accept/dl	dl-dual-snap-reject-accept/dl	numu	0.9	score below cut	3.855	0.386	-331.3	cosmict_2_filled,cosmict_4_filled,numu_1_score,numu_score
+LOST	sel_numu0.9	720	5	32	0	numuCC	680.8	70.4	47.8	124.8		1.4				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	1.248	0.236	197.6	br3_3_score,br3_5_score,br3_6_score,lol_1_score,lol_2_score,nue_score,numu_1_score,numu_3_score,numu_score,pio_2_score,sig_2_score,tro_1_score,tro_4_score,tro_5_score
+LOST	sel_numu0.9	720	64	28	0	numuCC	1149.0	-115.8	-74.3	434.2		0.6				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	0.911	0.735	-28.4	cosmict_2_filled,cosmict_4_filled,numu_1_score,numu_3_score,numu_score
+LOST	sel_numu0.9	720	66	23	0	numuCC	230.5	75.0	75.1	105.4		2.3				dl-dual-snap-accept/dl	dl-dual-snap-reject-accept/dl	numu	0.9	score below cut	2.409	-0.534	-112.7	cosmict_8_filled,cosmict_flag,cosmict_flag_2,numu_1_score,numu_score
+GAINED	sel_numu0.9	712	12	38	0	numuCC	537.5	-8.5	-162.3	365.3		1.6				dl-dual-snap-accept/dl	dl-dual-snap-reject-accept/dl	numu	0.9	score below cut	2.002	0.514	156.8	cosmict_2_filled,cosmict_4_filled,numu_1_score,numu_score
+GAINED	sel_numu0.9	712	18	39	0	numuCC	197.5	62.9	-30.3	383.5		0.7				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	1.018	0.825	-1.1	numu_1_score,numu_score
+GAINED	sel_numu0.9	712	31	27	0	numuCC	785.3	20.3	7.6	261.6		2.9				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	3.929	-1.053	-247.2	cosmict_8_filled,numu_1_score,numu_2_score,numu_3_score,numu_score
+GAINED	sel_numu0.9	712	6	8	0	numuCC	640.9	27.7	-118.7	182.9		64.7				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	3.922	nan		
+GAINED	sel_numu0.9	713	13	22	0	numuCC	660.7	-92.1	111.1	307.2		0.6				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	4.752	0.539	-466.5	br3_3_score,br3_5_score,br3_6_score,cosmict_3_filled,cosmict_5_filled,cosmict_8_filled,lol_1_score,lol_2_score,nue_score,numu_1_score,numu_2_score,numu_3_score,numu_score,sig_1_score,sig_2_score,stw_2_score,stw_3_score,stw_4_score,tro_2_score,tro_4_score,tro_5_score
+GAINED	sel_numu0.9	713	20	3	1	numuCC	777.7	-153.2	-30.6	106.2		11.8				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	4.721	nan		
+GAINED	sel_numu0.9	713	28	13	1	numuCC	1064.8	9.9	48.8	303.1		1.3				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	2.225	-0.102	-47.7	cosmict_2_filled,cosmict_4_filled,cosmict_flag,cosmict_flag_2,numu_1_score,numu_score
+GAINED	sel_numu0.9	713	35	17	0	numuCC	321.7	-66.2	178.2	231.3		85.8				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	2.077	nan		
+GAINED	sel_numu0.9	713	48	18	0	numuCC	1065.5	163.9	-37.6	326.7		7.3				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	1.041	nan		
+GAINED	sel_numu0.9	713	50	32	0	numuCC	1183.7	-138.5	169.8	214.9		63.8				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	1.535	nan		
+GAINED	sel_numu0.9	713	57	20	0	numuCC	160.2	-110.2	-154.6	447.2		1.1				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	1.043	0.677	3.8	numu_1_score,numu_score
+GAINED	sel_numu0.9	713	67	36	1	numuCC	131.9	-187.8	6.6	430.1		-1.0				dl-dual-snap-reject/nodl	-	numu	0.9	no candidate	1.698	nan		
+GAINED	sel_numu0.9	713	70	5	0	numuCC	593.5	-169.9	-146.0	56.2		112.8				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	3.716	nan		
+GAINED	sel_numu0.9	713	72	11	0	numuCC	780.4	-186.8	-49.1	97.3		0.4				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	2.682	0.336	-154.4	br3_3_score,cosmict_6_filled,lol_1_score,lol_2_score,nue_score,numu_1_score,numu_score,pio_2_score,sig_2_score,tro_1_score,tro_4_score
+GAINED	sel_numu0.9	713	85	27	0	numuCC	744.4	152.6	156.7	30.8		0.7				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	1.897	-0.615	-207.9	cosmict_2_filled,cosmict_4_filled,cosmict_8_filled,numu_1_score,numu_score
+GAINED	sel_numu0.9	713	89	13	0	numuCC	727.0	-161.2	-130.1	228.1		3.8				dl-dual-snap-reject/nodl	dl-dual-snap-reject-accept/dl	numu	0.9	score below cut	2.315	0.169	88.2	br3_3_score,br3_5_score,br3_6_score,cosmict_2_filled,cosmict_4_filled,cosmict_8_filled,cosmict_flag,cosmict_flag_4,lol_1_score,lol_2_score,match_isFC,nue_score,numu_1_score,numu_score,sig_1_score,sig_2_score,stw_2_score,stw_3_score,stw_4_score,tro_1_score,tro_4_score
+GAINED	sel_numu0.9	713	89	26	0	numuCC	884.7	91.5	114.4	434.1		109.6				dl-veto-protected/nodl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	2.880	nan		
+GAINED	sel_numu0.9	713	93	37	0	numuCC	371.4	-131.7	47.9	218.5		0.7				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	0.986	0.269	3.7	numu_1_score,numu_score
+GAINED	sel_numu0.9	713	93	49	0	numuCC	440.9	24.8	-181.3	112.1		5.5				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	2.770	nan		
+GAINED	sel_numu0.9	714	23	32	0	numuCC	917.8	-12.4	-36.7	46.4		27.4				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	2.492	nan		
+GAINED	sel_numu0.9	714	71	37	0	numuCC	1414.7	-85.7	36.5	340.2		0.6				dl-dual-snap-accept/dl	dl-dual-snap-reject-accept/dl	numu	0.9	score below cut	2.059	0.177	-486.2	cosmict_2_filled,cosmict_4_filled,cosmict_6_filled,cosmict_7_filled,numu_1_score,numu_3_score,numu_score
+GAINED	sel_numu0.9	714	9	50	0	numuCC	393.3	-123.7	-7.5	52.4		0.9				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	5.193	-1.027	-460.4	cosmict_3_filled,cosmict_5_filled,cosmict_6_filled,cosmict_7_filled,numu_1_score,numu_2_score,numu_3_score,numu_score
+GAINED	sel_numu0.9	715	17	14	0	numuCC	1064.3	-23.5	-102.7	207.7		11.4				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	4.142	nan		
+GAINED	sel_numu0.9	715	47	27	0	numuCC	647.8	-130.1	-73.5	84.0		7.8				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	1.996	nan		
+GAINED	sel_numu0.9	715	58	46	0	numuCC	645.3	-140.5	-150.2	211.2		287.3				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	4.850	nan		
+GAINED	sel_numu0.9	715	80	28	0	numuCC	258.1	-18.1	-140.7	105.0		1.2				dl-veto-protected/nodl	dl-dual-snap-accept/dl	numu	0.9	score below cut	1.156	0.848	-154.3	cosmict_6_filled,cosmict_7_filled,numu_1_score,numu_score
+GAINED	sel_numu0.9	719	0	48	0	numuCC	638.5	162.3	161.6	122.5		14.2				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	2.997	nan		
+GAINED	sel_numu0.9	719	1	17	0	numuCC	1096.0	-69.6	138.8	212.1		-1.0				dl-dual-snap-accept/dl	dl-not-run/nodl	numu	0.9	not matched (< 5 cm)	3.280	nan		
+GAINED	sel_numu0.9	719	1	2	0	numuCC	843.4	-160.0	-11.8	415.8		0.2				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	2.654	-0.369	-270.3	numu_1_score,numu_score
+GAINED	sel_numu0.9	719	5	15	0	numuCC	941.9	-23.9	36.2	406.9		1.6				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	0.914	0.478	195.5	cosmict_8_filled,numu_1_score,numu_score
+GAINED	sel_numu0.9	719	5	18	0	numuCC	310.5	-94.8	71.5	285.3		1.9				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	1.317	0.794	-2.2	numu_1_score,numu_score
+GAINED	sel_numu0.9	719	54	19	0	numuCC	592.3	-155.3	6.3	442.9		1.2				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	0.953	0.769	15.8	numu_1_score,numu_score
+GAINED	sel_numu0.9	719	54	5	0	numuCC	526.1	-22.3	26.9	389.0		5.7				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	1.598	nan		
+GAINED	sel_numu0.9	719	74	28	0	numuCC	528.2	56.7	39.8	105.1		0.8				dl-veto-protected/nodl	dl-dual-snap-accept/dl	numu	0.9	score below cut	2.417	0.545	11.1	cosmict_7_filled,cosmict_flag,cosmict_flag_2,numu_1_score,numu_3_score,numu_score
+GAINED	sel_numu0.9	719	74	49	1	numuCC	648.7	50.7	150.2	389.5		134.7				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	4.034	nan		
+GAINED	sel_numu0.9	719	76	41	0	numuCC	744.4	6.5	-188.8	293.6		4.1				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	4.313	-0.408	-308.3	cosmict_3_filled,cosmict_5_filled,cosmict_6_filled,cosmict_7_filled,match_isFC,numu_1_score,numu_2_score,numu_3_score,numu_score
+GAINED	sel_numu0.9	719	99	19	0	numuCC	647.2	40.5	-5.7	219.8		1.8				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	1.281	0.199	172.3	cosmict_6_filled,cosmict_7_filled,cosmict_8_filled,numu_1_score,numu_score
+GAINED	sel_numu0.9	720	17	43	1	numuCC	226.2	147.6	-103.0	444.7		22.9				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	2.376	nan		
+GAINED	sel_numu0.9	720	36	17	0	numuCC	1375.7	156.9	-82.1	408.3		5.1				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	not matched (< 5 cm)	3.437	nan		
+GAINED	sel_numu0.9	720	38	50	0	numuCC	1007.3	40.1	100.6	194.1		1.4				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	1.147	-0.025	114.9	cosmict_2_filled,cosmict_4_filled,numu_1_score,numu_score
+GAINED	sel_numu0.9	720	59	12	0	numuCC	518.1	114.9	-54.5	111.5		1.1				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	1.175	-0.063	-232.9	br3_3_score,cosmict_2_filled,cosmict_4_filled,lol_1_score,lol_2_score,nue_score,numu_1_score,numu_score,pio_2_score,sig_1_score,sig_2_score,stw_2_score,stw_3_score,stw_4_score,tro_1_score,tro_4_score
+GAINED	sel_numu0.9	720	66	19	1	numuCC	154.2	-173.7	56.5	355.0		2.5				dl-dual-snap-accept/dl	dl-dual-snap-accept/dl	numu	0.9	score below cut	1.103	0.745	4.6	numu_1_score,numu_score

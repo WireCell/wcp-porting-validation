@@ -1,0 +1,7 @@
+# doc 115 score scan -- sample off-cs
+# candidates 89, truth interactions 0
+# nue BDT evaluated (nue_score != -15): 6/89 = 6.7 %
+
+numu_score > 0.9   selected gates 4/1000 = 0.40 %
+nue_score > 4     selected gates 0/1000 = 0.00 %
+nue_score > 7     selected gates 0/1000 = 0.00 %
