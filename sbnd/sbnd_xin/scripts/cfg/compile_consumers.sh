@@ -87,10 +87,16 @@ echo "bare_prjob rc=$?"
 # silently disables the SCN import, so the job runs the GEOMETRIC vertex instead of the DL one.
 # That is a worse silent regression than an allocator swap.  Do not narrow the pattern to make an
 # upgrade quieter.
+#
+# doc sbnd_xin/119 sec 11.8 added SBND_PR_ALLOC_LIB to the alternation WITH the flip, not after it.
+# The preload sites read $SBND_TCMALLOC_LIB either way, so the LD_PRELOAD lines would have kept
+# matching and this artifact would have gone on hashing happily -- while the line that names the
+# library actually loaded silently dropped out of it.  A tripwire that still fires but no longer
+# contains the fact is worse than one that breaks.
 {
     for _r in run_pr_chain_batch.sh run_pr_evt.sh run_clus_evt.sh; do
         echo "## $_r"
-        grep -hE '(LD_PRELOAD|SBND_TCMALLOC_LIB|SBND_PR_TCMALLOC|TCMALLOC_SO|WCT_TCMALLOC|WC_PRELOAD|^PYLIB=)' \
+        grep -hE '(LD_PRELOAD|SBND_PR_ALLOC_LIB|SBND_TCMALLOC_LIB|SBND_PR_TCMALLOC|TCMALLOC_SO|WCT_TCMALLOC|WC_PRELOAD|^PYLIB=)' \
              "$SX/$_r" | grep -vE '^[[:space:]]*#' | sed 's/^[[:space:]]*//'
     done
 } > "$OUT/runner_alloc.txt" 2> "$OUT/runner_alloc.err"

@@ -61,7 +61,12 @@ case "$ALLOC" in
     # UNSET, not =1.  run_pr_chain_batch.sh turns its own default OFF when it detects harness use
     # (PR_PIPELINE set, or SBND_PROTECT_BUNDLE=0); letting that logic run is what makes this arm
     # production rather than an arm that merely looks like it.
-    prod)  unset SBND_PR_TCMALLOC; ARMSUF="" ;;
+    prod)  # doc sbnd_xin/119 sec 11.8: the runner's allocator default MOVED to jemalloc.  This arm was
+    # measured on tcmalloc, so it PINS tcmalloc rather than inheriting a default that no longer
+    # means what it meant when the arm was produced.  Without this line a re-run silently yields
+    # a JEMALLOC arm under a tcmalloc name -- the arm-naming trap of sec 11.7, one level down.
+    unset SBND_PR_TCMALLOC
+           export SBND_PR_ALLOC_LIB=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4; ARMSUF="" ;;
     glibc) export SBND_PR_TCMALLOC=0; ARMSUF="g" ;;
     *) echo "unknown ALLOC=$ALLOC (prod|glibc)" >&2; exit 2 ;;
 esac

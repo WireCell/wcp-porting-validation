@@ -1,0 +1,13 @@
+# doc sbnd_xin/119 sec 11.8 G3 -- the ALIAS PRECEDENCE test, two-sided, one event each into a
+# throwaway root under ~/tmp (never into a d119 arm: M13).  This is the mechanism the three
+# record scripts of rounds 1, 4 and 5 now depend on to keep their arms meaning what they say.
+#
+#   A: no allocator env at all              -> must be the NEW default, jemalloc
+#   B: SBND_TCMALLOC_LIB=<libtcmalloc>       -> round 1's spelling must still PIN tcmalloc
+#
+# Read from the runner's own per-event log line, not inferred:
+
+  a: /usr/lib/x86_64-linux-gnu/libjemalloc.so.2
+  b: /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+
+both rc=0.

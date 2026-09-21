@@ -1,0 +1,23 @@
+# doc sbnd_xin/119 lever gate: 'jdef' arm vs the 'jem' arm
+# allowed to move: trees=(none) calib-json=(none) provenance=True
+# always forgiven: the dual chain's off_ms stopwatch (it moves between two runs of one config)
+# archive members by content (M2); logs, rc.txt, .time.meta, compiled cfg are not products
+
+## cv: jem 18 events, jdef 18, compared 18
+   files compared         : 82
+   differ, within allowance: 28
+   differ, NOT allowed    : 0
+
+## nuecc: jem 24 events, jdef 24, compared 24
+   files compared         : 120
+   differ, within allowance: 48
+   differ, NOT allowed    : 0
+
+## off: jem 20 events, jdef 20, compared 20
+   files compared         : 82
+   differ, within allowance: 21
+   differ, NOT allowed    : 0
+
+PASS -- nothing outside this lever's declared allowance moved
+
+[exited with code 0]

@@ -1,4 +1,4 @@
-# doc sbnd_xin/119 — the cross-detector PR profiling campaign: rounds 0, 1, 2, 3, 4 and 5
+# doc sbnd_xin/119 — the cross-detector PR profiling campaign: rounds 0, 1, 2, 3, 4, 5 and the round-5 flip
 
 **Status: round 0 measured. Round 1 measured, gated and FLIPPED. Round 3 (§9) measured, gated and
 TAKEN — the first round of this campaign to rebuild C++: two byte-identical levers in the
@@ -32,10 +32,14 @@ through one invocation: **jemalloc 5.3.0 is −18.8 % mean and −19.1 % max pea
 events at no CPU cost, taking all three events above 2 GiB below it, and it is byte-identical on the
 62-event manifest** with a null pair proving the gate is specific. It buys **nothing on the gate
 manifest** (+0.1 % on nuecc) — the win exists only where a cap is threatened — and it is **+4 to
-+7 % CPU on jobs of a few seconds**, which is a few hundredths of a second each. **Not flipped** — changing an
++7 % CPU on jobs of a few seconds** (a few hundredths of a second each), while being **−4.0 % and
+faster on 7 of 7 of the heavy events**. **Not flipped** — changing an
 existing production default is §5 rule 1, the owner's call, as round 1's was. A mechanism control
 (tcmalloc at `TCMALLOC_RELEASE_RATE=10`) shows page-return policy is only about a quarter of it and
-is a cheaper partial option in its own right. Shipping regardless: **§6.4's runner tripwire hole is
+is a cheaper partial option in its own right. **§11.8 then flipped it on the owner's go, for local
+running only** — gated three ways, one artifact of 26 moved, no compiled config touched. **§11.9 is
+the item that flip uncovered and did not fix: SBND's LArSoft production preloads nothing and runs
+on glibc, the allocator this round ranks worst, and no flip in this campaign has ever reached it.** Shipping regardless: **§6.4's runner tripwire hole is
 closed**, and with it a second hole found *inside* `prod_cfg_gate.py` — adding a consumer to the
 gate's own input set had silently never taken effect (§11.4).
 
@@ -427,6 +431,13 @@ full-PR-chain preload sites, `:1963` and `:2156`. It **joins** the preload
 (`LD_PRELOAD="$PYLIB:$SBND_TCMALLOC_LIB"`) — assigning would drop libpython and silently demote the
 job to the geometric vertex. `run_pr_evt.sh:318` is deliberately **not** touched, so the frozen A/B
 arms keep their exact process environment. Escape hatch: `SBND_PR_TCMALLOC=0`.
+
+> **SUPERSEDED for the library, not the mechanism (§11.8).** The `SBND_PR_TCMALLOC` switch and the
+> join-don't-assign rule above are unchanged and still govern. What moved on 2026-09-21 is *which*
+> library the switch preloads: the default is now **jemalloc 5.3.0**, selected by
+> `SBND_PR_ALLOC_LIB` (with `SBND_TCMALLOC_LIB` still honoured as round 1's spelling). Round 1's
+> −16.5 % against glibc still stands and §11.2 reproduces it at −15.8 % on a different event set —
+> it is the *tcmalloc-vs-jemalloc* comparison that round 5 added.
 
 ---
 
@@ -1190,10 +1201,30 @@ In-job CPU on the same arms (TICK total, the instrument every cost claim in this
 | **jemalloc** | 78.7 s | **−4.0 %** | 159.1 s | −3.3 % |
 | tcmalloc + release_rate 10 | 82.3 s | +0.4 % | 168.1 s | +2.2 % |
 
-**Read the CPU column conservatively.** Round 3's null pair put the run-to-run floor on this machine
-at +0.2 / −1.6 / −2.6 % (§9.3). −4.0 % is only just outside it, and there is one run per event. The
-defensible statement is **"jemalloc costs no CPU"**, not "jemalloc is 4 % faster". The glibc column
-is a different matter — +18.8 % is far outside any floor, and it **independently reproduces round 1
+**The CPU floor, corrected.** An earlier draft of this section quoted +0.2 / −1.6 / −2.6 % as the
+run-to-run floor and attributed it to round 3. That is **round 2's** floor, measured on the
+*pre*-round-3 binary (§6.3); round 3 re-measured it on the new binary at **+3.0 / +0.9 / −0.1 %**
+(§9.3), precisely because a noise floor does not survive a rebuild. Round 5 runs on the round-3
+binary, so +3.0 / +0.9 / −0.1 % is the floor that applies.
+
+**And the tail set has a null pair of its own, which is better evidence than either.**
+`work-r3nue-d119ttcm` is byte-identically round 4's `work-r3nue-d119tail` configuration, run again
+weeks of edits later — a same-config repeat on exactly the seven events the claim is made on:
+
+| | arm TICK sum, 7 events | vs the round-5 control | sign across the 7 events |
+|---|---:|---:|---|
+| tcmalloc, round 4 run | 566.4 s | −1.2 % | — |
+| **tcmalloc, round 5 run (control)** | **573.6 s** | — | null pair: **−1.1 % to +7.5 %, mixed** |
+| glibc | 681.3 s | +18.8 % | 7/7 slower |
+| **jemalloc** | **550.9 s** | **−4.0 %** | **7/7 faster**, −0.9 to −5.5 % |
+| tcmalloc + release_rate 10 | 575.8 s | +0.4 % | mixed |
+
+So the null pair drifts **+1.3 % at arm level with mixed sign per event**, and jemalloc is −4.0 % at
+arm level and **negative on every one of the seven events** (7/7 one-way, sign test p = 0.016).
+That is a real if modest speed-up on the heavy events — about 3.2 s off an 82 s job — not merely
+"no cost". It is still not a reason to flip on its own; the memory is.
+
+The glibc column is a different matter — +18.8 % is far outside any floor, and it **independently reproduces round 1
 on a different event set**: round 1 measured tcmalloc at −16.5 % on one median event, and the
 inverse of +18.8 % is −15.8 % here on the tail.
 
@@ -1213,11 +1244,19 @@ directions. Taken with the p50 event, that is the clearest form of the round's c
 win exists **only** on the events that threaten a cap, which is also the only place it is wanted.
 It also means a flip cannot be justified by an average — the average is flat.
 
-**CPU: report the caveat.** On the two *short* samples jemalloc is **worse in relative terms**,
-+6.6 % on cv and +4.5 % on beam-off. In absolute core-seconds that is +0.20 s and +0.04 s per
-event against −0.28 s on nuecc and −3.2 s on the tail, so jemalloc wins where the time actually is
-— but the honest shape is "jemalloc's CPU benefit grows with job size and is slightly negative on
-jobs of a few seconds", not "jemalloc is faster".
+**CPU: report the caveat, against the right floor.** The round-3 null pair on this binary is
++3.0 / +0.9 / −0.1 % for nuecc / cv / off (§9.3). So of the three rows above:
+
+- **nuecc −2.4 % is inside its own ±3.0 % floor — no claim either way.**
+- cv **+6.6 %** and beam-off **+4.5 %** are outside theirs, and are real: on *short* jobs jemalloc
+  is genuinely slower in relative terms.
+
+In absolute core-seconds those are +0.20 s and +0.04 s per event, against −3.2 s per event on the
+tail. The honest shape is **"jemalloc's CPU benefit grows with job size, crossing over somewhere
+between a 3-second and a 12-second job"** — a real few-per-cent win on the heavy events, a real but
+negligible loss on the trivial ones, and nothing measurable in between. (Why short jobs pay is not
+measured here; per-thread arena initialisation is the obvious candidate and this round does not
+test it.)
 
 **Two free by-products of running the control arm.**
 
@@ -1395,12 +1434,17 @@ because unlike round 3's hoist or round 5's allocator it cannot be had byte-iden
 
 ### 11.7 What round 5 recommends
 
+> **DECIDED — TAKEN for local running.** The owner's go, 2026-09-21: *"Let's flip for local running
+> them."* §11.8 is the flip and its gates. The decision below is left as written, because it is the
+> record of what was put in front of the owner and on what evidence.
+
 **To the owner, one decision:** flip `SBND_TCMALLOC_LIB` to jemalloc 5.3.0 in the SBND PR runners,
 or do not. Everything needed to decide is above:
 
 - **For.** −18.8 % mean / −19.1 % max peak RSS on the tail, three of three events above 2 GiB taken
-  below it, −4.0 % CPU there (read as "no CPU cost"), byte-identical on 62 events with a specific
-  null pair, one line in one runner, and an exact precedent in round 1.
+  below it, **−4.0 % CPU there and faster on 7 of 7 events** against a same-config null pair that
+  drifts +1.3 % with mixed sign, byte-identical on 62 events with a specific null pair, one line in
+  one runner, and an exact precedent in round 1.
 - **Against.** It buys **nothing where there is no tail** — +0.1 % mean RSS on the 24 gate-manifest
   nuecc events, and 1.197 vs 1.197 GiB on the p50 event. This is a tail-only change, worth taking
   only if the operational constraint is a per-process cap; an average will not justify it. On jobs
@@ -1417,7 +1461,8 @@ no operating point and `prod_cfg_gate.py` reports PASS 26/26 against the new ref
 
 **For the campaign, the ranking after round 5:**
 
-1. **The allocator** — sized, gated, waiting on one decision.
+1. ~~**The allocator**~~ — **DONE for local running, §11.8.** Replaced at the top of this list by
+   §11.9: **SBND's LArSoft production runs on glibc** and no allocator flip has ever reached it.
 2. **`CreateSteinerGraph`'s per-cluster working set** (§10.6) — still the largest object on all
    three detectors in both CPU and memory, still blocked on a frame-pointer build before anything
    inside the retile sampler can be resolved, and still likely a physics trade rather than a lever.
@@ -1437,3 +1482,167 @@ exists and is **round 1's** arm on the **pre-round-3 binary**, so reading round 
 it would have folded round 3's −14.9 % CPU win into what was reported as an allocator delta. The
 M13 arm marker would have refused a *write* there; nothing stopped a *read*, so `r5_alloc.py` now
 checks the marker before it reads, and round 5's own 62-event arms carry an `r5` tag.
+
+---
+
+## 11.8 The flip — jemalloc becomes the default for local running
+
+> "Let's flip for local running them."
+> — the owner, 2026-09-21
+
+**Status: TAKEN, for the standalone chain only.** `run_pr_chain_batch.sh`'s allocator default moves
+from `libtcmalloc_minimal` to **jemalloc 5.3.0**. No compiled config moves; no physics product
+moves; 25 of the tripwire's 26 artifacts are bit-identical across the generation.
+
+### What changed
+
+One line becomes two:
+
+```bash
+-SBND_TCMALLOC_LIB=${SBND_TCMALLOC_LIB:-/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4}
++SBND_PR_ALLOC_LIB=${SBND_PR_ALLOC_LIB:-${SBND_TCMALLOC_LIB:-/usr/lib/x86_64-linux-gnu/libjemalloc.so.2}}
++SBND_TCMALLOC_LIB=$SBND_PR_ALLOC_LIB      # kept in step, so the two preload sites read one value
+```
+
+Precedence is `SBND_PR_ALLOC_LIB` (the correctly-named knob) → `SBND_TCMALLOC_LIB` (round 1's
+spelling, still honoured so every existing script and doc keeps working) → the jemalloc default.
+The `SBND_PR_TCMALLOC` switch, the join-don't-assign rule and the round-5 fallback warning are all
+unchanged. Escape hatch, either spelling:
+
+```bash
+SBND_PR_ALLOC_LIB=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4   # back to round 1
+SBND_PR_TCMALLOC=0                                                      # back to pre-round-1
+```
+
+### Scope — three things this does NOT do
+
+1. **It does not reach SBND's LArSoft production.** `lar -c wcls-img-clus-matching-xin.fcl` sets no
+   `LD_PRELOAD` at all — `setup-dlvtx.sh:29` says so explicitly — and `lar` links `libc.so.6` with
+   no art library pulling in an allocator. **The chain SBND actually runs is on glibc**, which §11.2
+   measures as the *worst* of the three (+18.8 % CPU against tcmalloc on the tail). Round 1 never
+   reached it either. §11.9 carries this as the campaign's largest open item.
+2. **It does not touch stage A.** `run_clus_evt.sh` keeps `libtcmalloc_minimal`; jemalloc was never
+   measured there.
+3. **It does not touch `run_pr_evt.sh`**, which preloads no allocator by design so the frozen
+   `-stm` / `-tgm` A/B arms keep their process environment.
+
+### The hazard a default flip creates, and what was done about it
+
+Three scripts obtained tcmalloc by *inheriting the default* rather than naming it:
+`stageB_lever.sh` (`LEVER=tcm`, round 1's record), `stageB_tail.sh` (`ALLOC=prod`, round 4's) and
+`stageB_alloc.sh` (`ALLOC=tcm`, round 5's own control). After the flip, every one of them would
+have produced a **jemalloc arm under a tcmalloc name** — the arm-naming trap of §11.7, one level
+down, and this time it would have corrupted the record of three separate rounds rather than one
+reading. All three now **pin** the allocator explicitly, in the same commit as the flip, so no
+window exists in history where a re-run silently mislabels.
+
+**The limitation this exposes, stated rather than fixed:** only a script that *pins* is
+re-derivable across a default change. Scripts that never mention the allocator — doc 118's
+`stageB_flip.sh`, the d117 scripts — inherit whatever the default is on the day they are run. That
+was already true after round 1; the flip does not make it worse, but it is the second time a moving
+default has put a record at risk, and the general fix is that **an arm should record its own
+process environment**. Round 5's per-event `alloc:` log line is the start of that; it makes a
+mislabeled arm *detectable after the fact*, which is not the same as prevented.
+
+### Gates
+
+**G1 — the flipped default reproduces the measured arm** (`119_r6_gate_jdef.txt`). A fresh 62-event
+arm run with **no allocator environment at all** (`ALLOC=default` → `work-r3*-d119jdef`), gated
+against the measured `jem` arm at provenance-only allowance:
+
+| | files compared | within allowance | **NOT allowed** |
+|---|---:|---:|---:|
+| cv (18) | 82 | 28 | **0** |
+| nuecc (24) | 120 | 48 | **0** |
+| beam-off (20) | 82 | 21 | **0** |
+
+**PASS.** All 62 events `rc=0`, and all 62 are confirmed on jemalloc from the runner's own
+per-event log line — not inferred from the arm's name. This is the check that matters for a
+*default* change: §11.5 proved jemalloc is byte-identical, G1 proves the default actually delivers
+jemalloc.
+
+**G2 — the tripwire catches its own family's next change** (`119_r6_gate_drift.txt`). This is the
+first test of the hole closed in §11.4, and it is the reason closing it was worth doing:
+
+```
+checked   : 26 artifacts
+DRIFT     : runner_alloc.txt
+
+PR runner allocator block (reference -> current tree):
+  -SBND_TCMALLOC_LIB=${SBND_TCMALLOC_LIB:-/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4}
+  +SBND_PR_ALLOC_LIB=${SBND_PR_ALLOC_LIB:-${SBND_TCMALLOC_LIB:-/usr/lib/x86_64-linux-gnu/libjemalloc.so.2}}
+```
+
+Detected **and named**, one artifact, nothing else moving. Before §11.4 this flip would have
+reported PASS 25/25.
+
+One edit was required to keep that true and is easy to miss: the preload sites still read
+`$SBND_TCMALLOC_LIB`, so the `LD_PRELOAD` lines would have kept matching the extraction pattern
+while the line naming the *actual library* dropped out of the artifact. `SBND_PR_ALLOC_LIB` was
+added to the pattern **with** the flip. A tripwire that still fires but no longer contains the fact
+is worse than one that breaks.
+
+**G3 — alias precedence, two-sided** (`119_r6_alias_precedence.txt`). One event each into a
+throwaway root, read from the runner's own log: with no allocator env the job loads
+`libjemalloc.so.2`; with round 1's `SBND_TCMALLOC_LIB` spelling it still loads
+`libtcmalloc_minimal.so.4`. That is exactly the mechanism the three pinned record scripts depend
+on, so it is tested rather than assumed.
+
+**G4 — the new reference.** `ref/prod-2026-09-21c`, 26 artifacts, **PASS 26/26**
+(`119_r6_gate_post.txt`). `prod-2026-09-21b` is kept. Exactly one hash differs between the
+generations; the other 25 are bit-identical, which is the blast-radius statement — **no compiled
+configuration moved, and no other detector is touched.**
+
+### What the flip buys, restated so it is not over-quoted
+
+On the seven tail events: **−18.8 % mean and −19.1 % max peak RSS, 3 of 3 events above 2 GiB taken
+below it, −4.0 % CPU and faster on 7 of 7.** On the 62-event gate manifest, which contains no tail
+event: **nothing** (+0.1 % mean RSS on nuecc). On jobs of a few seconds: **+4.5 to +6.6 % CPU**,
+which is +0.04 to +0.20 s each. This is a tail-only change and the averages will not show it.
+
+`TCMALLOC_RELEASE_RATE=10` remains on the table as a smaller, allocator-free alternative (−4.4 %
+mean RSS, no CPU effect) and is **not** applied — taking both would confound the next measurement
+of either.
+
+## 11.9 The open item this round uncovered: SBND's LArSoft production is on glibc
+
+Found while answering "what would it take to flip the LArSoft side too", and it is larger than the
+flip §11.8 just made.
+
+**The facts, all checked rather than assumed:**
+
+- Nothing on the SBND LArSoft path sets `LD_PRELOAD`. `wcp-porting-img/sbnd/setup-dlvtx.sh:29`
+  states it in as many words and contrasts itself with the standalone runner.
+- `lar` links `libc.so.6`; no `art` library in the distribution links an allocator.
+- So `lar -c wcls-img-clus-matching-xin.fcl` — **the chain that runs the PR taggers in SBND
+  production**, per `compile_consumers.sh` block (g) and doc 118's whole placement argument —
+  runs on **glibc**.
+
+Round 1's tcmalloc flip and §11.8's jemalloc flip are both scoped to `run_pr_chain_batch.sh`, the
+standalone driver that produced this campaign's study arms. **Neither has ever applied to the
+LArSoft chain.** Doc 118 went to real lengths to make the *config* flip reach LArSoft — placement
+at the call sites, not the TLAs, "or LArSoft misses it". The allocator has the mirror-image gap one
+level down, at the process, where no jsonnet can reach.
+
+**What is available there.** `jemalloc v5_3_0b -q e26:prof` is already a UPS product in the LArSoft
+cvmfs distribution, and it is **the same upstream revision this round measured** — identical git
+hash `5.3.0-0-g54eaed1d…` to the system library. gperftools/tcmalloc is **not** in that
+distribution, so `TCMALLOC_RELEASE_RATE=10` is not an option on the LArSoft side without adding a
+product to a collaboration-managed stack. The two choices are not symmetric across the two paths.
+
+**What does NOT transfer, and why this is a round and not an edit.** In `lar` the allocator is
+process-wide across art, ROOT, the event store and every LArSoft module; WCT clustering is one
+module. §11.2's −18.8 % was measured on a standalone process where WCT is ~100 % of the heap. An
+allocator cannot be scoped to one module, so the blast radius is the whole job and the number has
+to be re-measured there. Relatedly, doc 118 §12's "a 2 GiB cap no longer holds" is a *standalone,
+one-event-per-process* figure and says so; on the LArSoft path the operational quantity is the
+whole art job's RSS, which this campaign has never measured.
+
+**The measurement that would settle it:** `lar -c wcls-img-clus-matching-xin.fcl` on the same tail
+events, glibc vs jemalloc, reading the art job's own peak RSS and wall. It needs the LArSoft
+environment and reco1 inputs, and the comparison is over the whole job, not the PR stage.
+
+**Ranking, after the flip.** This is now item 1 — ahead of `CreateSteinerGraph` — not because
+jemalloc is certain to help there, but because **the chain SBND actually runs has never been
+measured on any allocator but the one this campaign ranks worst**, and nobody knew that until this
+round went looking.

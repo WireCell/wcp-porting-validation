@@ -1906,7 +1906,43 @@ PYLIB=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
 # 37.55 s (tcmalloc), -16.5 %, with the two sets of three non-overlapping; peak RSS mean
 # 1.416 -> 1.444 GiB, +2.0 %.  Reco-neutral: gated byte-identical on the 62-event manifest.
 # Escape hatch: SBND_PR_TCMALLOC=0 restores the exact pre-round-1 process environment.
-SBND_TCMALLOC_LIB=${SBND_TCMALLOC_LIB:-/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4}
+#
+# doc sbnd_xin/119 sec 11.8 -- FLIPPED TO JEMALLOC 5.3.0 on the owner's go, 2026-09-21
+# ("Let's flip for local running them").  Round 5 ran four allocator arms through THIS script on
+# the seven doc-116 peak-RSS events, back to back at one fan-out, and read them all with one
+# instrument (getrusage CHILDREN high-water):
+#
+#            peak RSS mean   max     events >2 GiB   in-job TICK
+#   tcmalloc    1.862 GiB   2.156         3 of 7        --
+#   glibc          +1.4 %  +2.3 %         4 of 7     +18.8 %
+#   jemalloc      -18.8 %  -19.1 %        0 of 7      -4.0 %   (faster on 7 of 7 events)
+#   tcmalloc+rel   -4.4 %  -3.9 %         1 of 7      +0.4 %
+#
+# Byte-identical: scripts/d119/lever_gate.py --vs r3 jem PASSes on the 62-event manifest, and its
+# non-provenance differences are EXACTLY the null pair's (10/24/1), so jemalloc moves nothing that
+# two runs of one configuration do not.
+#
+# WHAT THIS COSTS, so nobody quotes the flip as free:
+#   * NOTHING is bought where there is no tail -- +0.1 % mean RSS on the 24 gate-manifest nuecc
+#     events, and 1.197 vs 1.197 GiB on the p50 event.  This is a TAIL-ONLY change.
+#   * On SHORT jobs jemalloc is slower: +6.6 % TICK on cv (3 s jobs), +4.5 % on beam-off (1 s).
+#     Absolutely that is +0.20 s and +0.04 s per event, against -3.2 s on an 82 s tail event.
+#
+# SCOPE.  This is the STANDALONE chain only.  run_clus_evt.sh (stage A) stays on tcmalloc -- it was
+# never measured under jemalloc.  And the LArSoft chain that SBND production runs
+# (wcls-img-clus-matching-xin.fcl) preloads NOTHING and is on glibc; this flip does not reach it,
+# and doc 119 sec 11.7 carries that as an open item.
+#
+# Escape hatch, either spelling:
+#   SBND_PR_ALLOC_LIB=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4   # back to round 1
+#   SBND_PR_TCMALLOC=0                                                     # back to pre-round-1
+#
+# Precedence below is SBND_PR_ALLOC_LIB (the correctly-named knob) > SBND_TCMALLOC_LIB (round 1's
+# name, still honoured so every existing arm script and doc keeps working) > the jemalloc default.
+# The record scripts of rounds 1, 4 and 5 now PIN their allocator through one of these rather than
+# inheriting this default, so that `LEVER=tcm` still means tcmalloc after the default moved.
+SBND_PR_ALLOC_LIB=${SBND_PR_ALLOC_LIB:-${SBND_TCMALLOC_LIB:-/usr/lib/x86_64-linux-gnu/libjemalloc.so.2}}
+SBND_TCMALLOC_LIB=$SBND_PR_ALLOC_LIB      # kept in step, so the two preload sites read one value
 [ -r "$PYLIB" ] || { echo "ERROR: libpython not found: $PYLIB" >&2; exit 1; }
 
 # sbnd_xin/docs/109 group 4 -- a self-describing tracking-pr.root.  When the job

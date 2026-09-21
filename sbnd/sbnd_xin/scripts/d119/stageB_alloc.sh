@@ -18,15 +18,17 @@
 #   to replace it with four arms that differ in the allocator and in nothing else.
 #
 # ALLOC:
-#   tcm    TODAY'S PRODUCTION.  SBND_PR_TCMALLOC and SBND_TCMALLOC_LIB both unset, so the runner's
-#          own default applies -- which is ON, libtcmalloc_minimal (round 1, doc 119 sec 5).
+#   tcm    Round 1's allocator, libtcmalloc_minimal, PINNED explicitly.  It was production when
+#          round 5 measured it; doc 119 sec 11.8 then flipped the runner default to jemalloc on the
+#          owner's go, so this arm no longer gets tcmalloc by inheriting a default and must name it.
+#          The pin is what keeps every round-5 number re-derivable after the flip.
 #   glibc  SBND_PR_TCMALLOC=0, the pre-round-1 process environment.  The control doc 116's tail
 #          numbers were measured under.
 #   jem    jemalloc 5.3.0 via the runner's OWN env hook (SBND_TCMALLOC_LIB is `${...:-default}`),
 #          so NO runner edit is needed to measure it.  MALLOC_CONF is explicitly unset: round 4's
 #          jemalloc runs had prof:true and a sampling interval, and that is exactly the
 #          perturbation this round removes.
-#   rel    production tcmalloc + TCMALLOC_RELEASE_RATE=10.  THE MECHANISM CONTROL, and the reason
+#   rel    pinned tcmalloc + TCMALLOC_RELEASE_RATE=10.  THE MECHANISM CONTROL, and the reason
 #          it is not optional: jemalloc 5.x returns dirty pages on a decay timer
 #          (opt.dirty_decay_ms, 10 s by default) while tcmalloc's release rate is 1 by default and
 #          it holds freed spans in its page heap.  If that is what the tail gap is, the finding is
@@ -43,11 +45,15 @@
 # across arms run under different machine load is not a measurement (doc 119 sec 6, the
 # d119ctl2contended arm is the record of that mistake).
 #
-# Usage: ALLOC=<tcm|glibc|jem|rel> [JOBS=n] stageB_alloc.sh <tail|cv|nuecc|off> [sub ...]
+#   default  NO allocator env at all -- whatever the runner's own default is.  Added by sec 11.8
+#            as the FLIP GATE arm: gated against `jem` it proves the flipped default delivers the
+#            configuration that was measured.  Arms work-r3<s>-d119jdef.
+#
+# Usage: ALLOC=<tcm|glibc|jem|rel|default> [JOBS=n] stageB_alloc.sh <tail|cv|nuecc|off> [sub ...]
 set -u
 cd -P "$(dirname "$0")/../.." || exit 1
 SX=$PWD
-S=${1:?usage: ALLOC=<tcm|glibc|jem|rel> stageB_alloc.sh <tail|cv|nuecc|off> [sub ...]}
+S=${1:?usage: ALLOC=<tcm|glibc|jem|rel|default> stageB_alloc.sh <tail|cv|nuecc|off> [sub ...]}
 shift
 
 R3_CLUS_MD5=4ff75274e43e766eaec4eef8b6107ae7   # round 3, toolkit c590ae36 == 253f1845 (comment-only)
@@ -66,15 +72,24 @@ unset PR_EXTRA_TLA SBND_TRACKFIT_JSON PR_GROUP_SIZE SBND_NO_DL PR_CFG_TREE
 unset MALLOC_CONF TCMALLOC_RELEASE_RATE
 
 JEMALLOC=${JEMALLOC:-/usr/lib/x86_64-linux-gnu/libjemalloc.so.2}
-ALLOC=${ALLOC:?set ALLOC to tcm, glibc, jem or rel}
+ALLOC=${ALLOC:?set ALLOC to tcm, glibc, jem, rel or default}
 case "$ALLOC" in
-    tcm)   unset SBND_PR_TCMALLOC SBND_TCMALLOC_LIB; TAG=tcm ;;
+    # PINNED, not inherited: sec 11.8 moved the runner default to jemalloc, so `unset` no longer
+    # means tcmalloc.  An arm must be what its name says however the default moves.
+    tcm)   unset SBND_PR_TCMALLOC SBND_TCMALLOC_LIB
+           export SBND_PR_ALLOC_LIB=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4; TAG=tcm ;;
     glibc) export SBND_PR_TCMALLOC=0;                TAG=glb ;;
     jem)   [ -e "$JEMALLOC" ] || { echo "ERROR: no jemalloc at $JEMALLOC" >&2; exit 1; }
            export SBND_PR_TCMALLOC=1 SBND_TCMALLOC_LIB="$JEMALLOC"; TAG=jem ;;
     rel)   unset SBND_PR_TCMALLOC SBND_TCMALLOC_LIB
+           export SBND_PR_ALLOC_LIB=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4               # pinned, see `tcm` above
            export TCMALLOC_RELEASE_RATE=10;          TAG=rel ;;
-    *) echo "unknown ALLOC=$ALLOC (tcm|glibc|jem|rel)" >&2; exit 2 ;;
+    # THE FLIP GATE ARM (sec 11.8 G1).  No allocator env AT ALL, so the job takes whatever the
+    # runner's own default is.  Gated against the `jem` arm at provenance-only allowance, which is
+    # what proves the flipped DEFAULT delivers the configuration that was actually measured --
+    # exactly the shape of round 2's `flip` gate.
+    default) unset SBND_PR_TCMALLOC SBND_TCMALLOC_LIB SBND_PR_ALLOC_LIB; TAG=jdef ;;
+    *) echo "unknown ALLOC=$ALLOC (tcm|glibc|jem|rel|default)" >&2; exit 2 ;;
 esac
 
 # The tail, named from work-r3nue-d116tfull/*/.time.meta (getrusage CHILDREN high-water).
@@ -94,8 +109,8 @@ TAILSET=(f060/11239 f049/12202 f188/11811 f100/5265 f196/6248 f075/9393 f054/758
 # would have refused the write, but nothing stops a reader.  So round-5 arms carry `r5`.  `jem`
 # is the exception and must stay bare: lever_gate.py addresses arms as work-r3<s>-d119<lever>.
 case "$TAG" in
-    jem) GTAG=jem ;;
-    *)   GTAG=r5$TAG ;;
+    jem|jdef) GTAG=$TAG ;;          # addressed by lever_gate.py as a lever name -- keep it bare
+    *)        GTAG=r5$TAG ;;
 esac
 case "$S" in
     # `t` prefix, so a tail arm can never collide with the 62-event nuecc arm of the same

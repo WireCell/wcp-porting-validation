@@ -30,6 +30,7 @@ Usage:
   python3 scripts/d119/lever_gate.py --vs pad flip     # the flipped default vs the measured arm
   python3 scripts/d119/lever_gate.py --vs r3 r3b       # round 3/5's NULL PAIR -- run it first
   python3 scripts/d119/lever_gate.py --vs r3 jem       # round 5, jemalloc vs the same binary
+  python3 scripts/d119/lever_gate.py --vs jem jdef     # round 6, the FLIPPED DEFAULT vs measured
 """
 import glob
 import hashlib
@@ -112,6 +113,17 @@ ALLOW = {
             "prov_keys": ("toolkit_git", "wcp_git"),
             "prov_branch": ("toolkit_git", "wcp_git"),
             "prov_git": True},
+    # ROUND 6's FLIP GATE (sec 11.8 G1).  `jdef` is an arm run with NO allocator environment at
+    # all, so it takes run_pr_chain_batch.sh's own default.  Gated against the MEASURED `jem` arm
+    # (pass --vs jem), it answers the only question a default-flip raises: does the flipped default
+    # deliver the configuration that was actually measured?  Same shape as round 2's `flip` gate
+    # against `pad`.  Allowance is the SAME as jem's -- nothing but the stopwatch and the two git
+    # strings -- because the two arms are one configuration delivered two ways and must agree on
+    # every product.
+    "jdef": {"trees": (), "json_prefix": (), "provenance": True,
+             "prov_keys": ("toolkit_git", "wcp_git"),
+             "prov_branch": ("toolkit_git", "wcp_git"),
+             "prov_git": True},
 }
 
 

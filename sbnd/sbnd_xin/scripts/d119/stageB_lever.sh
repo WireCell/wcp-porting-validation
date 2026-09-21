@@ -72,7 +72,11 @@ case "$LEVER" in
     # showed a uniform +2 % spread across stages proj_pad cannot touch (the BDT scorers,
     # CreateSteinerGraph), which is the signature of noise, not of a knob.
     ctl|ctl2) export SBND_PR_TCMALLOC=0 ;;
-    tcm) export SBND_PR_TCMALLOC=1 ;;
+    tcm) # doc sbnd_xin/119 sec 11.8: the runner's allocator default MOVED to jemalloc.  This arm was
+    # measured on tcmalloc, so it PINS tcmalloc rather than inheriting a default that no longer
+    # means what it meant when the arm was produced.  Without this line a re-run silently yields
+    # a JEMALLOC arm under a tcmalloc name -- the arm-naming trap of sec 11.7, one level down.
+    export SBND_PR_TCMALLOC=1 SBND_PR_ALLOC_LIB=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4 ;;
     # round 2's FLIP arm: no SBND_TRACKFIT_JSON at all, so the job reads the in-tree
     # cfg/pgrapher/experiment/sbnd/sbnd_track_fitting.json -- i.e. production after the flip.
     # Gated against the `pad` arm to prove the flipped DEFAULT reproduces the MEASURED arm; a key
