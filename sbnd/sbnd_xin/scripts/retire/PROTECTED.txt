@@ -190,7 +190,7 @@ work-tfix388-r9	round-9 track-fit gap-jumping arm; there is no automatic protect
 # rollup_grp0825_ql_20260902.py froze its 18402-member hash rollup into
 # state-20260902/grp0825-ql-rollup.tsv.  Do NOT read the line below as still
 # protecting Q/L products; the current Q/L is work-*-d97fv.
-work-nuecc48-grp0825 work-ncpi0-grp0825 work-mcp1k-grp0825 work-mcp2k-grp0825	doc 81 stage A IMAGING (evt<N>) only -- 48/19/1000/2000 evts; ql_evt<N> retired 2026-09-02	docs/81_group-mode-production.md, doc 98
+# work-nuecc48-grp0825 work-ncpi0-grp0825 work-mcp1k-grp0825 work-mcp2k-grp0825	doc 81 stage A IMAGING (evt<N>) only -- 48/19/1000/2000 evts; ql_evt<N> retired 2026-09-02	docs/81_group-mode-production.md, doc 98
 
 # --- the pr/104 arms: NOW SUPERSEDED, kept pending an owner decision -------
 # prod0823 above covers every sample at least as widely and is byte-identical
@@ -304,7 +304,7 @@ work	bare work/ -- nusel_labels/ hand-scan record (M13) + pr137_sheets/	doc 89
 # The owner's instruction was "we only need to save the latest production
 # results for Q/L matching as well as PR results".  After doc 97's flip that is
 # these eight dirs, and they are the reason every other full-sample arm went.
-work-mcp1k-d97fv work-mcp2k-d97fv work-ncpi0-d97fv work-nuecc48-d97fv	LATEST PRODUCTION stage A (Q/L) at ref/prod-2026-09-04, sep_fv_point ON, 3067 evts	doc 97, doc 98
+# work-mcp1k-d97fv work-mcp2k-d97fv work-ncpi0-d97fv work-nuecc48-d97fv	LATEST PRODUCTION stage A (Q/L) at ref/prod-2026-09-04, sep_fv_point ON, 3067 evts	doc 97, doc 98
 # --- STAGE B MOVED 2026-09-06 (doc 101) ----------------------------------
 # doc pr/144 sec 16.3.1 cut a new full-sample stage B -- work-*-d144fixprod,
 # 3067/3067 rc=0, the COMMITTED DEFAULT on the crash-fixed binary -- and
@@ -317,8 +317,8 @@ work-mcp1k-d97fv work-mcp2k-d97fv work-ncpi0-d97fv work-nuecc48-d97fv	LATEST PRO
 # member-content manifests in archive/records/cleanup-20260906/sbnd-tier2/.
 # RELEASED 2026-09-06 (doc 101 tier 2) -- move to the RETIRED section when the
 # owner confirms; until then this line still protects the arms.
-work-mcp1k-d97fvpr2 work-mcp2k-d97fvpr2 work-ncpi0-d97fvpr2 work-nuecc48-d97fvpr2	the PREVIOUS production stage B (3067 evts, ref/prod-2026-09-04); superseded by work-*-d144fixprod -- doc pr/144 sec 16.3.1	doc 97, doc 98, doc 101
-work-mcp1k-d144fixprod work-mcp2k-d144fixprod work-ncpi0-d144fixprod work-nuecc48-d144fixprod	**LATEST PRODUCTION stage B (PR tail)**, 3067/3067 rc=0, the committed default on the crash-fixed binary; the sentinel suite is re-baselined onto it.  Reads work-*-d97fv (pr144_arms.sh:52).  Pin /home/xqian/tmp/d144_libpin4	doc pr/144 sec 16.3.1, doc 101
+# work-mcp1k-d97fvpr2 work-mcp2k-d97fvpr2 work-ncpi0-d97fvpr2 work-nuecc48-d97fvpr2	the PREVIOUS production stage B (3067 evts, ref/prod-2026-09-04); superseded by work-*-d144fixprod -- doc pr/144 sec 16.3.1	doc 97, doc 98, doc 101
+# work-mcp1k-d144fixprod work-mcp2k-d144fixprod work-ncpi0-d144fixprod work-nuecc48-d144fixprod	**LATEST PRODUCTION stage B (PR tail)**, 3067/3067 rc=0, the committed default on the crash-fixed binary; the sentinel suite is re-baselined onto it.  Reads work-*-d97fv (pr144_arms.sh:52).  Pin /home/xqian/tmp/d144_libpin4	doc pr/144 sec 16.3.1, doc 101
 
 # --- the post-d144fixprod flips (added 2026-09-06, doc 101) ---------------
 # FOUR flips landed AFTER d144fixprod was cut, so "latest production" is a SET,
@@ -819,7 +819,18 @@ work-pr130r1-probe98-mcp1k work-pr130r1-probe98-mcp2k work-pr130r1-probe98-ncpi0
 # released "through" it.
 work-mcp1k-d102m work-mcp2k-d102m work-ncpi0-d102m work-nuecc48-d102m	**LATEST PRODUCTION stage A** (imaging + clustering + Q/L), ref/prod-2026-09-08, 3067 events, toolkit eacacafe = master.  Supersedes work-*-d97fv	doc 102 sec 0, ref/prod-2026-09-08/README.md
 # 2026-09-16 (doc 111 sec 14, owner: "remove the sbnd's final icluster npz files"): the icluster-apa*-{active,masked}.npz of work-mcp1k-d102m / work-mcp2k-d102m (12756 files, 29.34 GiB) and the 12000 in-arm ql_evt<N>/ links onto them RETIRED; 3000 emptied evt<N>/ dirs removed.  Kept: every ql_evt<N> pctree/mabc/opflash (stage-A product), g<N>/ logs and frames-dnn, and the ncpi0/nuecc48 npz.  Manifest archive/records/cleanup-20260916b/sbnd-d102m-icluster.manifest.tsv (+ .links.txt).  Re-imaging = doc 102 stage A (run_chain_group.sh on the reco1 files).
-work-mcp1k-d102mpr work-mcp2k-d102mpr work-ncpi0-d102mpr work-nuecc48-d102mpr	**LATEST PRODUCTION stage B** (the 15-stage tagger + PR chain), ref/prod-2026-09-08, 3067 events; the source of products/prod0908/*-scores-prod0908.tsv.  Supersedes work-*-d144fixprod	doc 102, products/prod0908/
+# ----- 2026-09-21 (round I, doc sbnd_xin/121): THE CURRENT PRODUCTION SET -----
+# Added because this file had no line for anything newer than d102mpr, while the operating
+# point moved four times (ref/prod-2026-09-17b, -09-20, -09-21c, -09-21d).  Each name below
+# was re-derived from a primary source, not inherited from the previous round's planner.
+work-mcp1k-pr150s0 work-mcp2k-pr150s0 work-ncpi0-pr150s0 work-nuecc48-pr150s0	**LATEST PRODUCTION stage B** -- the newest FULL four-sample stage-B output set.  The operating point has moved past it (ref/prod-2026-09-20/-21c/-21d), but MEASURED 2026-09-21: no d118/d119 arm exists on mcp1k/mcp2k/ncpi0/nuecc48, so no newer full set exists, and sentinels_tolerant.py --arms 'work-*-pr150s0' resolves here (21 PASS / 0 FAIL / 2 OPEN / 7 INERT).  Retiring this would make the sentinel suite fail to launch or pass vacuously, neither visible in its tally.	doc pr/150; ref/prod-2026-09-17b
+work-r3cv-d116tfull work-r3nue-d116tfull work-r3off-d116tfull	**THE CURRENT PRODUCTION OUTPUT on the round-3 samples, and a published gate's REFERENCE.**  Doc 118 (Status: FLIPPED, toolkit 675fd266) line 5: the SBND flip IS "doc 116's tfull".  Its gate G1 compares every product of the flipped default AGAINST these arms, archive members by content -- 4 call sites in scripts/d118/hash_gate.py, 3 in stageB_flip.sh, plus d119/stageB_tail.sh and stageB_alloc.sh.  It sits inside a d116 family whose other members were released in round I, so a name-adjacency read WILL try to sweep it.	doc 118 secs 0, 2; ref/prod-2026-09-20
+work-r3cv-d116s0rep work-r3nue-d116s0rep work-r3off-d116s0rep	**THE NOISE-FLOOR CONTROL**, and the other arm a name-adjacency read would have swept.  Doc 116's cell table line 114: "s0rep | none | production re-run: the noise floor", compiled-config IDENTICAL to the no-TLA compile (4ee005c935dac7df, doc 116 sec 2).  It is the arm_before of doc 119 round 0's own Repro line (perf_rank.py nuecc work-r3nue-d116s0rep work-r3nue-d116tfull).  Rule: keep a control when you keep what it controls.	doc 116 secs 2, 3; doc 119 sec 0
+work-r3cv-d115 work-r3nue-d115 work-r3off-d115	**STAGE A / THE INPUT LAYER for every docs 116-119 arm** -- the per-group SP g*/frames-dnn.tar.bz2 archives, and the ONLY copy on our disk: the reco1 inputs are reached through the UNTRACKED symlink xin-round3-samples -> /nfs/data/1/yuhw/2025-fall-prod-sample/, which is not ours to depend on.  CLAUDE.md M11.  Round H ran sbnd with an EMPTY substrate list; round I added this.	doc 115 Repro
+work-r3cv-d115pr work-r3nue-d115pr work-r3off-d115pr	the published TRUTH BASELINE docs 116 and 117 grade every ladder rung against (numuCC 69.5 / 86.4, nueCC 40.9 %).  Kept on the owner's explicit call, 2026-09-21, when asked whether the pre-flip baseline was still worth 19 GiB.	doc 115 secs 4-6
+work-r3cv-d118flip work-r3nue-d118flip work-r3nue-d118fliprep	the arm carrying the flipped production default on ref/prod-2026-09-20, and its determinism control (root_gate.py --arms d118flip d118fliprep "control").	doc 118 Repro, sec 3
+
+work-mcp1k-d102mpr work-mcp2k-d102mpr work-ncpi0-d102mpr work-nuecc48-d102mpr	**SUPERSEDED stage B, KEPT DELIBERATELY** (corrected 2026-09-21, round I -- this line read "LATEST PRODUCTION stage B" until then, which stopped being true on 2026-09-17).  The 15-stage tagger + PR chain at ref/prod-2026-09-08, 3067 events; the source of products/prod0908/*-scores-prod0908.tsv.  It is kept because a superseded OUTPUT arm can still be the INPUT a published gate resolves into, and a newer arm is never a substitute for that -- 175 doc citations, 56 in scripts.  Supersedes work-*-d144fixprod (RETIRED 2026-09-21)	doc 102, products/prod0908/
 ref/ products/	the generation records and the published score tables; not work dirs, named here so no future planner's grammar has to be lucky	doc 102 sec 6
 # 2026-09-14 (doc 109 rev 2): ref/prod-2026-09-08 is REMOVED from the tree on the
 # owner's word.  It no longer matched production (4 artifacts drifted through the
@@ -870,3 +881,20 @@ work-mcp1k-d113snew work-mcp2k-d113snew work-mcp1k-d111ssnew work-mcp2k-d111ssne
 #   pdvd's old flip-evidence arms (~4.6 GiB) ...; mg10 and the wt-merge/wt-premerge worktrees"
 # work-mcp1k-d145np work-mcp2k-d145np work-ncpi0-d145np work-nuecc48-d145np	the full-sample (3067) arm doc pr/148 sec 16 names as what the NEXT round reads -- item 3's bisect and 137238's log lines.  A doc whose last section is a plan for the next session is an OPEN round	doc pr/148 sec 16
 #   -> pr/148's named input.  Released; production stays work-*-d102m/d102mpr, where the sentinel suite reads 21 PASS / 0 FAIL.  work-*-d145prod (pr/145's shipped arm) was NOT in the owner's list and stays.
+
+
+# 2026-09-21 round I (doc sbnd_xin/121): lines RETIRED because the arms they name are GONE
+#   from disk -- measured, not assumed: `ls -d work-*-<family>` returns 0 for all four.  They
+#   were the doc-103 tier-2 block, listed as "STAGED FOR RETIREMENT 2026-09-08 ... NOT YET
+#   EXECUTED"; a later round executed it without updating this file, so these lines have been
+#   protecting nothing for two weeks.  prot_hit() only ever ADDS to KEEP, so the cost was
+#   over-keeping, never mis-deletion -- but a protection that names nothing also cannot be
+#   distinguished from one that works, which is the reason to retire it rather than leave it.
+#   (was line 193) doc 81 stage A imaging, superseded by the round-3 stage A d115 and long gone from disk
+# work-nuecc48-grp0825 work-ncpi0-grp0825 work-mcp1k-grp0825 work-mcp2k-grp0825	doc 81 stage A IMAGING (evt<N>) only -- 48/19/1000/2000 evts; ql_evt<N> retired 2026-09-02	docs/81_group-mode-production.md, doc 98
+#   (was line 307) doc 97 stage A (Q/L) at ref/prod-2026-09-04; production stage A is work-<s>-d102m
+# work-mcp1k-d97fv work-mcp2k-d97fv work-ncpi0-d97fv work-nuecc48-d97fv	LATEST PRODUCTION stage A (Q/L) at ref/prod-2026-09-04, sep_fv_point ON, 3067 evts	doc 97, doc 98
+#   (was line 320) doc 97 stage B; superseded twice over (d102mpr, then pr150s0)
+# work-mcp1k-d97fvpr2 work-mcp2k-d97fvpr2 work-ncpi0-d97fvpr2 work-nuecc48-d97fvpr2	the PREVIOUS production stage B (3067 evts, ref/prod-2026-09-04); superseded by work-*-d144fixprod -- doc pr/144 sec 16.3.1	doc 97, doc 98, doc 101
+#   (was line 321) doc 144 stage B (PR tail); superseded by d102mpr, then pr150s0
+# work-mcp1k-d144fixprod work-mcp2k-d144fixprod work-ncpi0-d144fixprod work-nuecc48-d144fixprod	**LATEST PRODUCTION stage B (PR tail)**, 3067/3067 rc=0, the committed default on the crash-fixed binary; the sentinel suite is re-baselined onto it.  Reads work-*-d97fv (pr144_arms.sh:52).  Pin /home/xqian/tmp/d144_libpin4	doc pr/144 sec 16.3.1, doc 101

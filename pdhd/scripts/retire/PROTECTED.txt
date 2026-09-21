@@ -15,6 +15,22 @@
 # Housekeeping: when something is genuinely superseded, move its line to the
 # RETIRED section at the bottom with the date; do not delete it.
 #
+# MEASURED 2026-09-21 (round I, doc sbnd_xin/121) -- TWO WAYS FIELD 1 CAN PROTECT NOTHING,
+# both of them silent.  protected_lines() splits field 1 on whitespace and treats every
+# token as a name (or, with a TRAILING *, a prefix).  So:
+#   1. PROSE in field 1 becomes bogus tokens.  Line 29's "029107_<N> (38 bare run_evt dirs)"
+#      yields the tokens `(38`, `bare`, `run_evt`, `dirs)` and the literal `029107_<N>`,
+#      none of which match anything.  Those 38 dirs survive because the planner's inline
+#      substrate list names them, NOT because of this line.
+#   2. BRACE/MID-STAR SHORTHAND never matches.  `029107_{0..29}_stm0` and
+#      `029107_*_stmc4000` are shell shorthand, not patterns this matcher understands --
+#      only a trailing `*` is honoured.  (The 30 stm0 and 30 stmw dirs DO exist; the
+#      stmc*/phdump*/wccdump* families do not, and have not for some time.)
+# These lines are LEFT AS THEY ARE on purpose: prot_hit() only ever ADDS to KEEP, so the
+# cost is zero, and rewriting 33 lines of another round's record to suit the matcher is
+# exactly the kind of unrequested edit M13 exists to prevent.  But do not read a line here
+# as evidence that something is protected -- check that the name resolves.
+#
 # PRIMARY SOURCE for the first four blocks: docs/stm-tagger-chain.md line 95
 # (the sec-0 repro block) and line 901 (its "Not committed:" list).  Those two
 # lines are the doc's own statement of what exists only on disk.
@@ -61,7 +77,8 @@ h23conf	own23's ruled items (docs/scan/smx23/owner_rulings_own23.json) and prep-
 h25base h25k h25kr h25r h25va h25vb	smx25/smx26/smx27 + own25/own26: prep-pdhd-h25base, and the movers of lever 1 (h25k), compare_range_cm 45 (h25r) and both (h25kr) put in front of the blind two-scanner re-judge (docs/scan/smx25 key_smx25, items_a*).  h25va/h25vb are over-emitted from movers_*.tsv -- the safe direction.	docs/scan/smx25, smx26; doc pdhd/25 sec 5-8
 
 # --- added 2026-09-16 (doc sbnd_xin/111, round D): PDHD production moved to d108hflip ---
-d108hflip d102hcs	**THE LATEST PDHD PRODUCTION ARM** and the graded arm it reproduces.  Primary source: doc pdvd/108 line 3 ("PDHD production default CHANGED"), sec 3: d108hflip = the flipped config with no TLA on d102hcs's pctrees, gated equal to d102hcs (d103_flip_gate.py).  One claim, two arms.  Supersedes h28prod/h28wl (RETIRED below).  Docs 109-112 run SRC=d108hflip.	doc pdvd/108 sec 0-3
+d116hflip d116hr2	**THE LATEST PDHD PRODUCTION ARM** and the graded R2 cell it reproduces.  Added 2026-09-21 (round I, doc sbnd_xin/121): this file had no line for the production that shipped on 2026-09-18, and the line below still claimed the title.  Primary source: doc pdvd/116 sec 10 (Status: FLIPPED, owner, toolkit f9665bea) -- the same values PDVD ships.  d116hflip carries them with NO TLA; d116hr2 is the graded cell, and is independently a hand-scan source via own116h.	doc pdvd/116 sec 10
+d108hflip d102hcs	**SUBSTRATE and the graded arm it reproduces** (corrected 2026-09-21, round I -- this line read "THE LATEST PDHD PRODUCTION ARM" until then, which stopped being true on 2026-09-18).  d108hflip is now the SRC the doc-116 flip arm was built on, 88 doc citations, so it is substrate rather than production.  Original primary source: doc pdvd/108 line 3 ("PDHD production default CHANGED"), sec 3: d108hflip = the flipped config with no TLA on d102hcs's pctrees, gated equal to d102hcs (d103_flip_gate.py).  Supersedes h28prod/h28wl (RETIRED below).	doc pdvd/108 sec 0-3; doc pdvd/116 sec 10.0
 d109hstm	the display-scope proof of the current PDHD production config (doc pdvd/109: equal to d108hflip on the STM trees, G1) and the source of Bee set c3165b38 (doc pdvd/110 sec 1).  5 events, 0.11 GiB.	doc pdvd/109; doc pdvd/110 sec 1
 d101hnew	the OFF side of the doc 108 flip: the graded A0 (doc 108 sec 1.1), == h28prod on T_stm_michel (doc pdvd/103 sec 10).  Also read by the peer's doc pdvd/113 round (message 2026-09-16).	doc pdvd/108 sec 1.1; doc pdvd/103 sec 10
 /home/xqian/tmp/d102/libpin_d102	THE PIN d108hflip ran on (clus md5 091e142b9481, "unchanged before and after", doc 108 sec 3); also d103vflip's (PDVD).	doc pdvd/108 sec 0 and 3
