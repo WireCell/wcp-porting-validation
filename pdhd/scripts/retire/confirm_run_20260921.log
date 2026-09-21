@@ -1,0 +1,76 @@
+== re-plan at confirm time
+   OK: O5-O8 PASS, lists unchanged
+== pdvd: 23896 logs, 18.43 GiB, frozen 1:1 in pdvd-orphanlogs.manifest.tsv
+   removed 23896/23896
+== pdhd: 6337 logs, 8.96 GiB, frozen 1:1 in pdhd-orphanlogs.manifest.tsv
+   removed 6337/6337
+== pdvd broken symlinks: 0 -> 0
+== pdhd broken symlinks: 0 -> 0
+done (CONFIRM=yes)
+== INTERLOCK A: re-planning before deleting (peer-session guard)
+   OK: all interlocks still PASS; the tier file of every tree being
+   run (sbnd) is unchanged.
+==================================================================
+== sbnd   tier 1   file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_sbnd_20260921.txt
+   lines 22 | present 22 | already gone 0 | 130.32 GiB
+   record gate: 22/22 targets have a manifest in /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/../../../sbnd/sbnd_xin/archive/records/cleanup-20260921/sbnd-tier1
+   DELETING...
+   done, rc=0
+
+POST-STATE CHECK.  interlock 4 recorded the PRE-existing broken-symlink
+count per tree (prebroken_<tree>_20260921.txt); this number only means
+something compared against that.
+   pdhd: 0 broken symlinks
+   pdvd: 0 broken symlinks
+   sbnd/sbnd_xin: 0 broken symlinks
+== INTERLOCK A: re-planning before deleting (peer-session guard)
+   OK: all interlocks still PASS; the tier file of every tree being
+   run (pdvd) is unchanged.
+==================================================================
+== pdvd   tier 1   file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdvd_20260921.txt
+   lines 481 | present 481 | already gone 0 | 4.90 GiB
+   record gate: 481/481 targets have a manifest in /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/../../../sbnd/sbnd_xin/archive/records/cleanup-20260921/pdvd-tier1
+   DELETING...
+   done, rc=0
+
+POST-STATE CHECK.  interlock 4 recorded the PRE-existing broken-symlink
+count per tree (prebroken_<tree>_20260921.txt); this number only means
+something compared against that.
+   pdhd: 0 broken symlinks
+   pdvd: 0 broken symlinks
+   sbnd/sbnd_xin: 0 broken symlinks
+== INTERLOCK A: re-planning before deleting (peer-session guard)
+   OK: all interlocks still PASS; the tier file of every tree being
+   run (pdhd) is unchanged.
+==================================================================
+== pdhd   tier 1   file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdhd_20260921.txt
+   lines 244 | present 244 | already gone 0 | 3.69 GiB
+   record gate: 244/244 targets have a manifest in /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/../../../sbnd/sbnd_xin/archive/records/cleanup-20260921/pdhd-tier1
+   DELETING...
+   done, rc=0
+
+POST-STATE CHECK.  interlock 4 recorded the PRE-existing broken-symlink
+count per tree (prebroken_<tree>_20260921.txt); this number only means
+something compared against that.
+   pdhd: 0 broken symlinks
+   pdvd: 0 broken symlinks
+   sbnd/sbnd_xin: 0 broken symlinks
+== work release done: every tier1 dir of sbnd/pdvd/pdhd is gone
+== INTERLOCK A: re-census unchanged (759 units)
+   guards: 759 units, none written in the last hour, no process cwd inside
+   759 units | permanent pins intact: /home/xqian/tmp/d102/libpin_d102 /home/xqian/tmp/d102m-libsnap /home/xqian/tmp/pdhdstm_libpin
+   record gate: 759/759 units have a manifest written by this freeze in /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/archive/records/cleanup-20260921/tmp
+   REMOVING...
+   done, rc=0
+   WT removed: /home/xqian/tmp/d103/wcp_wt_r3 (HEAD 3320311e on the remote)
+
+POST-STATE: ~/tmp 61G | free 707G
+   /home/xqian/tmp/d102/libpin_d102: intact
+   /home/xqian/tmp/d102m-libsnap: intact
+   /home/xqian/tmp/pdhdstm_libpin: intact
+scanning 49 pin roots: 13776 files, 888 distinct inodes, 26.02 GiB on disk
+782 content groups; 58 files can share an inode; 2.40 GiB recoverable -> 23.63 GiB after
+linked 58, skipped 0, made read-only 5
+VERIFY: 13776 files present (was 13776), 0 missing, 830 inodes, 23.63 GiB on disk
+
+[exited with code 0]

@@ -1,0 +1,5 @@
+reference : ref/prod-2026-09-21d
+cfg tree  : /nfs/data/1/xqian/toolkit-dev/toolkit/cfg
+compiling : /home/xqian/tmp/prodcfg-nzagom1m
+checked   : 26 artifacts
+PASS -- the compiled operating point matches prod-2026-09-21d

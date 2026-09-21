@@ -1,9 +1,16 @@
 # 121 — cleanup round I (2026-09-21): retire the docs 116/117 ladders, and the log class nine rounds could not see
 
-**Status: PLANNED AND GATED; the destructive steps are the owner's to run** (sec 6). Every
-non-destructive step below ran this session: the sentinel baseline, the liveness pin, the
-seven-file fork, the census chain, both planners, the pin-dedup measurement and both dry
-runs. `/home/xqian` free space going in: **511 G**.
+**Status: FULLY EXECUTED by the owner 2026-09-21.** Free space on `/home/xqian` went
+**511 G → 710 G (+199 G)**, against a forecast of "≈ 710 G". Sentinels are **21 PASS /
+0 FAIL / 2 OPEN / 7 INERT** and `prod_cfg_gate` **PASS 26** — both identical to the
+baselines taken before the round, in sec 0. Every tree finished with **0 broken symlinks**
+against a recorded pre-count of 0, and the three permanent pins are intact. Tree sizes:
+sbnd_xin 289 → **159 G**, pdvd 99 → **75 G**, pdhd 83 → **71 G**, `~/tmp` 91 → **58 G**.
+Numbers as executed are in sec 7; sec 1 is the plan they were measured against.
+
+This session planned and gated the round but could not run it: the permission classifier
+refused `CONFIRM=yes` as it did five times in round D and four in round H. The owner ran
+sec 6's block from bash mode, in one paste, rc=0 throughout.
 
 Owner instruction, verbatim (2026-09-21):
 
@@ -370,9 +377,45 @@ means something moved — the drivers re-plan before they delete precisely so a 
 file cannot be executed. If step 3's re-plan disagrees with sec 1's counts, stop and
 re-read the plan.
 
-## 7. As executed
+## 7. As executed (2026-09-21, owner, bash mode)
 
-*(to be filled once the block has run.)*
+**Every step of sec 6 ran in one paste, rc=0 throughout, no refusal and no retry.**
+`/home/xqian` free: **511 G → 710 G (+199 G)** — against a forecast of "≈ 710 G", so the
+set-relative arithmetic in sec 1 held.
+
+| step | result |
+|---|---|
+| orphan driver logs | pdvd **23 896/23 896**, pdhd **6 337/6 337** removed, 27.39 GiB; broken symlinks 0 → 0 in both trees |
+| sbnd release | 22 dirs, present 22, already gone 0, **130.32 GiB**, rc=0 |
+| pdvd release | 481 dirs, present 481, already gone 0, **4.90 GiB**, rc=0 |
+| pdhd release | 244 dirs, present 244, already gone 0, **3.69 GiB**, rc=0 |
+| order gate | *"work release done: every tier1 dir of sbnd/pdvd/pdhd is gone"* — the sweep's precondition, checked rather than assumed |
+| `~/tmp` sweep | INTERLOCK A re-census **unchanged at 759 units**; record gate 759/759; removed, rc=0, **`~/tmp` 91 → 61 G** |
+| the worktree branch | **`WT removed: /home/xqian/tmp/d103/wcp_wt_r3 (HEAD 3320311e on the remote)`** — clean tree, HEAD an ancestor of the pinned head, so `git worktree remove`, never `rm -rf` |
+| pin dedup | 49 roots (3 fewer than at plan time — the sweep took them), 26.02 → **23.63 GiB**, 2.40 recovered, 58 linked, 0 skipped, 5 made read-only; VERIFY **13 776 files present (was 13 776), 0 missing** |
+| broken symlinks | pdhd 0, pdvd 0, sbnd_xin 0 — against the recorded pre-count of 0 |
+| permanent pins | `d102/libpin_d102`, `d102m-libsnap`, `pdhdstm_libpin` — intact, checked by the sweep itself and again after |
+
+Tree sizes: **sbnd_xin 289 → 159 G, pdvd 99 → 75 G, pdhd 83 → 71 G, `~/tmp` 91 → 58 G.**
+
+**The two gates are identical to their sec 0 before-values, which is the only form in which
+they mean anything:**
+
+| gate | before | after |
+|---|---|---|
+| `sentinels_tolerant.py --arms 'work-*-pr150s0'` | 21 PASS, 0 FAIL, 2 OPEN, 7 INERT, 0 SKIP | **21 PASS, 0 FAIL, 2 OPEN, 7 INERT, 0 SKIP** |
+| `prod_cfg_gate.py --ref ref/prod-2026-09-21d` | PASS, 26 artifacts, rc=0 | **PASS, 26 artifacts, rc=0** |
+
+**Two predictions this round made and then got to check.** The `INTERLOCK A` re-census
+came back **unchanged at 759 units** — round H's first sweep refusal was exactly this
+comparison failing (four files aged out of a 2-hour KEEP between census and confirm), and
+sec 6 carried the `CENSUS_SUFFIX` recovery for it. It was not needed. And the ordering
+argument held: putting the orphan logs *before* the directory release kept the frozen list
+and the live list identical, so `cmp` passed and the driver never reached exit 11.
+
+The classifier refused `CONFIRM=yes` once in this session before the hand-off — the tenth
+refusal across rounds D, H and I. One attempt, then the `!` block, as
+`feedback_classifier_refuses_bulk_delete` prescribes.
 
 ## 8. Verification targets
 
