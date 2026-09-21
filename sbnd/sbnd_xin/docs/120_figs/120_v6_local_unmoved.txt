@@ -1,0 +1,8 @@
+# doc sbnd_xin/120 sec 5 -- V6: the LOCAL chain did not move
+# compile_prjob_cfg.sh against the modified cfg tree vs the committed reference.
+
+  after pr() default change : 9635ebcb368d66cdd74108726f79b75e5f0ace6ef03bc5afcddaee00aadc3802
+  ref/prod-2026-09-21c      : 9635ebcb368d66cdd74108726f79b75e5f0ace6ef03bc5afcddaee00aadc3802
+
+  IDENTICAL -- and this is also the empirical proof that a caller-supplied
+  tcn_knobs bag REPLACES the new 219-key default rather than merging with it.

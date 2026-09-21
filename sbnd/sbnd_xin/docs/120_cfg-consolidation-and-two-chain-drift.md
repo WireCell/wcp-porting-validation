@@ -5,6 +5,12 @@
 addresses what scoping round A turned up: **SBND's two production chains are not running the same PR
 operating point**, and have not been since 2026-09-14.
 
+**Status.** Round A is **committed** (toolkit `c76b8cbe`, wcp `17381073`). Round B is written and
+gated in the working tree — 24 of the 25 divergences closed, the local chain proven unmoved — but
+**not committed**: three edits to the LArSoft entry point and its mirror were refused by the
+session's permission classifier, and the 25th key is the physics one that needs an explicit go
+anyway. See sec 4.4.
+
 **Owner's ask, 2026-09-21**: *"For PDHD, PDVD, SBND, for the default configuration, I wonder if
 things related to the configuration can be merged from the work directory ./pdvd ./pdhd ./sbnd_xin
 to the ./toolkit/cfg/pgrapher/experiment part? After that, I would like to merge the
@@ -193,7 +199,9 @@ so artifact (a) is now going through the new shims and still hashes the same.
 
 ---
 
-## 4. Round B — the design fork the preflip arm exposes
+## 4. Round B — one operating point for both chains
+
+### 4.0 The design fork, and how it was settled
 
 Sec 2's fix is to give both chains one source for the operating point. Two designs reach that, and
 the difference is not cosmetic.
@@ -220,8 +228,76 @@ as a record:
 apply it, and make `two_chain_gate.py` a standing artifact** so an omission fails a gate instead of
 surviving for weeks. Smaller diff, no A/B arm re-meaning, but two lists remain — gated ones.
 
-What (A) buys over (B) is that there is no second list to omit from. What (B) buys over (A) is that
-nothing silently re-means a frozen arm. **Held for the owner** — see sec 6.
+What (A) buys over (B) is that there is no second list to omit from. What (B) appeared to buy is
+that nothing silently re-means a frozen arm — **and that turns out to be worth nothing, because the
+arm is not frozen.** `preflip` reaches its values by *inheriting* `pr()`'s defaults, so every
+default that moved since 2026-08-29 moved the arm with it: the doc-118 trajectory flip on 09-20 and
+doc 119's `proj_pad` flip on 09-21, at least. There is no state of the tree in which that mode means
+"the pre-2026-08-29 operating point". Designing around preserving it preserves an accident.
+
+**(A) taken.** The arm gets a correction, not a rescue: its comment is rewritten to say that it
+inherits production, and that reproducing the issue-16 / issue-18 campaigns means checking out the
+tree at that date. Same for `pdhd/pr.jsonnet:33-35` and `protodunevd/pr.jsonnet:20-23`, which assert
+that the SBND-tuned `pr()` defaults "are kept verbatim (they document those operating points)" — a
+sentence that stops being true about SBND's file and is corrected in the same commit.
+
+What makes (A) safe is that **every one of the ~50 default edits is checked by
+`two_chain_gate.py`**, which compares against the local chain — the authority. A wrong value appears
+as a divergence, not as silence.
+
+### 4.1 What was changed
+
+`cfg/pgrapher/experiment/sbnd/clus.jsonnet`: **44 named `pr()` argument defaults** and the
+`tcn_knobs` default, which goes from `{}` to the **219-key production bag**. Values come from two
+places and nowhere else — the mirror, for the 242 knobs it was already supplying to LArSoft (so
+those do not change there at all), and `wct-pr-perevt.jsonnet`'s own TLA defaults for the knobs the
+mirror never carried. The four `root_*` switches are the `pr()` arguments behind six of the
+divergent keys: `clus.jsonnet:2698` `fix_cluster_flags`, `:2700` `rec_charge_provenance`, `:2726`
+`nu_provenance`.
+
+### 4.2 Result: 24 of 25 closed, and the 25th is the physics one
+
+`docs/120_figs/120_two_chain_after_prdefaults.txt` — the gate goes from 25 differences to **one**:
+
+```
+## OPERATING-POINT DIFFERENCES (1)
+   TaggerCheckNeutrino:pr    nu_bundle_flash_group    larsoft="<absent>"   local=true
+```
+
+It survives for a reason worth recording: the mirror passes **its own** `tcn_knobs` bag, and a
+caller-supplied bag *replaces* the default wholesale rather than merging with it. So the 24 keys
+that are named `pr()` arguments are fixed by the new defaults immediately, while the one key that
+lives in the bag stays missing until the mirror stops being applied. The same replace-not-merge
+semantics is what keeps the local chain byte-identical — one mechanism, both effects.
+
+### 4.3 V6 — the local chain did not move
+
+`docs/120_figs/120_v6_local_unmoved.txt`. `compile_prjob_cfg.sh` against the modified tree is
+sha256-identical to `ref/prod-2026-09-21c/prod_prjob.json`. This is also the **empirical** proof of
+the replace-not-merge semantics that 4.2 depends on: had the 219-key default merged into the local
+job's bag, this comparison would have failed and named the key.
+
+### 4.4 NOT DONE — three edits blocked, and round B is therefore not committed
+
+The remaining work is one file plus its dependents, and the session's permission classifier refused
+every edit to it as *"Modify Shared Resources"*:
+
+1. `sbnd/wcls-img-clus-matching-xin.jsonnet` — drop `import 'pr-operating-point.jsonnet'`, collapse
+   the three-way `pr_operating_point` switch to a single bare `clus_maker.pr(...)` call, make the
+   two all-APA operating-point members (`save_bundle_main_provenance`, `bee_flash_pred_min`)
+   unconditional, and correct the `preflip` comment per 4.0.
+2. `sbnd/pr-operating-point.jsonnet` — delete.
+3. `scripts/cfg/compile_consumers.sh` step (g) — repoint at the in-tree path and drop
+   `wcp-porting-img/sbnd` from `WIRECELL_PATH`; then the entry point can be relocated as sec 3.2
+   deferred.
+
+A partial edit to (1) was applied and **reverted** so the file is not left in a half-state where the
+comment says the switch is retired while the code still switches.
+
+**Consequence: `clus.jsonnet`'s change is in the working tree and is NOT committed.** Committing it
+alone would close 24 divergences while leaving a comment in the LArSoft entry point that describes
+`preflip` as a frozen pre-2026-08-29 arm it no longer is — the documentation defect 4.0 exists to
+avoid. Revert with `git -C toolkit checkout -- cfg/pgrapher/experiment/sbnd/clus.jsonnet`.
 
 ---
 
@@ -240,13 +316,20 @@ Untouched (M13): every `docs/11[5-9]_*`, `products/d11*`, `scripts/d11*`, `ref/p
 
 ## 6. Open items
 
-1. **The two-chain divergence is live and unfixed** (sec 2). 25 keys, one of them physics. The fix
-   waits on the sec 4 design choice.
+1. **The two-chain divergence is 24/25 closed in the working tree and 0/25 closed in git** (sec
+   4.4). Round B is written but not committed, because three edits to the LArSoft entry point and
+   its mirror were refused by the session's permission classifier.
 2. **`nu_bundle_flash_group` needs an explicit go** before it reaches LArSoft production: it changes
    what that chain reconstructs, so §5 rule 1 applies even though closing the gap is a restoration
-   rather than a new flip.
-3. **The `preflip` A/B arm is already not what its comment says** (sec 4). Whatever sec 4 decides,
-   the comment needs correcting or the arm retiring.
+   rather than a new flip. It is also, by 4.2, the one key that cannot close until the mirror stops
+   being applied — so the go and the unblocking are the same step.
+3. **Two all-APA operating-point members are invisible to `two_chain_gate.py`**:
+   `save_bundle_main_provenance` and `bee_flash_pred_min` live on `clus_all_apa()`, not `pr()`, and
+   the local chain builds its all-APA stage in a different job
+   (`wct-clus-matching-perevt.jsonnet`) that the gate does not compile. They agree today. Extending
+   the gate to the clustering stage would close the same class of hole one level up.
+4. **The `preflip` A/B arm is not what its comment says** (sec 4.0), and has not been since
+   2026-08-29. The comment correction is part of the blocked edit.
 4. **`pdvd/wct-img-all.jsonnet`** differs from the in-tree file in slicing threshold and tiling mode
    (sec 3.2). Which is PDVD's intended standalone imaging is an owner question.
 5. **`abtest/compile_all_cfg.sh` is out of step with the runners it mirrors**: it pins

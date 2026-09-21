@@ -1,0 +1,10 @@
+# doc sbnd_xin/120 two-chain gate: the LArSoft 1-step chain vs the local PR job
+# cfg tree : /nfs/data/1/xqian/toolkit-dev/toolkit/cfg
+# compiled : /home/xqian/tmp/twochain-mid
+# components: larsoft 226, local 42, compared 40
+# forgiven as structural: 17 (--verbose to list)
+
+## OPERATING-POINT DIFFERENCES (1)
+   TaggerCheckNeutrino:pr                         nu_bundle_flash_group              larsoft="<absent>"       local=true
+
+FAIL -- the two chains are not on the same PR operating point
