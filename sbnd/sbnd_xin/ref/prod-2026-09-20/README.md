@@ -16,7 +16,7 @@ operating point.
 
 `prod_cfg_gate.py --ref ref/prod-2026-09-17b` was **PASS 21/21 at unmodified HEAD** before the
 first edit, so the drift below has no inherited component.  Against this generation the tree is
-**PASS 24/24**.
+**PASS 25/25**.
 
 ## The drift from prod-2026-09-17b -- 3 of 21 artifacts, all SBND
 
@@ -58,12 +58,17 @@ Key by key on the SBND PR job ([11]/[12] = the two retile BlobSamplers, [13] = I
   22-24: `sbnd_track_fitting.json`, `pdhd_track_fitting.json`, `pdvd_track_fitting.json`, hashed
   as bytes by `scripts/cfg/compile_consumers.sh` step (f).  A flip of that family can no longer
   pass this gate silently.
+* ARTIFACT 25, also new: `sbnd_larsoft_1step.json` -- the LArSoft 1-step chain
+  (`sbnd/wcls-img-clus-matching-xin.jsonnet` at `pr_operating_point=sync`), which is the chain that
+  actually runs the PR taggers under LArSoft and was in NONE of the 21: step (c) compiles
+  `wcls-img-clus.jsonnet` and the standalone Q/L job, and neither calls `pr()`.  Doc 118 had to
+  verify by hand that it tracked this flip.  Step (g).
 
 ## Reproduce
 
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-python3 scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-20      # PASS 24/24
+python3 scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-20      # PASS 25/25
 ```
 
 `prod_prjob.json` is committed with `git add -f` (`*.json` is gitignored).

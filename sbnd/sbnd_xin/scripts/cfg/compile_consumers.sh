@@ -43,6 +43,23 @@ for _det_tf in sbnd/sbnd_track_fitting.json pdhd/pdhd_track_fitting.json \
     echo "trackfit $(basename "$_det_tf") rc=$?"
 done
 
+# (g) The LArSoft 1-step chain that actually runs the PR taggers in SBND production.  doc
+# sbnd_xin/118: (c) above compiles wcls-img-clus.jsonnet and the standalone Q/L job, NEITHER of
+# which calls pr(), so the chain that does -- sbnd/wcls-img-clus-matching-xin.jsonnet, through the
+# GENERATED sbnd/pr-operating-point.jsonnet -- was in none of the artifacts.  That is the same
+# shape of hole as the runtime fit JSONs in (f): doc 118 had to verify by hand that this chain
+# tracked its flip.  It needs its own extVars; pr_operating_point=sync is the production mode.
+export WIRECELL_PATH=$CFG:$DATA:$DATA/sbnd/photodet:/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd
+$W -V reality=data -V DL=4.0 -V DT=8.8 -V lifetime=35 -V driftSpeed=1.563 \
+   -V semimodel_file="" -V pr_operating_point=sync -V enable_tracking_root=true \
+   -V 'input_mask_tags=[]' -V 'output_mask_tags=[]' -V 'recobwire_tags=["gauss"]' \
+   -V 'summary_tags=[]' -V 'trace_tags=["gauss"]' \
+   -V opflash0_input_label=opflashtpc0 -V opflash1_input_label=opflashtpc1 \
+   --ext-code joint=false --ext-code pmt_nl=true \
+   /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/wcls-img-clus-matching-xin.jsonnet \
+   > "$OUT/sbnd_larsoft_1step.json" 2> "$OUT/sbnd_larsoft_1step.err"
+echo "sbnd_larsoft_1step rc=$?"
+
 # (e) SBND PR job bare (default pipeline, default operating point)
 export WIRECELL_PATH=$CFG:$DATA:$DATA/sbnd/photodet
 $W -A input=in.tar.gz -A output_dir=out -S run=1 -S subrun=1 -S event=1 -A reality=data \

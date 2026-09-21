@@ -12,7 +12,10 @@ sec 15.4 recommended against it; doc 117 sec 11's ADOPT table returned HOLD. Sec
 changed, what did not, and on whose word.
 
 **Doc 115 is now the PRE-flip baseline.** `docs/115_*` and `products/d115/` describe the
-configuration this round replaced. They are records, not current production.
+configuration this round replaced. They are records, not current production. Their repro blocks —
+and docs 116's and 117's — pin `prod_cfg_gate.py --ref ref/prod-2026-09-17b`, which from today
+reports the 3-artifact drift of sec 4. That is **correct behaviour, not a failure**: those rounds
+ran before the flip. Point the gate at `ref/prod-2026-09-20` to check the tree as it is now.
 
 ---
 
@@ -46,7 +49,7 @@ python3 scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-17b  > docs/118_figs
 cp -a ref/prod-2026-09-17b ref/prod-2026-09-20
 for n in sbnd pdhd pdvd; do echo "0000...0  ${n}_track_fitting.json" >> ref/prod-2026-09-20/consumers.sha256; done
 python3 scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-20 --refresh
-python3 scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-20            # PASS 24/24
+python3 scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-20            # PASS 25/25
 ```
 
 ---
@@ -154,6 +157,11 @@ trajectory, silently — `clus.jsonnet:1005` records precisely that trap for `fl
 *"a TLA-only flip would have left LArSoft on the defect."* Sec 3.4 is the measurement that the
 placement worked. No regeneration of the wrapper was needed.
 
+Read that narrowly: G5 shows the two chains agree **on these four knobs**, not that the generated
+wrapper is otherwise current. Its header pins its sync to toolkit `0ad642235` and names a
+`scripts/compile-both.sh` acceptance test that does not exist in this tree. That is why the chain
+itself is now a gate artifact — see sec 3.5.
+
 ---
 
 ## 3. Gates
@@ -175,6 +183,14 @@ production default** — the doc-116 `tfull` stage-B invocation minus exactly `P
 | `cv` (f000) | 18 | 82 | 28 | **0** |
 | `nuecc` (f000–f002) | 24 | 120 | 48 | **0** |
 | `off` (20 gates) | 20 | 82 | 21 | **0** |
+
+**How much of the flip each sample exercises.** Component (c) is read by `TaggerCheckSTM` /
+`TaggerCheckNeutrino`, so an event that never reaches a fit does not test it. Events whose
+`TaggerCheckNeutrino:pr` ran above 50 ms (doc 116 sec 14's criterion): `cv` **10 of 18**,
+`nuecc` **24 of 24**, `off` **1 of 20** — 35 of the 62. The `nuecc` arm is what carries the fit
+keys; `cv` and `off` mostly test (a) and (b) and the plumbing. Configuration identity for (c) does
+not depend on runtime at all — it is G2 plus the compile-sha match below — but "62 events" should
+not be read as 62 exercises of the fit.
 
 `pctree-pr-evt*.tar.gz`, `mabc-pr.zip` and `nusel-evt*.tsv` are **identical member for member on
 every event of all three samples.** Every difference that exists is one of exactly two things:
@@ -231,11 +247,11 @@ reading the runner's verdict.
 | **V1** | pin freshness | `71ebd5aeb3868cbc0803f2fa2654b46b` == `local/lib`, toolkit `0a2807f4` |
 | **G2** | production fit JSON vs the arm's `149_tf_sbnd_kf.json`, `_`-keys stripped as `load_trackfitting_config` does | **47 live keys, identical** |
 | **G3** | compiled node diff, no-TLA, pre vs post | exactly **3 changed nodes** (`CreateSteinerGraph:pr`, `:prrefresh`, `ImproveCluster_2:pr`) + the two `BlobSampler` renames; `trackfitting_config_file` **unchanged** |
-| — | post-flip compile sha | **`3db5df01e33ff853` = the doc-116 `csp3bw` cell's sha exactly** |
+| **G3b** | post-flip no-TLA compile sha vs the measured cell | **`3db5df01e33ff853` = the doc-116 `csp3bw` cell's sha, exactly** — this is what covers every emitted key nobody read individually, including `[11]/[12].data.strategy[0].disable_mix_dead_cell = False` in sec 4, a key this round never chose: it is the object form the `charge_stepped` sampler emits, and it is right because the whole document is byte-for-byte the cell that was graded |
 | **G4** | blast radius across the 21 consumers | **3 drift, all SBND** (`bare_prjob.json`, `prod_prjob.json`, `sbnd_pr.json`); uBooNE, PDHD, PDVD **byte-identical** |
 | **G5** | the LArSoft 1-step chain | same 3 changed nodes, same keys — the two chains move together |
 | **G7** | the three `*_track_fitting.json` added to the consumer set | done, **before** the refresh |
-| **G8** | new reference | `ref/prod-2026-09-20/` **PASS 24/24**; `prod-2026-09-17b` now drifts on the 3 SBND artifacts, as it should |
+| **G8** | new reference | `ref/prod-2026-09-20/` **PASS 25/25**; `prod-2026-09-17b` now drifts on the 3 SBND artifacts, as it should |
 
 `./build/clus/wcdoctest-clus` is run for hygiene; nothing in C++ changed.
 
@@ -249,8 +265,17 @@ and G1 shows it on the outputs of 62 events as well.
 Adding `fit_weight_pow`/`assoc_cont_center` to `sbnd_track_fitting.json` moved **zero of the 21**
 consumer hashes. The tripwire would have passed while the fit changed. `compile_consumers.sh` now
 hashes the SBND, PDHD and PDVD `*_track_fitting.json` as artifacts 22–24, so a future flip of this
-family cannot pass silently. It is the one scope addition this round took, and it is exactly the
-case it would have caught.
+family cannot pass silently.
+
+**The same-shaped hole one level over, also closed.** Step (c) of the consumer set compiles
+`wcls-img-clus.jsonnet` and the standalone Q/L job, and **neither calls `pr()`** — so the chain that
+actually runs the PR taggers under LArSoft, `sbnd/wcls-img-clus-matching-xin.jsonnet`, was in none
+of the artifacts either. This round had to verify by hand (G5) that it tracked the flip; a future
+divergence — someone regenerating `pr-operating-point.jsonnet` from a stale TLA set — would not have
+been caught. Step (g) now compiles it at `pr_operating_point=sync` as artifact **25**.
+
+`ref/prod-2026-09-20` therefore carries **25 artifacts, not 21**: the 21 compiled consumers, the
+three runtime fit JSONs, and the LArSoft 1-step chain.
 
 ---
 
@@ -459,7 +484,14 @@ family; they are **not** on the same display settings (`proj_pad_*` is PDHD/PDVD
 4. **Disk.** The doc-118 gate arms are 318 MB (`work-r3{cv,nue,off}-d118flip` + `-d118fliprep`);
    the doc-117 arms are ~74 GB and the doc-116 arms ~95 GB. Every number from them is in the
    committed `products/` tables, so they are a retention decision. 522 G free.
-5. Doc 115/116/117's own open items carry: the off-beam gate count `f`, νeCC purity needing a full
+5. **`pr-operating-point.jsonnet` currency.** It is generated, its header pins its sync to toolkit
+   `0ad642235`, and the `scripts/compile-both.sh` acceptance test it names does not exist in this
+   tree. Artifact 25 now detects a divergence, but nothing regenerates the wrapper; a round that
+   flips a knob the wrapper *does* carry must regenerate it by hand.
+6. **The `scripts/d118` drivers have no completeness guard.** The d117 fork refuses an incomplete
+   arm; `stageB_flip.sh` does not, and a bad substitution silently aborted its nuecc loop after one
+   of three sub-roots while still printing a clean summary. Carry the guard in if round 0 reuses it.
+7. Doc 115/116/117's own open items carry: the off-beam gate count `f`, νeCC purity needing a full
    CV production, the `dvm()` CPA face applied to MC, and the missing completeness guard in
    `scripts/d115` and `scripts/d116`.
 
@@ -472,8 +504,8 @@ family; they are **not** on the same display settings (`proj_pad_*` is PDHD/PDVD
 **wcp-porting-img** (`main`): this doc; `scripts/d118/{stageB_flip.sh,hash_gate.py,root_gate.py,
 tf_key_gate.py,cfg_diff.sh}`; `docs/118_figs/{118_gate_hash.txt,118_gate_tfkeys.txt,
 118_cfg_diff.txt,118_drift.txt}`; `ref/prod-2026-09-20/{consumers.sha256,prod_prjob.json,README.md}`;
-`scripts/cfg/compile_consumers.sh` (+ the three track-fitting hashes, sec 3.5) — the only edit to an
-existing file.
+`scripts/cfg/compile_consumers.sh` (+ steps (f) and (g): the three track-fitting hashes and the
+LArSoft 1-step chain, sec 3.5) — the only edit to an existing file.
 
 Untouched (M13): `docs/115_*`, `docs/116_*`, `docs/117_*`, `products/d115|d116|d117`,
 `scripts/d115|d116|d117`, `ref/prod-2026-09-17b` and every earlier generation, `work/ql_labels/`,
