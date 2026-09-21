@@ -1,0 +1,4 @@
+/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-d102mpr
+/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-d102mpr
+/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-ncpi0-d102mpr
+/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-nuecc48-d102mpr

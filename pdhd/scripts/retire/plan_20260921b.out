@@ -1,0 +1,75 @@
+# live_tokens: reference f04d89377a85, 278 untracked + 3 modified path(s) under DOCROOTS
+
+==============================================================================
+== sbnd   (/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin)
+==============================================================================
+  PASS  INTERLOCK 1: substrate present (all present)
+  PASS  INTERLOCK 2: no kept symlink resolves into a releasing dir (0 would dangle)
+  PASS  INTERLOCK 3: no live writer (0 of 4 sampled dirs moved, 0 tree-scoped wire-cell procs)
+  PASS  INTERLOCK 4: pre-existing broken symlinks recorded: 0 (the post-state number only means something against this)
+  PASS  INTERLOCK 5: PROTECTED.txt clear of the release (clear)
+  PASS  INTERLOCK 7: no record/label dir in the release (clear)
+  PASS  INTERLOCK 8: no target is itself a symlink (clear)
+  PASS  INTERLOCK 9: manifests name 446 arms, 14 exist, 0 in the release (none)
+  PASS  INTERLOCK 11: every substrate/production/scan name resolves (all resolve)
+  PASS  INTERLOCK 13: hand-scan sources kept: none for this tree
+  PASS  INTERLOCK 14: 0 uncited families in the release; each maps to a committed doc by round number (0 do not: none)
+  PASS  INTERLOCK 15: nothing released is named by an uncommitted record (clear)
+  PASS  INTERLOCK 16: live-by-uncommitted-record: 0 tokens from 0 file(s); 0 resolve in this tree (none)
+  set-relative: FREED 10.24 GiB (every link inside the release); 0.00 GiB shared with a kept link frees nothing
+
+  universe 124 dirs | KEEP 120 = 126.76 GiB | RELEASE 4 = 10.26 GiB | out-of-scope (untouched) 41
+  --- RELEASE ---   arm                       dirs      GiB  cited
+                    d102mpr                      4    10.26    180
+  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_sbnd_20260921b.txt  (4 lines, 10.26 GiB)
+
+==============================================================================
+== pdvd   (/home/xqian/toolkit-dev/wcp-porting-img/pdvd/work)
+==============================================================================
+  PASS  INTERLOCK 1: substrate present (all present)
+  PASS  INTERLOCK 2: no kept symlink resolves into a releasing dir (0 would dangle)
+  PASS  INTERLOCK 3: no live writer (0 of 1 sampled dirs moved, 0 tree-scoped wire-cell procs)
+  PASS  INTERLOCK 4: pre-existing broken symlinks recorded: 0 (the post-state number only means something against this)
+  PASS  INTERLOCK 5: PROTECTED.txt clear of the release (clear)
+  PASS  INTERLOCK 7: no record/label dir in the release (clear)
+  PASS  INTERLOCK 8: no target is itself a symlink (clear)
+  PASS  INTERLOCK 9: manifests name 0 arms, 0 exist, 0 in the release (none)
+  PASS  INTERLOCK 11: every substrate/production/scan name resolves (all resolve)
+  PASS  INTERLOCK 13: hand-scan sources kept: ['d08pv30off', 'd08pv30on', 'd101vkf', 'd102vcsall', 'd102vocs', 'd103v0', 'd103v1', 'd115vbwp05', 'd115voff', 'd115vp3bwp05', 'd116vr2', 'd53v', 'd67v', 'd68a3', 'd68d4', 'p100bx', 'p100bxp', 'p100c', 'p85vprod', 'p85vwh', 'p88v5fr', 'p88vprod', 'p90vprod', 'p96vprod', 'p98vonq', 'p99rwon', 'p99wflip']
+  PASS  INTERLOCK 14: 0 uncited families in the release; each maps to a committed doc by round number (0 do not: none)
+  PASS  INTERLOCK 15: nothing released is named by an uncommitted record (clear)
+  PASS  INTERLOCK 16: live-by-uncommitted-record: 0 tokens from 0 file(s); 0 resolve in this tree (none)
+  set-relative: FREED 0.01 GiB (every link inside the release); 0.00 GiB shared with a kept link frees nothing
+
+  universe 5224 dirs | KEEP 5223 = 67.48 GiB | RELEASE 1 = 0.01 GiB | out-of-scope (untouched) 271
+  --- RELEASE ---   arm                       dirs      GiB  cited
+                    d103vprod1                   1     0.01     10
+  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdvd_20260921b.txt  (1 lines, 0.01 GiB)
+
+==============================================================================
+== pdhd   (/home/xqian/toolkit-dev/wcp-porting-img/pdhd/work)
+==============================================================================
+  PASS  INTERLOCK 1: substrate present (all present)
+  PASS  INTERLOCK 2: no kept symlink resolves into a releasing dir (0 would dangle)
+  PASS  INTERLOCK 3: no live writer (0 of 0 sampled dirs moved, 0 tree-scoped wire-cell procs)
+  PASS  INTERLOCK 4: pre-existing broken symlinks recorded: 0 (the post-state number only means something against this)
+  PASS  INTERLOCK 5: PROTECTED.txt clear of the release (clear)
+  PASS  INTERLOCK 7: no record/label dir in the release (clear)
+  PASS  INTERLOCK 8: no target is itself a symlink (clear)
+  PASS  INTERLOCK 9: manifests name 1 arms, 0 exist, 0 in the release (none)
+  PASS  INTERLOCK 11: every substrate/production/scan name resolves (all resolve)
+  PASS  INTERLOCK 13: hand-scan sources kept: ['d05mON', 'd08cap10', 'd08goff', 'd101hkf', 'd102hcs', 'd102hocs', 'd115hoff', 'd115hp3bwp05', 'd116hr2', 'd53h', 'h18b', 'h18s', 'h23conf', 'h25base', 'h25k', 'h25kr', 'h25r', 'h25va', 'h25vb', 'p82bhoff', 'p82hoff', 'stm0']
+  PASS  INTERLOCK 14: 0 uncited families in the release; each maps to a committed doc by round number (0 do not: none)
+  PASS  INTERLOCK 15: nothing released is named by an uncommitted record (clear)
+  PASS  INTERLOCK 16: live-by-uncommitted-record: 0 tokens from 0 file(s); 0 resolve in this tree (none)
+  set-relative: FREED 0.00 GiB (every link inside the release); 0.00 GiB shared with a kept link frees nothing
+
+  universe 1913 dirs | KEEP 1913 = 51.83 GiB | RELEASE 0 = 0.00 GiB | out-of-scope (untouched) 109
+  --- RELEASE ---   arm                       dirs      GiB  cited
+  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdhd_20260921b.txt  (0 lines, 0.00 GiB)
+
+==============================================================================
+GRAND TOTAL release 10.27 GiB
+interlock failures: NONE
+
+This script retired nothing.  Review the tier files, then run the retire driver (CONFIRM=yes).

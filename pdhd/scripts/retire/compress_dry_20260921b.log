@@ -1,0 +1,9 @@
+== pdvd/work cold-file compression: 5466 files
+   record gate: 5466/5466 files have a manifest row with the current size
+   DRY RUN: would compress 5466 files, 4.88 GiB
+   pdvd worker rc=0
+== pdhd/work cold-file compression: 3223 files
+   record gate: 3223/3223 files have a manifest row with the current size
+   DRY RUN: would compress 3223 files, 10.15 GiB
+   pdhd worker rc=0
+DRY RUN.  Re-run with CONFIRM=yes to execute.

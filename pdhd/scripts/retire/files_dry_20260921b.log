@@ -1,0 +1,7 @@
+== sbnd-pctree-closed: 10036 files, 21.27 GiB, frozen 1:1 in sbnd-pctree-closed.manifest.tsv
+   DRY RUN -- nothing removed.  e.g. sbnd/sbnd_xin/work-r3cv-d115pr/f000/pr_evt10/pctree-pr-evt10.tar.gz
+== pdhd-sp-frames: 128 files, 7.24 GiB, frozen 1:1 in pdhd-sp-frames.manifest.tsv
+   DRY RUN -- nothing removed.  e.g. pdhd/work/028084_0_d09/protodunehd-sp-dnnroi-frames-anode0.tar.bz2
+== sbnd-sp-frames: 636 files, 10.30 GiB, frozen 1:1 in sbnd-sp-frames.manifest.tsv
+   DRY RUN -- nothing removed.  e.g. sbnd/sbnd_xin/work-mcp1k-d102m/g0/frames-dnn.tar.bz2
+done (CONFIRM=no)

@@ -1,0 +1,8 @@
+      1/5  work-mcp1k-d102mpr                       files  10465 (kept 6004, dropped 4461) links     0  4.82 MiB
+      2/5  work-mcp2k-d102mpr                       files  20909 (kept 12004, dropped 8905) links     0  9.58 MiB
+      3/5  work-ncpi0-d102mpr                       files    212 (kept 118, dropped 94) links     0  0.36 MiB
+      4/5  work-nuecc48-d102mpr                     files    531 (kept 292, dropped 239) links     0  1.00 MiB
+      5/5  039252_0_d103vprod1                      files      7 (kept 3, dropped 4) links     2  0.03 MiB
+
+archived 5/5 arms into /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/archive/records/cleanup-20260921b
+integrity: every released dir has a .manifest.tsv with a SHA-256 per file, a .links.txt, and a .tar.zst of the non-heavy record layer.

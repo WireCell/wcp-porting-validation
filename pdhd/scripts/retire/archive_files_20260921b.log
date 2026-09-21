@@ -1,0 +1,25 @@
+DEFERRED: 120 pdhd frame archives (6.77 GiB) are the target of a symlink in a kept arm -- excluded, see the note above.
+sbnd-pctree-closed: 10036 files, 21.27 GiB
+pdhd-sp-frames: 128 files, 7.24 GiB
+sbnd-sp-frames: 636 files, 10.30 GiB
+TOTAL 10800 files, 38.82 GiB
+
+  PASS  F1: regular files, one name each (0 not; e.g. [])
+  PASS  F3: every target under an allowed arm, none under an input/record tree (0 off-list; e.g. [])
+  PASS  F2: no symlink resolves onto a target (0; e.g. [])
+  PASS  F4: no process holds a target open (0)
+  PASS  F5: the product each target fed survives (0 would not; e.g. [])
+  PASS  F6: every regeneration input resolves and is non-empty (all present)
+  PASS  F7: every out-of-allow-list match is a declared exclusion (0 undeclared; e.g. [])
+        declared out of sbnd-sp-frames: /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/input_files_reco1
+            PRODUCTION INPUT, not SP output.  input_files_reco1 holds frames-dnn.tar.bz2 files of its own (~4.1 GiB); a glob on that exact name across sbnd_xin WOULD have deleted them.  It is also where an earlier substring test for 'frames' matched *_frameshift.root -- 4.46 GiB of reco1 input.  Both near-misses, both caught by measuring rather than trusting the pattern.
+        declared out of sbnd-pctree-closed: /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-
+            every OTHER arm's pctrees, including d116tfull (doc 118's gate G1 reference) and d115 (the stage-A products stage B consumes).  Named exclusions, see the header.
+  list: files_sbnd-pctree-closed_20260921b.txt  (10036 lines)
+  list: files_pdhd-sp-frames_20260921b.txt  (128 lines)
+  list: files_sbnd-sp-frames_20260921b.txt  (636 lines)
+  froze 10036 files -> sbnd-pctree-closed.manifest.tsv
+  froze 128 files -> pdhd-sp-frames.manifest.tsv
+  froze 636 files -> sbnd-sp-frames.manifest.tsv
+
+This script retired nothing.  Review the lists, then run the driver (CONFIRM=yes).

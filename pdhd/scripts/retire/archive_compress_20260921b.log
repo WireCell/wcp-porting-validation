@@ -1,0 +1,21 @@
+pdvd: 5466 files, 4.88 GiB, est save 4.21 GiB
+     calib      478 files   4.08 GiB  (ratio 6.5x)
+     csv       3420 files   0.01 GiB  (ratio 25.0x)
+     log       1568 files   0.79 GiB  (ratio 20.0x)
+pdhd: 3223 files, 10.15 GiB, est save 8.79 GiB
+     calib      822 files   8.31 GiB  (ratio 6.5x)
+     csv       1079 files   0.31 GiB  (ratio 25.0x)
+     log       1322 files   1.53 GiB  (ratio 20.0x)
+TOTAL 8689 files
+
+  PASS  C1: regular files, one name each (0 not; e.g. [])
+  PASS  C2: no symlink resolves onto a target (0; e.g. [])
+  PASS  C3: no process holds a target open (0)
+  PASS  C4: nothing written in the last 7 d (0), no .zst already present (0)
+  PASS  C5: no production or bare-substrate family in scope (0; e.g. [])
+  list: files_compress_pdvd_20260921b.txt  (5466 lines)
+  list: files_compress_pdhd_20260921b.txt  (3223 lines)
+  froze 5466 files -> pdvd-compress.manifest.tsv
+  froze 3223 files -> pdhd-compress.manifest.tsv
+
+This script compressed nothing.  Review the lists, then run the driver (CONFIRM=yes).
