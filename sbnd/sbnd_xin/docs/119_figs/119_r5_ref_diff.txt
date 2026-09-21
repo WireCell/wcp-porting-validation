@@ -1,0 +1,9 @@
+# doc sbnd_xin/119 round 5 -- the manifest diff between the two reference generations.
+# Only ONE line differs: the 25 artifacts of prod-2026-09-21 are bit-identical here.
+
+$ diff <(awk '{print $2}' ref/prod-2026-09-21/consumers.sha256) <(awk '{print $2}' ref/prod-2026-09-21b/consumers.sha256)
+17a18
+> runner_alloc.txt
+
+$ comm -13 <(sort ref/prod-2026-09-21/consumers.sha256) <(sort ref/prod-2026-09-21b/consumers.sha256)   # lines only in the new generation
+4400a43005ed07e52c005d90a7b56847eb326a8f147b68fe30acbb912aac1d3f  runner_alloc.txt

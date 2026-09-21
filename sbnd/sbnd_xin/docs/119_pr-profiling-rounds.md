@@ -1,4 +1,4 @@
-# doc sbnd_xin/119 — the cross-detector PR profiling campaign: rounds 0, 1, 2, 3 and 4
+# doc sbnd_xin/119 — the cross-detector PR profiling campaign: rounds 0, 1, 2, 3, 4 and 5
 
 **Status: round 0 measured. Round 1 measured, gated and FLIPPED. Round 3 (§9) measured, gated and
 TAKEN — the first round of this campaign to rebuild C++: two byte-identical levers in the
@@ -23,6 +23,21 @@ three of them still above 2.0 GiB (all 14 arm runs `rc=0`). Attribution: `Create
 live heap on both detectors profiled, and the retile sampler — already round 0's #1 CPU target —
 is a stable 14–21 % of it. **The CPU target and the memory target are the same object.** §10.5
 records two readings this round formed and then retracted, and the rule that kills both.
+
+**Round 5 (§11) is the allocator round, and it opens by retracting its own premise.** The
+−0.74 GiB that round 4 used to justify it was an instrument mix — a ladder number from a
+*profiled* jemalloc run set against a `getrusage` number from an unprofiled tcmalloc run — and one
+sentence of §10.4 is retracted outright (§11.1). Measured like for like, on four allocator arms
+through one invocation: **jemalloc 5.3.0 is −18.8 % mean and −19.1 % max peak RSS on the seven tail
+events at no CPU cost, taking all three events above 2 GiB below it, and it is byte-identical on the
+62-event manifest** with a null pair proving the gate is specific. It buys **nothing on the gate
+manifest** (+0.1 % on nuecc) — the win exists only where a cap is threatened — and it is **+4 to
++7 % CPU on jobs of a few seconds**, which is a few hundredths of a second each. **Not flipped** — changing an
+existing production default is §5 rule 1, the owner's call, as round 1's was. A mechanism control
+(tcmalloc at `TCMALLOC_RELEASE_RATE=10`) shows page-return policy is only about a quarter of it and
+is a cheaper partial option in its own right. Shipping regardless: **§6.4's runner tripwire hole is
+closed**, and with it a second hole found *inside* `prod_cfg_gate.py` — adding a consumer to the
+gate's own input set had silently never taken effect (§11.4).
 
 Nothing here re-opens the doc-118 trajectory flip. That flip is production and stays production;
 this campaign pays for it.
@@ -111,6 +126,30 @@ python3 $PD/stm/perf/d30_hash_gate.py $PV/work  d119vnu d119vr3   # PASS 120 / F
 for a in flip r3; do PIN=$HOME/tmp/$([ $a = flip ] && echo d119-libpin || echo d119r3-libpin)
   LD_LIBRARY_PATH=$PIN PRDIR=$SX/work-r3nue-d119$a/f002/pr_evt2925 OUTDIR=~/tmp/d119r3-prof/$a \
       $SX/scripts/perf/profile_pr118.sh; done
+```
+
+```bash
+# --- round 5, the allocator.  FOUR arms through ONE invocation on the SAME events, back to back
+#     on an idle box.  MALLOC_CONF is cleared inside the script: round 4's jemalloc runs had the
+#     heap sampler on, and that perturbation is exactly what sec 11.1 retracts.
+for A in tcm glibc jem rel; do ALLOC=$A JOBS=7 $SX/scripts/d119/stageB_alloc.sh tail; done
+ALLOC=jem JOBS=8 $SX/scripts/d119/stageB_alloc.sh nuecc    # and cv, off -- the 62-event gate arm
+ALLOC=tcm JOBS=8 $SX/scripts/d119/stageB_alloc.sh nuecc    # and cv, off -- its same-binary control
+python3 $SX/scripts/d119/r5_alloc.py            > docs/119_figs/119_r5_alloc.txt   # sec 11.2
+python3 $SX/scripts/d119/lever_gate.py --vs r3 r3b   # sec 11.5 NULL PAIR -- run it FIRST
+python3 $SX/scripts/d119/lever_gate.py --vs r3 jem   # sec 11.5 the byte gate -- PASS, 62 events
+# --- round 5, the tripwire hole (sec 11.4).  The NEW detection is the point: before this round
+#     adding a consumer to compile_consumers.sh was silently never adopted.
+python3 $SX/scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-21    # NEW: runner_alloc.txt, rc=1
+cp -a $SX/ref/prod-2026-09-21 $SX/ref/prod-2026-09-21b                # M13: never refresh in place
+python3 $SX/scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-21b --refresh   # 26 (1 added)
+python3 $SX/scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-21b   # PASS 26/26
+# --- round 5, the dual-chain census sec 8 kept deferring.  Read-only, nothing re-run.
+python3 $SX/scripts/d117/dual_chain_census.py \
+    "today (d119r3) = current production:nuecc:work-r3nue-d119r3:" \
+    "today (d119r3) = current production:cv:work-r3cv-d119r3:" \
+    "today (d119r3) = current production:off:work-r3off-d119r3:" \
+    > docs/119_figs/119_r5_dual_census.txt                            # sec 11.6
 ```
 
 Toolkit `d7d4da83` for rounds 0-2 (the round-2 flip; rounds 0 and 1 changed no toolkit file).
@@ -563,6 +602,13 @@ the churn, and is the recommended next tripwire change.
 
 ## 8. Recommended next step
 
+> **SUPERSEDED BY §11.7 — read that ranking, not this one.** Round 5 finally ran the census this
+> section kept deferring (§11.6) and it *demoted* the dual chain: the second pass is right about
+> two times in three on the events where it moves the pick (p = 1.1e-10 on 2 001 nuecc events), so
+> it is the largest number and the worst lever, and it cannot be had byte-identically at all.
+> Round 5 also closed item 1 below — the runner tripwire hole (§11.4). Item 2, retention, is still
+> open and round 5 adds ~0.6 GB of arms to it.
+>
 > **Still open after round 4.** §10 is a memory round and does not touch this ranking. The dual
 > chain remains the largest CPU target and still needs doc 107 grading rather than a byte gate.
 >
@@ -948,6 +994,14 @@ Each row's ladder peak is read from *that jemalloc run's own* job log, not from 
 | SBND f054/evt7582 (p50) | 0.525 | 1.065 | 49.3 % | 40.9 % |
 | PDVD 039252_8 (max Steiner) | 2.686 | 2.966 | **90.6 %** | **95.4 %** |
 
+> **RETRACTED by §11.1 — do not quote the paragraph below.** Its two comparisons mix instruments:
+> the jemalloc figures are `MEM:`-ladder peaks taken *with the heap sampler active*, the glibc and
+> tcmalloc figures are `getrusage` high-water from unprofiled chain runs. Measured like for like
+> (§11.2), the p50 comparison **reverses sign** — jemalloc 1.197 equals production tcmalloc 1.197
+> and is *above* glibc's 1.162 — and the tail gap is −20.3 %, not the ~1.6× implied here. The
+> conclusion the paragraph draws, that the effect is tail-specific and absent at the median, is the
+> one part that survives, and §11.2 states it on the right numbers.
+
 On SBND the allocator overhead **grows into the tail**: at the p50 jemalloc peaks at 1.065 GiB
 against glibc's 1.160 and production tcmalloc's 1.195, a few per cent; on the tail event it is
 1.343 against 2.204 and 2.084, a factor of ~1.6. Whatever those extra 0.7–0.9 GiB are, they are
@@ -1048,3 +1102,338 @@ the throwaway `pdvd/work/039252_8_heappr_039252_8` tag to the retention list. Ev
 `docs/119_figs/`, so none of it is a scan record.
 
 The `time2drift` item named at the end of §9.6 is also still open, and is still a round of its own.
+
+---
+
+## 11. Round 5 — the allocator, and the tripwire hole round 1 opened
+
+**Status: MEASURED and GATED, NOT flipped.** jemalloc 5.3.0 is **−18.8 % mean and −19.1 % max peak
+RSS against production tcmalloc on the seven tail events, at −4.0 % in-job CPU** — it removes every
+one of the three events above 2 GiB and is byte-identical on the 62-event manifest. Changing the
+allocator default is changing an existing production default (§5 rule 1), so this round measures,
+gates and recommends; the flip is the owner's, exactly as round 1's was.
+
+Two things ship regardless, because neither is an operating-point change: the **tripwire hole §6.4
+named is closed** (§11.5), and **a second hole found inside the tripwire itself** is closed with it.
+
+### 11.1 Round 5 begins by retracting round 5's own premise
+
+The hand-off out of round 4 recommended this round on a number that was **wrong by about 40 %**, and
+wrong for a reason round 4 had already been burned by once.
+
+§10.4 reported jemalloc peaking at **1.343 GiB** on `f060/evt11239` where production tcmalloc peaked
+at **2.084** — a gap of 0.74 GiB. Those two numbers are **different instruments on different
+invocations**:
+
+| | 1.343 GiB | 2.084 GiB |
+|---|---|---|
+| instrument | in-job `MEM:` ladder — VmRSS sampled at stage boundaries | `.time.meta maxrss_kb` — `getrusage(RUSAGE_CHILDREN)` high-water |
+| invocation | `scripts/perf/profile_pr119r4.sh`, a direct `wire-cell -c` | the full `run_pr_chain_batch.sh` chain |
+| allocator state | **`MALLOC_CONF=prof:true,…,lg_prof_sample:19`** — the heap sampler active | production, unperturbed |
+
+Both corrections matter and they push in **opposite** directions:
+
+- **Instrument.** On these seven events getrusage reads **+0.08 to +0.18 GiB above** the ladder, so
+  the ladder-vs-getrusage comparison inflates any advantage held by whichever arm was read by the
+  ladder.
+- **Perturbation.** The sampler is not neutral. Clean jemalloc's ladder peak on `f060/evt11239` is
+  **1.589 GiB**, not 1.343: heap sampling **understated** jemalloc by 0.246 GiB (15.5 %) there,
+  while at the p50 it *overstated* it by 0.022. Round 4's own §10 header says the sampler perturbs
+  allocation; it did, in both directions.
+
+Read like for like, the real number is **2.093 → 1.669 GiB, −0.424 GiB, −20.3 %** on that event.
+Still large, still the largest single memory effect this campaign has found, and **not** 0.74 GiB.
+
+**One sentence of §10.4 is retracted outright.** It said that at the p50 "jemalloc peaks at 1.065
+GiB against glibc's 1.160 and production tcmalloc's 1.195, a few per cent". Like-for-like at the
+p50 the three are **tcmalloc 1.197, glibc 1.162, jemalloc 1.197** — jemalloc is *exactly* production
+and *above* glibc. The direction of that comparison was an artefact of the instrument mix. What it
+was used to argue — that the effect is tail-specific and absent at the median — is **strengthened**
+by the correction, not weakened: at the median jemalloc buys precisely nothing.
+
+This is the third time in two rounds that an instrument, not the code, produced the finding
+(§10.5's two `(inline)` retractions, round 4's own corrected p50 row, this). The rule that comes out
+of it is in §11.7.
+
+### 11.2 Four allocators, one invocation, one instrument
+
+`scripts/d119/stageB_alloc.sh` runs the same seven events through the **same**
+`run_pr_chain_batch.sh` invocation four times, back to back at one fan-out on an idle box, with
+`MALLOC_CONF` and `TCMALLOC_RELEASE_RATE` explicitly cleared so the arms differ in the preload and
+in nothing else. All 28 runs `rc=0`. The allocator of every arm is proved twice: from the runner's
+new log line in each event's own `stdout.log`, and from `/proc/<pid>/maps` of a live job
+(`docs/119_figs/119_r5_maps.txt`) — **not** inferred from the arm's name, because the runner falls
+back to glibc silently when the requested library is absent (§11.5).
+
+Peak RSS, `getrusage` CHILDREN high-water, GiB — the number an operational memory cap is set
+against:
+
+| event | tcmalloc (production) | glibc | **jemalloc** | tcmalloc + release_rate 10 |
+|---|---:|---:|---:|---:|
+| f188/11811 | 2.156 | 2.049 | **1.745** | 2.073 |
+| f060/11239 | 2.093 | 2.206 | **1.669** | 1.979 |
+| f049/12202 | 2.059 | 2.201 | **1.670** | 1.921 |
+| f100/5265 | 1.915 | 2.017 | **1.499** | 1.803 |
+| f196/6248 | 1.910 | 1.981 | **1.488** | 1.862 |
+| f075/9393 (p99) | 1.705 | 1.599 | **1.316** | 1.630 |
+| f054/7582 (p50) | 1.197 | 1.162 | **1.197** | 1.197 |
+| **mean** | 1.862 | 1.888 (+1.4 %) | **1.512 (−18.8 %)** | 1.781 (−4.4 %) |
+| **max** | 2.156 | 2.206 (+2.3 %) | **1.745 (−19.1 %)** | 2.073 (−3.9 %) |
+| **events > 2.0 GiB** | **3 of 7** | 4 of 7 | **0 of 7** | 1 of 7 |
+
+In-job CPU on the same arms (TICK total, the instrument every cost claim in this doc is made on):
+
+| | mean | vs production | max | vs production |
+|---|---:|---:|---:|---:|
+| tcmalloc (production) | 81.9 s | — | 164.5 s | — |
+| glibc | 97.3 s | **+18.8 %** | 191.7 s | +16.6 % |
+| **jemalloc** | 78.7 s | **−4.0 %** | 159.1 s | −3.3 % |
+| tcmalloc + release_rate 10 | 82.3 s | +0.4 % | 168.1 s | +2.2 % |
+
+**Read the CPU column conservatively.** Round 3's null pair put the run-to-run floor on this machine
+at +0.2 / −1.6 / −2.6 % (§9.3). −4.0 % is only just outside it, and there is one run per event. The
+defensible statement is **"jemalloc costs no CPU"**, not "jemalloc is 4 % faster". The glibc column
+is a different matter — +18.8 % is far outside any floor, and it **independently reproduces round 1
+on a different event set**: round 1 measured tcmalloc at −16.5 % on one median event, and the
+inverse of +18.8 % is −15.8 % here on the tail.
+
+**The 62-event gate manifest says the same thing from the other side.** The same two allocators on
+the same binary over the d118 manifest — 24 nuecc + 18 cv + 20 beam-off, which §10.1 established
+contains **no tail event** (max 1.449 GiB):
+
+| sample | job size (TICK mean) | peak RSS, mean | peak RSS, max | TICK |
+|---|---:|---:|---:|---:|
+| nuecc (24) | 11.7 s | **+0.1 %** | +2.1 % | −2.4 % |
+| cv (18) | 3.0 s | −1.4 % | +1.0 % | **+6.6 %** |
+| beam-off (20) | 1.0 s | +3.0 % | −2.9 % | **+4.5 %** |
+| *tail (7), for contrast* | 81.9 s | **−18.8 %** | **−19.1 %** | −4.0 % |
+
+**Memory: jemalloc buys nothing here.** Not "a little" — nothing, inside the noise in both
+directions. Taken with the p50 event, that is the clearest form of the round's central claim: the
+win exists **only** on the events that threaten a cap, which is also the only place it is wanted.
+It also means a flip cannot be justified by an average — the average is flat.
+
+**CPU: report the caveat.** On the two *short* samples jemalloc is **worse in relative terms**,
++6.6 % on cv and +4.5 % on beam-off. In absolute core-seconds that is +0.20 s and +0.04 s per
+event against −0.28 s on nuecc and −3.2 s on the tail, so jemalloc wins where the time actually is
+— but the honest shape is "jemalloc's CPU benefit grows with job size and is slightly negative on
+jobs of a few seconds", not "jemalloc is faster".
+
+**Two free by-products of running the control arm.**
+
+1. **The memory instrument's repeatability.** `work-r3nue-d119ttcm` is byte-identically the
+   configuration of round 4's `work-r3nue-d119tail`, run again three weeks of edits later. Worst
+   per-event disagreement in `maxrss`: **0.009 GiB, ≤ 0.5 %.** So a 19 % memory delta is not noise,
+   and neither is a 4 % one — the earlier caution in this doc about RSS being unrepeatable applies
+   to *cross-allocator* comparison, not to this instrument.
+2. **Round 4's tail result is confirmed independently**: three events above 2.0 GiB at current
+   production, same three, same values to 0.01 GiB.
+
+### 11.3 The mechanism control, and why it was not optional
+
+jemalloc 5.x returns dirty pages to the OS on a decay timer (`opt.dirty_decay_ms`, 10 s by default);
+tcmalloc holds freed spans in its page heap and releases at `TCMALLOC_RELEASE_RATE`, default 1. If
+the tail gap were simply *page-return policy*, the finding would not be "jemalloc" at all — it would
+be "one environment variable", available on production's existing allocator with no flip, no byte
+gate and no owner decision. An arm that cannot tell those two apart is not worth running, so the
+fourth arm is production tcmalloc at `TCMALLOC_RELEASE_RATE=10`.
+
+**It is part of the mechanism and not most of it.** Aggressive release recovers **−4.4 % of the
+−18.8 %** — about a quarter — and costs nothing in CPU (+0.4 %, inside the floor). On the worst
+event jemalloc still sits **0.310 GiB below** the aggressively-releasing tcmalloc (1.669 vs 1.979).
+So roughly three quarters of the gap is jemalloc's allocation *layout* — its size classes and
+per-arena extent reuse against a heap that, per §10.4, is a genuinely live working set — and not
+merely when pages go back.
+
+`TCMALLOC_RELEASE_RATE=10` is therefore a **real, smaller, much cheaper option in its own right**:
+one env var in the runner, no allocator change, no byte gate needed beyond what round 1 already has,
+worth about 0.1 GiB off the worst event and one of the three events above 2 GiB. It is recorded here
+as an alternative the owner can take instead of the flip, not as a recommendation on its own.
+
+### 11.4 The tripwire hole §6.4 named, closed — and a second one found inside the tripwire
+
+This part ships whatever the owner decides about the allocator, because nothing in it changes a
+production operating point. §6.4 left the hole open with an explicit condition: close it *minimally*
+or not at all, because the PR runners are large, churn constantly with A/B scaffolding, and a noisy
+tripwire is worse than none.
+
+**The hole.** Round 1 made `SBND_PR_TCMALLOC` default on, which preloads `libtcmalloc_minimal` into
+every PR job for −10.9 to −16.7 % in-job CPU (§5; §11.2 reproduces it at −15.8 % on the tail). That
+is a production operating-point change living in a **runner**, and no runner was among the 25
+consumers, so `prod_cfg_gate.py` reported PASS 25/25 while it landed. Worse than the edit is the
+**silent fallback**:
+
+```bash
+if [ "${SBND_PR_TCMALLOC:-$SBND_PR_TCMALLOC_DEFAULT}" = 1 ] && [ -e "$SBND_TCMALLOC_LIB" ]; then
+```
+
+If that library ever stops existing — a package upgrade renaming a soname is enough — every PR job
+drops to glibc. Before this round there was **no log line, no compiled-config change and no gate
+failure**: round 4 had to read `/proc/<pid>/maps` to establish which allocator a running job
+actually had. A ~16 % CPU regression could land on production with nothing anywhere recording it.
+
+**What was added.** Three small things:
+
+1. `run_pr_chain_batch.sh` now **logs the allocator it chose**, on both the per-event and the group
+   path, and **warns loudly** when the requested library is missing instead of falling back in
+   silence. The line lands in each event's own `stdout.log`, next to the products it produced —
+   `lever_gate.py`'s SKIP already excludes `stdout.log`, so it is a record, not a product. Log-only:
+   no product, no compiled config, no TLA moves. §11.2's four arms are proved from it.
+2. `compile_consumers.sh` emits `runner_alloc.txt`: the allocator decision of the three SBND runners
+   that set `LD_PRELOAD` (`run_pr_chain_batch.sh`, `run_pr_evt.sh`, `run_clus_evt.sh`), extracted by
+   pattern, with comments and leading whitespace stripped and **no line numbers**. Moving the block,
+   re-indenting it or rewriting its comments does not fire; changing which library is preloaded, or
+   deleting the new warning, does. That is §6.4's minimal form, and it is what keeps the tripwire
+   quiet enough to stay trusted. The one line in it that looks like a false positive in waiting —
+   `PYLIB=…/libpython3.11.so.1.0` — is deliberately included: a python bump moving that soname is a
+   production change of exactly this family, because doc 118 §8 records that dropping `$PYLIB`
+   silently disables the SCN import and the job falls back to the **geometric** vertex. A quiet
+   upgrade there would be worse than a quiet allocator swap.
+3. A new reference generation, **`ref/prod-2026-09-21b`**, 26 artifacts. `prod-2026-09-21` is kept.
+   **All 25 of its hashes are bit-identical here** — the manifests differ by exactly one added line
+   (`119_r5_ref_diff.txt`). Round 5 changed what is watched, not what runs.
+
+**The second hole, found while closing the first.** `prod_cfg_gate.py` only ever looked up the names
+already in the reference manifest, and `--refresh` rewrote it over `sorted(want)`. So **adding a
+consumer to `compile_consumers.sh` did nothing at all**: the new artifact was compiled, ignored, and
+never adopted, while the gate went on reporting PASS on the old set. Doc 118 added three runtime fit
+JSONs and the LArSoft 1-step chain and got away with it only because it built its reference
+generation by hand — had it used `--refresh`, those four would silently not be gated today.
+
+Fixed in the same change: the gate computes what the compile **produced**, prints
+`NEW : <name>` for anything the reference does not list, **fails** on it, and `--refresh` writes the
+manifest from the produced set while reporting what it added and dropped. `runner_alloc.txt` is
+also kept in full in the reference dir, so a drift in it is *named* by a line diff and not merely
+detected — the same reason `prod_prjob.json` is kept.
+
+This one is worth stating plainly: **the instrument that exists to catch unseen production changes
+had a blind spot of exactly that shape.** It is the same failure mode as the runner hole, one level
+up.
+
+Records: `119_r5_gate_pre.txt` (PASS 25/25 at unmodified HEAD, before the round's first edit),
+`119_r5_gate_new.txt` (`NEW : runner_alloc.txt`, rc=1), `119_r5_gate_post.txt` (PASS 26/26),
+`119_r5_ref_diff.txt`, and `ref/prod-2026-09-21b/README.md`.
+
+### 11.5 The byte gate — 62 events, and a null pair that makes the PASS mean something
+
+An allocator change is **not** structurally byte-identical in this codebase, and saying so is the
+reason this gate exists rather than being waved through. §9.5 item 7 names a live
+`unordered_set<const Blob*>` whose *iteration order* reaches production output; allocator changes
+are exactly what perturbs pointer values. Round 1's PASS for tcmalloc is empirical evidence about
+tcmalloc, not a proof that covers a third allocator.
+
+`scripts/d119/lever_gate.py --vs r3 jem` compares the jemalloc arm against `work-r3*-d119r3` — the
+**same binary, same compiled config, same fit JSON**, differing in the malloc implementation and
+nothing else. Allowance: **nothing** beyond the dual chain's own stopwatch and the two git-sha
+provenance strings (the arms were produced at different working-tree states; `op_config_sha256` and
+`trackfitting_config` stay under comparison, so the gate would still notice if the configuration
+had moved).
+
+| | files compared | differ, within allowance | differ, NOT allowed |
+|---|---:|---:|---:|
+| cv (18 evt) | 82 | 28 | **0** |
+| nuecc (24 evt) | 120 | 48 | **0** |
+| beam-off (20 evt) | 82 | 21 | **0** |
+
+**PASS**, `119_r5_gate_jem.txt`. And the null pair makes it specific rather than merely green:
+`lever_gate.py --vs r3 r3b` — one configuration run twice on the same binary — reports **10 / 24 /
+1** differences at provenance-off allowance (`119_r5_gate_null.txt`). The jemalloc columns are
+exactly those counts **plus one provenance record per event** (18 + 10 = 28, 24 + 24 = 48,
+20 + 1 = 21). So jemalloc moved **nothing that two runs of one configuration do not also move**.
+That is the statement a bare PASS cannot make.
+
+Scope of the claim, stated so it is not over-read: 62 events, one detector, one binary. It is the
+same bar round 1 cleared for tcmalloc and round 3 cleared for the projection hoist — not a proof of
+pointer-order independence, which no gate here provides.
+
+### 11.6 The dual-chain census §8 has been deferring — read, and it changes the recommendation
+
+§8 has named SBND's dual second pass the largest remaining CPU target since round 0 (31.1 % of the
+post-flip nuecc job by direct profile, §3.1) and has three times deferred the census that would size
+it, on the grounds that it costs nothing to read. It does cost nothing:
+`scripts/d117/dual_chain_census.py` reads `vertex_scoreboard.dual_chain` out of calib dumps already
+on disk. `119_r5_dual_census.txt`, on the **2001-event** post-flip `nuecc` arm (`t2`, the trajectory
+that is production today) and the 2017-event `cv` arm:
+
+| | nuecc (1 869 scoreboards) | cv (952) | beam-off (85) |
+|---|---:|---:|---:|
+| second pass ran | 1 865 (99.8 %) | 931 (97.8 %) | 58 (68.2 %) |
+| chains agreed | 1 762 (94.5 %) | 901 (97.1 %) | 48 |
+| transfer accepted | 611 (32.8 %) | 452 | 47 |
+| **and it MOVED the pick** | **572 (30.7 %)** | 349 | 38 |
+| transfer distance, median / p90 | 0.413 / 1.80 cm | 0.272 / 1.27 | 0.000 / 2.25 |
+| second-pass cost, median / p90 | 2.9 / 13.4 s | 1.6 / 2.9 s | 1.5 / 4.3 s |
+| **total second-pass cost** | **3.16 core-h / 2 001 evt** | 0.53 core-h / 2 017 | 0.04 core-h / 1 000 |
+
+The 62 events of the gate manifest agree on the rates (second pass on **100 %** of nuecc, median
+2.0 s) and are quoted only as a consistency check — 24 events cannot measure a rate to better than
+a few per cent, and its lighter median cost is the same manifest-composition effect §10.1 is about.
+
+**What this does to §8's recommendation: it weakens it, and that is the useful result.** The census
+was expected to size a target. It also scores it, through the proxy doc 117 built: on the 572 nuecc
+events where the transfer moved the pick, the transferred vertex is **closer** to a true in-FV
+vertex than the composite winner on 294 and **further** on 157 (sign test p = 1.1 × 10⁻¹⁰); on `cv`,
+172 closer against 51 further (p = 1.6 × 10⁻¹⁶). The pass is not merely expensive — **it is
+consistently right**, on both samples, by a wide margin.
+
+So a lever here is not "skip work that does nothing". 30.7 % of the time it moves the answer, and
+when it moves it, it moves it the right way about two times in three. Three consequences worth
+writing down before anyone opens this:
+
+1. **`agree` is not a skip predicate.** 94.5 % of nuecc events agree, which looks like an enormous
+   saving — but agreement is an *output* of the second pass. It is known only after paying for it.
+2. **The saving is bounded by the whole pass.** 3.16 core-h over 2 001 events is ≈ 5.7 s/event
+   against a job whose post-flip nuecc median is ~17 s; that is the 31.1 % §3.1 measured, and there
+   is no smaller sub-piece the census can point at — `off_ms` covers the pass end to end.
+3. **It is a physics decision, not a perf round.** Any predicate that skips the pass changes which
+   events get the snap, so it needs grading against doc 107's metrics. §5 rule 1, owner's call —
+   which is what §8 already said, now with a number attached to what would be given up.
+
+**The honest summary: this is a worse lever than §8 has been implying for five rounds.** It remains
+the largest CPU item, and it is now the *least* attractive of the campaign's remaining targets,
+because unlike round 3's hoist or round 5's allocator it cannot be had byte-identically at all.
+
+### 11.7 What round 5 recommends
+
+**To the owner, one decision:** flip `SBND_TCMALLOC_LIB` to jemalloc 5.3.0 in the SBND PR runners,
+or do not. Everything needed to decide is above:
+
+- **For.** −18.8 % mean / −19.1 % max peak RSS on the tail, three of three events above 2 GiB taken
+  below it, −4.0 % CPU there (read as "no CPU cost"), byte-identical on 62 events with a specific
+  null pair, one line in one runner, and an exact precedent in round 1.
+- **Against.** It buys **nothing where there is no tail** — +0.1 % mean RSS on the 24 gate-manifest
+  nuecc events, and 1.197 vs 1.197 GiB on the p50 event. This is a tail-only change, worth taking
+  only if the operational constraint is a per-process cap; an average will not justify it. On jobs
+  of a few seconds it is **+4.5 to +6.6 % CPU** (absolutely, +0.04 to +0.20 s/event). It adds a
+  third allocator to a chain that already has two histories. And the byte gate is 62 events on one
+  detector: §9.5 item 7's pointer-keyed `unordered_set` iteration is a real mechanism, and no gate
+  here proves its absence — only that it did not fire.
+- **A cheaper partial.** `TCMALLOC_RELEASE_RATE=10` keeps production's allocator, needs no new byte
+  gate, costs no CPU, and takes one of the three events below 2 GiB (−4.4 % mean). If the aim is
+  "fewer cap breaches" rather than "less memory", it may be enough.
+
+**Nothing else in this round is a decision.** The tripwire changes (§11.4) are shipped; they change
+no operating point and `prod_cfg_gate.py` reports PASS 26/26 against the new reference.
+
+**For the campaign, the ranking after round 5:**
+
+1. **The allocator** — sized, gated, waiting on one decision.
+2. **`CreateSteinerGraph`'s per-cluster working set** (§10.6) — still the largest object on all
+   three detectors in both CPU and memory, still blocked on a frame-pointer build before anything
+   inside the retile sampler can be resolved, and still likely a physics trade rather than a lever.
+3. **The dual second pass** — biggest number, worst lever, now measured (§11.6). Do not re-open it
+   as a perf round.
+4. **`time2drift`** (§9.6) and **retention** (§8 item 2) — both still open, both still small.
+
+**And one rule, earned three times in two rounds.** Round 4 retracted two attributions taken from
+`(inline)` frames (§10.5); round 4's p50 row mixed a glibc `.time.meta` into a jemalloc table; round
+5 opened by retracting the very number that motivated it. All three are the same failure: **a
+quantity was compared against another quantity produced by a different instrument.** The discipline
+that catches it is cheap and is now built into `scripts/d119/r5_alloc.py` — print every arm under
+every instrument, label the claim instrument, and never let a table hold two.
+
+The same script carries the other lesson of this round in a guard: `work-r3cv-d119tcm` already
+exists and is **round 1's** arm on the **pre-round-3 binary**, so reading round 5's jemalloc against
+it would have folded round 3's −14.9 % CPU win into what was reported as an allocator delta. The
+M13 arm marker would have refused a *write* there; nothing stopped a *read*, so `r5_alloc.py` now
+checks the marker before it reads, and round 5's own 62-event arms carry an `r5` tag.

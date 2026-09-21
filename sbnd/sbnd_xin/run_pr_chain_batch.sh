@@ -1975,11 +1975,21 @@ process_event() {
         # fallback instead of the DL one (doc sbnd_xin/118 sec 8).  Deliberately NOT applied in
         # run_pr_evt.sh: its :307-310 comment keeps the -stm / -tgm / bare -p arms on their exact
         # pre-doc-pr/4 process environment because they are A/B comparison arms.
+        # doc sbnd_xin/119 round 5: the fallback below is SILENT, and that is the hole.  If
+        # $SBND_TCMALLOC_LIB ever stops existing -- a package upgrade renaming the soname is all
+        # it takes -- this branch hands the job glibc, no log line, no compiled-config change,
+        # so prod_cfg_gate.py still reports PASS while production loses round 1's -16.5 % CPU.
+        # Round 4 had to read /proc/<pid>/maps to find out which allocator a running job had.
+        # Two lines fix that: say what was loaded, and shout when what was asked for is missing.
         if [ "${SBND_PR_TCMALLOC:-$SBND_PR_TCMALLOC_DEFAULT}" = 1 ] && [ -e "$SBND_TCMALLOC_LIB" ]; then
             export LD_PRELOAD="$PYLIB:$SBND_TCMALLOC_LIB"
         else
+            if [ "${SBND_PR_TCMALLOC:-$SBND_PR_TCMALLOC_DEFAULT}" = 1 ]; then
+                echo "WARNING: [evt $EVT_ID] allocator preload requested but missing: $SBND_TCMALLOC_LIB -- running on glibc malloc" >&2
+            fi
             export LD_PRELOAD="$PYLIB"
         fi
+        echo "[evt $EVT_ID] alloc: LD_PRELOAD=$LD_PRELOAD"
         export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
         # doc pr/57: env-gated per-edge JSONL dump feeding
         # overclustering_display (hand-scan of S6 2D-connectivity
@@ -2168,11 +2178,16 @@ process_group() {
         # fallback instead of the DL one (doc sbnd_xin/118 sec 8).  Deliberately NOT applied in
         # run_pr_evt.sh: its :307-310 comment keeps the -stm / -tgm / bare -p arms on their exact
         # pre-doc-pr/4 process environment because they are A/B comparison arms.
+        # doc sbnd_xin/119 round 5 -- same silent fallback, same fix, on the group path.
         if [ "${SBND_PR_TCMALLOC:-$SBND_PR_TCMALLOC_DEFAULT}" = 1 ] && [ -e "$SBND_TCMALLOC_LIB" ]; then
             export LD_PRELOAD="$PYLIB:$SBND_TCMALLOC_LIB"
         else
+            if [ "${SBND_PR_TCMALLOC:-$SBND_PR_TCMALLOC_DEFAULT}" = 1 ]; then
+                echo "WARNING: [group $GIDX] allocator preload requested but missing: $SBND_TCMALLOC_LIB -- running on glibc malloc" >&2
+            fi
             export LD_PRELOAD="$PYLIB"
         fi
+        echo "[group $GIDX] alloc: LD_PRELOAD=$LD_PRELOAD"
         export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
         # doc 87: keep the pctree unless SBND_PR_PCTREE=0.
         GPCTREE_TLA=(--tla-str "save_tensors=$OUTROOT/pr_evt%1%/pctree-pr-evt%1%.tar.gz")

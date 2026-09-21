@@ -1,0 +1,29 @@
+# doc sbnd_xin/119 round 5 -- the allocator of each arm, proved from a LIVE job's /proc/<pid>/maps.
+# Not inferred from the arm name: run_pr_chain_batch.sh falls back to glibc when the requested
+# library is absent, and until this round it did so with no log line at all (sec 11.4).
+
+## tcm pid=3648791 cwd=/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-r3nue-d119ttcm/f100/pr_evt5265
+/usr/lib/x86_64-linux-gnu/libc.so.6
+/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4.5.10
+/wcwc/opt/builtin/linux-debian12-x86_64/gcc-12.2.0/python-3.11.9-o4oyrmuslwej6hlaaorfb6zlhefiwpzf/lib/libpython3.11.so.1.0
+## glibc pid=3654659 cwd=/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-r3nue-d119tglb/f054/pr_evt7582
+/usr/lib/x86_64-linux-gnu/libc.so.6
+/wcwc/opt/builtin/linux-debian12-x86_64/gcc-12.2.0/python-3.11.9-o4oyrmuslwej6hlaaorfb6zlhefiwpzf/lib/libpython3.11.so.1.0
+## jem pid=3660843 cwd=/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-r3nue-d119tjem/f054/pr_evt7582
+/usr/lib/x86_64-linux-gnu/libc.so.6
+/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
+/wcwc/opt/builtin/linux-debian12-x86_64/gcc-12.2.0/python-3.11.9-o4oyrmuslwej6hlaaorfb6zlhefiwpzf/lib/libpython3.11.so.1.0
+## rel pid=3665443 cwd=/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-r3nue-d119trel/f075/pr_evt9393
+/usr/lib/x86_64-linux-gnu/libc.so.6
+/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4.5.10
+/wcwc/opt/builtin/linux-debian12-x86_64/gcc-12.2.0/python-3.11.9-o4oyrmuslwej6hlaaorfb6zlhefiwpzf/lib/libpython3.11.so.1.0
+
+# ...and the same thing read from the runner's new per-event log line, all 7 events of each arm:
+## work-r3nue-d119ttcm
+         7 /wcwc/opt/builtin/linux-debian12-x86_64/gcc-12.2.0/python-3.11.9-o4oyrmuslwej6hlaaorfb6zlhefiwpzf/lib/libpython3.11.so.1.0:/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+## work-r3nue-d119tglb
+         7 /wcwc/opt/builtin/linux-debian12-x86_64/gcc-12.2.0/python-3.11.9-o4oyrmuslwej6hlaaorfb6zlhefiwpzf/lib/libpython3.11.so.1.0
+## work-r3nue-d119tjem
+         7 /wcwc/opt/builtin/linux-debian12-x86_64/gcc-12.2.0/python-3.11.9-o4oyrmuslwej6hlaaorfb6zlhefiwpzf/lib/libpython3.11.so.1.0:/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
+## work-r3nue-d119trel
+         7 /wcwc/opt/builtin/linux-debian12-x86_64/gcc-12.2.0/python-3.11.9-o4oyrmuslwej6hlaaorfb6zlhefiwpzf/lib/libpython3.11.so.1.0:/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4

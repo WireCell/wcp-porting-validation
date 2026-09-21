@@ -21,9 +21,15 @@ Lever allowances
        NOT permitted: T_rec_charge, any tagger tree, mabc-pr.zip, the pctree, nusel, or any
        non-`proj` key of the calib dump.  That is the doc-30 bar, restated for SBND.
 
+  jem  round 5 (jemalloc).  Same as tcm -- nothing but the stopwatch -- gated against `r3`, with
+       r3's narrow provenance allowance because the two arms are the same configuration run at
+       different working-tree states.
+
 Usage:
   python3 scripts/d119/lever_gate.py <ctl2|tcm|pad> [cv nuecc off]
   python3 scripts/d119/lever_gate.py --vs pad flip     # the flipped default vs the measured arm
+  python3 scripts/d119/lever_gate.py --vs r3 r3b       # round 3/5's NULL PAIR -- run it first
+  python3 scripts/d119/lever_gate.py --vs r3 jem       # round 5, jemalloc vs the same binary
 """
 import glob
 import hashlib
@@ -91,6 +97,21 @@ ALLOW = {
     # The null pair for round 3, on the NEW binary.  Round 2's floor was measured on the old one
     # and cannot be inherited across a rebuild.
     "r3b": {"trees": (), "json_prefix": (), "provenance": False},   # same tree state; nothing moves
+    # ROUND 5, jemalloc.  Gate it against `r3` (pass --vs r3): same binary, same compiled config,
+    # same fit JSON, a different malloc implementation.  Allowance is NOTHING beyond provenance,
+    # for the same reason round 1 allowed tcmalloc nothing -- an allocator that moved a
+    # reconstruction product would be a defect in the toolkit, not a trade to accept.  It is not a
+    # vacuous requirement here: doc 119 sec 9.5 item 7 names a live `unordered_set<const Blob*>`
+    # whose ITERATION ORDER reaches production output, and allocator changes are exactly what
+    # perturbs pointer values.  Round 1's PASS for tcmalloc is empirical evidence, not a proof
+    # that covers a third allocator.
+    # Narrow provenance like r3, and for the same reason: the two arms were run at different
+    # working-tree states, so toolkit_git / wcp_git must be allowed to move while
+    # op_config_sha256 and trackfitting_config stay under comparison.
+    "jem": {"trees": (), "json_prefix": (), "provenance": True,
+            "prov_keys": ("toolkit_git", "wcp_git"),
+            "prov_branch": ("toolkit_git", "wcp_git"),
+            "prov_git": True},
 }
 
 

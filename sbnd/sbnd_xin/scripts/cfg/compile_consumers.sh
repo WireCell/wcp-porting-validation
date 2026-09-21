@@ -65,3 +65,33 @@ export WIRECELL_PATH=$CFG:$DATA:$DATA/sbnd/photodet
 $W -A input=in.tar.gz -A output_dir=out -S run=1 -S subrun=1 -S event=1 -A reality=data \
    "$CFG/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet" > "$OUT/bare_prjob.json" 2> "$OUT/bare_prjob.err"
 echo "bare_prjob rc=$?"
+
+# (h) The PROCESS ENVIRONMENT of the three SBND runners -- which allocator the job gets.
+# doc sbnd_xin/119 sec 6.4 named this hole and sec 11 closes it.  Round 1 flipped
+# libtcmalloc_minimal into the PR chain for -10.9..-16.7 % in-job CPU; that is a production
+# operating-point change living in a RUNNER, and no runner is a compiled artifact, so the
+# tripwire reported 25/25 while it landed.  The failure it has to catch is not an edit -- it is
+# run_pr_chain_batch.sh's `[ -e "$SBND_TCMALLOC_LIB" ]` going false after a package change and
+# the job dropping to glibc with (before round 5) no log line at all.
+#
+# MINIMAL ON PURPOSE (sec 6.4's own condition).  These runners are large and churn constantly
+# with A/B scaffolding; hashing them whole would make the tripwire noisy enough to be ignored.
+# So this extracts only the lines that DECIDE the allocator, with leading whitespace and comments
+# stripped and no line numbers, and hashes that.  Moving the block, re-indenting it or rewriting
+# its comments does not fire; changing which library is preloaded, or deleting the round-5
+# warning that makes a fallback visible, does.
+#
+# `^PYLIB=` is in the pattern ON PURPOSE and is not a false positive waiting to happen.  It pins
+# libpython3.11.so.1.0 by soname, and a python bump moving that string IS a production change of
+# exactly this family: doc sbnd_xin/118 sec 8 records that dropping $PYLIB from the preload
+# silently disables the SCN import, so the job runs the GEOMETRIC vertex instead of the DL one.
+# That is a worse silent regression than an allocator swap.  Do not narrow the pattern to make an
+# upgrade quieter.
+{
+    for _r in run_pr_chain_batch.sh run_pr_evt.sh run_clus_evt.sh; do
+        echo "## $_r"
+        grep -hE '(LD_PRELOAD|SBND_TCMALLOC_LIB|SBND_PR_TCMALLOC|TCMALLOC_SO|WCT_TCMALLOC|WC_PRELOAD|^PYLIB=)' \
+             "$SX/$_r" | grep -vE '^[[:space:]]*#' | sed 's/^[[:space:]]*//'
+    done
+} > "$OUT/runner_alloc.txt" 2> "$OUT/runner_alloc.err"
+echo "runner_alloc rc=$?"

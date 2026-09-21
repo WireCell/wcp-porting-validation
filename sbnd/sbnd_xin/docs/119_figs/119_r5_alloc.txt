@@ -1,0 +1,133 @@
+# doc sbnd_xin/119 round 5 -- allocator arms, back to back on one box, one fan-out.
+# CLAIM INSTRUMENT = maxrss (getrusage CHILDREN high-water).  Every column below is
+# read from the SAME instrument across arms; round 4's error was mixing two.
+
+============================================================================================
+## sample tail -- 7 events paired across 4 arms (glb, jem, rel, tcm)
+============================================================================================
+   tcm  PRODUCTION: libtcmalloc_minimal joined to the preload (round 1)
+   glb  glibc malloc -- the pre-round-1 environment, and doc 116's control
+   jem  jemalloc 5.3.0, no MALLOC_CONF (round 4's runs had the heap sampler ON)
+   rel  PRODUCTION tcmalloc + TCMALLOC_RELEASE_RATE=10 -- the MECHANISM control
+
+   peak RSS (getrusage), GiB, per event
+   event                  tcm      glb      jem      rel
+   f049/12202           2.059    2.201    1.670    1.921
+   f054/7582            1.197    1.162    1.197    1.197
+   f060/11239           2.093    2.206    1.669    1.979
+   f075/9393            1.705    1.599    1.316    1.630
+   f100/5265            1.915    2.017    1.499    1.803
+   f188/11811           2.156    2.049    1.745    2.073
+   f196/6248            1.910    1.981    1.488    1.862
+
+   maxrss  GiB
+      tcm  mean    1.862 (  +0.0 %)   max    2.156 (  +0.0 %)
+      glb  mean    1.888 (  +1.4 %)   max    2.206 (  +2.3 %)
+      jem  mean    1.512 ( -18.8 %)   max    1.745 ( -19.1 %)
+      rel  mean    1.781 (  -4.4 %)   max    2.073 (  -3.9 %)
+      (% against tcm, the production allocator)
+
+   ladder  GiB
+      tcm  mean    1.694 (  +0.0 %)   max    1.967 (  +0.0 %)
+      glb  mean    1.720 (  +1.5 %)   max    2.036 (  +3.5 %)
+      jem  mean    1.369 ( -19.2 %)   max    1.619 ( -17.7 %)
+      rel  mean    1.612 (  -4.8 %)   max    1.877 (  -4.6 %)
+      (% against tcm, the production allocator)
+
+   TICK      s
+      tcm  mean   81.944 (  +0.0 %)   max  164.463 (  +0.0 %)
+      glb  mean   97.330 ( +18.8 %)   max  191.711 ( +16.6 %)
+      jem  mean   78.700 (  -4.0 %)   max  159.096 (  -3.3 %)
+      rel  mean   82.264 (  +0.4 %)   max  168.088 (  +2.2 %)
+      (% against tcm, the production allocator)
+
+   wall      s
+      tcm  mean   85.000 (  +0.0 %)   max  167.000 (  +0.0 %)
+      glb  mean  100.714 ( +18.5 %)   max  195.000 ( +16.8 %)
+      jem  mean   81.571 (  -4.0 %)   max  161.000 (  -3.6 %)
+      rel  mean   85.429 (  +0.5 %)   max  171.000 (  +2.4 %)
+      (% against tcm, the production allocator)
+
+============================================================================================
+## sample nuecc -- 24 events paired across 2 arms (jem, tcm)
+============================================================================================
+   tcm  PRODUCTION: libtcmalloc_minimal joined to the preload (round 1)
+   jem  jemalloc 5.3.0, no MALLOC_CONF (round 4's runs had the heap sampler ON)
+
+   maxrss  GiB
+      tcm  mean    1.224 (  +0.0 %)   max    1.449 (  +0.0 %)
+      jem  mean    1.226 (  +0.1 %)   max    1.480 (  +2.1 %)
+      (% against tcm, the production allocator)
+
+   ladder  GiB
+      tcm  mean    1.073 (  +0.0 %)   max    1.329 (  +0.0 %)
+      jem  mean    1.068 (  -0.5 %)   max    1.374 (  +3.4 %)
+      (% against tcm, the production allocator)
+
+   TICK      s
+      tcm  mean   11.710 (  +0.0 %)   max   34.459 (  +0.0 %)
+      jem  mean   11.433 (  -2.4 %)   max   33.322 (  -3.3 %)
+      (% against tcm, the production allocator)
+
+   wall      s
+      tcm  mean   14.083 (  +0.0 %)   max   38.000 (  +0.0 %)
+      jem  mean   14.292 (  +1.5 %)   max   37.000 (  -2.6 %)
+      (% against tcm, the production allocator)
+
+============================================================================================
+## sample cv -- 18 events paired across 2 arms (jem, tcm)
+============================================================================================
+   tcm  PRODUCTION: libtcmalloc_minimal joined to the preload (round 1)
+   jem  jemalloc 5.3.0, no MALLOC_CONF (round 4's runs had the heap sampler ON)
+
+   maxrss  GiB
+      tcm  mean    0.826 (  +0.0 %)   max    1.344 (  +0.0 %)
+      jem  mean    0.815 (  -1.4 %)   max    1.357 (  +1.0 %)
+      (% against tcm, the production allocator)
+
+   ladder  GiB
+      tcm  mean    0.743 (  +0.0 %)   max    1.214 (  +0.0 %)
+      jem  mean    0.710 (  -4.5 %)   max    1.161 (  -4.3 %)
+      (% against tcm, the production allocator)
+
+   TICK      s
+      tcm  mean    2.952 (  +0.0 %)   max    9.374 (  +0.0 %)
+      jem  mean    3.147 (  +6.6 %)   max    9.734 (  +3.8 %)
+      (% against tcm, the production allocator)
+
+   wall      s
+      tcm  mean    5.278 (  +0.0 %)   max   13.000 (  +0.0 %)
+      jem  mean    5.722 (  +8.4 %)   max   14.000 (  +7.7 %)
+      (% against tcm, the production allocator)
+
+============================================================================================
+## sample off -- 20 events paired across 2 arms (jem, tcm)
+============================================================================================
+   tcm  PRODUCTION: libtcmalloc_minimal joined to the preload (round 1)
+   jem  jemalloc 5.3.0, no MALLOC_CONF (round 4's runs had the heap sampler ON)
+
+   maxrss  GiB
+      tcm  mean    0.443 (  +0.0 %)   max    1.193 (  +0.0 %)
+      jem  mean    0.457 (  +3.0 %)   max    1.159 (  -2.9 %)
+      (% against tcm, the production allocator)
+
+   ladder  GiB
+      tcm  mean    0.424 (  +0.0 %)   max    1.043 (  +0.0 %)
+      jem  mean    0.426 (  +0.3 %)   max    1.002 (  -3.9 %)
+      (% against tcm, the production allocator)
+
+   TICK      s
+      tcm  mean    0.968 (  +0.0 %)   max    8.212 (  +0.0 %)
+      jem  mean    1.011 (  +4.5 %)   max    8.510 (  +3.6 %)
+      (% against tcm, the production allocator)
+
+   wall      s
+      tcm  mean    4.350 (  +0.0 %)   max   11.000 (  +0.0 %)
+      jem  mean    4.000 (  -8.0 %)   max   12.000 (  +9.1 %)
+      (% against tcm, the production allocator)
+
+============================================================================================
+HOW TO READ A DELTA HERE.  Round 3's null pair measured the run-to-run floor on this
+machine at +0.2 / -1.6 / -2.6 % on TICK (doc 119 sec 9.3).  A TICK delta inside that
+band is not a measurement.  maxrss is far more repeatable than TICK, but it is still a
+single run per event: a 1-2 % memory delta is not a finding either.

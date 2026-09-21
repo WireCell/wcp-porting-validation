@@ -1,0 +1,21 @@
+# doc sbnd_xin/119 lever gate: 'jem' arm vs the 'r3' arm
+# allowed to move: trees=(none) calib-json=(none) provenance=True
+# always forgiven: the dual chain's off_ms stopwatch (it moves between two runs of one config)
+# archive members by content (M2); logs, rc.txt, .time.meta, compiled cfg are not products
+
+## cv: r3 18 events, jem 18, compared 18
+   files compared         : 82
+   differ, within allowance: 28
+   differ, NOT allowed    : 0
+
+## nuecc: r3 24 events, jem 24, compared 24
+   files compared         : 120
+   differ, within allowance: 48
+   differ, NOT allowed    : 0
+
+## off: r3 20 events, jem 20, compared 20
+   files compared         : 82
+   differ, within allowance: 21
+   differ, NOT allowed    : 0
+
+PASS -- nothing outside this lever's declared allowance moved

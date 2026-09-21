@@ -1,0 +1,9 @@
+reference : ref/prod-2026-09-21
+cfg tree  : /nfs/data/1/xqian/toolkit-dev/toolkit/cfg
+compiling : /home/xqian/tmp/d119r5/mid
+checked   : 25 artifacts
+NEW       : runner_alloc.txt   (in the compiled set, absent from the reference)
+
+If this drift is an intended flip, re-run with --refresh and record it in the
+round doc.  If it is not, something changed the production operating point
+without a round behind it -- that is what this gate exists to catch.
