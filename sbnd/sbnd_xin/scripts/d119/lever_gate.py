@@ -22,7 +22,8 @@ Lever allowances
        non-`proj` key of the calib dump.  That is the doc-30 bar, restated for SBND.
 
 Usage:
-  python3 scripts/d119/lever_gate.py <tcm|pad> [cv nuecc off]
+  python3 scripts/d119/lever_gate.py <ctl2|tcm|pad> [cv nuecc off]
+  python3 scripts/d119/lever_gate.py --vs pad flip     # the flipped default vs the measured arm
 """
 import glob
 import hashlib
@@ -62,6 +63,13 @@ ALLOW = {
     "ctl2": {"trees": (), "json_prefix": (), "provenance": False},
     "tcm": {"trees": (), "json_prefix": (), "provenance": False},
     "pad": {"trees": ("T_proj_data",), "json_prefix": ("proj",), "provenance": True},
+    # The FLIPPED PRODUCTION DEFAULT, gated against the MEASURED `pad` arm (pass --vs pad).
+    # Allowance is provenance ONLY: the two arms must agree on every product including
+    # T_proj_data and the proj block, because they are meant to be the same configuration
+    # delivered two ways -- in-tree default vs SBND_TRACKFIT_JSON override.  The only thing
+    # entitled to differ is WHICH PATH each one names for the fit JSON, and the hashes computed
+    # from it.  Same shape as doc 118 gate G1.
+    "flip": {"trees": (), "json_prefix": (), "provenance": True},
 }
 
 
@@ -198,21 +206,27 @@ def evdirs(arm):
 
 
 def main():
-    lever = sys.argv[1]
-    samples = sys.argv[2:] or ["cv", "nuecc", "off"]
+    argv = sys.argv[1:]
+    base = "ctl"
+    if "--vs" in argv:                      # gate against an arm other than ctl
+        i = argv.index("--vs")
+        base = argv[i + 1]
+        argv = argv[:i] + argv[i + 2:]
+    lever = argv[0]
+    samples = argv[1:] or ["cv", "nuecc", "off"]
     allow = ALLOW[lever]
-    print(f"# doc sbnd_xin/119 lever gate: '{lever}' arm vs the 'ctl' arm (production as it runs today)")
+    print(f"# doc sbnd_xin/119 lever gate: '{lever}' arm vs the '{base}' arm")
     print(f"# allowed to move: trees={allow['trees'] or '(none)'} "
           f"calib-json={allow['json_prefix'] or '(none)'} provenance={allow['provenance']}")
     print("# always forgiven: the dual chain's off_ms stopwatch (it moves between two runs of one config)")
     print("# archive members by content (M2); logs, rc.txt, .time.meta, compiled cfg are not products")
     rc = 0
     for s in samples:
-        a = os.path.join(SX, ARMS[s] % "ctl")
+        a = os.path.join(SX, ARMS[s] % base)
         b = os.path.join(SX, ARMS[s] % lever)
         A, B = evdirs(a), evdirs(b)
         common = sorted(set(A) & set(B), key=lambda k: (k[0], int(re.sub(r"\D", "", k[1]) or 0)))
-        print(f"\n## {s}: ctl {len(A)} events, {lever} {len(B)}, compared {len(common)}")
+        print(f"\n## {s}: {base} {len(A)} events, {lever} {len(B)}, compared {len(common)}")
         if not common:
             print("   NO OVERLAP -- nothing gated")
             rc = 1

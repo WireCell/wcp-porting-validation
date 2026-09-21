@@ -1,5 +1,5 @@
-reference : ref/prod-2026-09-20
+reference : ref/prod-2026-09-21
 cfg tree  : /nfs/data/1/xqian/toolkit-dev/toolkit/cfg
-compiling : /home/xqian/tmp/prodcfg-5rs7f0am
+compiling : /home/xqian/tmp/prodcfg-4n6xl22c
 checked   : 25 artifacts
-PASS -- the compiled operating point matches prod-2026-09-20
+PASS -- the compiled operating point matches prod-2026-09-21

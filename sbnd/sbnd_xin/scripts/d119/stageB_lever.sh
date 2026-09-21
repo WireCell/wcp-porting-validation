@@ -44,10 +44,17 @@ case "$LEVER" in
     # CreateSteinerGraph), which is the signature of noise, not of a knob.
     ctl|ctl2) export SBND_PR_TCMALLOC=0 ;;
     tcm) export SBND_PR_TCMALLOC=1 ;;
+    # round 2's FLIP arm: no SBND_TRACKFIT_JSON at all, so the job reads the in-tree
+    # cfg/pgrapher/experiment/sbnd/sbnd_track_fitting.json -- i.e. production after the flip.
+    # Gated against the `pad` arm to prove the flipped DEFAULT reproduces the MEASURED arm; a key
+    # list alone (scripts/d119/tf_key_gate.py) does not prove the path that reads it.
+    # tcmalloc stays OFF here so this arm differs from `pad` in nothing but where the knobs came
+    # from -- the same discipline doc 118's stageB_flip.sh used.
+    flip) export SBND_PR_TCMALLOC=0 ;;
     pad) export SBND_PR_TCMALLOC=0
          export SBND_TRACKFIT_JSON="$SX/docs/119_figs/119_tf_sbnd_pad.json"
          [ -s "$SBND_TRACKFIT_JSON" ] || { echo "ERROR: no padded fit JSON at $SBND_TRACKFIT_JSON" >&2; exit 1; } ;;
-    *) echo "unknown LEVER=$LEVER (ctl|ctl2|tcm|pad)" >&2; exit 2 ;;
+    *) echo "unknown LEVER=$LEVER (ctl|ctl2|tcm|pad|flip)" >&2; exit 2 ;;
 esac
 
 case "$S" in

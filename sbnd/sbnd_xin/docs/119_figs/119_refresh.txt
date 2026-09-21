@@ -1,0 +1,7 @@
+reference : ref/prod-2026-09-21
+cfg tree  : /nfs/data/1/xqian/toolkit-dev/toolkit/cfg
+compiling : /home/xqian/tmp/prodcfg-nqa9h80w
+checked   : 25 artifacts
+DRIFT     : sbnd_track_fitting.json
+
+REFRESHED prod-2026-09-21 -- record in the round doc WHICH knob moved and on whose word.

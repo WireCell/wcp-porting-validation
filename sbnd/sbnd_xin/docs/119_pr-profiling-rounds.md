@@ -1,8 +1,9 @@
 # doc sbnd_xin/119 — the cross-detector PR profiling campaign: rounds 0, 1 and 2
 
-**Status: round 0 measured. Round 1 measured, gated and FLIPPED. Round 2 measured, gated — and
-deliberately NOT flipped, although it was pre-authorised: the trade it was authorised on does not
-exist on SBND (§6).**
+**Status: round 0 measured. Round 1 measured, gated and FLIPPED. Round 2 measured, gated, and
+FLIPPED on the owner's explicit instruction of 2026-09-21 — against this doc's own recommendation,
+and for a different reason than doc 30's. Read §6 before quoting any number from it: on SBND the
+knob buys no CPU and no memory, and it does cost 12.1 % of the 2-D display.**
 Doc 118 part B planned this campaign; this doc executes it. It is the round-numbered perf doc for
 the SBND Neutrino chain and the PDHD/PDVD STM+Michel chain, and it supersedes doc 118 part B's
 sizing wherever the two disagree — three of doc 118's own premises turned out to be wrong, and
@@ -63,10 +64,20 @@ python3 $SX/scripts/d119/lever_gate.py tcm      # round 1 product identity
 python3 $SX/scripts/d119/lever_gate.py pad      # round 2 product identity
 python3 $SX/scripts/d119/lever_cost.py          # cost: null pair, then both levers
 
-# --- the tripwire, both ends of the round
-python3 $SX/scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-20    # PASS 25, before and after
+# --- round 2's FLIP, and the two gates that carry the measurement onto production.
+#     The measurement used SBND_TRACKFIT_JSON; production reads the in-tree file.  Different
+#     file, different path -- so the 62-event gate does not transfer without these.
+python3 $SX/scripts/d119/tf_key_gate.py                  # G2: 49 live keys identical
+LEVER=flip JOBS=8 $SX/scripts/d119/stageB_lever.sh nuecc # a 62-evt arm with NO override at all
+python3 $SX/scripts/d119/lever_gate.py --vs pad flip     # G1: flipped default == measured arm
+
+# --- the tripwire, at every stage of the round
+python3 $SX/scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-20   # PASS 25 before the flip,
+                                                                     # DRIFT: sbnd_track_fitting.json after
+python3 $SX/scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-21   # PASS 25 on the new reference
 ```
 
+Toolkit `d7d4da83` (the round-2 flip; round 0 and round 1 changed no toolkit file).
 Pin: `~/tmp/d119-libpin`, `libWireCellClus.so` md5 `71ebd5aeb386` — the same binary doc 115, doc
 116, doc 117 and doc 118 ran. No C++ was rebuilt in this campaign; every lever is configuration or
 process environment.
@@ -343,7 +354,7 @@ arms keep their exact process environment. Escape hatch: `SBND_PR_TCMALLOC=0`.
 
 ---
 
-## 6. Round 2 — `proj_pad` for SBND: measured, and **NOT flipped**
+## 6. Round 2 — `proj_pad` for SBND: measured, recommended against, FLIPPED anyway
 
 C++ default −1 = OFF. `TrackFitting.cxx` is shared, so the *absent key* is what kept SBND on the
 untrimmed path while PDHD and PDVD have carried `proj_pad_wire 3 / proj_pad_time 3` since doc 30
@@ -388,35 +399,93 @@ So the flip was *available*. It was not taken.
 
 **Reconciling this with what doc 118 actually wrote.** Doc 118 §9 set the condition literally:
 *"Round 2 therefore measures **and** flips, on one explicit condition: only if the per-tree gate
-shows every physics product byte-identical."* That condition **was met** — see the gate above. It
-turned out to be necessary but not sufficient, because the sentence was written on the assumption
-that the PDHD payoff would carry over, and the payoff is the part that did not. Where the two docs
-differ, **this one governs**: doc 118 §9 stated a condition, doc 119 §6 measured the premise behind
-it.
+shows every physics product byte-identical."* That condition **was met**. What doc 118 did not
+state, because it assumed it, was that the PDHD payoff would carry over. It does not.
 
-**Decision: do not flip, and say why rather than flipping because it was pre-authorised.** The
-authorisation was for the doc-30 trade — give up display fidelity, get back a quarter of the CPU
-and half the memory. SBND's measured trade is: give up 12 % of the display and get back nothing
-measurable. Flipping on the strength of the authorisation alone would be spending a real product
-for a saving that was assumed and then measured to be absent. The knob stays absent from
-`sbnd_track_fitting.json`, which is also what keeps uBooNE and the two ProtoDUNEs untouched.
+### 6.1 The recommendation, and the owner's decision against it
 
-If SBND's fitted-charge map ever grows — a larger readout window, a wider fit, a denser sampler —
-this becomes worth re-measuring. `docs/119_figs/119_tf_sbnd_pad.json` and
-`scripts/d119/stageB_lever.sh LEVER=pad` re-run it in about three minutes.
+**This doc recommended not flipping.** The authorisation of 2026-09-20 was for the doc-30 trade —
+give up display fidelity, get back a quarter of the CPU and half the memory. SBND's measured trade
+is: give up 12.1 % of the display cells and get back nothing measurable. Spending a real product
+for a saving that was assumed and then measured to be absent is not the trade that was authorised.
+
+**The owner flipped it on 2026-09-21 regardless**, with the reason *"since the output did not
+change"*. That reason needs one correction on the record, and it does not change the decision:
+
+> The **physics** output does not change — `T_rec_charge`, every tagger tree, `mabc-pr.zip`, the
+> pctree, `nusel` and the non-`proj` calib dump are byte-identical across 62 events. The
+> **display** output does change: `T_proj_data` and the calib `proj` block lose **12.1 %** of
+> their cells (7 968 → 7 002 per event). That is the product the knob exists to trim, so it is not
+> a free change; it is a cheap one.
+
+**The defensible reason, and the one recorded in the config comment, is cross-detector
+consistency.** After doc pdvd/103, doc pdvd/108 and doc sbnd_xin/118 all three detectors run the
+same trajectory family, and SBND was the only one whose 2-D display settings still differed — which
+is a real friction for anyone comparing scans across detectors. The config comment states plainly
+that there is **no CPU or memory saving on SBND** and that the 12.1 % display loss is real, so that
+nobody later cites this key for a benefit it does not deliver here.
+
+### 6.2 Gates on the flip itself
+
+Flipping moves the knob from a runtime override (`SBND_TRACKFIT_JSON`, how it was measured) to the
+in-tree default (`cfg/pgrapher/experiment/sbnd/sbnd_track_fitting.json`, how production reads it).
+Those are different files and different code paths, so the 62-event gate above does not by itself
+transfer. Two checks close that:
+
+**G2 — fit-JSON key identity** (`scripts/d119/tf_key_gate.py`,
+`docs/119_figs/119_gate_tfkeys.txt`): after stripping `_`-prefixed comment keys, which
+`load_trackfitting_config` skips, the flipped production file and the measured file carry **all 49
+live keys identical in name and value**. So the measured configuration *is* the production
+configuration.
+
+**G1 — the flipped default reproduces the measured arm** (`lever_gate.py --vs pad flip`,
+`docs/119_figs/119_gate_flip.txt`): a fresh 62-event arm run with **no `SBND_TRACKFIT_JSON` at
+all**, gated against the `pad` arm at provenance-only allowance — **0 differences outside
+provenance** on all three samples (284 files, 62 events). A key list proves the values agree; only
+this proves the path that reads them does. And because "forgiven by an allowance" is not the same
+as "identical", a direct tree-level comparison on 8 nuecc events confirms the crux: the only
+differing tree is `Trun`, and **`T_proj_data` itself is byte-identical** between the flipped default
+and the measured arm.
+
+*An instrument note, because it cost a re-run.* The first flip arm was launched while
+`sbnd_track_fitting.json` was still being rewritten, so some of its events may have read a torn
+file; it is kept as `work-r3nue-d119flip-torn` and used for nothing. `stageB_lever.sh LEVER=flip`
+now prints the fit JSON's md5 **before and after** the arm, and the arm that G1 uses shows
+`97668454d5cb` at both ends.
+
+**G3 — the tripwire fires, on exactly one artifact.** `prod_cfg_gate.py --ref ref/prod-2026-09-20`
+returns `DRIFT: sbnd_track_fitting.json` and nothing else — uBooNE (a frozen reference), PDHD and
+PDVD byte-identical. This is the hole doc 118 opened the tripwire to cover (the runtime fit JSONs
+are artifacts 22–24), working as designed and bounding the blast radius to one file. New reference
+**`ref/prod-2026-09-21`** is PASS 25/25; exactly **1 of 25** hashes differs from `prod-2026-09-20`,
+which is kept and still reports the drift, so it remains a valid record of the pre-flip point.
+
+### 6.3 If this is ever revisited
+
+`docs/119_figs/119_tf_sbnd_pad.json` and `scripts/d119/stageB_lever.sh LEVER=pad` re-run the whole
+measurement in about three minutes. Deleting the two keys restores the pre-flip display exactly
+(C++ default −1 = OFF). If SBND's fitted-charge map ever grows — a larger readout window, a wider
+fit, a denser sampler — the saving that is absent today could appear, and the keep fraction
+(87.9 % now) is the number to re-measure.
 
 ---
 
-## 6.1 The tripwire, and a hole round 1 opens in it
+## 6.4 The tripwire, and a hole round 1 opens in it
 
 `prod_cfg_gate.py --ref ref/prod-2026-09-20` was run **before** any edit in this round and gave
 **PASS, 25 artifacts** (`docs/119_figs/119_gate_pre.txt`), so nothing this round reports has
-inherited drift mixed into it. It was run again after the edits, with the same result — see §0.
+inherited drift mixed into it. It was run again after round 0 and round 1 — still PASS 25
+(`119_gate_post.txt`), because neither touched a compiled artifact — and a third time after the
+round-2 flip, where it reports the single expected drift (§6.2 G3).
 
-**No new reference generation is needed, and that is worth stating explicitly.** Round 2 did not
-flip, so `sbnd_track_fitting.json` is untouched; no jsonnet changed; the compiled operating point
-of all 25 artifacts is bit-identical to `prod-2026-09-20`. The reference from doc 118 remains
-current.
+**A new reference generation IS needed, because round 2 flipped.** `sbnd_track_fitting.json` is
+consumer artifact 22, so the tripwire reports `DRIFT: sbnd_track_fitting.json` against
+`prod-2026-09-20` — and nothing else, which is the blast-radius statement (§6.2 G3). The new
+reference is **`ref/prod-2026-09-21`**; `prod-2026-09-20` is kept, as every earlier generation is.
+No jsonnet changed, so the other 24 artifacts are bit-identical across the two generations.
+
+Had round 2 gone the other way — measured and declined — no new generation would have been needed
+at all, and that is worth knowing: this round's *measurements* moved nothing, only its flip did.
 
 **But round 1 shipped a production change the tripwire cannot see.** `run_pr_chain_batch.sh` is a
 runner script, and **no runner is among the 25 consumers** — the set holds compiled configs and the
@@ -470,7 +539,10 @@ Two smaller items, both cheap:
 1. **Close the runner tripwire hole** (§6.1) in its minimal form — hash the preload/allocator block
    of the three PR runners into the consumer set. Round 1 is the first production change in this
    arc that `prod_cfg_gate.py` cannot see.
-2. **Retention.** This round added four SBND arms of 62 events (`d119ctl`, `d119ctl2`, `d119tcm`,
-   `d119pad`, plus `d119ctl2contended` kept only as the record of a contaminated measurement), a
-   61-event PDHD arm and a 120-event PDVD arm. Every number from them is in `docs/119_figs/`, so
-   they are re-derivable and none of them is a scan record.
+2. **Retention.** This round added five SBND arms of 62 events (`d119ctl`, `d119ctl2`, `d119tcm`,
+   `d119pad`, `d119flip`), a 61-event PDHD arm and a 120-event PDVD arm. Every number from them is
+   in `docs/119_figs/`, so they are re-derivable and none is a scan record. Two are kept only as
+   records of measurements that had to be discarded, and are named so nobody reads them as data:
+   `d119ctl2contended` (the null pair, run while the PDVD arm shared the box) and
+   `work-r3nue-d119flip-torn` (a flip arm that read `sbnd_track_fitting.json` while that file was
+   being rewritten — see the md5-before/after lines `stageB_lever.sh LEVER=flip` now prints).

@@ -1,0 +1,8 @@
+# doc sbnd_xin/119 G2 -- production fit JSON vs the JSON the 62-event gate measured
+# production : /nfs/data/1/xqian/toolkit-dev/toolkit/cfg/pgrapher/experiment/sbnd/sbnd_track_fitting.json
+# measured   : /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/119_figs/119_tf_sbnd_pad.json
+# live keys  : 49 production, 49 measured (underscore-prefixed comment keys stripped -- they differ by design)
+
+PASS -- all 49 live keys identical in name and value.  The 62-event output
+       gate therefore applies to production as it now runs.
+       proj_pad_wire=3 proj_pad_time=3
