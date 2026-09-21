@@ -1,0 +1,74 @@
+# google-pprof --text --cum /home/xqian/toolkit-dev/toolkit/build/apps/wire-cell /home/xqian/tmp/claude-25225/-home-xqian-toolkit-dev-toolkit/87207d1f-0daa-41d0-98a0-e87d9c780495/scratchpad/d119/pdhd/michel_029107_12.prof
+Total: 10710 samples
+       0   0.0%   0.0%    10656  99.5% __libc_start_call_main
+       0   0.0%   0.0%    10656  99.5% __libc_start_main_impl
+       0   0.0%   0.0%    10656  99.5% _start
+       0   0.0%   0.0%    10656  99.5% main
+       0   0.0%   0.0%    10566  98.7% WireCell::Main::operator
+       0   0.0%   0.0%    10566  98.7% WireCell::Pgraph::Graph::call_node
+       0   0.0%   0.0%    10566  98.7% WireCell::Pgraph::Graph::execute
+       0   0.0%   0.0%    10566  98.7% WireCell::Pgraph::Pgrapher::execute
+       0   0.0%   0.0%    10448  97.6% WireCell::Clus::MultiAlgBlobClustering::operator
+       0   0.0%   0.0%    10448  97.6% WireCell::IFunctionNode::operator
+       0   0.0%   0.0%    10448  97.6% WireCell::Pgraph::Function::operator
+       0   0.0%   0.0%     6109  57.0% WireCell::Clus::Steiner::CreateSteinerGraph::visit
+       0   0.0%   0.0%     6109  57.0% WireCell::Clus::Steiner::CreateSteinerGraph::visit::{lambda#2}::operator [clone .isra.0]
+       1   0.0%   0.0%     3533  33.0% WireCell::Clus::ImproveCluster_2::mutate
+       0   0.0%   0.0%     2452  22.9% WireCell::Clus::Facade::Cluster::find_graph@32f810
+       0   0.0%   0.0%     2320  21.7% WireCell::Clus::Graphs::make_graph_ctpc_pid
+       0   0.0%   0.0%     2095  19.6% WireCell::Clus::TrackFitting::do_single_tracking
+       0   0.0%   0.0%     1934  18.1% WireCell::Clus::Graphs::make_graph_closely_pid
+     226   2.1%   2.1%     1933  18.0% WireCell::Clus::Graphs::connect_graph_closely_pid
+       0   0.0%   2.1%     1928  18.0% TaggerCheckSTM::visit
+       0   0.0%   2.1%     1915  17.9% TaggerCheckSTM::check_stm_conditions
+       0   0.0%   2.1%     1899  17.7% TaggerCheckSTM::check_stm_conditions::{lambda#2}::operator
+      32   0.3%   2.4%     1411  13.2% WireCell::Clus::TrackFitting::dQ_dx_fit
+       0   0.0%   2.4%      935   8.7% WireCell::Clus::ImproveCluster_1::mutate
+       0   0.0%   2.4%      934   8.7% CheckSTM_Michel::visit
+     311   2.9%   5.3%      913   8.5% std::_Rb_tree::_M_lower_bound (inline)
+       0   0.0%   5.3%      881   8.2% WireCell::Clus::PR::PatternAlgorithms::find_proto_vertex
+      23   0.2%   5.5%      822   7.7% std::__new_allocator::allocate (inline)
+       0   0.0%   5.5%      820   7.7% std::allocator_traits::allocate (inline)
+     419   3.9%   9.4%      799   7.5% std::operator<  (inline)
+       0   0.0%   9.4%      786   7.3% WireCell::Aux::sample_live[abi:cxx11]
+     173   1.6%  11.1%      686   6.4% std::__new_allocator::deallocate (inline)
+       0   0.0%  11.1%      686   6.4% std::allocator_traits::deallocate (inline)
+       9   0.1%  11.1%      661   6.2% std::less::operator (inline)
+       0   0.0%  11.1%      637   5.9% WireCell::Clus::Facade::Cluster::graph_algorithms
+       1   0.0%  11.2%      626   5.8% std::_Rb_tree::~_Rb_tree (inline)
+       0   0.0%  11.2%      604   5.6% WireCell::Clus::TrackFitting::do_multi_tracking
+       8   0.1%  11.2%      590   5.5% std::_Rb_tree::_M_insert_unique (inline)
+       0   0.0%  11.2%      589   5.5% TaggerCheckTGM::check_tgm
+       0   0.0%  11.2%      589   5.5% TaggerCheckTGM::visit
+       6   0.1%  11.3%      586   5.5% std::_Hashtable::_M_find_node (inline)
+       0   0.0%  11.3%      580   5.4% std::_Rb_tree::_M_drop_node (inline)
+       9   0.1%  11.4%      576   5.4% std::__sort (inline)
+       0   0.0%  11.4%      576   5.4% std::sort (inline)
+
+# --focus=CreateSteinerGraph::visit
+Total: 10710 samples
+       0   0.0%   0.0%     6109 100.0% WireCell::Clus::MultiAlgBlobClustering::operator
+       0   0.0%   0.0%     6109 100.0% WireCell::Clus::Steiner::CreateSteinerGraph::visit
+       0   0.0%   0.0%     6109 100.0% WireCell::Clus::Steiner::CreateSteinerGraph::visit::{lambda#2}::operator [clone .isra.0]
+       0   0.0%   0.0%     6109 100.0% WireCell::IFunctionNode::operator
+       0   0.0%   0.0%     6109 100.0% WireCell::Main::operator
+       0   0.0%   0.0%     6109 100.0% WireCell::Pgraph::Function::operator
+       0   0.0%   0.0%     6109 100.0% WireCell::Pgraph::Graph::call_node
+       0   0.0%   0.0%     6109 100.0% WireCell::Pgraph::Graph::execute
+       0   0.0%   0.0%     6109 100.0% WireCell::Pgraph::Pgrapher::execute
+       0   0.0%   0.0%     6109 100.0% __libc_start_call_main
+       0   0.0%   0.0%     6109 100.0% __libc_start_main_impl
+
+# --focus=CheckSTM_Michel (PDHD) / TaggerCheckNeutrino (SBND)
+Total: 10710 samples
+       0   0.0%   0.0%      934 100.0% CheckSTM_Michel::visit
+       0   0.0%   0.0%      934 100.0% WireCell::Clus::MultiAlgBlobClustering::operator
+       0   0.0%   0.0%      934 100.0% WireCell::IFunctionNode::operator
+       0   0.0%   0.0%      934 100.0% WireCell::Main::operator
+       0   0.0%   0.0%      934 100.0% WireCell::Pgraph::Function::operator
+       0   0.0%   0.0%      934 100.0% WireCell::Pgraph::Graph::call_node
+       0   0.0%   0.0%      934 100.0% WireCell::Pgraph::Graph::execute
+       0   0.0%   0.0%      934 100.0% WireCell::Pgraph::Pgrapher::execute
+       0   0.0%   0.0%      934 100.0% __libc_start_call_main
+       0   0.0%   0.0%      934 100.0% __libc_start_main_impl
+       0   0.0%   0.0%      934 100.0% _start

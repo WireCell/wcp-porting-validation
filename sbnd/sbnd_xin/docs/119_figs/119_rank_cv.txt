@@ -1,0 +1,55 @@
+# doc sbnd_xin/119 round 0 -- per-stage ranking, sample=cv
+# before = work-r3cv-d116s0rep  (2017 events with a ladder)
+# after  = work-r3cv-d116tfull  (2017 events with a ladder)
+# paired on (sub-root, event): 2017 events
+
+stage                                  before/evt  after/evt     delta   %job     p50     p90      max
+----------------------------------------------------------------------------------------------------
+TaggerCheckNeutrino:pr                     1.421s     1.459s   +0.038s  43.8%  0.000s  3.470s  64.392s
+UbooneNueBDTScorer:pr                      0.899s     0.898s   -0.002s  27.0%  0.000s  1.975s   2.259s
+CreateSteinerGraph:pr                      0.115s     0.326s   +0.210s   9.8%  0.109s  0.873s   6.829s
+UbooneNumuBDTScorer:pr                     0.127s     0.127s   -0.000s   3.8%  0.000s  0.283s   0.432s
+done                                       0.104s     0.104s   +0.001s   3.1%  0.097s  0.167s   0.392s  (bookkeeping)
+CreateSteinerGraph:prrefresh               0.032s     0.100s   +0.068s   3.0%  0.000s  0.249s   5.620s
+loaded live                                0.068s     0.068s   +0.001s   2.1%  0.063s  0.118s   0.265s  (bookkeeping)
+SbndPrMagnifyTrackingVisitor:pr            0.068s     0.067s   -0.001s   2.0%  0.064s  0.088s   0.143s
+TaggerCheckSTM:pr                          0.035s     0.034s   -0.001s   1.0%  0.001s  0.116s   0.659s
+ClusteringSwitchScope:pr                   0.024s     0.024s   +0.000s   0.7%  0.022s  0.038s   0.105s
+loaded dead                                0.022s     0.022s   -0.000s   0.7%  0.021s  0.034s   0.086s  (bookkeeping)
+dump live clusters to bee                  0.019s     0.019s   +0.000s   0.6%  0.016s  0.032s   0.119s  (bookkeeping)
+ClusteringUnmergeBundle:pr                 0.019s     0.019s   +0.000s   0.6%  0.017s  0.030s   0.110s
+TaggerCheckTGM:pr                          0.017s     0.017s   -0.000s   0.5%  0.003s  0.040s   0.554s
+ClusteringProtectBundle:pr                 0.014s     0.014s   -0.000s   0.4%  0.000s  0.030s   2.015s
+PrDisplayDump:pr                           0.013s     0.014s   +0.001s   0.4%  0.000s  0.043s   0.329s
+UbooneTaggerOutputVisitor:pr               0.013s     0.013s   -0.000s   0.4%  0.000s  0.028s   0.069s
+ClusteringUnmergeBundle:prassoc            0.005s     0.005s   -0.000s   0.2%  0.004s  0.011s   0.098s
+TaggerCheckFC:pr                           0.001s     0.001s   -0.000s   0.0%  0.000s  0.004s   0.029s
+dump dead regions to bee                   0.000s     0.000s   -0.000s   0.0%  0.000s  0.001s   0.010s  (bookkeeping)
+starting MultiAlgBlobClustering            0.000s     0.000s   +0.000s   0.0%  0.000s  0.000s   0.000s  (bookkeeping)
+pre clustering                             0.000s     0.000s   +0.000s   0.0%  0.000s  0.000s   0.000s  (bookkeeping)
+start clustering                           0.000s     0.000s   +0.000s   0.0%  0.000s  0.000s   0.000s  (bookkeeping)
+MakeFiducialUtils:pr                       0.000s     0.000s   +0.000s   0.0%  0.000s  0.000s   0.000s
+----------------------------------------------------------------------------------------------------
+TOTAL (sum of stages)                      3.016s     3.331s   +0.316s (+10.5 %)
+
+TICK total                 before: mean   3.024 p50   0.785 p90   6.414 max  65.600 s
+                           after : mean   3.339 p50   1.177 p90   7.223 max  80.112 s
+
+ladder peak res            before: mean   0.655 p50   0.440 p90   1.027 max   1.222 GiB
+                           after : mean   0.660 p50   0.462 p90   1.028 max   1.232 GiB
+
+wall (env-contaminated)    before: mean  22.235 p50  24.000 p90  30.000 max  90.000 s
+                           after : mean  22.828 p50  24.000 p90  31.000 max  98.000 s
+
+maxrss                     before: mean   0.731 p50   0.443 p90   1.179 max   1.347 GiB
+                           after : mean   0.736 p50   0.466 p90   1.181 max   1.369 GiB
+
+top maxrss events in work-r3cv-d116tfull:
+   1.369 GiB   f080/pr_evt21
+   1.363 GiB   f139/pr_evt11
+   1.350 GiB   f018/pr_evt49
+   1.342 GiB   f000/pr_evt22
+   1.330 GiB   f122/pr_evt2
+   1.313 GiB   f080/pr_evt27
+   1.312 GiB   f078/pr_evt47
+   1.311 GiB   f015/pr_evt34

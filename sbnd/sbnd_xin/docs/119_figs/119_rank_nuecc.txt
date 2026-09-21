@@ -1,0 +1,55 @@
+# doc sbnd_xin/119 round 0 -- per-stage ranking, sample=nuecc
+# before = work-r3nue-d116s0rep  (2001 events with a ladder)
+# after  = work-r3nue-d116tfull  (2001 events with a ladder)
+# paired on (sub-root, event): 2001 events
+
+stage                                  before/evt  after/evt     delta   %job     p50     p90      max
+----------------------------------------------------------------------------------------------------
+TaggerCheckNeutrino:pr                    10.581s    11.508s   +0.927s  67.2%  5.271s 27.448s 236.594s
+UbooneNueBDTScorer:pr                      1.875s     1.861s   -0.013s  10.9%  1.937s  2.187s   2.811s
+CreateSteinerGraph:pr                      0.546s     1.625s   +1.079s   9.5%  0.920s  3.928s  43.281s
+CreateSteinerGraph:prrefresh               0.323s     1.102s   +0.780s   6.4%  0.555s  2.902s  13.320s
+UbooneNumuBDTScorer:pr                     0.266s     0.265s   -0.002s   1.5%  0.265s  0.330s   0.491s
+ClusteringProtectBundle:pr                 0.131s     0.133s   +0.001s   0.8%  0.050s  0.311s   3.143s
+done                                       0.132s     0.132s   +0.000s   0.8%  0.124s  0.206s   0.505s  (bookkeeping)
+TaggerCheckTGM:pr                          0.089s     0.086s   -0.003s   0.5%  0.038s  0.205s   3.458s
+loaded live                                0.080s     0.080s   -0.000s   0.5%  0.074s  0.133s   0.338s  (bookkeeping)
+SbndPrMagnifyTrackingVisitor:pr            0.069s     0.068s   -0.001s   0.4%  0.064s  0.083s   0.136s
+PrDisplayDump:pr                           0.057s     0.060s   +0.003s   0.4%  0.045s  0.124s   0.622s
+TaggerCheckSTM:pr                          0.055s     0.056s   +0.001s   0.3%  0.013s  0.164s   1.120s
+ClusteringSwitchScope:pr                   0.029s     0.029s   -0.000s   0.2%  0.026s  0.046s   0.098s
+UbooneTaggerOutputVisitor:pr               0.027s     0.027s   -0.001s   0.2%  0.027s  0.034s   0.072s
+loaded dead                                0.026s     0.026s   -0.000s   0.2%  0.024s  0.040s   0.096s  (bookkeeping)
+ClusteringUnmergeBundle:pr                 0.023s     0.023s   -0.000s   0.1%  0.021s  0.038s   0.098s
+dump live clusters to bee                  0.023s     0.023s   -0.000s   0.1%  0.021s  0.036s   0.103s  (bookkeeping)
+ClusteringUnmergeBundle:prassoc            0.008s     0.008s   -0.000s   0.0%  0.006s  0.017s   0.083s
+TaggerCheckFC:pr                           0.006s     0.006s   -0.000s   0.0%  0.004s  0.014s   0.065s
+dump dead regions to bee                   0.000s     0.000s   +0.000s   0.0%  0.000s  0.001s   0.015s  (bookkeeping)
+MakeFiducialUtils:pr                       0.000s     0.000s   +0.000s   0.0%  0.000s  0.000s   0.002s
+starting MultiAlgBlobClustering            0.000s     0.000s   +0.000s   0.0%  0.000s  0.000s   0.000s  (bookkeeping)
+pre clustering                             0.000s     0.000s   +0.000s   0.0%  0.000s  0.000s   0.000s  (bookkeeping)
+start clustering                           0.000s     0.000s   +0.000s   0.0%  0.000s  0.000s   0.000s  (bookkeeping)
+----------------------------------------------------------------------------------------------------
+TOTAL (sum of stages)                     14.348s    17.117s   +2.769s (+19.3 %)
+
+TICK total                 before: mean  14.357 p50   8.710 p90  30.941 max 158.779 s
+                           after : mean  17.127 p50   9.824 p90  37.458 max 272.890 s
+
+ladder peak res            before: mean   0.978 p50   1.007 p90   1.103 max   1.445 GiB
+                           after : mean   0.990 p50   1.009 p90   1.119 max   2.038 GiB
+
+wall (env-contaminated)    before: mean  20.734 p50  16.000 p90  38.000 max 168.000 s
+                           after : mean  23.173 p50  16.000 p90  44.000 max 280.000 s
+
+maxrss                     before: mean   1.123 p50   1.163 p90   1.247 max   1.522 GiB
+                           after : mean   1.136 p50   1.165 p90   1.264 max   2.208 GiB
+
+top maxrss events in work-r3nue-d116tfull:
+   2.208 GiB   f060/pr_evt11239
+   2.203 GiB   f049/pr_evt12202
+   2.050 GiB   f188/pr_evt11811
+   2.021 GiB   f100/pr_evt5265
+   2.006 GiB   f196/pr_evt6248
+   1.916 GiB   f071/pr_evt10963
+   1.882 GiB   f222/pr_evt5123
+   1.738 GiB   f120/pr_evt9239

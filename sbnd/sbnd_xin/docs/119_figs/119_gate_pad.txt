@@ -1,0 +1,21 @@
+# doc sbnd_xin/119 lever gate: 'pad' arm vs the 'ctl' arm (production as it runs today)
+# allowed to move: trees=('T_proj_data',) calib-json=('proj',) provenance=True
+# always forgiven: the dual chain's off_ms stopwatch (it moves between two runs of one config)
+# archive members by content (M2); logs, rc.txt, .time.meta, compiled cfg are not products
+
+## cv: ctl 18 events, pad 18, compared 18
+   files compared         : 82
+   differ, within allowance: 28
+   differ, NOT allowed    : 0
+
+## nuecc: ctl 24 events, pad 24, compared 24
+   files compared         : 120
+   differ, within allowance: 48
+   differ, NOT allowed    : 0
+
+## off: ctl 20 events, pad 20, compared 20
+   files compared         : 82
+   differ, within allowance: 21
+   differ, NOT allowed    : 0
+
+PASS -- nothing outside this lever's declared allowance moved

@@ -336,6 +336,18 @@ the wrong way.
 
 # Part B — the PR profiling campaign
 
+> **EXECUTED — see `docs/119_pr-profiling-rounds.md` (2026-09-21).** Doc 119 supersedes the sizing
+> below wherever the two disagree, and it corrects three premises of this part:
+> (1) `want_2d` is a PDHD/PDVD lever only — `check_stm_conditions` belongs to `TaggerCheckSTM`,
+> and SBND's whole `TaggerCheckSTM:pr` stage is 0.3 % of the job (sec 8 item 1 is wrong);
+> (2) "the PDHD `-nu` max event (174 s / 5.54 GB)" is two different events (sec 7 item 4);
+> (3) `CheckSTM_Michel` is no longer 28 % of the PDHD `-nu` arm — it is 17.4 %, and Steiner is
+> 50.3 % (sec 6 table).
+> Outcomes: round 1 (tcmalloc on the SBND PR chain) measured, gated on 62 events and **flipped**;
+> round 2 (`proj_pad` for SBND) measured, gated — and **NOT flipped** despite the pre-authorisation,
+> because SBND already keeps 87.9 % of its proj cells where PDHD kept 2.4 %, so the doc-30 trade
+> this was authorised on does not exist here (doc 119 sec 6).
+
 The flip's cost is what makes this urgent, and the owner has authorised multiple rounds. Scope:
 PDHD and PDVD (STM+Michel tagger) and SBND (Neutrino tagger), CPU and memory.
 

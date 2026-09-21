@@ -1,0 +1,45 @@
+# doc sbnd_xin/119 -- lever cost against the ctl arm (production as it runs today)
+# claim instrument = TICK total (in-job compute); wall is context only
+
+===== ctl2: NULL PAIR: the control configuration run a second time -- the noise floor. Read this FIRST; a lever delta smaller than this column is not a measurement.
+  nuecc (24 paired events)   arm TICK sum    341.0 ->    341.7 s  (+0.2 %)
+     TICK total  s mean   14.210 ->   14.237 (  +0.2 %)   p50   7.331 ->   7.446   max   44.039 ->   43.658
+     maxrss   GiB  mean    1.187 ->    1.186 (  -0.1 %)   p50   1.157 ->   1.151   max    1.428 ->    1.429
+     wall      s   mean   17.208 ->   16.542 (  -3.9 %)   p50  11.000 ->  10.000   max   48.000 ->   47.000
+  cv (18 paired events)   arm TICK sum     58.3 ->     57.3 s  (-1.6 %)
+     TICK total  s mean    3.237 ->    3.186 (  -1.6 %)   p50   3.636 ->   3.492   max   10.954 ->   10.633
+     maxrss   GiB  mean    0.813 ->    0.814 (  +0.1 %)   p50   1.091 ->   1.100   max    1.333 ->    1.342
+     wall      s   mean    5.667 ->    5.611 (  -1.0 %)   p50   5.000 ->   6.000   max   14.000 ->   14.000
+  off (20 paired events)   arm TICK sum     23.2 ->     22.6 s  (-2.6 %)
+     TICK total  s mean    1.161 ->    1.131 (  -2.6 %)   p50   0.441 ->   0.441   max    9.347 ->    9.131
+     maxrss   GiB  mean    0.448 ->    0.448 (  -0.0 %)   p50   0.389 ->   0.389   max    1.158 ->    1.159
+     wall      s   mean    5.000 ->    4.450 ( -11.0 %)   p50   5.000 ->   4.000   max   14.000 ->   12.000
+
+===== tcm: round 1: tcmalloc joined to the PR chain's LD_PRELOAD
+  nuecc (24 paired events)   arm TICK sum    341.0 ->    303.8 s  (-10.9 %)
+     TICK total  s mean   14.210 ->   12.659 ( -10.9 %)   p50   7.331 ->   6.775   max   44.039 ->   37.900
+     maxrss   GiB  mean    1.187 ->    1.223 (  +3.0 %)   p50   1.157 ->   1.190   max    1.428 ->    1.437
+     wall      s   mean   17.208 ->   20.583 ( +19.6 %)   p50  11.000 ->  23.000   max   48.000 ->   55.000
+  cv (18 paired events)   arm TICK sum     58.3 ->     53.6 s  (-8.1 %)
+     TICK total  s mean    3.237 ->    2.976 (  -8.1 %)   p50   3.636 ->   3.459   max   10.954 ->    9.651
+     maxrss   GiB  mean    0.813 ->    0.824 (  +1.3 %)   p50   1.091 ->   1.122   max    1.333 ->    1.340
+     wall      s   mean    5.667 ->    5.333 (  -5.9 %)   p50   5.000 ->   5.000   max   14.000 ->   13.000
+  off (20 paired events)   arm TICK sum     23.2 ->     19.3 s  (-16.7 %)
+     TICK total  s mean    1.161 ->    0.967 ( -16.7 %)   p50   0.441 ->   0.324   max    9.347 ->    8.215
+     maxrss   GiB  mean    0.448 ->    0.446 (  -0.5 %)   p50   0.389 ->   0.383   max    1.158 ->    1.195
+     wall      s   mean    5.000 ->    4.200 ( -16.0 %)   p50   5.000 ->   4.000   max   14.000 ->   11.000
+
+===== pad: round 2: proj_pad_wire 3 / proj_pad_time 3 in the fit JSON
+  nuecc (24 paired events)   arm TICK sum    341.0 ->    348.4 s  (+2.2 %)
+     TICK total  s mean   14.210 ->   14.516 (  +2.2 %)   p50   7.331 ->   7.407   max   44.039 ->   45.725
+     maxrss   GiB  mean    1.187 ->    1.186 (  -0.1 %)   p50   1.157 ->   1.159   max    1.428 ->    1.424
+     wall      s   mean   17.208 ->   17.417 (  +1.2 %)   p50  11.000 ->  11.000   max   48.000 ->   49.000
+  cv (18 paired events)   arm TICK sum     58.3 ->     59.0 s  (+1.3 %)
+     TICK total  s mean    3.237 ->    3.278 (  +1.3 %)   p50   3.636 ->   3.621   max   10.954 ->   11.022
+     maxrss   GiB  mean    0.813 ->    0.815 (  +0.2 %)   p50   1.091 ->   1.100   max    1.333 ->    1.342
+     wall      s   mean    5.667 ->    5.889 (  +3.9 %)   p50   5.000 ->   6.000   max   14.000 ->   14.000
+  off (20 paired events)   arm TICK sum     23.2 ->     23.6 s  (+1.5 %)
+     TICK total  s mean    1.161 ->    1.178 (  +1.5 %)   p50   0.441 ->   0.434   max    9.347 ->    9.578
+     maxrss   GiB  mean    0.448 ->    0.449 (  +0.0 %)   p50   0.389 ->   0.389   max    1.158 ->    1.156
+     wall      s   mean    5.000 ->    4.850 (  -3.0 %)   p50   5.000 ->   5.000   max   14.000 ->   14.000
+

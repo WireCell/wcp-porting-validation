@@ -260,6 +260,21 @@ if [ "${SBND_PROTECT_BUNDLE:-1}" = 0 ]; then
     PIPELINE="${PIPELINE/protect_bundle,steiner_refresh,/}"
 fi
 
+# doc sbnd_xin/119 round 1 -- WHEN the tcmalloc preload defaults on.
+# This driver is not only the production driver: PR_PIPELINE overrides the stage list outright
+# (doc 76 round 2 ran each half of the chain on its own) and SBND_PROTECT_BUNDLE=0 reproduces the
+# pre-doc-pr/23 chain, which the comment above calls "the arm every pre-flip comparison uses".
+# Those are A/B arms, and doc sbnd_xin/118 sec 6 is explicit that a comparison arm must keep the
+# process environment it was produced with -- the products are byte-identical either way (doc 119
+# sec 5 gates that on 62 events), but a core-s or wall number is not comparable across allocators.
+# So the default is ON for the full production pipeline and OFF the moment this script is being
+# used as a harness.  SBND_PR_TCMALLOC=1 still forces it on for a deliberate measurement.
+if [ -n "${PR_PIPELINE:-}" ] || [ "${SBND_PROTECT_BUNDLE:-1}" = 0 ]; then
+    SBND_PR_TCMALLOC_DEFAULT=0
+else
+    SBND_PR_TCMALLOC_DEFAULT=1
+fi
+
 # Cathode kink veto (doc pr/20 Part II B0), cm.  EMPTY = emit no TLA = the job
 # default null = C++ 0 = OFF = the legacy kink search, so a bare run of this
 # script is byte-identical to before the knob existed.
@@ -1884,6 +1899,14 @@ true
 # The embedded interpreter needs libpython loaded RTLD_GLOBAL for the SCN
 # (DL vertex) import to succeed -- same idiom as run_pr3_evt_dl.sh / M4.
 PYLIB=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")/libpython3.11.so.1.0
+# doc sbnd_xin/119 round 1 -- the allocator for the FULL PR chain.
+# SBND's PR runners have never preloaded tcmalloc, while PDHD, PDVD and SBND's own
+# run_clus_evt.sh all do.  MEASURED on SBND nuecc evt 2925, 3 repetitions of each arm on the
+# same pinned binary and the same compiled config: in-job TICK total 44.98 s (glibc) ->
+# 37.55 s (tcmalloc), -16.5 %, with the two sets of three non-overlapping; peak RSS mean
+# 1.416 -> 1.444 GiB, +2.0 %.  Reco-neutral: gated byte-identical on the 62-event manifest.
+# Escape hatch: SBND_PR_TCMALLOC=0 restores the exact pre-round-1 process environment.
+SBND_TCMALLOC_LIB=${SBND_TCMALLOC_LIB:-/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4}
 [ -r "$PYLIB" ] || { echo "ERROR: libpython not found: $PYLIB" >&2; exit 1; }
 
 # sbnd_xin/docs/109 group 4 -- a self-describing tracking-pr.root.  When the job
@@ -1947,7 +1970,16 @@ process_event() {
 
     (
         cd "$PRDIR" || exit 1
-        export LD_PRELOAD="$PYLIB"
+        # doc sbnd_xin/119 round 1: JOIN tcmalloc to the preload -- never assign.  Dropping
+        # $PYLIB silently disables the SCN import, and the job then runs the geometric vertex
+        # fallback instead of the DL one (doc sbnd_xin/118 sec 8).  Deliberately NOT applied in
+        # run_pr_evt.sh: its :307-310 comment keeps the -stm / -tgm / bare -p arms on their exact
+        # pre-doc-pr/4 process environment because they are A/B comparison arms.
+        if [ "${SBND_PR_TCMALLOC:-$SBND_PR_TCMALLOC_DEFAULT}" = 1 ] && [ -e "$SBND_TCMALLOC_LIB" ]; then
+            export LD_PRELOAD="$PYLIB:$SBND_TCMALLOC_LIB"
+        else
+            export LD_PRELOAD="$PYLIB"
+        fi
         export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
         # doc pr/57: env-gated per-edge JSONL dump feeding
         # overclustering_display (hand-scan of S6 2D-connectivity
@@ -2131,7 +2163,16 @@ process_group() {
 
     (
         cd "$OUTROOT" || exit 1
-        export LD_PRELOAD="$PYLIB"
+        # doc sbnd_xin/119 round 1: JOIN tcmalloc to the preload -- never assign.  Dropping
+        # $PYLIB silently disables the SCN import, and the job then runs the geometric vertex
+        # fallback instead of the DL one (doc sbnd_xin/118 sec 8).  Deliberately NOT applied in
+        # run_pr_evt.sh: its :307-310 comment keeps the -stm / -tgm / bare -p arms on their exact
+        # pre-doc-pr/4 process environment because they are A/B comparison arms.
+        if [ "${SBND_PR_TCMALLOC:-$SBND_PR_TCMALLOC_DEFAULT}" = 1 ] && [ -e "$SBND_TCMALLOC_LIB" ]; then
+            export LD_PRELOAD="$PYLIB:$SBND_TCMALLOC_LIB"
+        else
+            export LD_PRELOAD="$PYLIB"
+        fi
         export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
         # doc 87: keep the pctree unless SBND_PR_PCTREE=0.
         GPCTREE_TLA=(--tla-str "save_tensors=$OUTROOT/pr_evt%1%/pctree-pr-evt%1%.tar.gz")
