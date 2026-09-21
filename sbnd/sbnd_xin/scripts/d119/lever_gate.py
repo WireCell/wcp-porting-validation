@@ -51,6 +51,10 @@ PROV_BRANCH = {"op_config_sha256", "toolkit_git", "trackfitting_config", "wcp_gi
 PROV_KEY = ("trackfitting_config", "op_config_sha256", "toolkit_git", "wcp_git")
 # The two spellings of the fit JSON in the pad arm vs the control.
 PATHS = ("119_tf_sbnd_pad.json", "pgrapher/experiment/sbnd/sbnd_track_fitting.json")
+# doc sbnd_xin/119 round 3: a git sha, optionally -dirty.  FORTY hex digits, so this can never
+# match op_config_sha256 (a sha256, 64 hex) -- the compiled-config hash stays fully compared even
+# for a lever that forgives the git strings.  Used only when a lever sets prov_git.
+GIT_SHA = re.compile(r"\b[0-9a-f]{40}(?:-dirty)?\b")
 
 # What each lever may move.  Empty tuple = nothing beyond the stopwatch.
 ALLOW = {
@@ -70,6 +74,23 @@ ALLOW = {
     # entitled to differ is WHICH PATH each one names for the fit JSON, and the hashes computed
     # from it.  Same shape as doc 118 gate G1.
     "flip": {"trees": (), "json_prefix": (), "provenance": True},
+    # ROUND 3, the projection-constant hoist.  Gate it against `flip` (pass --vs flip): same
+    # configuration, same fit JSON, same compiled config, REBUILT libWireCellClus.  Every
+    # reconstruction product must be identical -- a CPU refactor that moved one would be a defect,
+    # exactly as for `tcm`, and there is no trade to accept here.
+    "r3": {"trees": (), "json_prefix": (), "provenance": True,
+           # NARROW provenance, not blanket.  The two arms are the same configuration on two
+           # binaries, so they are run at different working-tree states and toolkit_git / wcp_git
+           # MUST be allowed to move.  Everything else in the provenance block must not:
+           # op_config_sha256 (the compiled config) and trackfitting_config (which fit JSON was
+           # read) are deliberately left under comparison, because round 3 changes neither and a
+           # blanket `provenance: True` would stop the gate noticing if it had.
+           "prov_keys": ("toolkit_git", "wcp_git"),
+           "prov_branch": ("toolkit_git", "wcp_git"),
+           "prov_git": True},
+    # The null pair for round 3, on the NEW binary.  Round 2's floor was measured on the old one
+    # and cannot be inherited across a rebuild.
+    "r3b": {"trees": (), "json_prefix": (), "provenance": False},   # same tree state; nothing moves
 }
 
 
@@ -118,7 +139,7 @@ def json_note(pa, pb, allow):
     def ok(k):
         if k.endswith(TIMING_SUFFIX):
             return True
-        if allow["provenance"] and any(t in k for t in PROV_KEY):
+        if allow["provenance"] and any(t in k for t in allow.get("prov_keys", PROV_KEY)):
             return True
         # "proj" as a path COMPONENT, so a key merely containing the letters cannot pass.
         parts = re.split(r"[.\[]", k)
@@ -140,7 +161,8 @@ def root_note(pa, pb, allow):
         if t in allow["trees"]:
             continue
         keep = [b for b in bad
-                if not (t == "Trun" and allow["provenance"] and b in PROV_BRANCH)]
+                if not (t == "Trun" and allow["provenance"]
+                        and b in allow.get("prov_branch", PROV_BRANCH))]
         if keep:
             outside[t] = keep
     if outside:
@@ -148,8 +170,13 @@ def root_note(pa, pb, allow):
     return "EXPLAINED: " + ", ".join(f"{t}({len(b)} br)" for t, b in sorted(d.items()))
 
 
-def explained_path(pa, pb):
-    """True when a text product differs only by which fit-JSON path it names."""
+def explained_path(pa, pb, allow=None):
+    """True when a text product differs only by provenance this lever forgives: which fit-JSON
+    path it names, and -- for a lever that sets prov_git -- which toolkit/wcp commit it was run
+    at.  doc sbnd_xin/119 round 3 needs the second: its two arms are the same configuration on
+    two BINARIES, so they are necessarily run at different working-tree states, while every
+    reconstruction product must still match.  op_config_sha256 is a sha256 and is never
+    neutralised here, so the compiled config is still compared byte for byte."""
     try:
         ta, tb = open(pa, errors="replace").read(), open(pb, errors="replace").read()
     except OSError:
@@ -158,6 +185,8 @@ def explained_path(pa, pb):
         ta, tb = ta.replace(p, "<TFJSON>"), tb.replace(p, "<TFJSON>")
     ta = re.sub(r"/[^\"\s]*<TFJSON>", "<TFJSON>", ta)
     tb = re.sub(r"/[^\"\s]*<TFJSON>", "<TFJSON>", tb)
+    if allow and allow.get("prov_git"):
+        ta, tb = GIT_SHA.sub("<GIT>", ta), GIT_SHA.sub("<GIT>", tb)
     return ta == tb
 
 
@@ -183,8 +212,8 @@ def one_event(da, db, allow):
                 continue
             if ma == mb:
                 continue
-            if allow["provenance"] and nm.endswith((".json", ".tsv")) and explained_path(pa, pb):
-                note = "EXPLAINED: differs only by the fit-JSON path string"
+            if allow["provenance"] and nm.endswith((".json", ".tsv")) and explained_path(pa, pb, allow):
+                note = "EXPLAINED: differs only by forgiven provenance strings"
             else:
                 bad = [k for k in sorted(set(ma) | set(mb)) if ma.get(k) != mb.get(k)]
                 note = "members differ: " + ", ".join(bad[:6]) + (" ..." if len(bad) > 6 else "")

@@ -1,6 +1,11 @@
-# doc sbnd_xin/119 — the cross-detector PR profiling campaign: rounds 0, 1 and 2
+# doc sbnd_xin/119 — the cross-detector PR profiling campaign: rounds 0, 1, 2 and 3
 
-**Status: round 0 measured. Round 1 measured, gated and FLIPPED. Round 2 measured, gated, and
+**Status: round 0 measured. Round 1 measured, gated and FLIPPED. Round 3 (§9) measured, gated and
+TAKEN — the first round of this campaign to rebuild C++: two byte-identical levers in the
+projection hot path, −14.9 / −9.5 / −6.7 % in-job CPU on nuecc / cv / beam-off against a
+null-pair floor of +3.0 / +0.9 / −0.1 %, no knob because there is no behaviour to switch off.
+The round-3 the campaign had recommended (sharing the dual chain's association lattice) was
+REFUTED by the code read and is closed, not deferred — §9.1. Round 2 measured, gated, and
 FLIPPED on the owner's explicit instruction of 2026-09-21 — against this doc's own recommendation,
 and for a different reason than doc 30's. Read §6 before quoting any number from it: on SBND the
 knob buys no CPU and no memory, and it does cost 12.1 % of the 2-D display.**
@@ -77,10 +82,26 @@ python3 $SX/scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-20   # PASS 25 b
 python3 $SX/scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-21   # PASS 25 on the new reference
 ```
 
-Toolkit `d7d4da83` (the round-2 flip; round 0 and round 1 changed no toolkit file).
-Pin: `~/tmp/d119-libpin`, `libWireCellClus.so` md5 `71ebd5aeb386` — the same binary doc 115, doc
-116, doc 117 and doc 118 ran. No C++ was rebuilt in this campaign; every lever is configuration or
-process environment.
+```bash
+# --- round 3: the C++ round.  Its arms differ from `flip` in the BINARY and nothing else, so
+#     stageB_lever.sh now REFUSES r3/r3b on the pre-round-3 pin and the old levers on the new one.
+LEVER=r3  JOBS=8 $SX/scripts/d119/stageB_lever.sh nuecc   # and cv, off; then LEVER=r3b likewise
+python3 $SX/scripts/d119/lever_gate.py --vs flip r3       # sec 9.4 G1  -- PASS, 62 events
+python3 $SX/scripts/d119/lever_gate.py --vs r3   r3b      # sec 9.4 G2  -- the null pair
+python3 $SX/scripts/d119/lever_gate.py --vs ctl  r3 nuecc # sec 9.4 G3  -- MUST FAIL (sensitivity)
+python3 $SX/scripts/d119/r3_cost.py                       # sec 9.3
+/nfs/data/1/xqian/toolkit-dev/toolkit/build/clus/wcdoctest-clus   # sec 9.4 G4
+# before/after profile on ONE event, same config, two pins (sec 9.2):
+for a in flip r3; do PIN=$HOME/tmp/$([ $a = flip ] && echo d119-libpin || echo d119r3-libpin)
+  LD_LIBRARY_PATH=$PIN PRDIR=$SX/work-r3nue-d119$a/f002/pr_evt2925 OUTDIR=~/tmp/d119r3-prof/$a \
+      $SX/scripts/perf/profile_pr118.sh; done
+```
+
+Toolkit `d7d4da83` for rounds 0-2 (the round-2 flip; rounds 0 and 1 changed no toolkit file).
+Pin `~/tmp/d119-libpin`, `libWireCellClus.so` md5 `71ebd5aeb386` — the same binary doc 115, doc
+116, doc 117 and doc 118 ran. **Round 3 is the first round of this campaign that rebuilds C++**:
+pin `~/tmp/d119r3-libpin`, md5 `4ff75274e43e`. Rounds 0-2 remain readable against the old pin, and
+the driver enforces the pairing in both directions so neither can be re-run on the wrong one.
 
 ---
 
@@ -526,6 +547,12 @@ the churn, and is the recommended next tripwire change.
 
 ## 8. Recommended next step
 
+> **EXECUTED, and the recommendation below was partly refuted — see §9.** The concrete round-3A
+> proposal (share the association lattice between the two passes) died on the code read: the
+> lattice is rebuilt from the fit points, the OFF pass owns a separate fitter, and it runs with
+> exclusion off. §9 took a different, byte-identical target found by the same read, for
+> −14.9 / −9.5 / −6.7 % in-job CPU. What §8 says below about the dual chain itself still stands.
+
 **Round 3 as doc 118 §9.1 framed it — making SBND's dual second pass cheaper — is now the best-sized
 remaining target**, and round 0 strengthened the case: it is 31.1 % of the post-flip nuecc job
 measured directly, larger than doc 117's 27 % estimate, and it is the only large consumer that is
@@ -546,3 +573,213 @@ Two smaller items, both cheap:
    `d119ctl2contended` (the null pair, run while the PDVD arm shared the box) and
    `work-r3nue-d119flip-torn` (a flip arm that read `sbnd_track_fitting.json` while that file was
    being rewritten — see the md5-before/after lines `stageB_lever.sh LEVER=flip` now prints).
+
+---
+
+## 9. Round 3 — the projection hot path
+
+**Status: TAKEN. Byte-identical on 62 events, −14.9 / −9.5 / −6.7 % in-job CPU, CPU only.**
+Toolkit commit adds no config key and no knob: there is nothing to turn off, because there is no
+behaviour to turn off.
+
+### 9.1 The recommended round 3 was refuted by the code read, and that is the round's first result
+
+§8 recommended attacking `run_dual_chain_off_pass` (31.1 % of the nuecc job), and the concrete
+proposal was **3A: share the point↔cell association lattice between the production pass and the
+OFF pass, byte-identically, if that lattice is seed-independent.** The first step was a code read
+answering exactly that question. The answer is **no**, for three independent reasons:
+
+1. **The lattice is a function of the fit points, not of cluster geometry.** `form_map_graph`
+   *clears* `m_3d_to_2d` and `m_2d_to_3d` at entry (`TrackFitting.cxx:4482-4483`) and rebuilds them
+   from `segment->fits()` — the current fitted trajectory. A different vertex seed gives a
+   different trajectory gives a different lattice. It is also re-cleared and rebuilt several times
+   *within* one pass (`do_multi_tracking` runs three `form_map_graph` passes).
+2. **There is no shared object to populate.** The OFF pass constructs its own `TrackFitting`, its
+   own `PR::Graph` and its own `PatternAlgorithms` copy (`TaggerCheckNeutrino.cxx:4639-4655`).
+3. **The two passes do not even ask the same question.** The OFF pass sets
+   `pattern_algos.m_fit_exclusion = false` (`:4657`) where production runs `fit_exclusion=true`,
+   and `form_map_graph(flag_exclusion, …)` branches on precisely that. Even at identical fit
+   points the two lattices would differ.
+
+So 3A cannot be built, and 3B (skip the pass by a predicate) remains what §8 said it was — a
+physics decision needing doc 107 grading, not a perf round. **3A is closed, not deferred.**
+
+**But the same code read re-aimed the round at something better.** The functions 3A wanted to share
+are expensive for a reason that has nothing to do with the dual chain, and fixing that reason helps
+the production pass, the OFF pass, and PDHD/PDVD, all at once.
+
+### 9.2 Where the time in `form_point_association` actually went
+
+Profiles: `docs/119_figs/119_prof_sbnd_nuecc.txt` (round 0) and
+`docs/119_figs/119_prof_r3_before_after.txt` (this round). `form_point_association` was **19.1 %
+of the SBND nuecc job**, and it is called once per projected fit point from both passes. Inside it:
+
+| callee | samples (of 9775) | what it was doing |
+|---|---:|---|
+| `convert_3Dpoint_time_ch` | 820 (44 % of the function) | the projection |
+| ⤷ `drift2time` | 405 | **re-deriving two per-face constants, per call** |
+| ⤷ `point2wind` | 220 | of which ~139 is `cos`/`sin` **of a per-face constant angle** |
+| `find_neighbors_nlevel` | 461 | of which **327 (71 %) is `std::set` insertion**, not graph work |
+
+Two specific defects, both of them work that did not need doing at all:
+
+- **`drift2time` re-derived a job constant on every call.** Its body was
+  `xsign = anodeface->dirx(); xorig = anodeface->planes()[2]->wires().front()->center().x();` —
+  `planes()` and `wires()` both return **by value**, so each call cloned two containers of
+  shared pointers, took and dropped a refcount, and walked to a wire centre, to recover two numbers
+  that are fixed for the whole job. The line-level profile shows the cost as
+  `std::vector::~vector` 140, `_Sp_counted_base::_M_release` 88, `IWire::center` 120.
+- **`point2wind` called `cos(angle)` and `sin(angle)` per point**, where `angle` is a
+  per-(apa, face, plane) constant. 139 of its 223 samples were the two transcendentals and the
+  `libc_feholdsetround_sse_ctx` fenv save/restore they drag in.
+
+The call site that makes this expensive is **not** the obvious one. `convert_3Dpoint_time_ch` is
+called three times per projected point — but also **three times per Steiner-graph neighbour**,
+inside `for (auto vertex_idx : total_vertices_found)` at `TrackFitting.cxx:3346`. That inner loop
+is why `convert_3Dpoint_time_ch` carries 845 samples while `convert_3Dpoint_wire_cont` — called
+once per point on the same branch, under the same `assoc_cont_center` that is on for all three
+detectors — carries 1. The ratio is a call count, not a knob being inert; that was checked before
+anything was built on it.
+
+### 9.3 The two levers, and what they cost
+
+**L1 — the projection constants move into the memo that already exists.** `Grouping::fastgeom_t`
+was built for exactly this purpose and says so in its own comment ("a per-call `std::vector` for
+the angles and the by-value `IAnodePlane::faces()` vector dominated their cost. Output-identical:
+the memo holds exactly the values those lookups return"). It memoised angle/pitch/centre and
+stopped there. L1 adds `cos_angle[3]`, `sin_angle[3]`, `xsign`, `xorig` to the same struct, filled
+in the same builder, and adds `drift2time(xsign, xorig, …)` / `point2wind_cs` / `point2wind_cont_cs`
+overloads that take them. **Each function body is carried across textually**; only `cos(angle)` and
+`sin(angle)` become parameters. The angle-taking forms remain for callers with no memo and now
+delegate, so there is one copy of each expression, not two that could drift apart.
+
+**L2 — the BFS stops paying for an order it already has.** `find_neighbors_nlevel` returned
+`std::set<vertex_type>`, one red-black node allocation per neighbour, and its `visited` flag array
+already guaranteed uniqueness — the set was supplying **order only**. It now returns a vector
+sorted once at the end. The ascending order is load-bearing and not incidental: `TrackFitting`
+walks the result to build a blob set whose iteration order reaches the output, so returning raw BFS
+discovery order would **not** have been byte-identical. Both call sites already used `auto`.
+
+**Cost, 62 events, TICK total** (`docs/119_figs/119_cost_r3.txt`). The baseline is the **`flip`**
+arm — production as it runs after round 2 — not `ctl`, which is pre-`proj_pad` and would fold
+round 2's delta into round 3's number:
+
+| sample | arm TICK sum | round 3 | **null-pair floor, new binary** |
+|---|---|---:|---:|
+| nuecc (24 evt) | 352.4 → 300.0 s | **−14.9 %** | +3.0 % |
+| cv (18 evt) | 62.1 → 56.2 s | **−9.5 %** | +0.9 % |
+| off (20 evt) | 24.2 → 22.6 s | **−6.7 %** | −0.1 % |
+
+All three sit clearly outside the floor, which is why the floor was re-measured on the **new**
+binary (`r3b`) rather than inherited from round 2's — a noise floor does not survive a rebuild.
+
+**Memory: this is a CPU round and memory did not improve.** Peak RSS moved **+1.1 / +0.8 / +0.7 %**
+(nuecc max 1.402 → 1.429 GiB) against a null-pair floor of +0.1 / +0.4 / +0.0 %. The nuecc figure
+is small but probably real: a `std::vector` grown by doubling replaces exactly-sized red-black
+nodes. It is reported rather than rounded away, and **the 2.2 GiB nuecc tail doc 118 introduced is
+untouched by this round.**
+
+**Attribution — the same event, the same config, two binaries**
+(`docs/119_figs/119_prof_r3_before_after.txt`, evt 2925, one `PROFILE:` line in each run):
+
+| function | before | after | |
+|---|---:|---:|---|
+| **total samples** | 9440 | 8526 | −9.7 % |
+| `form_point_association` | 1793 | 870 | −923 |
+| ⤷ `convert_3Dpoint_time_ch` | 802 | **137** | −665 |
+| ⤷ ⤷ `drift2time` | 405 | **2** | −403 |
+| ⤷ ⤷ `point2wind` | 258 | **4** | −254 |
+| ⤷ `find_neighbors_nlevel` | 446 | 250 | −196 |
+| `do_cos` / `__sincos_fma` / `feholdsetround` | 33 / 33 / 104 | 0 / 3 / 19 | −148 |
+| `CreateSteinerGraph::visit` — **not touched** | 2083 | 2076 | **−7** |
+
+The whole −914-sample total delta is accounted for by the −923 in `form_point_association`, and
+`CreateSteinerGraph` — the largest stage this round does not touch — moves by 0.3 %. That is the
+internal control: the saving is where the change is, not a global shift.
+
+### 9.4 Gates
+
+**G1 — output equivalence, 62 events** (`119_gate_r3.txt`): `r3` vs `flip`, 284 files compared,
+**0 differences outside the declared allowance**. The allowance is deliberately **narrow, not
+blanket**: `toolkit_git` and `wcp_git` are forgiven (the two arms are necessarily run at different
+working-tree states), while `op_config_sha256` and `trackfitting_config` stay under comparison —
+and both are byte-identical, `6089ecad115d…` on both sides. What the arms actually differ by, with
+provenance forbidden entirely, is only:
+
+```
+  x 24  calib-pr-evt*.json : 1 of up to 523 940 keys -- vertex_scoreboard.dual_chain.off_ms
+  x 24  tracking-pr.root   : Trun['toolkit_git', 'wcp_git']
+```
+
+i.e. the dual chain's own stopwatch and the two git strings. `T_rec_charge`, every tagger tree,
+`T_proj_data`, `mabc-pr.zip`, the pctree, `nusel` and every other calib key are identical.
+
+**G2 — the null pair, on the new binary** (`119_gate_r3null.txt`): `r3b` vs `r3` returns
+**10 / 24 / 1**, and `r3` vs `flip` returns **28 / 48 / 21**. The difference is exactly
+**18 / 24 / 20** — one `tracking-pr.root` per event in each sample. The gate's output is the floor
+plus one git string per event and nothing else.
+
+**G3 — sensitivity** (`119_gate_r3_sens.txt`): the *same* `r3` allowance applied to a pair that
+genuinely differs (`ctl`, which is pre-`proj_pad`) **FAILS**, reporting `T_proj_data` and
+20 979–121 764 `proj` charge keys per event. The PASS above is the gate working, not the gate being
+blind — the round-2 lesson applied to a new allowance code path.
+
+**G4 — unit tests**: `./build/clus/wcdoctest-clus` **446 cases, 430 758 assertions, 0 failed.** The
+new `clus/test/doctest_projection_constant_hoist.cxx` writes out the *legacy* bodies literally and
+asserts the hoisted forms reproduce them **bit for bit** — 140 000 random points over seven
+SBND/PDHD/PDVD plane geometries, 6 006 cases driven onto the `.5` rounding boundary on purpose, and
+120 000 `drift2time` cases. This is what retires the one real risk in L1: `cos(a)*z − sin(a)*y` can
+be contracted to an FMA in one inlining context and not another, and a value landing exactly on
+`.5` would then round to a different wire. It does not, and now a future refactor that breaks it
+fails here instead of failing an A/B three hours into an arm.
+
+**G5 — the tripwire** (`119_gate_r3_cfg.txt`): `prod_cfg_gate.py --ref ref/prod-2026-09-21` is
+**PASS 25/25**. Round 3 changes no jsonnet and no runtime JSON, so **no new reference generation**;
+`prod-2026-09-21` remains current.
+
+**M1, the stale-library trap, is the failure this round was most exposed to** — the first in this
+campaign whose arms differ by the binary. `stageB_lever.sh` now refuses `r3`/`r3b` on the
+pre-round-3 pin ("this would compare the old binary against itself and PASS for nothing") *and*
+refuses `ctl`/`ctl2`/`tcm`/`pad`/`flip` on the new one. Both directions were fired once on purpose
+before the arms were launched.
+
+### 9.5 What round 3 did not take, and why
+
+1. **The plane-independent drift time.** `convert_3Dpoint_time_ch` is called three times per point
+   and the time index is identical for all three planes — `NeutrinoStructureExaminer.cxx:1513`
+   already documents and exploits this. Two thirds of the `drift2time` calls are therefore dead.
+   **Subsumed by L1**: with `xsign`/`xorig` memoised, `drift2time` is a subtract, a divide and a
+   subtract (2 samples after, from 405), so removing two thirds of it saves nothing worth a diff.
+2. **Deriving the rounded wire from the continuous one** (`cur_wire = std::round(cen)` when
+   `assoc_cont_center` is on, instead of calling `point2wind` again). Dropped deliberately. After
+   L1 memoises the trig it is worth ~nothing, and it was the only lever in the round whose
+   correctness rested on two separately-compiled expressions agreeing to the last ulp. Removing it
+   removed the round's only FP-identity risk.
+3. **The `std::vector<char> visited(num_vertices)` allocated per `find_neighbors_nlevel` call** —
+   O(N) in the whole cluster point cloud for a BFS that touches a neighbourhood. A reusable
+   stamp buffer would fix it, but `GraphAlgorithms` methods are `const` and the object is shared,
+   so the buffer would have to be `mutable` — a thread-safety hazard in a multi-threaded node for a
+   minority of the 461 samples. Left, with the reason.
+4. **Hinted `std::set` insertion in the wire loops.** The `j` loops insert ascending runs into
+   `associated_2d_points`, so `insert(hint, …)` would be O(1) amortised. The runs are short and the
+   remaining `std::set::insert` is 563 samples across many call sites; it needs its own measurement
+   before it is worth a diff.
+5. **`time2drift`, which has the identical defect.** Left alone on purpose: `Aux::time2drift` is a
+   different package with imaging-stage consumers, and the `clus` one does not appear in this
+   profile at all. Round-4 material, named here so it is not lost.
+6. **A pre-existing order dependence, named not fixed** (CLAUDE.md §5 tie-breaker). The blob set
+   `form_point_association` builds is an `unordered_set<const Blob*>`, and the `blobs_by_face`
+   vectors — hence `face_blobs.front()->wpid()` — take their order from iterating it. That is a
+   pointer-keyed iteration order reaching production output today. L2 preserves it exactly (the
+   insertion sequence is unchanged), and this round does not touch it.
+
+### 9.6 What is left
+
+**Round 3 does not reduce the dual chain, it makes everything cheaper.** `run_dual_chain_off_pass`
+went 2955 → 2508 samples on evt 2925 purely because it runs the same projection code — it is still
+29 % of the job. §8's ranking is unchanged, and §8's recommendation still stands as the largest
+remaining target, still needing doc 107 grading rather than a byte gate.
+
+The two cheap items in §8 (the runner tripwire hole; retention) are untouched by this round, and
+round 3 adds two more 62-event arms, `d119r3` and `d119r3b`, to the retention list. Every number
+from them is in `docs/119_figs/`.

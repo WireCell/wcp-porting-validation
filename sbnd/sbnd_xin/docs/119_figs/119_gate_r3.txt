@@ -1,0 +1,22 @@
+# doc sbnd_xin/119 lever gate: 'r3' arm vs the 'flip' arm
+# allowed to move: trees=(none) calib-json=(none) provenance=True
+# always forgiven: the dual chain's off_ms stopwatch (it moves between two runs of one config)
+# archive members by content (M2); logs, rc.txt, .time.meta, compiled cfg are not products
+
+## cv: flip 18 events, r3 18, compared 18
+   files compared         : 82
+   differ, within allowance: 28
+   differ, NOT allowed    : 0
+
+## nuecc: flip 24 events, r3 24, compared 24
+   files compared         : 120
+   differ, within allowance: 48
+   differ, NOT allowed    : 0
+
+## off: flip 20 events, r3 20, compared 20
+   files compared         : 82
+   differ, within allowance: 21
+   differ, NOT allowed    : 0
+
+PASS -- nothing outside this lever's declared allowance moved
+GATE_RC=0

@@ -23,7 +23,17 @@
 #
 #   LEVER=ctl2  the null pair -- ctl run a second time, to size run-to-run variation.
 #
-# Usage: LEVER=<ctl|ctl2|tcm|pad> [JOBS=n] [OFF_N=k] stageB_lever.sh <cv|nuecc|off> [f000 ...]
+#   LEVER=r3    round 3 -- the projection-constant hoist and the BFS container change, i.e. the
+#               SAME configuration as `flip` run against a REBUILT libWireCellClus.  This is the
+#               first d119 lever where the arms differ by the BINARY and not by the environment,
+#               which makes M1 (the stale-library trap) the failure mode that would silently void
+#               the round: an r3 arm run against the round-0..2 pin compares the old binary to
+#               itself and PASSes vacuously.  So r3/r3b default to their OWN pin and the guard
+#               below REFUSES the wrong one in either direction.
+#   LEVER=r3b   the null pair for round 3 -- r3 run a second time, so the cost delta has a noise
+#               floor measured on the NEW binary rather than inherited from the old one.
+#
+# Usage: LEVER=<ctl|ctl2|tcm|pad|flip|r3|r3b> [JOBS=n] [OFF_N=k] stageB_lever.sh <cv|nuecc|off> [f000 ...]
 set -u
 cd -P "$(dirname "$0")/../.." || exit 1
 SX=$PWD
@@ -31,8 +41,27 @@ S=${1:?usage: LEVER=<ctl|ctl2|tcm|pad> stageB_lever.sh <cv|nuecc|off> [f000 ...]
 shift
 LEVER=${LEVER:?set LEVER to ctl, ctl2, tcm or pad}
 J=${JOBS:-8}
-export LIBSNAP=${LIBSNAP:-$HOME/tmp/d119-libpin}
+# doc sbnd_xin/119 round 3: rounds 0-2 all ran on ONE binary, so one pin was enough.  Round 3
+# changes C++, so the pin is part of the lever and picking it by hand is exactly how M1 fires.
+PRE_R3_CLUS_MD5=71ebd5aeb3868cbc0803f2fa2654b46b   # the round-0..2 binary, toolkit d7d4da83
+case "$LEVER" in
+    r3|r3b) export LIBSNAP=${LIBSNAP:-$HOME/tmp/d119r3-libpin} ;;
+    *)      export LIBSNAP=${LIBSNAP:-$HOME/tmp/d119-libpin} ;;
+esac
 export LD_LIBRARY_PATH=$LIBSNAP:${LD_LIBRARY_PATH:-}
+[ -e "$LIBSNAP/libWireCellClus.so" ] || { echo "ERROR: no pin at $LIBSNAP" >&2; exit 1; }
+CLUS_MD5=$(md5sum "$LIBSNAP/libWireCellClus.so" | cut -d' ' -f1)
+case "$LEVER" in
+    # The round-3 arms MUST NOT be the pre-round-3 binary -- that is the vacuous PASS.
+    r3|r3b) [ "$CLUS_MD5" != "$PRE_R3_CLUS_MD5" ] \
+                || { echo "REFUSING: LEVER=$LEVER on the PRE-round-3 clus ($CLUS_MD5) -- this would" >&2
+                     echo "          compare the old binary against itself and PASS for nothing (M1)." >&2; exit 2; } ;;
+    # ...and the round-0..2 arms MUST be it, or re-running one of them would silently re-measure
+    # rounds 1-2 on a binary they were never measured on.
+    *)      [ "$CLUS_MD5"  = "$PRE_R3_CLUS_MD5" ] \
+                || { echo "REFUSING: LEVER=$LEVER on clus $CLUS_MD5, but rounds 0-2 were measured on" >&2
+                     echo "          $PRE_R3_CLUS_MD5.  Use LEVER=r3 for the new binary." >&2; exit 2; } ;;
+esac
 export PR_EXTRA_STAGES=${PR_EXTRA_STAGES:-pr_display}
 # Same as d118: production supplies the trajectory from jsonnet + the in-tree JSON.
 unset PR_EXTRA_TLA SBND_TRACKFIT_JSON PR_GROUP_SIZE SBND_NO_DL PR_CFG_TREE
@@ -51,10 +80,14 @@ case "$LEVER" in
     # tcmalloc stays OFF here so this arm differs from `pad` in nothing but where the knobs came
     # from -- the same discipline doc 118's stageB_flip.sh used.
     flip) export SBND_PR_TCMALLOC=0 ;;
+    # Round 3's arms are `flip`'s configuration on a rebuilt binary, so they must carry `flip`'s
+    # ENVIRONMENT too -- tcmalloc OFF.  Turning the round-1 allocator on here would mix a 10-16 %
+    # allocator effect into a CPU measurement and make the round unreadable.
+    r3|r3b) export SBND_PR_TCMALLOC=0 ;;
     pad) export SBND_PR_TCMALLOC=0
          export SBND_TRACKFIT_JSON="$SX/docs/119_figs/119_tf_sbnd_pad.json"
          [ -s "$SBND_TRACKFIT_JSON" ] || { echo "ERROR: no padded fit JSON at $SBND_TRACKFIT_JSON" >&2; exit 1; } ;;
-    *) echo "unknown LEVER=$LEVER (ctl|ctl2|tcm|pad|flip)" >&2; exit 2 ;;
+    *) echo "unknown LEVER=$LEVER (ctl|ctl2|tcm|pad|flip|r3|r3b)" >&2; exit 2 ;;
 esac
 
 case "$S" in

@@ -1,0 +1,77 @@
+# doc sbnd_xin/119 round 3 -- before/after CPU profile, SBND nuecc evt 2925.
+# SAME production config (post-round-2), SAME event, two BINARIES:
+#   before = pin 71ebd5aeb386 (toolkit d7d4da83)   arm work-r3nue-d119flip/f002/pr_evt2925
+#   after  = pin 4ff75274e43e (round 3)            arm work-r3nue-d119r3/f002/pr_evt2925
+# Exactly one 'PROFILE: interrupts/evictions/bytes' line in each run (sec 3.1 sanity check):
+#   before 9440/4754/1638960   wall_s=38  maxrss_kb=1547188
+#   after  8526/3902/1489720   wall_s=34  maxrss_kb=1546628
+
+########## BEFORE (top 30 by cumulative) ##########
+Total: 9440 samples
+       0   0.0%   0.0%     9381  99.4% __libc_start_call_main
+       0   0.0%   0.0%     9381  99.4% __libc_start_main_impl
+       0   0.0%   0.0%     9381  99.4% _start
+       0   0.0%   0.0%     9368  99.2% main
+       0   0.0%   0.0%     9296  98.5% WireCell::Main::operator
+       0   0.0%   0.0%     9296  98.5% WireCell::Pgraph::Graph::call_node
+       0   0.0%   0.0%     9296  98.5% WireCell::Pgraph::Graph::execute
+       0   0.0%   0.0%     9296  98.5% WireCell::Pgraph::Pgrapher::execute
+       0   0.0%   0.0%     9246  97.9% WireCell::Pgraph::Function::operator
+       0   0.0%   0.0%     9245  97.9% WireCell::Clus::MultiAlgBlobClustering::operator
+       0   0.0%   0.0%     9245  97.9% WireCell::IFunctionNode::operator
+       0   0.0%   0.0%     6305  66.8% TaggerCheckNeutrino::visit
+       0   0.0%   0.0%     5037  53.4% WireCell::Clus::TrackFitting::do_multi_tracking
+       0   0.0%   0.0%     4662  49.4% WireCell::Clus::PR::PatternAlgorithms::find_proto_vertex
+       1   0.0%   0.0%     3624  38.4% WireCell::Clus::PR::PatternAlgorithms::find_other_segments
+       2   0.0%   0.0%     3251  34.4% WireCell::Clus::TrackFitting::form_map_graph
+       0   0.0%   0.0%     2955  31.3% TaggerCheckNeutrino::run_dual_chain_off_pass
+       0   0.0%   0.0%     2083  22.1% WireCell::Clus::Steiner::CreateSteinerGraph::visit
+       1   0.0%   0.0%     2083  22.1% WireCell::Clus::Steiner::CreateSteinerGraph::visit::{lambda#2}::operator [clone .isra.0]
+      53   0.6%   0.6%     1793  19.0% WireCell::Clus::TrackFitting::form_point_association
+      34   0.4%   1.0%     1482  15.7% WireCell::Clus::TrackFitting::dQ_dx_multi_fit
+       0   0.0%   1.0%     1091  11.6% WireCell::Clus::ImproveCluster_2::mutate
+       0   0.0%   1.0%     1077  11.4% WireCell::Clus::Facade::Cluster::find_graph@32f810
+       0   0.0%   1.0%     1014  10.7% WireCell::Clus::Graphs::make_graph_ctpc_pid
+      89   0.9%   1.9%      976  10.3% WireCell::Clus::Graphs::connect_graph_closely_pid
+       0   0.0%   1.9%      976  10.3% WireCell::Clus::Graphs::make_graph_closely_pid
+       8   0.1%   2.0%      920   9.7% WireCell::Clus::TrackFitting::update_association
+       0   0.0%   2.0%      892   9.4% WireCell::Clus::PR::PatternAlgorithms::improve_vertex
+      27   0.3%   2.3%      826   8.8% exclusion_closest_2d_dis
+      17   0.2%   2.5%      815   8.6% std::set::insert (inline)
+      73   0.8%   3.2%      802   8.5% WireCell::Clus::Facade::Grouping::convert_3Dpoint_time_ch
+     117   1.2%   4.5%      740   7.8% nanoflann::KDTreeSingleIndexDynamicAdaptor_::findNeighbors (inline)
+
+########## AFTER (top 30 by cumulative) ##########
+Total: 8526 samples
+       0   0.0%   0.0%     8457  99.2% __libc_start_call_main
+       0   0.0%   0.0%     8457  99.2% __libc_start_main_impl
+       0   0.0%   0.0%     8457  99.2% _start
+       0   0.0%   0.0%     8444  99.0% main
+       0   0.0%   0.0%     8367  98.1% WireCell::Main::operator
+       0   0.0%   0.0%     8367  98.1% WireCell::Pgraph::Graph::call_node
+       0   0.0%   0.0%     8367  98.1% WireCell::Pgraph::Graph::execute
+       0   0.0%   0.0%     8367  98.1% WireCell::Pgraph::Pgrapher::execute
+       0   0.0%   0.0%     8330  97.7% WireCell::Clus::MultiAlgBlobClustering::operator
+       0   0.0%   0.0%     8330  97.7% WireCell::IFunctionNode::operator
+       0   0.0%   0.0%     8330  97.7% WireCell::Pgraph::Function::operator
+       0   0.0%   0.0%     5386  63.2% TaggerCheckNeutrino::visit
+       0   0.0%   0.0%     4161  48.8% WireCell::Clus::TrackFitting::do_multi_tracking
+       0   0.0%   0.0%     3914  45.9% WireCell::Clus::PR::PatternAlgorithms::find_proto_vertex
+       1   0.0%   0.0%     3030  35.5% WireCell::Clus::PR::PatternAlgorithms::find_other_segments
+       0   0.0%   0.0%     2508  29.4% TaggerCheckNeutrino::run_dual_chain_off_pass
+       5   0.1%   0.1%     2351  27.6% WireCell::Clus::TrackFitting::form_map_graph
+       0   0.0%   0.1%     2076  24.3% WireCell::Clus::Steiner::CreateSteinerGraph::visit
+       0   0.0%   0.1%     2076  24.3% WireCell::Clus::Steiner::CreateSteinerGraph::visit::{lambda#2}::operator [clone .isra.0]
+      35   0.4%   0.5%     1507  17.7% WireCell::Clus::TrackFitting::dQ_dx_multi_fit
+       0   0.0%   0.5%     1098  12.9% WireCell::Clus::ImproveCluster_2::mutate
+       0   0.0%   0.5%     1074  12.6% WireCell::Clus::Facade::Cluster::find_graph@32f830
+       0   0.0%   0.5%     1007  11.8% WireCell::Clus::Graphs::make_graph_ctpc_pid
+     113   1.3%   1.8%      973  11.4% WireCell::Clus::Graphs::connect_graph_closely_pid
+       0   0.0%   1.8%      973  11.4% WireCell::Clus::Graphs::make_graph_closely_pid
+      43   0.5%   2.3%      870  10.2% WireCell::Clus::TrackFitting::form_point_association
+       6   0.1%   2.4%      859  10.1% WireCell::Clus::TrackFitting::update_association
+      29   0.3%   2.7%      755   8.9% exclusion_closest_2d_dis
+       0   0.0%   2.7%      747   8.8% WireCell::Clus::PR::PatternAlgorithms::improve_vertex
+     257   3.0%   5.7%      711   8.3% std::_Rb_tree::_M_lower_bound (inline)
+      95   1.1%   6.8%      701   8.2% nanoflann::KDTreeSingleIndexDynamicAdaptor_::findNeighbors (inline)
+       5   0.1%   6.9%      662   7.8% std::_Rb_tree::_M_insert_unique (inline)

@@ -1,0 +1,23 @@
+### NULL PAIR on the NEW binary: r3b vs r3, one configuration run twice
+# doc sbnd_xin/119 lever gate: 'r3b' arm vs the 'r3' arm
+# allowed to move: trees=(none) calib-json=(none) provenance=False
+# always forgiven: the dual chain's off_ms stopwatch (it moves between two runs of one config)
+# archive members by content (M2); logs, rc.txt, .time.meta, compiled cfg are not products
+
+## cv: r3 18 events, r3b 18, compared 18
+   files compared         : 82
+   differ, within allowance: 10
+   differ, NOT allowed    : 0
+
+## nuecc: r3 24 events, r3b 24, compared 24
+   files compared         : 120
+   differ, within allowance: 24
+   differ, NOT allowed    : 0
+
+## off: r3 20 events, r3b 20, compared 20
+   files compared         : 82
+   differ, within allowance: 1
+   differ, NOT allowed    : 0
+
+PASS -- nothing outside this lever's declared allowance moved
+GATE_RC=0

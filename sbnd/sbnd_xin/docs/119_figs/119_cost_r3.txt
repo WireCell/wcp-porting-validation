@@ -1,0 +1,31 @@
+# doc sbnd_xin/119 round 3 -- cost against the `flip` arm (production as it runs today)
+# claim instrument = TICK total (in-job compute); wall is context only
+
+===== r3 vs flip: ROUND 3 CLAIM: same configuration, rebuilt libWireCellClus (projection-constant hoist + BFS container)
+  nuecc (24 paired events)   arm TICK sum    352.4 ->    300.0 s  (-14.9 %)
+     TICK total  s mean   14.684 ->   12.498 ( -14.9 %)   p50   7.732 ->   6.825   max   44.568 ->   38.704
+     maxrss   GiB  mean    1.171 ->    1.184 (  +1.1 %)   p50   1.143 ->   1.153   max    1.402 ->    1.429
+     wall      s   mean   17.917 ->   15.042 ( -16.0 %)   p50  11.000 ->  10.000   max   49.000 ->   42.000
+  cv (18 paired events)   arm TICK sum     62.1 ->     56.2 s  (-9.5 %)
+     TICK total  s mean    3.450 ->    3.122 (  -9.5 %)   p50   3.824 ->   3.457   max   11.348 ->   10.102
+     maxrss   GiB  mean    0.803 ->    0.810 (  +0.8 %)   p50   1.075 ->   1.090   max    1.317 ->    1.330
+     wall      s   mean    5.944 ->    5.722 (  -3.7 %)   p50   6.000 ->   6.000   max   15.000 ->   14.000
+  off (20 paired events)   arm TICK sum     24.2 ->     22.6 s  (-6.7 %)
+     TICK total  s mean    1.208 ->    1.128 (  -6.7 %)   p50   0.450 ->   0.434   max    9.737 ->    8.880
+     maxrss   GiB  mean    0.443 ->    0.446 (  +0.7 %)   p50   0.384 ->   0.387   max    1.141 ->    1.156
+     wall      s   mean    4.900 ->    4.350 ( -11.2 %)   p50   5.000 ->   5.000   max   14.000 ->   11.000
+
+===== r3b vs r3: NULL PAIR on the new binary: one configuration run twice -- the floor. Read this FIRST.
+  nuecc (24 paired events)   arm TICK sum    300.0 ->    309.0 s  (+3.0 %)
+     TICK total  s mean   12.498 ->   12.873 (  +3.0 %)   p50   6.825 ->   7.018   max   38.704 ->   38.812
+     maxrss   GiB  mean    1.184 ->    1.186 (  +0.1 %)   p50   1.153 ->   1.160   max    1.429 ->    1.413
+     wall      s   mean   15.042 ->   15.708 (  +4.4 %)   p50  10.000 ->  10.000   max   42.000 ->   42.000
+  cv (18 paired events)   arm TICK sum     56.2 ->     56.7 s  (+0.9 %)
+     TICK total  s mean    3.122 ->    3.150 (  +0.9 %)   p50   3.457 ->   3.550   max   10.102 ->   10.171
+     maxrss   GiB  mean    0.810 ->    0.813 (  +0.4 %)   p50   1.090 ->   1.098   max    1.330 ->    1.335
+     wall      s   mean    5.722 ->    5.611 (  -1.9 %)   p50   6.000 ->   6.000   max   14.000 ->   13.000
+  off (20 paired events)   arm TICK sum     22.6 ->     22.5 s  (-0.1 %)
+     TICK total  s mean    1.128 ->    1.126 (  -0.1 %)   p50   0.434 ->   0.438   max    8.880 ->    8.900
+     maxrss   GiB  mean    0.446 ->    0.446 (  +0.0 %)   p50   0.387 ->   0.386   max    1.156 ->    1.156
+     wall      s   mean    4.350 ->    4.850 ( +11.5 %)   p50   5.000 ->   5.000   max   11.000 ->   13.000
+

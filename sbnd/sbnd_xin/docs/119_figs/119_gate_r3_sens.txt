@@ -1,0 +1,54 @@
+### SENSITIVITY CONTROL: the same r3 allowance applied to a pair that DOES differ
+### (ctl is pre-proj_pad, r3 is post; T_proj_data must move and r3 allows no trees)
+# doc sbnd_xin/119 lever gate: 'r3' arm vs the 'ctl' arm
+# allowed to move: trees=(none) calib-json=(none) provenance=True
+# always forgiven: the dual chain's off_ms stopwatch (it moves between two runs of one config)
+# archive members by content (M2); logs, rc.txt, .time.meta, compiled cfg are not products
+
+## nuecc: ctl 24 events, r3 24, compared 24
+   files compared         : 120
+   differ, within allowance: 0
+   differ, NOT allowed    : 48
+      f000/pr_evt1150/calib-pr-evt1150.json: 2 of 18385 keys differ, 1 NOT allowed: ['proj[1].charge_pred[8]']
+      f000/pr_evt1150/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f000/pr_evt1154/calib-pr-evt1154.json: 60453 of 202135 keys differ, 60452 NOT allowed: ['proj[0].charge_pred[38]', 'proj[0].charge_pred[43]', 'proj[0].charge_pred[53]', 'proj[1].charge[61]', 'proj[1].charge[63]', 'proj[1].charge[64]']
+      f000/pr_evt1154/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f000/pr_evt2935/calib-pr-evt2935.json: 85690 of 241542 keys differ, 85689 NOT allowed: ['proj[0].charge[1000]', 'proj[0].charge[1001]', 'proj[0].charge[1002]', 'proj[0].charge[1003]', 'proj[0].charge[1004]', 'proj[0].charge[1005]']
+      f000/pr_evt2935/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f000/pr_evt7158/calib-pr-evt7158.json: 327586 of 638985 keys differ, 327583 NOT allowed: ['candidates[0].proj[0].charge[0]', 'candidates[0].proj[0].charge[1000]', 'candidates[0].proj[0].charge[1001]', 'candidates[0].proj[0].charge[1002]', 'candidates[0].proj[0].charge[1003]', 'candidates[0].proj[0].charge[1004]']
+      f000/pr_evt7158/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f000/pr_evt9621/calib-pr-evt9621.json: 9204 of 62688 keys differ, 9203 NOT allowed: ['proj[0].charge_pred[10]', 'proj[0].charge_pred[11]', 'proj[0].charge_pred[124]', 'proj[0].charge_pred[12]', 'proj[0].charge_pred[13]', 'proj[0].charge_pred[14]']
+      f000/pr_evt9621/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f000/pr_evt10992/calib-pr-evt10992.json: 30398 of 82356 keys differ, 30397 NOT allowed: ['proj[0].charge[1000]', 'proj[0].charge[1001]', 'proj[0].charge[1002]', 'proj[0].charge[1003]', 'proj[0].charge[1004]', 'proj[0].charge[1005]']
+      f000/pr_evt10992/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f001/pr_evt807/calib-pr-evt807.json: 67119 of 229757 keys differ, 67118 NOT allowed: ['proj[0].charge[1000]', 'proj[0].charge[1001]', 'proj[0].charge[1002]', 'proj[0].charge[1003]', 'proj[0].charge[1004]', 'proj[0].charge[1005]']
+      f001/pr_evt807/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f001/pr_evt4427/calib-pr-evt4427.json: 19335 of 76171 keys differ, 19334 NOT allowed: ['proj[0].charge[1000]', 'proj[0].charge[1001]', 'proj[0].charge[1002]', 'proj[0].charge[1003]', 'proj[0].charge[1004]', 'proj[0].charge[1005]']
+      f001/pr_evt4427/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f001/pr_evt4754/calib-pr-evt4754.json: 47098 of 139165 keys differ, 47097 NOT allowed: ['proj[0].charge[0]', 'proj[0].charge[100]', 'proj[0].charge[101]', 'proj[0].charge[102]', 'proj[0].charge[103]', 'proj[0].charge[104]']
+      f001/pr_evt4754/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f001/pr_evt6354/calib-pr-evt6354.json: 30654 of 73564 keys differ, 30653 NOT allowed: ['proj[0].charge[1000]', 'proj[0].charge[1001]', 'proj[0].charge[1002]', 'proj[0].charge[1003]', 'proj[0].charge[1004]', 'proj[0].charge[1005]']
+      f001/pr_evt6354/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f001/pr_evt7096/calib-pr-evt7096.json: 2827 of 43170 keys differ, 2826 NOT allowed: ['proj[0].charge_pred[673]', 'proj[0].charge_pred[680]', 'proj[0].charge_pred[686]', 'proj[0].charge_pred[687]', 'proj[0].charge_pred[694]', 'proj[0].charge_pred[695]']
+      f001/pr_evt7096/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f001/pr_evt7361/calib-pr-evt7361.json: 16979 of 72491 keys differ, 16978 NOT allowed: ['proj[0].charge[1000]', 'proj[0].charge[1001]', 'proj[0].charge[1002]', 'proj[0].charge[1003]', 'proj[0].charge[1004]', 'proj[0].charge[1005]']
+      f001/pr_evt7361/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f001/pr_evt9269/calib-pr-evt9269.json: 24338 of 75881 keys differ, 24337 NOT allowed: ['proj[0].charge[1000]', 'proj[0].charge[1001]', 'proj[0].charge[1002]', 'proj[0].charge[1003]', 'proj[0].charge[1004]', 'proj[0].charge[1005]']
+      f001/pr_evt9269/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f001/pr_evt10603/calib-pr-evt10603.json: 47891 of 135051 keys differ, 47890 NOT allowed: ['proj[0].charge[1000]', 'proj[0].charge[1001]', 'proj[0].charge[1002]', 'proj[0].charge[1003]', 'proj[0].charge[1004]', 'proj[0].charge[1005]']
+      f001/pr_evt10603/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f001/pr_evt11199/calib-pr-evt11199.json: 20979 of 73907 keys differ, 20978 NOT allowed: ['proj[0].charge[1000]', 'proj[0].charge[1001]', 'proj[0].charge[1002]', 'proj[0].charge[1003]', 'proj[0].charge[1004]', 'proj[0].charge[1005]']
+      f001/pr_evt11199/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f001/pr_evt11515/calib-pr-evt11515.json: 64831 of 195143 keys differ, 64830 NOT allowed: ['proj[0].charge[0]', 'proj[0].charge[1000]', 'proj[0].charge[1001]', 'proj[0].charge[1002]', 'proj[0].charge[1003]', 'proj[0].charge[1004]']
+      f001/pr_evt11515/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f002/pr_evt1855/calib-pr-evt1855.json: 12803 of 41157 keys differ, 12802 NOT allowed: ['proj[0].charge[1000]', 'proj[0].charge[1001]', 'proj[0].charge[1002]', 'proj[0].charge[1003]', 'proj[0].charge[1004]', 'proj[0].charge[1005]']
+      f002/pr_evt1855/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f002/pr_evt2925/calib-pr-evt2925.json: 70310 of 248024 keys differ, 70309 NOT allowed: ['proj[3].charge[1000]', 'proj[3].charge[1001]', 'proj[3].charge[1002]', 'proj[3].charge[1003]', 'proj[3].charge[1004]', 'proj[3].charge[1005]']
+      f002/pr_evt2925/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f002/pr_evt4226/calib-pr-evt4226.json: 121764 of 278650 keys differ, 121761 NOT allowed: ['candidates[0].proj[0].charge[1000]', 'candidates[0].proj[0].charge[1001]', 'candidates[0].proj[0].charge[1002]', 'candidates[0].proj[0].charge[1003]', 'candidates[0].proj[0].charge[1004]', 'candidates[0].proj[0].charge[1005]']
+      f002/pr_evt4226/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+      f002/pr_evt5418/calib-pr-evt5418.json: 24353 of 112052 keys differ, 24352 NOT allowed: ['proj[0].charge[1000]', 'proj[0].charge[1001]', 'proj[0].charge[1002]', 'proj[0].charge[1003]', 'proj[0].charge[1004]', 'proj[0].charge[1005]']
+      f002/pr_evt5418/tracking-pr.root: trees differ: T_proj_data['channel', 'charge', 'charge_err', 'charge_pred', 'time_slice']
+
+FAIL -- see the differences above
+GATE_RC=1  <-- must be 1
