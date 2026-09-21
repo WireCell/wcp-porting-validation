@@ -338,7 +338,7 @@ CONFIRM=yes ./retire_20260921.sh 1 sbnd
 CONFIRM=yes ./retire_20260921.sh 1 pdvd
 CONFIRM=yes ./retire_20260921.sh 1 pdhd
 
-# 4. ~/tmp sweep -- order-gated on step 2, and BEFORE the dedup (doc 114 sec 1)
+# 4. ~/tmp sweep -- order-gated on step 3 (a bare run before it exits 4), BEFORE the dedup
 CONFIRM=yes ./sweep_tmp_20260921.sh
 #    if it exits 11 (the unit list moved -- an age-KEEP aged into FREE between census and
 #    confirm, round H's first refusal), re-census under CENSUS_SUFFIX so the plan-time
