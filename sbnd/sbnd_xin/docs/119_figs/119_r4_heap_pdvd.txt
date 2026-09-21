@@ -1,0 +1,171 @@
+doc sbnd_xin/119 round 4 -- PDVD 039252_8 (max d_steiner in the 120-event census, 3.04 GB)
+Reading, caveats and the two retracted readings: see 119_r4_heap_sbnd.txt.
+
+=== dump series: 84 dumps  (evt 039252_8)
+    dump                                     live MiB
+    je_evt039252_8.3602192.0.i0.heap             70.5
+    je_evt039252_8.3602192.1.i1.heap            230.2
+    je_evt039252_8.3602192.2.i2.heap            740.6
+    je_evt039252_8.3602192.3.i3.heap            789.1
+    je_evt039252_8.3602192.4.i4.heap            823.8
+    je_evt039252_8.3602192.5.i5.heap            925.0
+    je_evt039252_8.3602192.6.i6.heap            973.5
+    je_evt039252_8.3602192.7.i7.heap           1047.5
+    je_evt039252_8.3602192.8.i8.heap            980.6
+    je_evt039252_8.3602192.9.i9.heap            987.5
+    je_evt039252_8.3602192.10.i10.heap         1050.1
+    je_evt039252_8.3602192.11.i11.heap         1064.1
+    je_evt039252_8.3602192.12.i12.heap         1134.2
+    je_evt039252_8.3602192.13.i13.heap         1142.4
+    je_evt039252_8.3602192.14.i14.heap         1055.6
+    je_evt039252_8.3602192.15.i15.heap         1116.1
+    je_evt039252_8.3602192.16.i16.heap         1277.5
+    je_evt039252_8.3602192.17.i17.heap         1503.6
+    je_evt039252_8.3602192.18.i18.heap         1412.2
+    je_evt039252_8.3602192.19.i19.heap         1829.2
+    je_evt039252_8.3602192.20.i20.heap         1803.9
+    je_evt039252_8.3602192.21.i21.heap         2112.6
+    je_evt039252_8.3602192.22.i22.heap         1840.1
+    je_evt039252_8.3602192.23.i23.heap         2023.1
+    je_evt039252_8.3602192.24.i24.heap         2241.7
+    je_evt039252_8.3602192.25.i25.heap         2220.5
+    je_evt039252_8.3602192.26.i26.heap         1836.5
+    je_evt039252_8.3602192.27.i27.heap         2118.1
+    je_evt039252_8.3602192.28.i28.heap         1942.5
+    je_evt039252_8.3602192.29.i29.heap         1876.5
+    je_evt039252_8.3602192.30.i30.heap         1962.7
+    je_evt039252_8.3602192.31.i31.heap         2050.4
+    je_evt039252_8.3602192.32.i32.heap         2750.1
+    je_evt039252_8.3602192.33.i33.heap         1223.9
+    je_evt039252_8.3602192.34.i34.heap         1227.5
+    je_evt039252_8.3602192.35.i35.heap         1212.2
+    je_evt039252_8.3602192.36.i36.heap         1241.2
+    je_evt039252_8.3602192.37.i37.heap         1282.7
+    je_evt039252_8.3602192.38.i38.heap         1291.4
+    je_evt039252_8.3602192.39.i39.heap         1276.0
+    je_evt039252_8.3602192.40.i40.heap         1275.0
+    je_evt039252_8.3602192.41.i41.heap         1340.1
+    je_evt039252_8.3602192.42.i42.heap         1300.4
+    je_evt039252_8.3602192.43.i43.heap         1361.9
+    je_evt039252_8.3602192.44.i44.heap         1405.5
+    je_evt039252_8.3602192.45.i45.heap         1418.2
+    je_evt039252_8.3602192.46.i46.heap         1444.4
+    je_evt039252_8.3602192.47.i47.heap         1293.5
+    je_evt039252_8.3602192.48.i48.heap         1495.3
+    je_evt039252_8.3602192.49.i49.heap         1497.3
+    je_evt039252_8.3602192.50.i50.heap         1308.0
+    je_evt039252_8.3602192.51.i51.heap         1334.7
+    je_evt039252_8.3602192.52.i52.heap         1362.8
+    je_evt039252_8.3602192.53.i53.heap         1421.9
+    je_evt039252_8.3602192.54.i54.heap         1421.9
+    je_evt039252_8.3602192.55.i55.heap         1421.9
+    je_evt039252_8.3602192.56.i56.heap         1450.4
+    je_evt039252_8.3602192.57.i57.heap         1449.2
+    je_evt039252_8.3602192.58.i58.heap         1449.2
+    je_evt039252_8.3602192.59.i59.heap         1459.3
+    je_evt039252_8.3602192.60.i60.heap         1542.7
+    je_evt039252_8.3602192.61.i61.heap         1576.6
+    je_evt039252_8.3602192.62.i62.heap         1601.7
+    je_evt039252_8.3602192.63.i63.heap         1578.1
+    je_evt039252_8.3602192.64.i64.heap         1626.9
+    je_evt039252_8.3602192.65.i65.heap         1591.5
+    je_evt039252_8.3602192.66.i66.heap         1616.2
+    je_evt039252_8.3602192.67.i67.heap         1700.7
+    je_evt039252_8.3602192.68.i68.heap         1866.8
+    je_evt039252_8.3602192.69.i69.heap         1971.1
+    je_evt039252_8.3602192.70.i70.heap         1979.3
+    je_evt039252_8.3602192.71.i71.heap         2066.3
+    je_evt039252_8.3602192.72.i72.heap         2067.8
+    je_evt039252_8.3602192.73.i73.heap         2072.5
+    je_evt039252_8.3602192.74.i74.heap         2077.3
+    je_evt039252_8.3602192.75.i75.heap         2071.5
+    je_evt039252_8.3602192.76.i76.heap         2075.3
+    je_evt039252_8.3602192.77.i77.heap         2151.2
+    je_evt039252_8.3602192.78.i78.heap         2300.0
+    je_evt039252_8.3602192.79.i79.heap         2552.9
+    je_evt039252_8.3602192.80.i80.heap         2615.3
+    je_evt039252_8.3602192.81.i81.heap         2691.0
+    je_evt039252_8.3602192.82.i82.heap         2736.1
+    je_evt039252_8.3602192.83.f.heap            126.1
+
+=== peak  live 2.686 GiB   je_evt039252_8.3602192.32.i32.heap
+=== final live 0.123 GiB   je_evt039252_8.3602192.83.f.heap
+=== released between peak and exit: 2.563 GiB (95.4 % of peak live)
+    (compare peak live against the job's MEM-ladder peak res: the GAP is allocator
+     arena + non-heap mappings, and no call-site knob reaches it)
+
+==============================================================================
+=== PEAK dump, --inuse_space --cum, top 34   [je_evt039252_8.3602192.32.i32.heap]
+==============================================================================
+Total: 2750.1 MB
+  2750.1 100.0% 100.0%   2750.1 100.0% malloc_usable_size
+     0.0   0.0% 100.0%   2749.6 100.0% __libc_start_call_main
+     0.0   0.0% 100.0%   2749.6 100.0% __libc_start_main_impl
+     0.0   0.0% 100.0%   2749.6 100.0% _start
+     0.0   0.0% 100.0%   2749.6 100.0% main
+     0.0   0.0% 100.0%   2744.4  99.8% WireCell::Main::operator
+     0.0   0.0% 100.0%   2744.4  99.8% WireCell::Pgraph::Graph::call_node
+     0.0   0.0% 100.0%   2744.4  99.8% WireCell::Pgraph::Graph::execute
+     0.0   0.0% 100.0%   2744.4  99.8% WireCell::Pgraph::Pgrapher::execute
+     0.0   0.0% 100.0%   2655.3  96.6% std::__new_allocator::allocate (inline)
+     0.0   0.0% 100.0%   2655.3  96.6% std::allocator_traits::allocate (inline)
+     0.0   0.0% 100.0%   2645.8  96.2% WireCell::Clus::MultiAlgBlobClustering::operator
+     0.0   0.0% 100.0%   2645.8  96.2% WireCell::IFunctionNode::operator
+     0.0   0.0% 100.0%   2645.8  96.2% WireCell::Pgraph::Function::operator
+     0.0   0.0% 100.0%   1968.7  71.6% WireCell::Clus::Steiner::CreateSteinerGraph::visit
+     0.0   0.0% 100.0%   1968.7  71.6% WireCell::Clus::Steiner::CreateSteinerGraph::visit::{lambda#2}::operator [clone .isra.0]
+     0.0   0.0% 100.0%   1273.9  46.3% boost::add_edge (inline)
+     0.0   0.0% 100.0%   1273.9  46.3% boost::graph_detail::push (inline)
+     0.0   0.0% 100.0%   1273.9  46.3% boost::graph_detail::push_dispatch (inline)
+     0.0   0.0% 100.0%   1254.1  45.6% boost::adjacency_list::adjacency_list (inline)
+     0.0   0.0% 100.0%   1254.1  45.6% boost::vec_adj_list_impl::copy_impl
+     0.0   0.0% 100.0%   1254.1  45.6% boost::vec_adj_list_impl::vec_adj_list_impl (inline)
+     0.0   0.0% 100.0%   1194.0  43.4% std::_Vector_base::_M_allocate (inline)
+     0.0   0.0% 100.0%    809.4  29.4% std::_Rb_tree::_M_create_node (inline)
+     0.0   0.0% 100.0%    808.0  29.4% WireCell::Clus::Steiner::Grapher::create_steiner_tree
+     0.0   0.0% 100.0%    696.5  25.3% std::vector::push_back (inline)
+     0.0   0.0% 100.0%    695.1  25.3% std::vector::_M_realloc_insert
+     0.0   0.0% 100.0%    651.1  23.7% std::vector::emplace_back (inline)
+     0.0   0.0% 100.0%    632.0  23.0% std::__cxx11::_List_base::_M_get_node (inline)
+     0.0   0.0% 100.0%    632.0  23.0% std::__cxx11::list::_M_create_node (inline)
+     0.0   0.0% 100.0%    632.0  23.0% std::__cxx11::list::_M_insert (inline)
+     0.0   0.0% 100.0%    632.0  23.0% std::__cxx11::list::push_back (inline)
+     0.0   0.0% 100.0%    625.6  22.7% std::allocator_traits::construct (inline)
+
+==============================================================================
+=== FINAL dump, --inuse_space --cum, top 34   [je_evt039252_8.3602192.83.f.heap]
+==============================================================================
+Total: 126.1 MB
+   126.1 100.0% 100.0%    126.1 100.0% malloc_usable_size
+     0.0   0.0% 100.0%    125.6  99.6% __libc_start_call_main
+     0.0   0.0% 100.0%    125.6  99.6% __libc_start_main_impl
+     0.0   0.0% 100.0%    125.6  99.6% _start
+     0.0   0.0% 100.0%    125.6  99.6% main
+     0.0   0.0% 100.0%    120.4  95.5% WireCell::Clus::MultiAlgBlobClustering::operator
+     0.0   0.0% 100.0%    120.4  95.5% WireCell::IFunctionNode::operator
+     0.0   0.0% 100.0%    120.4  95.5% WireCell::Main::operator
+     0.0   0.0% 100.0%    120.4  95.5% WireCell::Pgraph::Function::operator
+     0.0   0.0% 100.0%    120.4  95.5% WireCell::Pgraph::Graph::call_node
+     0.0   0.0% 100.0%    120.4  95.5% WireCell::Pgraph::Graph::execute
+     0.0   0.0% 100.0%    120.4  95.5% WireCell::Pgraph::Pgrapher::execute
+     0.0   0.0% 100.0%     99.6  79.0% std::__new_allocator::allocate (inline)
+     0.0   0.0% 100.0%     99.6  79.0% std::allocator_traits::allocate (inline)
+     0.0   0.0% 100.0%     80.7  64.0% TaggerCheckSTM::check_stm_conditions
+     0.0   0.0% 100.0%     80.7  64.0% TaggerCheckSTM::check_stm_conditions::{lambda#2}::operator
+     0.0   0.0% 100.0%     80.7  64.0% TaggerCheckSTM::visit
+     0.0   0.0% 100.0%     79.2  62.8% WireCell::Clus::TrackFitting::do_single_tracking
+     0.0   0.0% 100.0%     63.0  50.0% WireCell::Clus::TrackFitting::fill_global_rb_map
+     0.0   0.0% 100.0%     45.5  36.1% std::__detail::_Hashtable_alloc::_M_allocate_node (inline)
+     0.0   0.0% 100.0%     45.2  35.9% std::unordered_map::operator[] (inline)
+     0.0   0.0% 100.0%     44.7  35.5% std::__detail::_Map_base::operator[]
+     0.0   0.0% 100.0%     36.0  28.5% std::_Hashtable::_Scoped_node::_Scoped_node (inline)
+     0.0   0.0% 100.0%     34.0  27.0% std::_Hashtable::_M_insert (inline)
+     0.0   0.0% 100.0%     34.0  27.0% std::_Hashtable::_M_insert_unique (inline)
+     0.0   0.0% 100.0%     34.0  27.0% std::__detail::_Insert_base::insert (inline)
+     0.0   0.0% 100.0%     34.0  27.0% std::unordered_set::insert (inline)
+     0.0   0.0% 100.0%     33.7  26.7% std::_Hashtable::_M_allocate_buckets (inline)
+     0.0   0.0% 100.0%     33.7  26.7% std::_Hashtable::_M_rehash_aux (inline)
+     0.0   0.0% 100.0%     33.7  26.7% std::__detail::_Hashtable_alloc::_M_allocate_buckets (inline)
+     0.0   0.0% 100.0%     33.2  26.4% std::_Hashtable::_M_insert_unique_node (inline)
+     0.0   0.0% 100.0%     24.5  19.4% std::_Hashtable::_M_rehash (inline)
+     0.0   0.0% 100.0%     24.4  19.3% WireCell::Root::PdvdPrMagnifyTrackingVisitor::visit

@@ -1,0 +1,165 @@
+doc sbnd_xin/119 round 4 -- SBND f054/evt7582, the p50 COMPOSITION CONTROL.
+What a normal event looks like, so the tail can be read against it.
+
+=== dump series: 38 dumps  (evt 7582)
+    dump                                     live MiB
+    je_evt7582.3595468.0.i0.heap                 28.8
+    je_evt7582.3595468.1.i1.heap                 46.0
+    je_evt7582.3595468.2.i2.heap                 89.5
+    je_evt7582.3595468.3.i3.heap                132.0
+    je_evt7582.3595468.4.i4.heap                143.6
+    je_evt7582.3595468.5.i5.heap                158.2
+    je_evt7582.3595468.6.i6.heap                121.6
+    je_evt7582.3595468.7.i7.heap                133.7
+    je_evt7582.3595468.8.i8.heap                135.5
+    je_evt7582.3595468.9.i9.heap                120.2
+    je_evt7582.3595468.10.i10.heap              137.7
+    je_evt7582.3595468.11.i11.heap              130.7
+    je_evt7582.3595468.12.i12.heap              138.3
+    je_evt7582.3595468.13.i13.heap              141.3
+    je_evt7582.3595468.14.i14.heap              136.7
+    je_evt7582.3595468.15.i15.heap              139.3
+    je_evt7582.3595468.16.i16.heap              136.3
+    je_evt7582.3595468.17.i17.heap              144.4
+    je_evt7582.3595468.18.i18.heap              224.7
+    je_evt7582.3595468.19.i19.heap              278.7
+    je_evt7582.3595468.20.i20.heap              283.2
+    je_evt7582.3595468.21.i21.heap              266.6
+    je_evt7582.3595468.22.i22.heap              271.6
+    je_evt7582.3595468.23.i23.heap              269.1
+    je_evt7582.3595468.24.i24.heap              270.6
+    je_evt7582.3595468.25.i25.heap              274.1
+    je_evt7582.3595468.26.i26.heap              276.7
+    je_evt7582.3595468.27.i27.heap              272.2
+    je_evt7582.3595468.28.i28.heap              284.1
+    je_evt7582.3595468.29.i29.heap              280.2
+    je_evt7582.3595468.30.i30.heap              285.8
+    je_evt7582.3595468.31.i31.heap              311.7
+    je_evt7582.3595468.32.i32.heap              345.7
+    je_evt7582.3595468.33.i33.heap              380.7
+    je_evt7582.3595468.34.i34.heap              425.8
+    je_evt7582.3595468.35.i35.heap              537.6
+    je_evt7582.3595468.36.i36.heap              411.6
+    je_evt7582.3595468.37.f.heap                317.6
+
+=== peak  live 0.525 GiB   je_evt7582.3595468.35.i35.heap
+=== final live 0.310 GiB   je_evt7582.3595468.37.f.heap
+=== released between peak and exit: 0.215 GiB (40.9 % of peak live)
+    (compare peak live against the job's MEM-ladder peak res: the GAP is allocator
+     arena + non-heap mappings, and no call-site knob reaches it)
+
+==============================================================================
+=== PEAK dump, --inuse_space --cum, top 32   [je_evt7582.3595468.35.i35.heap]
+==============================================================================
+Total: 537.6 MB
+   537.6 100.0% 100.0%    537.6 100.0% malloc_usable_size
+     0.0   0.0% 100.0%    517.2  96.2% __libc_start_call_main
+     0.0   0.0% 100.0%    517.2  96.2% main
+     0.0   0.0% 100.0%    516.7  96.1% __libc_start_main_impl
+     0.0   0.0% 100.0%    516.7  96.1% _start
+     0.0   0.0% 100.0%    481.4  89.5% WireCell::Pgraph::Graph::call_node
+     0.0   0.0% 100.0%    481.4  89.5% WireCell::Pgraph::Graph::execute
+     0.0   0.0% 100.0%    480.4  89.4% WireCell::Main::operator
+     0.0   0.0% 100.0%    480.4  89.4% WireCell::Pgraph::Pgrapher::execute
+     0.0   0.0% 100.0%    474.4  88.2% WireCell::Clus::MultiAlgBlobClustering::operator
+     0.0   0.0% 100.0%    474.4  88.2% WireCell::IFunctionNode::operator
+     0.0   0.0% 100.0%    473.9  88.1% WireCell::Pgraph::Function::operator
+     0.0   0.0% 100.0%    173.5  32.3% __pthread_once_slow
+     0.0   0.0% 100.0%    173.5  32.3% call_once (inline)
+     0.0   0.0% 100.0%    166.5  31.0% std::__new_allocator::allocate (inline)
+     0.0   0.0% 100.0%    166.5  31.0% std::allocator_traits::allocate (inline)
+     0.0   0.0% 100.0%    158.2  29.4% TaggerCheckNeutrino::visit
+     0.0   0.0% 100.0%    145.0  27.0% WireCell::Root::UbooneNueBDTScorer::ensure_readers
+     0.0   0.0% 100.0%    145.0  27.0% WireCell::Root::UbooneNueBDTScorer::ensure_readers (inline)
+     0.0   0.0% 100.0%    145.0  27.0% WireCell::Root::UbooneNueBDTScorer::init_readers_impl
+     0.0   0.0% 100.0%    145.0  27.0% WireCell::Root::UbooneNueBDTScorer::visit
+     0.0   0.0% 100.0%    133.7  24.9% _PyEval_EvalFrame (inline)
+     0.0   0.0% 100.0%    133.7  24.9% _PyEval_EvalFrameDefault
+     0.0   0.0% 100.0%    133.7  24.9% _PyEval_Vector
+     0.0   0.0% 100.0%    133.7  24.9% _PyObject_VectorcallTstate (inline)
+     0.0   0.0% 100.0%    133.0  24.7% object_vacall
+     0.0   0.0% 100.0%    122.6  22.8% TaggerCheckNeutrino::run_dual_chain_off_pass
+     0.0   0.0% 100.0%    117.0  21.8% WCPPyUtil::SCN_Vertex
+     0.0   0.0% 100.0%    117.0  21.8% WireCell::Clus::PR::PatternAlgorithms::determine_overall_main_vertex_DL
+     0.0   0.0% 100.0%    114.0  21.2% TMVA::MethodBase::ReadStateFromFile
+     0.0   0.0% 100.0%    114.0  21.2% TMVA::MethodBase::ReadStateFromXML
+
+--- PEAK dump, --inuse_space FLAT, top 20 (where the bytes are ALLOCATED)
+Total: 537.6 MB
+   537.6 100.0% 100.0%    537.6 100.0% malloc_usable_size
+     0.0   0.0% 100.0%      0.7   0.1% 0x00007f109df0102c
+     0.0   0.0% 100.0%      0.7   0.1% 0x00007f109df0247a
+     0.0   0.0% 100.0%      2.0   0.4% ::AggExprEmitter::VisitCXXConstructExpr
+     0.0   0.0% 100.0%      2.0   0.4% ::AggExprEmitter::VisitCastExpr
+     0.0   0.0% 100.0%      2.0   0.4% ::CGRecordLowering::lower
+     0.0   0.0% 100.0%      2.1   0.4% ::GenEmulation
+     0.0   0.0% 100.0%      1.5   0.3% ::ItaniumCXXABI::EmitCXXConstructors
+     0.0   0.0% 100.0%      1.0   0.2% ::ItaniumRecordLayoutBuilder::CheckFieldPadding [clone .constprop.0]
+     0.0   0.0% 100.0%      1.0   0.2% ::ItaniumRecordLayoutBuilder::LayoutField
+     0.0   0.0% 100.0%      1.0   0.2% ::ItaniumRecordLayoutBuilder::LayoutFields
+     0.0   0.0% 100.0%      0.5   0.1% ::ScalarExprEmitter::EmitBinOps
+     0.0   0.0% 100.0%      0.5   0.1% ::ScalarExprEmitter::EmitCompare
+     0.0   0.0% 100.0%      0.5   0.1% ::ScalarExprEmitter::Visit
+     0.0   0.0% 100.0%      0.5   0.1% ::ScalarExprEmitter::VisitAbstractConditionalOperator
+     0.0   0.0% 100.0%      3.0   0.6% ::ScalarExprEmitter::VisitCallExpr
+     0.0   0.0% 100.0%      1.0   0.2% ::ScalarExprEmitter::VisitCastExpr
+     0.0   0.0% 100.0%      1.0   0.2% ::createCIImpl
+     0.0   0.0% 100.0%      0.5   0.1% ChargeStepped::get_wire_charge [clone .isra.0]
+
+==============================================================================
+=== FINAL dump, --inuse_space --cum, top 32   [je_evt7582.3595468.37.f.heap]
+==============================================================================
+Total: 317.6 MB
+   317.6 100.0% 100.0%    317.6 100.0% malloc_usable_size
+     0.0   0.0% 100.0%    297.2  93.6% __libc_start_call_main
+     0.0   0.0% 100.0%    297.2  93.6% main
+     0.0   0.0% 100.0%    296.7  93.4% __libc_start_main_impl
+     0.0   0.0% 100.0%    296.7  93.4% _start
+     0.0   0.0% 100.0%    273.0  86.0% WireCell::Clus::MultiAlgBlobClustering::operator
+     0.0   0.0% 100.0%    273.0  86.0% WireCell::IFunctionNode::operator
+     0.0   0.0% 100.0%    272.5  85.8% WireCell::Pgraph::Function::operator
+     0.0   0.0% 100.0%    272.0  85.6% WireCell::Pgraph::Graph::call_node
+     0.0   0.0% 100.0%    272.0  85.6% WireCell::Pgraph::Graph::execute
+     0.0   0.0% 100.0%    271.0  85.3% WireCell::Main::operator
+     0.0   0.0% 100.0%    271.0  85.3% WireCell::Pgraph::Pgrapher::execute
+     0.0   0.0% 100.0%    173.5  54.6% __pthread_once_slow
+     0.0   0.0% 100.0%    173.5  54.6% call_once (inline)
+     0.0   0.0% 100.0%    145.0  45.7% WireCell::Root::UbooneNueBDTScorer::ensure_readers
+     0.0   0.0% 100.0%    145.0  45.7% WireCell::Root::UbooneNueBDTScorer::ensure_readers (inline)
+     0.0   0.0% 100.0%    145.0  45.7% WireCell::Root::UbooneNueBDTScorer::init_readers_impl
+     0.0   0.0% 100.0%    145.0  45.7% WireCell::Root::UbooneNueBDTScorer::visit
+     0.0   0.0% 100.0%    114.0  35.9% TMVA::MethodBase::ReadStateFromFile
+     0.0   0.0% 100.0%    114.0  35.9% TMVA::MethodBase::ReadStateFromXML
+     0.0   0.0% 100.0%    114.0  35.9% TMVA::Reader::BookMVA@3ea0a0
+     0.0   0.0% 100.0%    114.0  35.9% TMVA::Reader::BookMVA@3ec020
+     0.0   0.0% 100.0%     98.5  31.0% TMVA::TransformationHandler::ReadFromXML
+     0.0   0.0% 100.0%     97.5  30.7% TMVA::PDF::ReadXML
+     0.0   0.0% 100.0%     97.5  30.7% TMVA::VariableGaussTransform::ReadFromXML
+     0.0   0.0% 100.0%     96.4  30.4% std::__new_allocator::allocate (inline)
+     0.0   0.0% 100.0%     96.4  30.4% std::allocator_traits::allocate (inline)
+     0.0   0.0% 100.0%     89.9  28.3% TaggerCheckNeutrino::visit
+     0.0   0.0% 100.0%     71.0  22.3% _PyEval_EvalFrame (inline)
+     0.0   0.0% 100.0%     71.0  22.3% _PyEval_EvalFrameDefault
+     0.0   0.0% 100.0%     71.0  22.3% _PyEval_Vector
+
+--- FINAL dump, --inuse_space FLAT, top 20 (where the bytes are ALLOCATED)
+Total: 317.6 MB
+   317.6 100.0% 100.0%    317.6 100.0% malloc_usable_size
+     0.0   0.0% 100.0%      0.7   0.2% 0x00007f109df0102c
+     0.0   0.0% 100.0%      0.7   0.2% 0x00007f109df0247a
+     0.0   0.0% 100.0%      1.5   0.5% ::AggExprEmitter::VisitCXXConstructExpr
+     0.0   0.0% 100.0%      1.5   0.5% ::AggExprEmitter::VisitCastExpr
+     0.0   0.0% 100.0%      1.5   0.5% ::CGRecordLowering::lower
+     0.0   0.0% 100.0%      1.6   0.5% ::GenEmulation
+     0.0   0.0% 100.0%      1.0   0.3% ::ItaniumCXXABI::EmitCXXConstructors
+     0.0   0.0% 100.0%      1.5   0.5% ::ScalarExprEmitter::VisitCallExpr
+     0.0   0.0% 100.0%      0.5   0.2% ChargeStepped::get_wire_charge [clone .isra.0]
+     0.0   0.0% 100.0%      0.5   0.2% ChargeStepped::sample
+     0.0   0.0% 100.0%      0.5   0.2% ChargeStepped::sample_with_config
+     0.0   0.0% 100.0%      2.6   0.8% ClingMemberIterInternal::DCIter::DCIter
+     0.0   0.0% 100.0%      5.0   1.6% CreateInterpreter
+     0.0   0.0% 100.0%      0.5   0.2% DebugPrint
+     0.0   0.0% 100.0%      0.5   0.2% DefaultErrorHandler
+     0.0   0.0% 100.0%      1.0   0.3% DelegatingCycleHelper
+     0.0   0.0% 100.0%      0.5   0.2% Error
+     0.0   0.0% 100.0%      0.5   0.2% ErrorHandler

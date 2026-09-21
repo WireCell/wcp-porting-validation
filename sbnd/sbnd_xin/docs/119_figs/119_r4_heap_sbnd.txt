@@ -1,0 +1,311 @@
+doc sbnd_xin/119 round 4 -- jemalloc live-heap attribution, SBND + PDVD.
+========================================================================================
+Repro:
+  PRDIR=<arm>/f060/pr_evt11239 OUTDIR=~/tmp/d119r4/sbnd_11239 LG_INTERVAL=30 \
+      scripts/perf/profile_pr119r4.sh
+  LD_LIBRARY_PATH=~/tmp/d119r3-libpin LG_INTERVAL=30 pdvd/profile_pr_heap.sh 39252 8
+  scripts/d119/heap_rank.py <outdir> <evt>
+
+Binary actually MAPPED by each profiled process (read from /proc/<pid>/maps, not asserted):
+  SBND  /home/xqian/tmp/d119r3-libpin/libWireCellClus.so  md5 4ff75274e43e766eaec4eef8b6107ae7
+  PDVD  /home/xqian/tmp/d119r3-libpin/libWireCellClus.so  md5 4ff75274e43e766eaec4eef8b6107ae7
+
+HOW MUCH OF RSS IS LIVE HEAP AT ALL
+---------------------------------------------------------------------------------------
+Every row's "ladder peak res" is read from THAT JEMALLOC RUN's own job log -- not from the
+production .time.meta, which is a different allocator and would not be a ratio of like to like.
+
+                                   peak live   MEM-ladder peak res   live/RSS   released by exit
+  SBND f060/evt11239 (tail)          0.910 GiB        1.343 GiB        67.8 %       58.6 %
+  SBND f054/evt7582  (p50 control)   0.525            1.065            49.3 %       40.9 %
+  PDVD 039252_8      (max steiner)   2.686            2.966            90.6 %       95.4 %
+
+  The allocator overhead GROWS INTO THE TAIL on SBND.  Under jemalloc the p50 event peaks at
+  1.065 GiB against 1.160 (glibc) and 1.195 (production tcmalloc) -- a few per cent.  The tail
+  event peaks at 1.343 against 2.204 and 2.084 -- a factor of ~1.6.  Whatever the extra 0.7-0.9
+  GiB on the tail event is, it is not live data, and it is not present at the median.
+
+  PDVD: 90 % of peak RSS IS live heap -- there is no allocator slack to reclaim, and 95.4 % of it
+  is gone by exit.  This is a WORKING SET, not retained state: a lever has to shrink what is
+  simultaneously live, not free something sooner.
+
+  Do NOT read the SBND rows as "jemalloc would save 0.75 GiB in production" -- it is one event,
+  the allocators differ in more than footprint, and nothing here gates a byte-identical output.  It is stated because it bounds how much of SBND's
+  tail is live data at all: roughly 0.9 GiB of it is, the rest is allocator and mapping overhead.
+
+THE STAGE, AND WHY THE WITHIN-STAGE SPLIT IS NOT A TARGET
+---------------------------------------------------------------------------------------
+Peak dumps are SPIKES above an oscillating plateau, not a single plateau: SBND evt11239 runs
+~600 MB, spikes to 932 at i6, and settles to ~350 MB from i17 on; PDVD runs ~1950 MB, spikes to
+2750 at i32, settles to ~1220.  Each oscillation is one cluster's retile-graph-Steiner cycle.
+So the DUMP POSITION selects a phase, and the sub-attribution follows the phase -- within ONE
+SBND event:
+
+  dump            CreateSteinerGraph::visit   connect_graph_closely_pid   create_steiner_tree
+  SBND i6  (932 MB)        78.0 %                     59.2 %                    absent
+  SBND i16 (687 MB)        69.9 %                      2.6 %                    24.2 %
+  SBND i32 (373 MB)        18.6 %                      1.4 %                     0.1 %
+  PDVD i6  (976 MB)        19.7 %                      0.4 %                     0.2 %
+  PDVD i32 (2750 MB)       71.6 %                      2.1 %                    29.4 %
+
+The split between connect_graph_closely_pid and create_steiner_tree SWAPS between two dumps of
+the same event on the same detector.  They are two phases of one stage, NOT two detector-specific
+targets, and this instrument cannot separate them.  Any claim that one of them is "the" site is
+an artefact of which dump was read.
+
+WHAT IS STABLE ACROSS BOTH DETECTORS AND EVERY PHASE
+---------------------------------------------------------------------------------------
+  1. CreateSteinerGraph::visit is the stage: 78.0 / 69.9 % (SBND, two peaks) and 71.6 % (PDVD)
+     of peak live heap.
+  2. ImproveCluster_2::mutate -- the RETILE SAMPLER (CreateSteinerGraph.cxx:322,
+     m_grapher_config.retile->mutate) -- is 17.0 / 14.4 % (SBND) and 20.7 / 17.7 % (PDVD),
+     i.e. present and sizeable in EVERY phase including ones where the stage itself is small.
+     The FRACTION is what is stable; the absolute is not, and must not be read as a fixed block
+     that could be deleted.  On SBND evt11239 it is 158.5 MB at i6, 98.9 at i16, 61.7 at i32 --
+     a 2.5x range while the share holds.  It SCALES WITH THE CLUSTER.  That is the right shape
+     for a lever (shrink the retile output and the graph built on it shrinks with it) but it is
+     not a removable fifth of the peak.
+
+  (2) is the round's result.  Doc 119 round 0 named the retile sampler as the #1 CPU target on
+  all three detectors (53-60 % of Steiner's time).  It is now also a stable sixth-to-fifth of
+  peak live heap on two detectors.  The CPU target and the memory target are the SAME OBJECT.
+
+TWO READINGS THIS ROUND RETRACTED, AND THE RULE THEY GIVE
+---------------------------------------------------------------------------------------
+Both came from google-pprof frames marked "(inline)", and both were refuted by primary evidence
+within minutes of being formed.  Neither reached a conclusion; they are recorded so the next
+round does not re-derive them.
+
+  a) "boost::vec_adj_list_impl::copy_impl at 1254 MB (45.6 % of PDVD's peak) is the graph COPY in
+     Steiner::reweight_base_graph (doc pdvd/115 pricing, SteinerBaseWeight.h:84 `Graph out =
+     base;`), so the doc-118 base_weight flip is the memory tail."
+     REFUTED by the job's own log: 409 pricing calls in this event, the largest 62 vertices /
+     450 edges.  All the priced graphs together are a few MB.  The copy is real code and it is
+     not this memory.
+
+  b) "add_edge allocating _Rb_tree nodes (809 MB) and list nodes (632 MB) means the Steiner graph
+     stores one red-black-tree node per edge, so the edge container is the target."
+     REFUTED by the typedef: Graphs.h:23 is boost::adjacency_list<vecS, vecS, undirectedS, ...>.
+     Both vertex and edge storage are vectors.  There is no per-edge tree or list node in this
+     graph at all; those containers belong to something else that pprof folded into the same
+     inline chain.
+
+  RULE: in this profile, trust NAMED NON-INLINE frames (CreateSteinerGraph::visit,
+  ImproveCluster_2::mutate, connect_graph_closely_pid).  Treat every "(inline)" frame and every
+  std:: / boost:: container frame as unattributed -- the inline chain is reconstructed, not
+  observed, and it was wrong twice here in one profile.  Going deeper needs a different
+  instrument (a frame-pointer build), not a closer reading of this one.
+
+AN INCIDENTAL FLOOR
+---------------------------------------------------------------------------------------
+UbooneNueBDTScorer::ensure_readers -> TMVA::MethodBase::ReadStateFromFile holds 145.0 MB that is
+still live at exit (45.7 % of the median event's final live heap).  It is allocated once under
+call_once and never released.  Not a tail contributor -- it is the same 145 MB on every event --
+but it is a floor under every SBND PR job and it is the largest single thing alive at exit.
+
+########################################################################################
+### FULL heap_rank.py OUTPUT -- SBND f060/evt11239 (tail, 2.084 GiB prod RSS)
+########################################################################################
+=== dump series: 107 dumps  (evt 11239)
+    dump                                     live MiB
+    je_evt11239.3599711.0.i0.heap               203.0
+    je_evt11239.3599711.1.i1.heap               232.2
+    je_evt11239.3599711.2.i2.heap               382.8
+    je_evt11239.3599711.3.i3.heap               554.4
+    je_evt11239.3599711.4.i4.heap               602.9
+    je_evt11239.3599711.5.i5.heap               586.5
+    je_evt11239.3599711.6.i6.heap               931.9
+    je_evt11239.3599711.7.i7.heap               745.1
+    je_evt11239.3599711.8.i8.heap               803.6
+    je_evt11239.3599711.9.i9.heap               275.1
+    je_evt11239.3599711.10.i10.heap             331.8
+    je_evt11239.3599711.11.i11.heap             227.8
+    je_evt11239.3599711.12.i12.heap             502.6
+    je_evt11239.3599711.13.i13.heap             502.1
+    je_evt11239.3599711.14.i14.heap             518.7
+    je_evt11239.3599711.15.i15.heap             524.1
+    je_evt11239.3599711.16.i16.heap             687.2
+    je_evt11239.3599711.17.i17.heap             308.9
+    je_evt11239.3599711.18.i18.heap             332.3
+    je_evt11239.3599711.19.i19.heap             349.6
+    je_evt11239.3599711.20.i20.heap             340.5
+    je_evt11239.3599711.21.i21.heap             351.5
+    je_evt11239.3599711.22.i22.heap             353.5
+    je_evt11239.3599711.23.i23.heap             349.8
+    je_evt11239.3599711.24.i24.heap             343.5
+    je_evt11239.3599711.25.i25.heap             351.6
+    je_evt11239.3599711.26.i26.heap             362.3
+    je_evt11239.3599711.27.i27.heap             346.4
+    je_evt11239.3599711.28.i28.heap             364.8
+    je_evt11239.3599711.29.i29.heap             354.0
+    je_evt11239.3599711.30.i30.heap             363.8
+    je_evt11239.3599711.31.i31.heap             358.0
+    je_evt11239.3599711.32.i32.heap             373.1
+    je_evt11239.3599711.33.i33.heap             364.1
+    je_evt11239.3599711.34.i34.heap             370.8
+    je_evt11239.3599711.35.i35.heap             362.9
+    je_evt11239.3599711.36.i36.heap             356.6
+    je_evt11239.3599711.37.i37.heap             349.5
+    je_evt11239.3599711.38.i38.heap             370.5
+    je_evt11239.3599711.39.i39.heap             370.3
+    je_evt11239.3599711.40.i40.heap             357.6
+    je_evt11239.3599711.41.i41.heap             355.2
+    je_evt11239.3599711.42.i42.heap             367.5
+    je_evt11239.3599711.43.i43.heap             354.7
+    je_evt11239.3599711.44.i44.heap             352.2
+    je_evt11239.3599711.45.i45.heap             376.4
+    je_evt11239.3599711.46.i46.heap             361.2
+    je_evt11239.3599711.47.i47.heap             361.7
+    je_evt11239.3599711.48.i48.heap             372.3
+    je_evt11239.3599711.49.i49.heap             400.4
+    je_evt11239.3599711.50.i50.heap             534.2
+    je_evt11239.3599711.51.i51.heap             539.2
+    je_evt11239.3599711.52.i52.heap             545.7
+    je_evt11239.3599711.53.i53.heap             537.7
+    je_evt11239.3599711.54.i54.heap             536.2
+    je_evt11239.3599711.55.i55.heap             493.0
+    je_evt11239.3599711.56.i56.heap             490.6
+    je_evt11239.3599711.57.i57.heap             491.0
+    je_evt11239.3599711.58.i58.heap             491.2
+    je_evt11239.3599711.59.i59.heap             498.1
+    je_evt11239.3599711.60.i60.heap             500.4
+    je_evt11239.3599711.61.i61.heap             504.5
+    je_evt11239.3599711.62.i62.heap             508.0
+    je_evt11239.3599711.63.i63.heap             513.1
+    je_evt11239.3599711.64.i64.heap             499.4
+    je_evt11239.3599711.65.i65.heap             507.7
+    je_evt11239.3599711.66.i66.heap             517.5
+    je_evt11239.3599711.67.i67.heap             505.4
+    je_evt11239.3599711.68.i68.heap             513.9
+    je_evt11239.3599711.69.i69.heap             512.3
+    je_evt11239.3599711.70.i70.heap             518.4
+    je_evt11239.3599711.71.i71.heap             513.3
+    je_evt11239.3599711.72.i72.heap             519.0
+    je_evt11239.3599711.73.i73.heap             516.2
+    je_evt11239.3599711.74.i74.heap             514.0
+    je_evt11239.3599711.75.i75.heap             500.6
+    je_evt11239.3599711.76.i76.heap             502.1
+    je_evt11239.3599711.77.i77.heap             504.9
+    je_evt11239.3599711.78.i78.heap             511.8
+    je_evt11239.3599711.79.i79.heap             507.8
+    je_evt11239.3599711.80.i80.heap             514.1
+    je_evt11239.3599711.81.i81.heap             514.4
+    je_evt11239.3599711.82.i82.heap             526.8
+    je_evt11239.3599711.83.i83.heap             503.6
+    je_evt11239.3599711.84.i84.heap             503.6
+    je_evt11239.3599711.85.i85.heap             504.0
+    je_evt11239.3599711.86.i86.heap             517.7
+    je_evt11239.3599711.87.i87.heap             510.6
+    je_evt11239.3599711.88.i88.heap             513.7
+    je_evt11239.3599711.89.i89.heap             500.9
+    je_evt11239.3599711.90.i90.heap             508.4
+    je_evt11239.3599711.91.i91.heap             511.0
+    je_evt11239.3599711.92.i92.heap             517.6
+    je_evt11239.3599711.93.i93.heap             518.2
+    je_evt11239.3599711.94.i94.heap             503.4
+    je_evt11239.3599711.95.i95.heap             510.9
+    je_evt11239.3599711.96.i96.heap             528.0
+    je_evt11239.3599711.97.i97.heap             538.0
+    je_evt11239.3599711.98.i98.heap             542.8
+    je_evt11239.3599711.99.i99.heap             544.2
+    je_evt11239.3599711.100.i100.heap           546.9
+    je_evt11239.3599711.101.i101.heap           531.0
+    je_evt11239.3599711.102.i102.heap           530.5
+    je_evt11239.3599711.103.i103.heap           530.5
+    je_evt11239.3599711.104.i104.heap           656.9
+    je_evt11239.3599711.105.i105.heap           487.6
+    je_evt11239.3599711.106.f.heap              385.6
+
+=== peak  live 0.910 GiB   je_evt11239.3599711.6.i6.heap
+=== final live 0.377 GiB   je_evt11239.3599711.106.f.heap
+=== released between peak and exit: 0.534 GiB (58.6 % of peak live)
+    (compare peak live against the job's MEM-ladder peak res: the GAP is allocator
+     arena + non-heap mappings, and no call-site knob reaches it)
+
+==============================================================================
+=== PEAK dump, --inuse_space --cum, top 40   [je_evt11239.3599711.6.i6.heap]
+==============================================================================
+Total: 931.9 MB
+   931.9 100.0% 100.0%    931.9 100.0% malloc_usable_size
+     0.0   0.0% 100.0%    931.4  99.9% __libc_start_call_main
+     0.0   0.0% 100.0%    931.4  99.9% __libc_start_main_impl
+     0.0   0.0% 100.0%    931.4  99.9% _start
+     0.0   0.0% 100.0%    931.4  99.9% main
+     0.0   0.0% 100.0%    890.7  95.6% WireCell::Main::operator
+     0.0   0.0% 100.0%    890.7  95.6% WireCell::Pgraph::Graph::call_node
+     0.0   0.0% 100.0%    890.7  95.6% WireCell::Pgraph::Graph::execute
+     0.0   0.0% 100.0%    890.7  95.6% WireCell::Pgraph::Pgrapher::execute
+     0.0   0.0% 100.0%    874.7  93.9% std::__new_allocator::allocate (inline)
+     0.0   0.0% 100.0%    874.7  93.9% std::allocator_traits::allocate (inline)
+     0.0   0.0% 100.0%    872.1  93.6% WireCell::Clus::MultiAlgBlobClustering::operator
+     0.0   0.0% 100.0%    872.1  93.6% WireCell::IFunctionNode::operator
+     0.0   0.0% 100.0%    872.1  93.6% WireCell::Pgraph::Function::operator
+     0.0   0.0% 100.0%    727.2  78.0% WireCell::Clus::Steiner::CreateSteinerGraph::visit
+     0.0   0.0% 100.0%    727.2  78.0% WireCell::Clus::Steiner::CreateSteinerGraph::visit::{lambda#2}::operator [clone .isra.0]
+     0.0   0.0% 100.0%    566.0  60.7% WireCell::Clus::Facade::Cluster::find_graph@32f830
+     0.0   0.0% 100.0%    566.0  60.7% WireCell::Clus::Graphs::make_graph_ctpc_pid
+     0.0   0.0% 100.0%    559.4  60.0% WireCell::Clus::Graphs::make_graph_closely_pid
+     0.0   0.0% 100.0%    551.4  59.2% WireCell::Clus::Graphs::connect_graph_closely_pid
+     0.0   0.0% 100.0%    321.1  34.5% boost::add_edge (inline)
+     0.0   0.0% 100.0%    321.1  34.5% boost::graph_detail::push_dispatch (inline)
+     0.0   0.0% 100.0%    313.6  33.7% std::_Rb_tree::_M_create_node (inline)
+     0.0   0.0% 100.0%    308.1  33.1% boost::add_edge
+     0.0   0.0% 100.0%    291.5  31.3% std::_Rb_tree::_M_get_node (inline)
+     0.0   0.0% 100.0%    289.9  31.1% std::_Vector_base::_M_allocate (inline)
+     0.0   0.0% 100.0%    202.0  21.7% std::_Rb_tree::_Alloc_node::operator (inline)
+     0.0   0.0% 100.0%    193.0  20.7% std::_Rb_tree::_M_insert_ (inline)
+     0.0   0.0% 100.0%    170.5  18.3% std::__cxx11::_List_base::_M_get_node (inline)
+     0.0   0.0% 100.0%    170.5  18.3% std::__cxx11::list::_M_create_node (inline)
+     0.0   0.0% 100.0%    170.5  18.3% std::__cxx11::list::_M_insert (inline)
+     0.0   0.0% 100.0%    170.5  18.3% std::__cxx11::list::push_back (inline)
+     0.0   0.0% 100.0%    167.2  17.9% std::vector::_M_realloc_insert
+     0.0   0.0% 100.0%    166.2  17.8% std::vector::push_back (inline)
+     0.0   0.0% 100.0%    161.5  17.3% boost::graph_detail::push
+     0.0   0.0% 100.0%    159.6  17.1% boost::graph_detail::push (inline)
+     0.0   0.0% 100.0%    158.5  17.0% WireCell::Clus::ImproveCluster_2::mutate
+     0.0   0.0% 100.0%    153.9  16.5% std::vector::emplace_back (inline)
+     0.0   0.0% 100.0%    132.5  14.2% std::_Rb_tree::_M_insert_unique (inline)
+
+==============================================================================
+=== FINAL dump, --inuse_space --cum, top 40   [je_evt11239.3599711.106.f.heap]
+==============================================================================
+Total: 385.6 MB
+   385.6 100.0% 100.0%    385.6 100.0% malloc_usable_size
+     0.0   0.0% 100.0%    373.4  96.8% __libc_start_call_main
+     0.0   0.0% 100.0%    373.4  96.8% main
+     0.0   0.0% 100.0%    371.9  96.5% __libc_start_main_impl
+     0.0   0.0% 100.0%    370.9  96.2% _start
+     0.0   0.0% 100.0%    351.1  91.1% WireCell::Clus::MultiAlgBlobClustering::operator
+     0.0   0.0% 100.0%    350.6  90.9% WireCell::IFunctionNode::operator
+     0.0   0.0% 100.0%    350.6  90.9% WireCell::Pgraph::Function::operator
+     0.0   0.0% 100.0%    350.6  90.9% WireCell::Pgraph::Graph::call_node
+     0.0   0.0% 100.0%    350.6  90.9% WireCell::Pgraph::Graph::execute
+     0.0   0.0% 100.0%    350.1  90.8% WireCell::Main::operator
+     0.0   0.0% 100.0%    350.1  90.8% WireCell::Pgraph::Pgrapher::execute
+     0.0   0.0% 100.0%    166.1  43.1% TaggerCheckNeutrino::visit
+     0.0   0.0% 100.0%    162.9  42.2% __pthread_once_slow
+     0.0   0.0% 100.0%    162.9  42.2% call_once (inline)
+     0.0   0.0% 100.0%    146.2  37.9% std::__new_allocator::allocate (inline)
+     0.0   0.0% 100.0%    146.2  37.9% std::allocator_traits::allocate (inline)
+     0.0   0.0% 100.0%    140.6  36.5% WireCell::Root::UbooneNueBDTScorer::ensure_readers
+     0.0   0.0% 100.0%    140.6  36.5% WireCell::Root::UbooneNueBDTScorer::ensure_readers (inline)
+     0.0   0.0% 100.0%    140.6  36.5% WireCell::Root::UbooneNueBDTScorer::init_readers_impl
+     0.0   0.0% 100.0%    140.6  36.5% WireCell::Root::UbooneNueBDTScorer::visit
+     0.0   0.0% 100.0%    103.4  26.8% TMVA::MethodBase::ReadStateFromFile
+     0.0   0.0% 100.0%    103.4  26.8% TMVA::MethodBase::ReadStateFromXML
+     0.0   0.0% 100.0%    103.4  26.8% TMVA::Reader::BookMVA@3ea0a0
+     0.0   0.0% 100.0%    103.4  26.8% TMVA::Reader::BookMVA@3ec020
+     0.0   0.0% 100.0%     92.9  24.1% TMVA::TransformationHandler::ReadFromXML
+     0.0   0.0% 100.0%     92.9  24.1% TMVA::VariableGaussTransform::ReadFromXML
+     0.0   0.0% 100.0%     92.4  24.0% TMVA::PDF::ReadXML
+     0.0   0.0% 100.0%     90.5  23.5% std::_Vector_base::_M_allocate (inline)
+     0.0   0.0% 100.0%     79.3  20.6% _PyEval_EvalFrame (inline)
+     0.0   0.0% 100.0%     79.3  20.6% _PyEval_EvalFrameDefault
+     0.0   0.0% 100.0%     79.3  20.6% _PyEval_Vector
+     0.0   0.0% 100.0%     79.3  20.6% _PyObject_VectorcallTstate (inline)
+     0.0   0.0% 100.0%     79.3  20.6% object_vacall
+     0.0   0.0% 100.0%     70.1  18.2% std::vector::push_back (inline)
+     0.0   0.0% 100.0%     69.8  18.1% TaggerCheckNeutrino::run_dual_chain_off_pass
+     0.0   0.0% 100.0%     69.8  18.1% WCPPyUtil::SCN_Vertex
+     0.0   0.0% 100.0%     69.8  18.1% WireCell::Clus::PR::PatternAlgorithms::determine_overall_main_vertex_DL
+     0.0   0.0% 100.0%     66.0  17.1% std::vector::_M_realloc_insert

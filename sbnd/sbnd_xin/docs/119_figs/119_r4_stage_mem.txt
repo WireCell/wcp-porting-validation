@@ -1,0 +1,70 @@
+doc sbnd_xin/119 round 4 -- per-stage RESIDENT-memory increment, all three detectors.
+========================================================================================
+Instrument: the in-job MEM ladder (MultiAlgBlobClustering), already on disk for every
+arm.  Values are GiB of resident-size increment attributed to each stage.
+
+CAVEAT THAT GOVERNS EVERY CROSS-DETECTOR READING BELOW: the allocator differs.  SBND's
+PR chain preloads libtcmalloc_minimal since round 1; PDHD/PDVD preload it too; but the
+d116/d119tailg arms are glibc.  RSS is not comparable across allocators -- doc 119
+sec 9.3 records the round-3 RSS claim that this exact confound already broke once.
+
+-- SBND, the 24-event nuecc GATE manifest (max 1.43 GiB: contains NO tail event) -----
+  d119r3 (round-3 binary, glibc)  n=24  ladder peak res: mean 1.030  max 1.306 GiB
+      TaggerCheckNeutrino:pr             mean +0.394   max +0.461
+      CreateSteinerGraph:pr              mean +0.155   max +0.604
+      UbooneNueBDTScorer:pr              mean +0.121   max +0.138
+      loaded live                        mean +0.039   max +0.123
+      SbndPrMagnifyTrackingVisitor:pr    mean +0.021   max +0.024
+      UbooneNumuBDTScorer:pr             mean +0.014   max +0.029
+
+-- SBND, the 5 doc-116 TAIL events + p99 + p50 (this round's arms) --------------------
+  d119tail  (production, tcmalloc)  n=7  ladder peak res: mean 1.694  max 1.973 GiB
+      CreateSteinerGraph:pr              mean +1.010   max +1.336
+      TaggerCheckNeutrino:pr             mean +0.291   max +0.365
+      loaded live                        mean +0.068   max +0.128
+      SbndPrMagnifyTrackingVisitor:pr    mean +0.020   max +0.028
+      PrDisplayDump:pr                   mean +0.017   max +0.048
+      done                               mean +0.006   max +0.017
+  d119tailg (control, glibc)  n=7  ladder peak res: mean 1.741  max 2.034 GiB
+      CreateSteinerGraph:pr              mean +1.038   max +1.403
+      TaggerCheckNeutrino:pr             mean +0.303   max +0.343
+      loaded live                        mean +0.071   max +0.141
+      CreateSteinerGraph:prrefresh       mean +0.029   max +0.189
+      UbooneNueBDTScorer:pr              mean +0.020   max +0.137
+      SbndPrMagnifyTrackingVisitor:pr    mean +0.015   max +0.019
+
+-- PDHD / PDVD, the round-3 cross-detector census (tcmalloc) --------------------------
+  PDHD -nu  n=61  peak_gb: mean 1.76  max 3.43   >2 GB: 13
+      steiner                            mean +0.387   max +1.447   (max/mean  3.7x)
+      load                               mean +0.329   max +0.746   (max/mean  2.3x)
+      michel                             mean +0.291   max +1.125   (max/mean  3.9x)
+      stm                                mean +0.184   max +0.456   (max/mean  2.5x)
+      w_pr                               mean +0.179   max +0.189   (max/mean  1.1x)
+      w_disp                             mean +0.130   max +0.314   (max/mean  2.4x)
+  PDVD -nu  n=120  peak_gb: mean 1.42  max 3.39   >2 GB: 19
+      steiner                            mean +0.352   max +1.970   (max/mean  5.6x)
+      load                               mean +0.336   max +0.776   (max/mean  2.3x)
+      michel                             mean +0.195   max +1.131   (max/mean  5.8x)
+      w_pr                               mean +0.180   max +0.189   (max/mean  1.0x)
+      w_disp                             mean +0.076   max +0.243   (max/mean  3.2x)
+      stm                                mean +0.069   max +0.225   (max/mean  3.3x)
+
+========================================================================================
+READING.
+
+1. THE MEAN AND THE TAIL NAME DIFFERENT STAGES.  On the SBND gate manifest the biggest
+   mean increment is TaggerCheckNeutrino:pr (+0.39) and Steiner is +0.16.  On the five
+   doc-116 tail events Steiner is +1.2 to +1.4 GiB -- about 8x its own mean -- while
+   TaggerCheckNeutrino stays near +0.29.  A memory target ranked on means would be the
+   wrong target for every event that breaks a cap.
+
+2. TaggerCheckNeutrino IS NARROW, STEINER IS HEAVY-TAILED.  The tagger's increment sits
+   in a tight band on both the gate arm and the tail events; Steiner's max/mean ratio is
+   ~4x on PDHD and ~6x on PDVD.  The stage that varies is the stage that matters.
+
+3. SAME ON ALL THREE DETECTORS.  Steiner has the largest max increment on SBND, PDHD and
+   PDVD alike, and the heap profile (119_r4_heap_sbnd.txt) puts CreateSteinerGraph::visit
+   at 70-78 % of PEAK LIVE HEAP on both detectors profiled.
+
+4. ROUND 3 DID NOT MOVE MEMORY, as expected -- it was a CPU round.  The d118flip and
+   d119r3 gate arms agree to three decimals on every stage.

@@ -1,4 +1,4 @@
-# doc sbnd_xin/119 — the cross-detector PR profiling campaign: rounds 0, 1, 2 and 3
+# doc sbnd_xin/119 — the cross-detector PR profiling campaign: rounds 0, 1, 2, 3 and 4
 
 **Status: round 0 measured. Round 1 measured, gated and FLIPPED. Round 3 (§9) measured, gated and
 TAKEN — the first round of this campaign to rebuild C++: two byte-identical levers in the
@@ -14,6 +14,15 @@ Doc 118 part B planned this campaign; this doc executes it. It is the round-numb
 the SBND Neutrino chain and the PDHD/PDVD STM+Michel chain, and it supersedes doc 118 part B's
 sizing wherever the two disagree — three of doc 118's own premises turned out to be wrong, and
 they are corrected in section 2 rather than quietly dropped.
+
+**Round 4 (§10) is the memory round — the first of this campaign to measure memory at all, and it
+measures rather than changes anything.** It corrects a claim made in the round-3 hand-off: the
+62-event gate manifest showing no event above 2 GiB is a manifest-size artefact, not evidence that
+doc 116's 2.2 GiB tail is gone. Re-running the five named tail events at current production puts
+three of them still above 2.0 GiB (all 14 arm runs `rc=0`). Attribution: `CreateSteinerGraph::visit` is 70–78 % of peak
+live heap on both detectors profiled, and the retile sampler — already round 0's #1 CPU target —
+is a stable 14–21 % of it. **The CPU target and the memory target are the same object.** §10.5
+records two readings this round formed and then retracted, and the rule that kills both.
 
 Nothing here re-opens the doc-118 trajectory flip. That flip is production and stays production;
 this campaign pays for it.
@@ -554,6 +563,9 @@ the churn, and is the recommended next tripwire change.
 
 ## 8. Recommended next step
 
+> **Still open after round 4.** §10 is a memory round and does not touch this ranking. The dual
+> chain remains the largest CPU target and still needs doc 107 grading rather than a byte gate.
+>
 > **EXECUTED, and the recommendation below was partly refuted — see §9.** The concrete round-3A
 > proposal (share the association lattice between the two passes) died on the code read: the
 > lattice is rebuilt from the fit points, the OFF pass owns a separate fitter, and it runs with
@@ -842,3 +854,197 @@ re-derivable.
 touched because `Aux::time2drift` lives in a different package with imaging-stage consumers, and
 the `clus` one does not appear anywhere in this profile. That makes it a round of its own with its
 own manifests, not something to fold into a PR-chain round. Named here so it is not lost.
+
+## 10. Round 4 — memory, attributed for the first time
+
+**No code changes.** This round measures. It is the first round of the campaign to look at memory
+at all: rounds 0–3 were CPU, and doc 118 §B.1 item 4 planned jemalloc sampling that was never run.
+
+Repro:
+
+```bash
+# the tail, at current production and at the pre-round-1 allocator
+ALLOC=prod  scripts/d119/stageB_tail.sh          # -> work-r3nue-d119tail
+ALLOC=glibc scripts/d119/stageB_tail.sh          # -> work-r3nue-d119tailg
+# per-stage memory, from instruments already on disk -- nothing re-run
+scripts/d119/r4_stage_mem.py     > docs/119_figs/119_r4_stage_mem.txt
+# live-heap attribution
+PRDIR=$PWD/work-r3nue-d119tail/f060/pr_evt11239 OUTDIR=~/tmp/d119r4/sbnd_11239 \
+    LG_INTERVAL=30 scripts/perf/profile_pr119r4.sh
+LD_LIBRARY_PATH=~/tmp/d119r3-libpin LG_INTERVAL=30 ../../pdvd/profile_pr_heap.sh 39252 8
+scripts/d119/heap_rank.py ~/tmp/d119r4/sbnd_11239 11239
+```
+
+### 10.1 The correction this round exists to make
+
+Rounds 1–3 all gated on the 62-event d118 manifest, whose 24 `nuecc` events top out at 1.43 GiB.
+It is tempting — and I did it in the round-3 hand-off — to read "0 events above 2 GiB" there as
+the doc-116 memory tail having gone away. It is not evidence of anything. Doc 116 §14 measured
+that tail over **2001** events and found **5** above 2 GiB: a 0.25 % tail. Twenty-four draws
+cannot contain it.
+
+So this round names those five events from the doc-116 arm's own `.time.meta` records and re-runs
+them, plus the p99 shoulder and the p50 as a composition control.
+
+### 10.2 The tail today: still there, and neither round 3 nor `proj_pad` touched it
+
+`docs/119_figs/119_r4_tail.txt`. Peak RSS, `getrusage(RUSAGE_CHILDREN).ru_maxrss`:
+
+| sub/event | doc 116 (glibc) | now, glibc | now, **production (tcmalloc)** |
+|---|---:|---:|---:|
+| f060/11239 | 2.208 | 2.204 | **2.084** |
+| f049/12202 | 2.203 | 2.197 | **2.063** |
+| f188/11811 | 2.050 | 2.048 | **2.162** |
+| f100/5265 | 2.021 | 2.019 | **1.915** |
+| f196/6248 | 2.006 | 2.001 | **1.910** |
+| f075/9393 (p99) | 1.602 | 1.734 | 1.698 |
+| f054/7582 (p50) | 1.165 | 1.160 | 1.195 |
+
+Three readings, and one thing reported rather than explained:
+
+1. **The tail is still there.** Three of the five still exceed 2.0 GiB under today's production.
+2. **Round 3 and `proj_pad` are neutral on it** — glibc-to-glibc, four of the five moved by less
+   than 0.005 GiB. `proj_pad` buying SBND nothing in memory is consistent with §6: SBND keeps
+   87.9 % of its proj cells where PDHD kept 2.4 %.
+3. **tcmalloc is not a memory lever here** — −6.1 % to +5.6 %, both signs. Round 1 flipped it for
+   CPU; it should not be cited for memory in either direction.
+4. `f075/9393` moved 1.602 → 1.734 GiB (+8 %) glibc-to-glibc while its four neighbours moved by
+   under 0.3 %. One event, unexplained, recorded (§5 rule 7).
+
+**A trap this round fell into and had to back out of.** The first version of `stageB_tail.sh` set
+`SBND_PR_TCMALLOC=0`, copied from the `flip` lever where glibc is deliberate — and would have
+reported a glibc arm as "current production". Round 1 made tcmalloc the SBND PR default, so
+production has been tcmalloc since. Both arms are kept, because the allocator is the one term
+that differs between doc 116's tail and today's. And the proof that the prod arm really preloads
+it is a `/proc/<pid>/maps` read, not the arm-to-arm delta: `run_pr_chain_batch.sh:1978` falls
+back to glibc *silently* if `SBND_TCMALLOC_LIB` is missing, so a null delta would have two
+readings.
+
+### 10.3 The mean and the tail name different stages
+
+`docs/119_figs/119_r4_stage_mem.txt`, from the in-job `MEM:` ladder — nothing re-run.
+
+| | SBND gate arm (24 evt) | SBND tail arm (7 evt) |
+|---|---:|---:|
+| `CreateSteinerGraph:pr` | mean **+0.155**, max +0.604 | mean **+1.010**, max +1.336 |
+| `TaggerCheckNeutrino:pr` | mean **+0.394**, max +0.461 | mean +0.291, max +0.365 |
+
+On the gate manifest the tagger is the biggest mean and Steiner is a quarter of it. On the tail
+events Steiner is 6–9× its own gate-arm mean and the tagger is *flat*. **A memory target ranked
+on means is the wrong target for every event that breaks a cap.** The tagger's increment sits in
+a narrow band everywhere; Steiner's max/mean is 3.7× on PDHD and 5.6× on PDVD. The stage that
+varies is the stage that matters, and it is the same stage on all three detectors.
+
+### 10.4 Where the live heap actually is
+
+`docs/119_figs/119_r4_heap_sbnd.txt`, `119_r4_heap_pdvd.txt`, `119_r4_heap_sbnd_p50.txt`.
+
+Each row's ladder peak is read from *that jemalloc run's own* job log, not from the production
+`.time.meta` — a different allocator, so it would not be a ratio of like to like.
+
+| | peak live | ladder peak res | live/RSS | released by exit |
+|---|---:|---:|---:|---:|
+| SBND f060/evt11239 (tail) | 0.910 GiB | 1.343 GiB | 67.8 % | 58.6 % |
+| SBND f054/evt7582 (p50) | 0.525 | 1.065 | 49.3 % | 40.9 % |
+| PDVD 039252_8 (max Steiner) | 2.686 | 2.966 | **90.6 %** | **95.4 %** |
+
+On SBND the allocator overhead **grows into the tail**: at the p50 jemalloc peaks at 1.065 GiB
+against glibc's 1.160 and production tcmalloc's 1.195, a few per cent; on the tail event it is
+1.343 against 2.204 and 2.084, a factor of ~1.6. Whatever those extra 0.7–0.9 GiB are, they are
+not live data and they are not present at the median. (One event; not a lever, and nothing here
+gates a byte-identical output.)
+
+PDVD's 90 % live / 95.4 % released says this is a **working set, not retained state**: a lever has
+to shrink what is *simultaneously* live, not free something sooner.
+
+**What is stable across both detectors and every phase:**
+
+1. `CreateSteinerGraph::visit` is the stage — 78.0 % and 69.9 % of peak live heap at two different
+   SBND peaks, 71.6 % on PDVD.
+2. `ImproveCluster_2::mutate` — the **retile sampler** (`CreateSteinerGraph.cxx:322`) — is 14–21 %
+   of peak live in *every* phase sampled, including ones where the stage itself is small. The
+   **fraction** is what is stable; the absolute is not. On SBND evt11239 it is 158.5 MB at i6,
+   98.9 at i16, 61.7 at i32 — a 2.5× range while the share holds. It **scales with the cluster**,
+   so it is not a fixed block that could be deleted.
+
+(2) is the round's result. Round 0 named the retile sampler as the #1 CPU target on all three
+detectors (53–60 % of Steiner's time). It is now also a stable sixth-to-fifth of peak live heap on
+two detectors. **The CPU target and the memory target are the same object.**
+
+**What is *not* a finding: the within-stage split.** The peak dumps are spikes above an
+oscillating plateau — one oscillation per cluster's retile→graph→Steiner cycle — so the dump
+position selects a phase, and the sub-attribution follows it. Within one SBND event:
+
+| dump | `CreateSteinerGraph::visit` | `connect_graph_closely_pid` | `create_steiner_tree` |
+|---|---:|---:|---:|
+| SBND i6 (932 MB) | 78.0 % | **59.2 %** | absent |
+| SBND i16 (687 MB) | 69.9 % | 2.6 % | **24.2 %** |
+| PDVD i32 (2750 MB) | 71.6 % | 2.1 % | **29.4 %** |
+
+The split swaps between two dumps of the same event on the same detector. These are two phases of
+one stage, not two targets, and this instrument cannot separate them.
+
+**Checked and clean:** retiled child clusters do *not* accumulate. Every exit path of
+`process_cluster_steiner` calls `grouping.destroy_child` (`CreateSteinerGraph.cxx:330, 378, 391,
+422`), which is what the oscillating trajectory shows. The peak is one cluster's working set, not
+a leak. Recorded so round 5 does not chase it.
+
+**An incidental floor:** `UbooneNueBDTScorer::ensure_readers` → `TMVA::MethodBase::ReadStateFromFile`
+holds **145 MB live at exit** — 45.7 % of the median event's final live heap — allocated once under
+`call_once` and never released. Not a tail contributor (it is the same 145 MB on every event), but
+it is the largest single thing alive at exit and a floor under every SBND PR job.
+
+### 10.5 Two readings this round retracted, and the rule they give
+
+Both came from `google-pprof` frames marked `(inline)`. Neither reached a conclusion — each was
+refuted by primary evidence within minutes — and both are recorded so the next round does not
+re-derive them.
+
+**(a) "the doc-118 base-weight flip is the memory tail."** `boost::vec_adj_list_impl::copy_impl`
+at 1254 MB, 45.6 % of PDVD's peak, sits under `add_edge` in the inline chain, and
+`Steiner::reweight_base_graph` (`SteinerBaseWeight.h:84`) really does copy a whole graph —
+`Graph out = base;` — only when `base_weight_blank_alpha > 0`, which is exactly what doc 118
+flipped on. It fits doc 116 §16's finding that the 2.2 GiB events need *both* knobs.
+**Refuted by the job's own log**: 409 pricing calls in this event, largest 62 vertices / 450
+edges. All of them together are a few MB. The copy is real code; it is not this memory.
+
+**(b) "the Steiner graph stores a red-black-tree node per edge."** `_Rb_tree::_M_create_node` at
+809 MB and `list::push_back` at 632 MB both appear under `boost::add_edge`.
+**Refuted by the typedef**: `Graphs.h:23` is `boost::adjacency_list<vecS, vecS, undirectedS, …>`.
+Both vertex and edge storage are vectors; there is no per-edge tree or list node in this graph at
+all.
+
+**The rule.** In this profile, trust **named non-inline frames** — `CreateSteinerGraph::visit`,
+`ImproveCluster_2::mutate`, `connect_graph_closely_pid`. Treat every `(inline)` frame and every
+bare `std::`/`boost::` container frame as **unattributed**: the inline chain is reconstructed by
+the symbolizer, not observed, and it was wrong twice in one profile. Going deeper needs a
+different instrument — a frame-pointer build — not a closer reading of this one.
+
+### 10.6 What a round 5 would have to be
+
+Nothing here is a lever yet, and this round deliberately stops short of proposing one. What it
+fixes is the aim:
+
+- The target is **`CreateSteinerGraph`'s per-cluster working set on the largest cluster**, not a
+  container and not a leak. Shrinking the mean buys nothing operationally; the tail is the value.
+- The retile sampler is the one object that is both the #1 CPU cost and a stable *fraction* of
+  peak live heap on two detectors. A lever there pays twice — which also means it needs both
+  gates. But budget it as a proportional saving, not as a removable 17 %: its absolute footprint
+  tracks the cluster (158.5 → 61.7 MB across phases of one event), so the win is "the largest
+  cluster's retile gets smaller", not "a fifth of the peak disappears".
+- **Doc 30 §12.4's target is not confirmed on these arms and should not be carried forward
+  unexamined.** Its 20.5 %-of-live-heap figure for the per-cell `std::set<Cluster*>` is a `-stm`
+  measurement; on these `-nu` arms the `stm` stage is 4th on PDHD (+0.184 mean) and 6th on PDVD
+  (+0.069). Whatever is true in `-stm` mode, it is not where `-nu` memory goes.
+- Deciding *what inside the retile is large* needs an instrument this round showed is not
+  available: a frame-pointer build, so the inline chain is observed rather than reconstructed.
+  That is the first step of a round 5, and it is a build question before it is a physics one.
+
+### 10.7 What is left
+
+§8's CPU ranking is unchanged by this round. The two cheap items there (the runner tripwire hole;
+retention) are still untouched, and round 4 adds `work-r3nue-d119tail{,g}` (7 events each) plus
+the throwaway `pdvd/work/039252_8_heappr_039252_8` tag to the retention list. Every number is in
+`docs/119_figs/`, so none of it is a scan record.
+
+The `time2drift` item named at the end of §9.6 is also still open, and is still a round of its own.

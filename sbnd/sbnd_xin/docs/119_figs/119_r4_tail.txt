@@ -1,0 +1,60 @@
+doc sbnd_xin/119 round 4 -- the SBND peak-RSS TAIL, re-measured at current production.
+========================================================================================
+Repro:
+  ALLOC=prod  scripts/d119/stageB_tail.sh      -> work-r3nue-d119tail
+  ALLOC=glibc scripts/d119/stageB_tail.sh      -> work-r3nue-d119tailg
+
+WHY THESE SEVEN EVENTS.  Doc 116 sec 14 put the post-flip nuecc tail at 2.21 GiB with 5 events of
+2001 above 2 GiB -- a 0.25 % tail.  The d118/d119 gate manifest is 24 nuecc events with a maximum
+of 1.43 GiB: it contains no tail event and at 24 draws it never could.  Rounds 1-3 therefore say
+nothing about the tail, and their "0 events above 2 GiB" is a manifest-size artefact, NOT evidence
+the tail is gone.  The 5 tail events are named from work-r3nue-d116tfull/*/.time.meta, plus the
+p99 shoulder and the p50 as a composition control.
+
+BINARY.  Round-3 pin /home/xqian/tmp/d119r3-libpin, libWireCellClus.so md5
+4ff75274e43e766eaec4eef8b6107ae7, asserted by the script in both directions.  NOTE md5sum of
+local/lib/libWireCellClus.so is 129461a1... -- HEAD 253f1845 RELINKED the library after the pin
+was taken and its only non-test change was a comment block in Facade_Util.h.  Same code, new
+build id.  The pin is used because it is the binary every round-3 number was measured on.
+
+ALLOCATOR.  Round 1 flipped libtcmalloc_minimal into the SBND PR chain, so PRODUCTION IS TCMALLOC
+today; doc 116's tail was measured on glibc, before round 1 existed.  The first draft of this
+round forced SBND_PR_TCMALLOC=0 and would have reported a glibc arm as production.  Both arms are
+kept, because the allocator is the one term that differs between doc 116's tail and today's.
+Proof that the prod arm really preloads it (not inferred from the delta -- run_pr_chain_batch.sh
+:1978 falls back to glibc silently if SBND_TCMALLOC_LIB is missing):
+  /proc/<pid>/maps -> /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4.5.10
+
+COMPLETENESS: all 7 events x 2 arms = 14 runs carry rc=0 in their own pr_evt*/rc.txt.  This is
+checked from the ARM, not from the driver's log dir: the ALLOC=prod run uses ARMSUF="" and so
+shares $HOME/tmp/d119-stageB-tail with the pre-ALLOC glibc run, whose driver logs it overwrote.
+A job that died partway would report a LOWER maxrss and silently deflate the tail, which is the
+round's headline count -- so this is checked, not assumed.
+
+peak RSS, getrusage(RUSAGE_CHILDREN).ru_maxrss, GiB
+---------------------------------------------------------------------------------------
+sub/event          doc116      glibc  prod(tcm) tcm-glibc
+f060/11239          2.208      2.204      2.084     -5.5%
+f049/12202          2.203      2.197      2.063     -6.1%
+f188/11811          2.050      2.048      2.162     +5.6%
+f100/5265           2.021      2.019      1.915     -5.2%
+f196/6248           2.006      2.001      1.910     -4.6%
+f075/9393           1.602      1.734      1.698     -2.1%
+f054/7582           1.165      1.160      1.195     +3.0%
+---------------------------------------------------------------------------------------
+READING.
+
+1. THE TAIL IS STILL THERE.  Under today's production the five doc-116 tail events peak at
+   1.910 - 2.162 GiB; three of them still exceed 2.0 GiB.  Round 3 and the proj_pad flip did not
+   remove it, and nothing in rounds 1-3 ever measured it.
+
+2. ROUND 3 AND proj_pad ARE NEUTRAL ON THE TAIL.  glibc-vs-glibc, doc 116 -> now, is within
+   0.005 GiB on four of the five tail events (2.208->2.204, 2.203->2.197, 2.050->2.048,
+   2.021->2.019, 2.006->2.001).  proj_pad buys SBND nothing in memory, consistent with doc 119
+   sec 6: SBND keeps 87.9 % of its proj cells where PDHD kept 2.4 %.
+
+3. tcmalloc IS NOT A MEMORY LEVER HERE.  -6.1 % to +5.6 % across seven events, both signs.  It
+   was flipped in round 1 for CPU and it should not be cited for memory either way.
+
+4. f075/9393 moved 1.602 (doc 116) -> 1.734 GiB (glibc, now), +8 %, against four neighbours that
+   moved by <0.3 %.  One event, unexplained, reported rather than explained away (rule 7).
