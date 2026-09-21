@@ -1,0 +1,13 @@
+# doc sbnd_xin/119 round 3 -- CROSS-DETECTOR output gates.  The round edits shared clus files
+# (Facade_Util, Facade_Grouping, Graphs), so PDHD and PDVD are affected detectors and CLAUDE.md
+# sec 4 wants a gate on each, not an argument from the SBND one.
+#   before = round 0's arms d119hnu / d119vnu on pin 71ebd5aeb386
+#   after  = the same manifests on pin 4ff75274e43e
+# d30_hash_gate.py compares FIVE products per event incl. T_proj_data via the jagged-safe
+# d30_hash_proj.py (doc 30's round-3 correction -- hash_root_trees.py alone cannot read it).
+
+=== PDHD, 61 events ===
+GATE d119hnu vs d119hr3 (/home/xqian/toolkit-dev/wcp-porting-img/pdhd/work): PASS 61  FAIL 0  MISSING 0  of 61 events, 5 products each
+
+=== PDVD, 120 events ===
+GATE d119vnu vs d119vr3 (/home/xqian/toolkit-dev/wcp-porting-img/pdvd/work): PASS 120  FAIL 0  MISSING 0  of 120 events, 5 products each

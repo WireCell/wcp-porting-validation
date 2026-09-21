@@ -2,8 +2,9 @@
 
 **Status: round 0 measured. Round 1 measured, gated and FLIPPED. Round 3 (§9) measured, gated and
 TAKEN — the first round of this campaign to rebuild C++: two byte-identical levers in the
-projection hot path, −14.9 / −9.5 / −6.7 % in-job CPU on nuecc / cv / beam-off against a
-null-pair floor of +3.0 / +0.9 / −0.1 %, no knob because there is no behaviour to switch off.
+projection hot path, gated on **all three detectors** (SBND 62 evt, PDHD 61, PDVD 120) and worth
+−14.9 / −9.5 / −6.7 % in-job CPU on SBND nuecc / cv / beam-off and −4.1 / −4.4 % on the PDHD and
+PDVD `-nu` arms, no knob because there is no behaviour to switch off.
 The round-3 the campaign had recommended (sharing the dual chain's association lattice) was
 REFUTED by the code read and is closed, not deferred — §9.1. Round 2 measured, gated, and
 FLIPPED on the owner's explicit instruction of 2026-09-21 — against this doc's own recommendation,
@@ -90,6 +91,12 @@ python3 $SX/scripts/d119/lever_gate.py --vs flip r3       # sec 9.4 G1  -- PASS,
 python3 $SX/scripts/d119/lever_gate.py --vs r3   r3b      # sec 9.4 G2  -- the null pair
 python3 $SX/scripts/d119/lever_gate.py --vs ctl  r3 nuecc # sec 9.4 G3  -- MUST FAIL (sensitivity)
 python3 $SX/scripts/d119/r3_cost.py                       # sec 9.3
+# --- the other two detectors: round 0's arms re-run on the round-3 pin, then gated (sec 9.4 G4)
+ARM=d119hr3 MODE=-nu STMFIT=1 PIN=~/tmp/d119r3-libpin JOBS=10 $PD/docs/scripts/d30_run_pr_arm.sh
+ARM=d119vr3 MODE=-nu STMFIT=1 SRC=p100flip PIN=~/tmp/d119r3-libpin JOBS=10 \
+    $PD/stm/perf/d30_run_pdvd_arm.sh
+python3 $PD/stm/perf/d30_hash_gate.py $PD/work  d119hnu d119hr3   # PASS  61 / FAIL 0
+python3 $PD/stm/perf/d30_hash_gate.py $PV/work  d119vnu d119vr3   # PASS 120 / FAIL 0
 /nfs/data/1/xqian/toolkit-dev/toolkit/build/clus/wcdoctest-clus   # sec 9.4 G4
 # before/after profile on ONE event, same config, two pins (sec 9.2):
 for a in flip r3; do PIN=$HOME/tmp/$([ $a = flip ] && echo d119-libpin || echo d119r3-libpin)
@@ -578,7 +585,8 @@ Two smaller items, both cheap:
 
 ## 9. Round 3 — the projection hot path
 
-**Status: TAKEN. Byte-identical on 62 events, −14.9 / −9.5 / −6.7 % in-job CPU, CPU only.**
+**Status: TAKEN. Byte-identical on all three detectors — SBND 62 events, PDHD 61, PDVD 120 —
+and worth −14.9 / −9.5 / −6.7 % (SBND) and −4.1 / −4.4 % (PDHD / PDVD) in-job CPU. CPU only.**
 Toolkit commit adds no config key and no knob: there is nothing to turn off, because there is no
 behaviour to turn off.
 
@@ -673,11 +681,31 @@ round 2's delta into round 3's number:
 All three sit clearly outside the floor, which is why the floor was re-measured on the **new**
 binary (`r3b`) rather than inherited from round 2's — a noise floor does not survive a rebuild.
 
+**And on the other two detectors** (`docs/119_figs/119_cost_r3_xdet.txt`; the edited files are
+shared `clus` code, so PDHD and PDVD are affected whether or not anyone measured them). Baseline is
+round 0's own arm, re-run on the round-3 pin, **claim instrument `node_core_s`** — the before-arms
+ran at `JOBS=12` and the after-arms at `JOBS=10`, so `wall_s` is not comparable and is not quoted:
+
+| arm | in-job compute | | peak RSS |
+|---|---|---:|---|
+| PDHD `-nu`, 61 evt | 1982.9 → 1902.4 s | **−4.1 %** | 1.765 → 1.765 GB (−0.0 %) |
+| PDVD `-nu`, 120 evt | 2835.0 → 2710.8 s | **−4.4 %** | 1.421 → 1.420 GB (−0.1 %) |
+
+Per stage, both detectors move in the same places and by the same mechanism: `TaggerCheckSTM`
+−7.3 / −8.5 %, `CheckSTM_Michel` −8.0 / −9.0 %, `CreateSteinerGraph` only −2.2 / −2.9 %. **The
+smaller headline is expected and is not a weaker result**: PDHD and PDVD spend 50–57 % of the job
+in `CreateSteinerGraph`, which barely touches the projection, where SBND's nuecc job is dominated
+by the PR/fit path that does. The lever is the same size; the job mix is different.
+
 **Memory: this is a CPU round and memory did not improve.** Peak RSS moved **+1.1 / +0.8 / +0.7 %**
 (nuecc max 1.402 → 1.429 GiB) against a null-pair floor of +0.1 / +0.4 / +0.0 %. The nuecc figure
-is small but probably real: a `std::vector` grown by doubling replaces exactly-sized red-black
-nodes. It is reported rather than rounded away, and **the 2.2 GiB nuecc tail doc 118 introduced is
-untouched by this round.**
+is small but probably real. My first explanation — a `std::vector` grown by doubling replacing
+exactly-sized red-black nodes — **does not survive the cross-detector arms**, which are flat
+(−0.0 % PDHD, −0.1 % PDVD) on the same code. What separates them is the allocator: the SBND arms
+run glibc (`SBND_PR_TCMALLOC=0`, to match `flip`), PDHD and PDVD preload tcmalloc. So the drift
+correlates with the allocator, not with the change, and it is recorded as an observation and not
+as a mechanism. Either way **the 2.2 GiB nuecc tail doc 118 introduced is untouched by this
+round.**
 
 **Attribution — the same event, the same config, two binaries**
 (`docs/119_figs/119_prof_r3_before_after.txt`, evt 2925, one `PROFILE:` line in each run):
@@ -724,16 +752,33 @@ genuinely differs (`ctl`, which is pre-`proj_pad`) **FAILS**, reporting `T_proj_
 20 979–121 764 `proj` charge keys per event. The PASS above is the gate working, not the gate being
 blind — the round-2 lesson applied to a new allowance code path.
 
-**G4 — unit tests**: `./build/clus/wcdoctest-clus` **446 cases, 430 758 assertions, 0 failed.** The
+**G4 — the other two detectors, gated not argued** (`119_gate_r3_xdet.txt`). `Facade_Util.cxx`,
+`Facade_Grouping.cxx` and `Graphs.cxx` are shared across all three detectors, so a PASS on SBND
+alone would not have discharged CLAUDE.md §4's "every affected detector". Round 0's PDHD and PDVD
+arms re-run on the round-3 pin and gated with `d30_hash_gate.py` (five products per event,
+including `T_proj_data` through the jagged-safe `d30_hash_proj.py` — `hash_root_trees.py` alone
+cannot read that tree, doc 30's round-3 correction):
+
+```
+GATE d119hnu vs d119hr3 (pdhd/work): PASS  61  FAIL 0  MISSING 0  of  61 events, 5 products each
+GATE d119vnu vs d119vr3 (pdvd/work): PASS 120  FAIL 0  MISSING 0  of 120 events, 5 products each
+```
+
+Independently of the hashes, the census agrees: `nclus`, `nstm`, `nfit`, `nseg`, `sum_npts` and
+`max_npts` are equal **on every one of the 181 events**
+(`119_pdhd_r3_census.tsv`, `119_pdvd_r3_census.tsv`). This also covers the one non-fit caller of
+`point2wind`, `DynamicPointCloud.cxx:1010`.
+
+**G5 — unit tests**: `./build/clus/wcdoctest-clus` **446 cases, 716 750 assertions, 0 failed.** The
 new `clus/test/doctest_projection_constant_hoist.cxx` writes out the *legacy* bodies literally and
 asserts the hoisted forms reproduce them **bit for bit** — 140 000 random points over seven
 SBND/PDHD/PDVD plane geometries, 6 006 cases driven onto the `.5` rounding boundary on purpose, and
-120 000 `drift2time` cases. This is what retires the one real risk in L1: `cos(a)*z − sin(a)*y` can
+120 000 `drift2time` cases. The *delegating* angle-taking forms get the same full sweep rather than a spot check, because `DynamicPointCloud` calls them and their results reach production outside the fit. This is what retires the one real risk in L1: `cos(a)*z − sin(a)*y` can
 be contracted to an FMA in one inlining context and not another, and a value landing exactly on
 `.5` would then round to a different wire. It does not, and now a future refactor that breaks it
 fails here instead of failing an A/B three hours into an arm.
 
-**G5 — the tripwire** (`119_gate_r3_cfg.txt`): `prod_cfg_gate.py --ref ref/prod-2026-09-21` is
+**G6 — the tripwire** (`119_gate_r3_cfg.txt`): `prod_cfg_gate.py --ref ref/prod-2026-09-21` is
 **PASS 25/25**. Round 3 changes no jsonnet and no runtime JSON, so **no new reference generation**;
 `prod-2026-09-21` remains current.
 
@@ -767,7 +812,13 @@ before the arms were launched.
 5. **`time2drift`, which has the identical defect.** Left alone on purpose: `Aux::time2drift` is a
    different package with imaging-stage consumers, and the `clus` one does not appear in this
    profile at all. Round-4 material, named here so it is not lost.
-6. **A pre-existing order dependence, named not fixed** (CLAUDE.md §5 tie-breaker). The blob set
+6. **`libWireCellMatch.so` and `libWireCellRoot.so` also changed in the rebuild** — checked, not
+   waved through. `nm -C` shows neither references `point2wind`, `drift2time` or
+   `find_neighbors_nlevel`, defined or undefined, and `fastgeom_t` is only ever held behind a
+   `std::unique_ptr` so growing it does not move `Grouping`'s layout. Both are pure recompile
+   artifacts of including the edited headers; the blast radius is `clus`. All three libraries were
+   pinned together anyway, so the gated arms carry a consistent set.
+7. **A pre-existing order dependence, named not fixed** (CLAUDE.md §5 tie-breaker). The blob set
    `form_point_association` builds is an `unordered_set<const Blob*>`, and the `blobs_by_face`
    vectors — hence `face_blobs.front()->wpid()` — take their order from iterating it. That is a
    pointer-keyed iteration order reaching production output today. L2 preserves it exactly (the
@@ -780,6 +831,14 @@ went 2955 → 2508 samples on evt 2925 purely because it runs the same projectio
 29 % of the job. §8's ranking is unchanged, and §8's recommendation still stands as the largest
 remaining target, still needing doc 107 grading rather than a byte gate.
 
-The two cheap items in §8 (the runner tripwire hole; retention) are untouched by this round, and
-round 3 adds two more 62-event arms, `d119r3` and `d119r3b`, to the retention list. Every number
-from them is in `docs/119_figs/`.
+The two cheap items in §8 (the runner tripwire hole; retention) are untouched by this round.
+Round 3 adds two SBND arms of 62 events each (`d119r3`, `d119r3b`) plus a 61-event PDHD arm
+(`pdhd/work/*_d119hr3`) and a 120-event PDVD arm (`pdvd/work/*_d119vr3`) to the retention list.
+Every number from all of them is in `docs/119_figs/`, so none is a scan record and all are
+re-derivable.
+
+**One defect this round deliberately left standing.** `time2drift` has the *identical* shape as
+`drift2time` — it re-derives `xsign`/`xorig` from the `IAnodeFace` on every call. It was not
+touched because `Aux::time2drift` lives in a different package with imaging-stage consumers, and
+the `clus` one does not appear anywhere in this profile. That makes it a round of its own with its
+own manifests, not something to fold into a PR-chain round. Named here so it is not lost.
