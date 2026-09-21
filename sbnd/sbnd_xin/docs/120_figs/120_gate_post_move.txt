@@ -1,0 +1,5 @@
+reference : ref/prod-2026-09-21c
+cfg tree  : /nfs/data/1/xqian/toolkit-dev/toolkit/cfg
+compiling : /home/xqian/tmp/prodcfg-hbh001wz
+checked   : 26 artifacts
+PASS -- the compiled operating point matches prod-2026-09-21c

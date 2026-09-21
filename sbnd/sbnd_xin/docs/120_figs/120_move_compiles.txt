@@ -1,0 +1,29 @@
+# doc sbnd_xin/120 round A -- V1: every relocated file compiles identically before and after
+# BEFORE and AFTER are both compiled from the WORK-DIR path (what the runners invoke);
+# after the move that path is a 1-line re-export shim.
+# a third set compiles each file from its canonical in-tree path.
+
+## diff -rq before after   (work-dir path)
+   IDENTICAL -- 17 compile points (15 bare + 2 runner-TLA)
+
+## in-tree path vs the same baseline
+   IDENTICAL -- 14 files
+
+## sizes (bare compile)
+   pdhd_wct-clustering.json                        106146
+   pdhd_wct-img-all.json                           139287
+   pdhd_wct-light-allpd-reco.json                    4994
+   pdhd_wct-light-convert.json                       1428
+   pdhd_wct-light-fullstream-reco.json               3921
+   pdhd_wct-light-reco.json                          3233
+   pdhd_wct-pr-perevt.json                         264289
+   pdhd_wct-pr-perevt.prod.json                    264311
+   pdhd_wct-sp-to-magnify.json                      15704
+   pdvd_wct-clustering.json                        197771
+   pdvd_wct-img-all.json                           279033
+   pdvd_wct-light-reco.json                          7025
+   pdvd_wct-nf-sp-dnnroi.json                     3758614
+   pdvd_wct-nf-sp.json                            3759619
+   pdvd_wct-pr-perevt.json                         278349
+   pdvd_wct-pr-perevt.prod.json                    278389
+   pdvd_wct-sp-to-magnify.json                      30908

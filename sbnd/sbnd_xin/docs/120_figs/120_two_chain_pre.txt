@@ -1,0 +1,53 @@
+# doc sbnd_xin/120 two-chain gate: the LArSoft 1-step chain vs the local PR job
+# cfg tree : /nfs/data/1/xqian/toolkit-dev/toolkit/cfg
+# compiled : /home/xqian/tmp/twochain-base
+# components: larsoft 226, local 42, compared 40
+# forgiven as structural: 17 (--verbose to list)
+
+## forgiven
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      emit_empty               shared Bee zip -- keep mc.json when the tagger declines (clus.jsonnet:2972)
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      merge_metadata_key       shared Bee zip -- graft onto the labeler truth tree (clus.jsonnet:2966)
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      merge_node_text          shared Bee zip (clus.jsonnet:2967)
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      visitor                  shared Bee zip -- dump on the last stage (clus.jsonnet:2961)
+   MultiAlgBlobClustering:clus_pr                 bee_sink                 shared Bee zip (clus.jsonnet bee_sink != null)
+   MultiAlgBlobClustering:clus_pr                 bee_zip                  output directory (basename compared)
+   MultiAlgBlobClustering:clus_pr                 eventNo                  per-event identity
+   MultiAlgBlobClustering:clus_pr                 rse_from_ident           per-event identity (LArSoft takes RSE from the art event)
+   MultiAlgBlobClustering:clus_pr                 rse_from_metadata        per-event identity (LArSoft takes RSE from the art event)
+   MultiAlgBlobClustering:clus_pr                 runNo                    per-event identity
+   MultiAlgBlobClustering:clus_pr                 save_deadarea            shared Bee zip -- only ONE node may write dead area (clus.jsonnet:2825)
+   MultiAlgBlobClustering:clus_pr                 subRunNo                 per-event identity
+   SbndPrMagnifyTrackingVisitor:pr                eventNo                  per-event identity
+   SbndPrMagnifyTrackingVisitor:pr                output_filename          output directory (basename compared)
+   SbndPrMagnifyTrackingVisitor:pr                runNo                    per-event identity
+   SbndPrMagnifyTrackingVisitor:pr                subRunNo                 per-event identity
+   UbooneTaggerOutputVisitor:pr                   output_filename          output directory (basename compared)
+
+## OPERATING-POINT DIFFERENCES (25)
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      pf_conn4_near_candidate            larsoft="<absent>"       local=true
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      pf_direct_when_touching            larsoft="<absent>"       local=true
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      pf_drop_stray_satellites           larsoft="<absent>"       local=true
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      pf_orphan_audit_only               larsoft="<absent>"       local=true
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      pf_orphan_confident_track          larsoft="<absent>"       local=true
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      pf_orphan_guard_freed              larsoft="<absent>"       local=true
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      pf_orphan_near_cross_cluster       larsoft="<absent>"       local=true
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      pf_orphan_track_parentage          larsoft="<absent>"       local=true
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      pf_pdg_name_prototype_fallback     larsoft="<absent>"       local=true
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      pf_pi0_node_per_id                 larsoft="<absent>"       local=true
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      pf_pseudo_gap_from_main            larsoft="<absent>"       local=true
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      pf_shower_parent_precedence        larsoft="<absent>"       local=true
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      pf_shower_vertex_barrier           larsoft="<absent>"       local=true
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      pf_track_bridged_clusters          larsoft="<absent>"       local=true
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      pf_track_main_cluster_only         larsoft="<absent>"       local=true
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      pf_track_owns_loose_vertex         larsoft="<absent>"       local=true
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      pf_unique_node_ids                 larsoft="<absent>"       local=true
+   MultiAlgBlobClustering:clus_pr bee_points_sets[shower_track] pseudo_shower_track_paint          larsoft="<absent>"       local=true
+   SbndPrMagnifyTrackingVisitor:pr                fix_cluster_flags                  larsoft="<absent>"       local=true
+   SbndPrMagnifyTrackingVisitor:pr                nu_provenance                      larsoft="<absent>"       local=true
+   SbndPrMagnifyTrackingVisitor:pr                provenance                         larsoft="<absent>"       local={"bdt_weights_dir": "uboone/weights", "dl_weights": "uboone/
+   SbndPrMagnifyTrackingVisitor:pr                rec_charge_provenance              larsoft="<absent>"       local=true
+   TaggerCheckNeutrino:pr                         nu_bundle_flash_group              larsoft="<absent>"       local=true
+   TaggerCheckNeutrino:pr                         nu_provenance                      larsoft="<absent>"       local=true
+   UbooneTaggerOutputVisitor:pr                   nu_provenance                      larsoft="<absent>"       local=true
+
+FAIL -- the two chains are not on the same PR operating point
