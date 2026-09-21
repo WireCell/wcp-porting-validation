@@ -211,7 +211,8 @@ def main():
     # (1) the LArSoft 1-step chain, at its production extVars.  Same invocation
     #     as compile_consumers.sh step (g).
     ls = compile_cfg(
-        f"{SBND_WD}/wcls-img-clus-matching-xin.jsonnet", f"{tmp}/larsoft.json", args.cfg,
+        f"{args.cfg}/pgrapher/experiment/sbnd/wcls-img-clus-matching-xin.jsonnet",
+        f"{tmp}/larsoft.json", args.cfg,
         extvars=[("reality", "data"), ("DL", "4.0"), ("DT", "8.8"), ("lifetime", "35"),
                  ("driftSpeed", "1.563"), ("semimodel_file", ""),
                  ("pr_operating_point", "sync"), ("enable_tracking_root", "true"),

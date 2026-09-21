@@ -5,11 +5,9 @@
 addresses what scoping round A turned up: **SBND's two production chains are not running the same PR
 operating point**, and have not been since 2026-09-14.
 
-**Status.** Round A is **committed** (toolkit `c76b8cbe`, wcp `17381073`). Round B is written and
-gated in the working tree — 24 of the 25 divergences closed, the local chain proven unmoved — but
-**not committed**: three edits to the LArSoft entry point and its mirror were refused by the
-session's permission classifier, and the 25th key is the physics one that needs an explicit go
-anyway. See sec 4.4.
+**Status.** Both rounds **committed and pushed**. Round A: toolkit `c76b8cbe`, wcp `17381073`.
+Round B: SBND's two chains are on one operating point again — `two_chain_gate.py` **PASS**, local
+chain byte-identical, 1 of 26 artifacts moved, new reference `ref/prod-2026-09-21d`.
 
 **Owner's ask, 2026-09-21**: *"For PDHD, PDVD, SBND, for the default configuration, I wonder if
 things related to the configuration can be merged from the work directory ./pdvd ./pdhd ./sbnd_xin
@@ -277,27 +275,40 @@ sha256-identical to `ref/prod-2026-09-21c/prod_prjob.json`. This is also the **e
 the replace-not-merge semantics that 4.2 depends on: had the 219-key default merged into the local
 job's bag, this comparison would have failed and named the key.
 
-### 4.4 NOT DONE — three edits blocked, and round B is therefore not committed
+### 4.4 The rest of round B, and two defects it found in passing
 
-The remaining work is one file plus its dependents, and the session's permission classifier refused
-every edit to it as *"Modify Shared Resources"*:
+The mirror is **deleted**; `wcls-img-clus-matching-xin.jsonnet` is **in-tree** at
+`cfg/pgrapher/experiment/sbnd/` with a 1-line re-export at the work-dir path, so every fcl and
+`setup-ap.sh` keeps working; `compile_consumers.sh` step (g) names the in-tree path and no longer
+puts `wcp-porting-img/sbnd` on `WIRECELL_PATH` — **nothing in this chain resolves out of the working
+repo any more**, which is what makes an operating point creeping back there visible instead of
+silent.
 
-1. `sbnd/wcls-img-clus-matching-xin.jsonnet` — drop `import 'pr-operating-point.jsonnet'`, collapse
-   the three-way `pr_operating_point` switch to a single bare `clus_maker.pr(...)` call, make the
-   two all-APA operating-point members (`save_bundle_main_provenance`, `bee_flash_pred_min`)
-   unconditional, and correct the `preflip` comment per 4.0.
-2. `sbnd/pr-operating-point.jsonnet` — delete.
-3. `scripts/cfg/compile_consumers.sh` step (g) — repoint at the in-tree path and drop
-   `wcp-porting-img/sbnd` from `WIRECELL_PATH`; then the entry point can be relocated as sec 3.2
-   deferred.
+The `pr_operating_point` mode is retired. All three former modes now produce the production graph;
+the extVar is pinned rather than read, so `wcls-img-clus-matching-xin-preflip.fcl` still compiles.
 
-A partial edit to (1) was applied and **reverted** so the file is not left in a half-state where the
-comment says the switch is retired while the code still switches.
+**Defect 1 — `iso_endpoint=true` could never have compiled.** The entry point passed it to
+`clus_maker.pr()`, which has no such parameter: it is a `tcn_knobs` bag key. It survived because it
+sat in the `preflip` branch, which production never took and which jsonnet, being lazy, never
+evaluated. Collapsing to one call surfaced it immediately. The value now arrives through `pr()`'s
+bag default (`clus.jsonnet:2107`), where it always belonged.
 
-**Consequence: `clus.jsonnet`'s change is in the working tree and is NOT committed.** Committing it
-alone would close 24 divergences while leaving a comment in the LArSoft entry point that describes
-`preflip` as a frozen pre-2026-08-29 arm it no longer is — the documentation defect 4.0 exists to
-avoid. Revert with `git -C toolkit checkout -- cfg/pgrapher/experiment/sbnd/clus.jsonnet`.
+**Defect 2 — the `preflip` arm was never frozen**, as 4.0 argued from the code and this round then
+confirmed from both directions: its values were inherited, *and* it would have failed to compile.
+Treating it as a record to be preserved would have protected something that did not work.
+
+### 4.5 Gate
+
+| # | check | result |
+|---|---|---|
+| V5 | **the two chains agree** (`120_two_chain_final.txt`) | **PASS** — 40 shared components key for key; 17 differences forgiven as structural, each naming the `clus.jsonnet` line that creates it |
+| V6 | local chain unmoved (`120_v6_local_unmoved.txt`) | `prod_prjob.json` **sha256-identical** to `ref/prod-2026-09-21c` |
+| — | blast radius (`120_gate_drift.txt`) | **1 of 26** artifacts moved, and it is `sbnd_larsoft_1step.json` — so uBooNE, PDHD, PDVD, the three runtime fit JSONs and the runner allocator block are untouched |
+| V7 | new reference (`120_gate_post.txt`) | `ref/prod-2026-09-21d` **PASS 26/26**; `-21c` copied, never written into (M13) |
+
+PDHD's and PDVD's `pr.jsonnet` get a comment correction in the same commit: their claim that the
+SBND-tuned `pr()` defaults "are kept verbatim (they document those operating points)" stopped being
+true of SBND's file the moment §4.1 landed.
 
 ---
 
@@ -316,22 +327,22 @@ Untouched (M13): every `docs/11[5-9]_*`, `products/d11*`, `scripts/d11*`, `ref/p
 
 ## 6. Open items
 
-1. **The two-chain divergence is 24/25 closed in the working tree and 0/25 closed in git** (sec
-   4.4). Round B is written but not committed, because three edits to the LArSoft entry point and
-   its mirror were refused by the session's permission classifier.
-2. **`nu_bundle_flash_group` needs an explicit go** before it reaches LArSoft production: it changes
-   what that chain reconstructs, so §5 rule 1 applies even though closing the gap is a restoration
-   rather than a new flip. It is also, by 4.2, the one key that cannot close until the mirror stops
-   being applied — so the go and the unblocking are the same step.
-3. **Two all-APA operating-point members are invisible to `two_chain_gate.py`**:
+1. **Two all-APA operating-point members are invisible to `two_chain_gate.py`**:
    `save_bundle_main_provenance` and `bee_flash_pred_min` live on `clus_all_apa()`, not `pr()`, and
    the local chain builds its all-APA stage in a different job
-   (`wct-clus-matching-perevt.jsonnet`) that the gate does not compile. They agree today. Extending
-   the gate to the clustering stage would close the same class of hole one level up.
-4. **The `preflip` A/B arm is not what its comment says** (sec 4.0), and has not been since
-   2026-08-29. The comment correction is part of the blocked edit.
-4. **`pdvd/wct-img-all.jsonnet`** differs from the in-tree file in slicing threshold and tiling mode
-   (sec 3.2). Which is PDVD's intended standalone imaging is an owner question.
+   (`wct-clus-matching-perevt.jsonnet`) that the gate does not compile. They agree today and are
+   now unconditional on the LArSoft side. Extending the gate to the clustering stage closes the same
+   class of hole one level up, and is the cheapest thing on this list.
+2. **The 25 keys were live in SBND LArSoft production from 2026-09-14 to 2026-09-21.** Anything
+   reconstructed by the 1-step chain in that window ran without them — in particular without
+   `nu_bundle_flash_group`. Whether any of it needs re-running is a physics call, not a config one.
+3. **`pdvd/wct-img-all.jsonnet`** differs from the in-tree file of that name in slicing threshold
+   (`1e-6` vs 3.6 σ) and tiling mode (`"multi"`), so it was held back from round A (§3.2). Which is
+   PDVD's intended standalone imaging is an owner question.
+4. **`pdhd/wct-nf-sp.jsonnet` and `wct-nf-sp-dnnroi.jsonnet`** stay in the working repo by design
+   (§3.2) — they import a running-directory pre-flip override. If the 027409-era files are ever
+   re-decoded with a post-flip map, the sentinel and the override go, and these two can be promoted
+   like the rest.
 5. **`abtest/compile_all_cfg.sh` is out of step with the runners it mirrors**: it pins
    `trackfitting_config` by a work-dir path and still spells out ~25 `tgm_*`/`stm_*` values that the
    runners deleted as byte-identical on the doc-68 flip. Reported, not fixed here (§5 tie-breaker).

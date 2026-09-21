@@ -1,0 +1,10 @@
+reference : ref/prod-2026-09-21c
+cfg tree  : /nfs/data/1/xqian/toolkit-dev/toolkit/cfg
+compiling : /home/xqian/tmp/prodcfg-8xfo31mb
+checked   : 26 artifacts
+DRIFT     : sbnd_larsoft_1step.json
+
+If this drift is an intended flip, re-run with --refresh and record it in the
+round doc.  If it is not, something changed the production operating point
+without a round behind it -- that is what this gate exists to catch.
+(compiled set left at /home/xqian/tmp/prodcfg-8xfo31mb)

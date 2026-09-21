@@ -1,0 +1,26 @@
+# doc sbnd_xin/120 two-chain gate: the LArSoft 1-step chain vs the local PR job
+# cfg tree : /nfs/data/1/xqian/toolkit-dev/toolkit/cfg
+# compiled : /home/xqian/tmp/twochain-final
+# components: larsoft 226, local 42, compared 40
+# forgiven as structural: 17 (--verbose to list)
+
+## forgiven
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      emit_empty               shared Bee zip -- keep mc.json when the tagger declines (clus.jsonnet:2972)
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      merge_metadata_key       shared Bee zip -- graft onto the labeler truth tree (clus.jsonnet:2966)
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      merge_node_text          shared Bee zip (clus.jsonnet:2967)
+   MultiAlgBlobClustering:clus_pr bee_pf[mc]      visitor                  shared Bee zip -- dump on the last stage (clus.jsonnet:2961)
+   MultiAlgBlobClustering:clus_pr                 bee_sink                 shared Bee zip (clus.jsonnet bee_sink != null)
+   MultiAlgBlobClustering:clus_pr                 bee_zip                  output directory (basename compared)
+   MultiAlgBlobClustering:clus_pr                 eventNo                  per-event identity
+   MultiAlgBlobClustering:clus_pr                 rse_from_ident           per-event identity (LArSoft takes RSE from the art event)
+   MultiAlgBlobClustering:clus_pr                 rse_from_metadata        per-event identity (LArSoft takes RSE from the art event)
+   MultiAlgBlobClustering:clus_pr                 runNo                    per-event identity
+   MultiAlgBlobClustering:clus_pr                 save_deadarea            shared Bee zip -- only ONE node may write dead area (clus.jsonnet:2825)
+   MultiAlgBlobClustering:clus_pr                 subRunNo                 per-event identity
+   SbndPrMagnifyTrackingVisitor:pr                eventNo                  per-event identity
+   SbndPrMagnifyTrackingVisitor:pr                output_filename          output directory (basename compared)
+   SbndPrMagnifyTrackingVisitor:pr                runNo                    per-event identity
+   SbndPrMagnifyTrackingVisitor:pr                subRunNo                 per-event identity
+   UbooneTaggerOutputVisitor:pr                   output_filename          output directory (basename compared)
+
+PASS -- both chains compile to the same PR operating point

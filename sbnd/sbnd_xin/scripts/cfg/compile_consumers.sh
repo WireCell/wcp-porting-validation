@@ -45,18 +45,28 @@ done
 
 # (g) The LArSoft 1-step chain that actually runs the PR taggers in SBND production.  doc
 # sbnd_xin/118: (c) above compiles wcls-img-clus.jsonnet and the standalone Q/L job, NEITHER of
-# which calls pr(), so the chain that does -- sbnd/wcls-img-clus-matching-xin.jsonnet, through the
-# GENERATED sbnd/pr-operating-point.jsonnet -- was in none of the artifacts.  That is the same
-# shape of hole as the runtime fit JSONs in (f): doc 118 had to verify by hand that this chain
-# tracked its flip.  It needs its own extVars; pr_operating_point=sync is the production mode.
-export WIRECELL_PATH=$CFG:$DATA:$DATA/sbnd/photodet:/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd
+# which calls pr(), so the chain that does was in none of the artifacts.  That is the same shape of
+# hole as the runtime fit JSONs in (f): doc 118 had to verify by hand that this chain tracked its
+# flip.
+#
+# doc sbnd_xin/120 moved this file IN-TREE and deleted the generated
+# sbnd/pr-operating-point.jsonnet it used to read.  Both edits matter here:
+#   * the path below is the in-tree one, NOT the work-dir re-export shim -- hashing the shim would
+#     leave the tripwire firing happily while the file production actually reads dropped out of it
+#     (doc 119 sec 11.8's trap, same family);
+#   * WIRECELL_PATH no longer needs wcp-porting-img/sbnd, because nothing in this chain resolves
+#     out of the working repo any more.  Leaving it on would hide exactly the regression where an
+#     operating point creeps back into the work dir.
+# pr_operating_point is still accepted as an extVar and is now ignored (the mode is retired); it is
+# passed below only to prove that an fcl still setting it compiles.
+export WIRECELL_PATH=$CFG:$DATA:$DATA/sbnd/photodet
 $W -V reality=data -V DL=4.0 -V DT=8.8 -V lifetime=35 -V driftSpeed=1.563 \
    -V semimodel_file="" -V pr_operating_point=sync -V enable_tracking_root=true \
    -V 'input_mask_tags=[]' -V 'output_mask_tags=[]' -V 'recobwire_tags=["gauss"]' \
    -V 'summary_tags=[]' -V 'trace_tags=["gauss"]' \
    -V opflash0_input_label=opflashtpc0 -V opflash1_input_label=opflashtpc1 \
    --ext-code joint=false --ext-code pmt_nl=true \
-   /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/wcls-img-clus-matching-xin.jsonnet \
+   "$CFG/pgrapher/experiment/sbnd/wcls-img-clus-matching-xin.jsonnet" \
    > "$OUT/sbnd_larsoft_1step.json" 2> "$OUT/sbnd_larsoft_1step.err"
 echo "sbnd_larsoft_1step rc=$?"
 
