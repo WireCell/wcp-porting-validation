@@ -365,10 +365,21 @@ three productions) **plus** a debug-level spdlog build **plus** `-L debug`. Pars
   construction.
 - **SBND's PR runners do not preload tcmalloc.** `run_pr_evt.sh:317-321` and
   `run_pr_chain_batch.sh:1950,2134` **assign** `LD_PRELOAD="$PYLIB"`, so libpython replaces rather
-  than joins. PDHD and PDVD preload `libtcmalloc_minimal` at every stage, and SBND's own
-  `run_clus_evt.sh` does, verified byte-identical on 5 events × 3 archives. Consequences: a profile
-  of SBND PR under `libtcmalloc_and_profiler` is **not** the production allocator, unlike
-  PDHD/PDVD; and preloading it in the PR runners is itself a reco-neutral candidate (sec 8).
+  than joins, and `grep tcmalloc` on both returns nothing. PDHD and PDVD preload
+  `libtcmalloc_minimal` at every stage, and SBND's own `run_clus_evt.sh` does, verified
+  byte-identical on 5 events × 3 archives.
+
+  **Read the runner's own comment before treating this as an oversight** (`run_pr_evt.sh:307-310`):
+  *"The -stm / -tgm / bare -p arms must keep the exact process environment they had before the
+  doc-pr/4 default flip -- they are A/B comparison arms."* The **conditional** structure is
+  deliberate and load-bearing. What the comment does not address is tcmalloc, which is simply
+  absent. So the accurate statement is: the *shape* is by design, the *absence* is unexplained, and
+  a round-1 lever must preserve the shape (sec 8).
+
+  Two consequences either way: a profile of SBND PR under `libtcmalloc_and_profiler` is **not** the
+  production allocator, unlike PDHD/PDVD — carry the caveat or run a glibc control; and any
+  comparison against a pre-existing SBND PR arm must account for the allocator, because those arms
+  ran without it.
 
 **Heap profiling uses jemalloc sampling, not `HEAPPROFILE`** (doc pdvd/28 §0 measured the
 gperftools heap path ~25× slower): `MALLOC_CONF=prof:true,…,lg_prof_sample:19` plus
@@ -418,8 +429,12 @@ Deliverable: a ranked, sized target list per detector, each with the gate it wou
    `do_single_tracking` drops them byte-identically. Worth less on PDHD/PDVD since the pad knob made
    each fill ~5× cheaper — but SBND has no pad knob yet, so on SBND it is at full value.
 2. **tcmalloc in the SBND PR runners** (sec 6). Runner-level, reco-neutral, with SBND's own
-   `run_clus_evt.sh` byte-identity precedent. It must **join** `LD_PRELOAD`, not assign, or it
-   silently drops libpython and the job runs the geometric vertex fallback.
+   `run_clus_evt.sh` byte-identity precedent. Two constraints, both from the runner itself:
+   it must **join** `LD_PRELOAD`, not assign, or it silently drops libpython and the job runs the
+   geometric vertex fallback; and it must **not** change the process environment of the `-stm` /
+   `-tgm` / bare `-p` arms, which `run_pr_evt.sh:307-310` keeps frozen on purpose because they are
+   A/B comparison arms. So the lever is scoped to the full PR pipeline and ships behind its own
+   switch, and any core-s claim against an older SBND arm states which allocator each side ran.
 
 Gate: `d30_hash_gate.py`-style product identity on the SBND 16-event manifest and the PDHD/PDVD busy
 sets, plus an A/B core-s census at `JOBS=1` (a 3 % claim is inside batch noise at `JOBS=6`).
