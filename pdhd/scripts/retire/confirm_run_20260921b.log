@@ -1,0 +1,64 @@
+== re-plan at confirm time
+   OK: F1-F7 PASS, lists unchanged
+== sbnd-pctree-closed: 10036 files, 21.27 GiB, frozen 1:1 in sbnd-pctree-closed.manifest.tsv
+   removed 10036/10036
+== pdhd-sp-frames: 128 files, 7.24 GiB, frozen 1:1 in pdhd-sp-frames.manifest.tsv
+   removed 128/128
+== sbnd-sp-frames: 636 files, 10.30 GiB, frozen 1:1 in sbnd-sp-frames.manifest.tsv
+   removed 636/636
+== pdvd/work broken symlinks: 0 -> 0
+== pdhd/work broken symlinks: 0 -> 0
+== sbnd/sbnd_xin broken symlinks: 0 -> 0
+done (CONFIRM=yes)
+== INTERLOCK A: re-planning before deleting (peer-session guard)
+   OK: all interlocks still PASS; the tier file of every tree being
+   run (sbnd) is unchanged.
+==================================================================
+== sbnd   tier 1   file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_sbnd_20260921b.txt
+   lines 4 | present 4 | already gone 0 | 10.25 GiB
+   record gate: 4/4 targets have a manifest in /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/../../../sbnd/sbnd_xin/archive/records/cleanup-20260921b/sbnd-tier1
+   DELETING...
+   done, rc=0
+
+POST-STATE CHECK.  interlock 4 recorded the PRE-existing broken-symlink
+count per tree (prebroken_<tree>_20260921b.txt); this number only means
+something compared against that.
+   pdhd: 0 broken symlinks
+   pdvd: 0 broken symlinks
+   sbnd/sbnd_xin: 0 broken symlinks
+== INTERLOCK A: re-planning before deleting (peer-session guard)
+   OK: all interlocks still PASS; the tier file of every tree being
+   run (pdvd) is unchanged.
+==================================================================
+== pdvd   tier 1   file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdvd_20260921b.txt
+   lines 1 | present 1 | already gone 0 | .01 GiB
+   record gate: 1/1 targets have a manifest in /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/../../../sbnd/sbnd_xin/archive/records/cleanup-20260921b/pdvd-tier1
+   DELETING...
+   done, rc=0
+
+POST-STATE CHECK.  interlock 4 recorded the PRE-existing broken-symlink
+count per tree (prebroken_<tree>_20260921b.txt); this number only means
+something compared against that.
+   pdhd: 0 broken symlinks
+   pdvd: 0 broken symlinks
+   sbnd/sbnd_xin: 0 broken symlinks
+== INTERLOCK A: re-planning before compressing
+   OK: gates pass, target list unchanged
+== pdvd/work cold-file compression: 5466 files
+   record gate: 5466/5466 files have a manifest row with the current size
+   COMPRESSING 5466 files, 4.88 GiB, 24 jobs ...
+   status: {'done': 5466}
+   compressed 4.88 GiB -> 0.69 GiB, saved 4.19 GiB
+   pdvd worker rc=0
+== pdhd/work cold-file compression: 3223 files
+   record gate: 3223/3223 files have a manifest row with the current size
+   COMPRESSING 3223 files, 10.15 GiB, 24 jobs ...
+   status: {'done': 3223}
+   compressed 10.15 GiB -> 1.37 GiB, saved 8.79 GiB
+   pdhd worker rc=0
+POST-STATE pdvd: originals left 0 | .zst present 5466 | broken symlinks 0 | pdvd/work 67G
+POST-STATE pdhd: originals left 0 | .zst present 3223 | broken symlinks 0 | pdhd/work 42G
+            free 772G
+  UNDO: python3 /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/restore_compress_20260921b.py --confirm <family ...> | --all
+
+[exited with code 0]

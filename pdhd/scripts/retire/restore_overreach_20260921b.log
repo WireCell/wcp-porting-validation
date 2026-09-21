@@ -1,0 +1,3 @@
+manifests: pdvd-compress.manifest.tsv, pdhd-compress.manifest.tsv, pdvd-compress.manifest.tsv
+2638 manifest rows selected, 2638 still compressed
+status: {'restored': 2638}

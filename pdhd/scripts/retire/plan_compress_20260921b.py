@@ -64,6 +64,30 @@ CLASSES = [("calib", re.compile(r"^calib(-pr)?-evt\d+\.json$")),
            ("csv",   re.compile(r"^(gpu_mem|pr_rss|clus_rss)_.*\.csv$"))]
 RATIO = {"calib": 6.5, "log": 20.0, "stdout": 20.0, "csv": 25.0}
 
+# EXTRA_HOLD -- added 2026-09-21b AFTER this planner over-reached, and the reason it has to be
+# an explicit list is worth stating rather than hiding.
+#
+# WHAT WENT WRONG.  The hold was `set(cfg["production"])`, on the reading that round G's scope was
+# "cold arms including substrate and hand-scan sources".  It was -- but round G's own HOLD ALSO
+# named `p100flip pvdimg p98von` and `p101q`, and those are NOT in plan_*.py's `production` list:
+# pvdimg/p98von/p100flip sit in `substrate` and p101q in `keep_arms`.  So they fell through and
+# 2638 files (4.87 GiB) inside the pdvd PRODUCTION INPUT CHAIN and the OPEN p101q were compressed.
+# Caught after execution by reading the manifest back; restored byte-identical (2638/2638, 0 .zst
+# left, sha256 spot-check 40/40) with restore_compress_20260921b.py.  The only reason that was
+# recoverable is that this lever is the reversible one -- a delete would have been permanent.
+#
+# WHY IT CANNOT BE DERIVED.  pdvd's `substrate` list mixes two different things under one name:
+# old provenance arms (d27fresh, keep, d51vclus, d41prov, d39r2prov), which round G compressed on
+# purpose, and the PRODUCTION INPUT CHAIN (pvdimg, p98von, p100flip, d103vflip), which it held.
+# Nothing in the config distinguishes them -- only the PROTECTED line's prose does ("THE PRODUCTION
+# INPUT CHAIN").  So this is a typed list, with C7 asserting every name still resolves so it cannot
+# rot into silence the way three PROTECTED lines did.
+EXTRA_HOLD = {
+ "pdvd": ("pvdimg", "p98von", "p100flip", "d103vflip",   # production input chain (PROTECTED's words)
+          "p101q"),                                       # OPEN: doc pdvd/100 sec 8.7, owner's call
+ "pdhd": ("d108hflip",),                                  # the doc-116 flip arm's SRC
+}
+
 def load_round_config():
     """Read plan_20260921b.py's TREES dict and PROTECTED union -- the single source of truth."""
     src = open(os.path.join(HERE, "plan_20260921b.py")).read()
@@ -115,7 +139,11 @@ def main():
         # checks production/OPEN membership and no longer checks PROT_N/PROT_P.
         # What still guards it: C4 (the whole ARM cold for 7+ days, so no live reader), C2 (no
         # symlink resolves onto a target), and the restore script.
-        hold = set(cfg["production"]) | {"(bare)"}
+        # NO_EXTRA_HOLD=1 is the causal control for EXTRA_HOLD: with it set, the input-chain and
+        # OPEN arms come back into scope, which is how the hold is shown to be doing the work
+        # rather than coinciding with an empty result.
+        extra = () if os.environ.get("NO_EXTRA_HOLD") else EXTRA_HOLD.get(tree, ())
+        hold = set(cfg["production"]) | set(extra) | {"(bare)"}
         holdsets[tree] = hold
         KEPT = kept_arms(tree)
         sel, byclass = [], {}
@@ -179,11 +207,16 @@ def main():
                 if (st.st_dev, st.st_ino) in ino: stray.append(q)
     check("C2", not stray, f"no symlink resolves onto a target ({len(stray)}; e.g. {stray[:1]})")
 
+    # An EMPTY target list must not be handed to lsof: `lsof -Fn --` with no paths lists every
+    # open file on the machine, and C3 then "failed" with 32724 held targets on a scope of zero.
+    # Measured 2026-09-21b on the post-execution re-run.  A gate that fires on nothing is as
+    # useless as one that never fires.
     held = []
-    try:
-        out = subprocess.run(["lsof", "-Fn", "--"] + allt[:2000], capture_output=True, text=True).stdout
-        held = [l[1:] for l in out.splitlines() if l.startswith("n")]
-    except FileNotFoundError: pass
+    if allt:
+        try:
+            out = subprocess.run(["lsof", "-Fn", "--"] + allt[:2000], capture_output=True, text=True).stdout
+            held = [l[1:] for l in out.splitlines() if l.startswith("n")]
+        except FileNotFoundError: pass
     check("C3", not held, f"no process holds a target open ({len(held)})")
 
     hot = [p for p in allt if os.path.exists(p) and NOW - os.lstat(p).st_mtime < COLD]
@@ -199,7 +232,17 @@ def main():
             arm = (m.group(3) if m and m.group(3) else "(bare)")
             if arm in holdsets[tree]:
                 off.append(f"{tree}:{arm}:{p}")
-    check("C5", not off, f"no production or bare-substrate family in scope "
+    # ---- C7 every EXTRA_HOLD name still resolves to a real arm (so the list cannot rot silently)
+    unresolved = []
+    for tree, names in EXTRA_HOLD.items():
+        have = set()
+        for d in os.listdir(TREES[tree]["work"]):
+            m = ARM.match(d)
+            if m: have.add(m.group(3) or "(bare)")
+        unresolved += [f"{tree}:{n}" for n in names if n not in have]
+    check("C7", not unresolved, f"every EXTRA_HOLD name resolves ({unresolved or 'all present'})")
+
+    check("C5", not off, f"no production, input-chain, OPEN or bare family in scope "
                          f"({len(off)}; e.g. {off[:1]})")
 
     for tree in picks:

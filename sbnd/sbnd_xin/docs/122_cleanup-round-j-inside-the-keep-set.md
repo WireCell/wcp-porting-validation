@@ -1,7 +1,14 @@
 # 122 — cleanup round J (2026-09-21b): inside the keep set
 
-**Status: PLANNED AND GATED; the destructive steps are the owner's to run** (sec 7). Round I
-spent the directory-level lever — after it, every arm still on disk is kept for a named
+**Status: FULLY EXECUTED by the owner 2026-09-21b.** `/home/xqian` **710 G -> 768 G free (+58 G)**.
+Both gates identical to their sec 0 baselines; 0 broken symlinks; the three named exclusions
+verified intact afterwards. **One over-reach was found after execution and reverted** -- 2638
+files in pdvd's production input chain and the OPEN `p101q` had been compressed; all were
+restored byte-identical, and the planner now holds them behind a negative-controlled `EXTRA_HOLD`.
+Sec 8 is the full account, including what it means for the compression lever (pdvd's is spent;
+round J's real compression yield is pdhd's 8.79 GiB, not the 13.00 offered in sec 1).
+
+Round I spent the directory-level lever — after it, every arm still on disk is kept for a named
 reason — so the owner asked what else could go. This round answers that with measurement
 rather than instinct, and four of the five things it found were **not** what the first pass
 of arithmetic suggested.
@@ -50,8 +57,8 @@ time only because it was run): sentinels **21 PASS / 0 FAIL / 2 OPEN / 7 INERT**
 | sbnd SP frames, `d115` + `d102m` | 636 files | **10.30 GiB** |
 | pdhd SP frames, unshared only | 128 files | **7.24 GiB** |
 | directory: `d102mpr` + `d103vprod1` | 5 dirs | **10.27 GiB** |
-| compression, pdvd + pdhd cold arms | 8 689 files, 15.03 GiB in scope | **≈13.00 GiB** (reversible) |
-| **total** | | **≈ 62.1 GiB** → `/home/xqian` ≈ **772 G free** |
+| compression, pdvd + pdhd cold arms | 8 689 files, 15.03 GiB in scope | offered **≈13.00 GiB**; actual net **8.79** (sec 8.1) |
+| **total** | | offered **≈ 62.1 GiB**; actual **58 GiB**, 710 → 768 G free |
 
 ### 1.1 Four corrections to the menu the owner chose from
 
@@ -64,7 +71,7 @@ quietly becomes a different number is how a round loses its audit trail.
 | pctrees | 21.3 | **21.27** | — |
 | SP frames | 29.6 | **17.54** | three separate reasons, below |
 | superseded arms | 11.5 | **10.27** | `d103vprod1` is **13 MB**, not the 1.25 GiB round H's PROTECTED line claimed |
-| compression | ~11 | **≈13.00** | my first scope was narrower than round G's; corrected to match the precedent |
+| compression | ~11 | **8.79** | my first scope was narrower than round G's, so I widened it to match the precedent -- and overshot, see sec 8.1.  pdvd's compression lever was already spent by round G; the real yield is the pdhd extension alone |
 
 The SP frames figure lost 12 GiB to three things, and the first two are near-misses:
 
@@ -219,9 +226,78 @@ python3 $IMG/sbnd/sbnd_xin/scripts/cfg/prod_cfg_gate.py --ref $IMG/sbnd/sbnd_xin
 Steps 2–4 are independent: no set's list is affected by another step, and each driver re-plans
 and `cmp`s before it acts, so a list that moved refuses (rc=11) instead of executing stale.
 
-## 8. As executed
+## 8. As executed (2026-09-21b, owner, bash mode) — including one over-reach and its correction
 
-*(to be filled once the block has run.)*
+**Every step ran rc=0 in one paste. `/home/xqian` 710 G → 772 G, then → 768 G after a
+correction described below.** Net **+58 G**.
+
+| step | result |
+|---|---|
+| sbnd pctrees | **10 036/10 036** removed, 21.27 GiB |
+| pdhd SP frames | **128/128** removed, 7.24 GiB |
+| sbnd SP frames | **636/636** removed, 10.30 GiB |
+| broken symlinks (file-level) | pdvd 0→0, pdhd 0→0, sbnd_xin 0→0 |
+| `d102mpr` | 4 dirs, present 4, already gone 0, 10.25 GiB, rc=0 |
+| `d103vprod1` | 1 dir, 0.01 GiB, rc=0 |
+| compression, pdhd | 3 223 files, **10.15 → 1.37 GiB, saved 8.79** |
+| compression, pdvd | 5 466 files, 4.88 → 0.69 GiB, saved 4.19 — **then mostly reverted, below** |
+| originals left / `.zst` present | 0 / 5 466 + 3 223 |
+
+Tree sizes: sbnd_xin 159 → **117 G**, pdvd 75 → **75 G** (after the restore), pdhd 71 → **55 G**.
+
+Gates, against §0's baselines: sentinels **21 PASS / 0 FAIL / 2 OPEN / 7 INERT** (identical),
+`prod_cfg_gate --ref prod-2026-09-21d` **PASS 26** (identical), broken symlinks **0**.
+
+**The three exclusions §1.2 promised were verified present after the round, not assumed:**
+`input_files_reco1` 4.6 G / 20 files intact, `work-r3nue-d116tfull` 2 001 pctrees intact,
+`work-r3nue-d115` 2 001 pctrees intact.
+
+### 8.1 The over-reach: 2 638 files inside the production input chain and the OPEN arm
+
+Reading the frozen manifest back after execution showed
+`plan_compress_20260921b.py` had compressed **1 200 files in `p98von`, 719 in `p100flip` and
+719 in `p101q`** — 2 638 files, 4.87 GiB. `p98von`/`p100flip`/`pvdimg` are what pdvd's
+PROTECTED calls **"THE PRODUCTION INPUT CHAIN"**, and `p101q` is the **OPEN** item awaiting the
+owner's decision (doc pdvd/100 §8.7). Round G held all four by name. None of them should have
+been in scope.
+
+**The mechanism.** §3.2 widened the hold from "production ∪ substrate ∪ scan ∪ PROTECTED" to
+`set(cfg["production"])`, on the correct reading that round G compressed substrate and
+hand-scan-source arms. But round G's *own* hold **also** named `p100flip pvdimg p98von p101q`,
+and those are not in `plan_*.py`'s `production` list — `pvdimg`/`p98von`/`p100flip` live in
+`substrate` and `p101q` in `keep_arms`. So widening to `production` alone let them through. The
+config cannot distinguish them: pdvd's `substrate` mixes old provenance arms (`d27fresh`,
+`keep`, `d51vclus`, `d41prov`, `d39r2prov` — which round G compressed on purpose) with the
+production input chain, and only the PROTECTED line's *prose* separates the two.
+
+**Corrected.** `restore_compress_20260921b.py --confirm p98von p100flip p101q` →
+**2 638/2 638 restored, 0 `.zst` remaining, SHA-256 spot-check 40/40 byte-identical.** Free
+space 772 → 768 G, i.e. the 4.19 GiB of saving handed back.
+
+**The fix, with a causal control.** `EXTRA_HOLD` now names the input chain and the OPEN arm
+explicitly, with **C7** asserting every name still resolves so the list cannot rot into silence
+the way three PROTECTED lines did this week. `NO_EXTRA_HOLD=1` is its control: without the hold
+the planner reports **2 638 files / 4.87 GiB** back in scope — the same count and bytes that
+were restored — and with it, **0**. That is the hold shown to be doing the work rather than
+coinciding with an empty result.
+
+**What this changes about the compression lever.** pdvd's in-scope 4.88 GiB was *almost
+entirely* the over-reach. So the honest conclusion is that **round G exhausted pdvd's
+compression lever**, and round J's real compression yield is the pdhd extension alone: **8.79
+GiB**. The "13.00 GiB" of §1 was 4.2 GiB of arms that should never have been offered.
+
+**Two things worth saying plainly.** This was caught only because the manifest was read back
+after the fact — no gate rejected it, and C5 passed because it was asked the wrong question.
+And it was recoverable only because this is the **reversible** lever; the same mistake in the
+pctree or frames set would have been permanent. That is an argument for putting the
+irreversible levers behind narrower, named scopes than the reversible one, not the reverse.
+
+### 8.2 A gate that fired on nothing
+
+The post-execution re-run also exposed **C3** failing with *"32 724 held targets"* on a scope of
+**zero**: `lsof -Fn --` with an empty path list reports every open file on the machine. Fixed by
+skipping the check when there are no targets. A gate that fires on nothing is as useless as one
+that never fires, and this one would have blocked a legitimate future run.
 
 ## 9. Carried forward to round K
 

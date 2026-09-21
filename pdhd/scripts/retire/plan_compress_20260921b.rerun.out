@@ -1,0 +1,14 @@
+pdvd: 0 files, 0.00 GiB, est save 0.00 GiB
+pdhd: 0 files, 0.00 GiB, est save 0.00 GiB
+TOTAL 0 files
+
+  PASS  C1: regular files, one name each (0 not; e.g. [])
+  PASS  C2: no symlink resolves onto a target (0; e.g. [])
+  FAIL  C3: no process holds a target open (32724)
+  PASS  C4: nothing written in the last 7 d (0), no .zst already present (0)
+  PASS  C7: every EXTRA_HOLD name resolves (all present)
+  PASS  C5: no production, input-chain, OPEN or bare family in scope (0; e.g. [])
+  list: files_compress_pdvd_20260921b.txt  (0 lines)
+  list: files_compress_pdhd_20260921b.txt  (0 lines)
+
+GATES FAILED: ['C3']
