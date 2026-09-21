@@ -1,0 +1,13 @@
+   guards: 759 units, none written in the last hour, no process cwd inside
+   759 units | permanent pins intact: /home/xqian/tmp/d102/libpin_d102 /home/xqian/tmp/d102m-libsnap /home/xqian/tmp/pdhdstm_libpin
+   DRY RUN -- would freeze 759 units into /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/archive/records/cleanup-20260921/tmp, then remove them.  First 3:
+      /home/xqian/tmp/d113/libpin_pre
+      /home/xqian/tmp/claude-25225/-home-xqian-work/7f182544-9f35-4c6d-9ecd-30bc31061934
+      /home/xqian/tmp/claude-25225/-home-xqian-work/b8994210-6f52-43b1-9e8c-01d5b5a747ba
+
+POST-STATE: ~/tmp 91G | free 511G
+   /home/xqian/tmp/d102/libpin_d102: intact
+   /home/xqian/tmp/d102m-libsnap: intact
+   /home/xqian/tmp/pdhdstm_libpin: intact
+
+DRY RUN.  Re-run with CONFIRM=yes to execute.

@@ -1,0 +1,60 @@
+
+==============================================================================
+== pdvd   (/home/xqian/toolkit-dev/wcp-porting-img/pdvd/work)
+==============================================================================
+  universe 26056 logs
+  RELEASE  23896 logs = 18.43 GiB
+  held: 2160 event dir alive | 0 arm kept | 0 PROTECTED | 0 written <1 h | 0 malformed name | 0 not a regular file
+  --- RELEASE ---                logs      GiB
+  d25r12eager                     120     0.59
+  stm1                             89     0.52
+  d25r14pre                       120     0.43
+  d28r2fp5                        120     0.37
+  d28r2fb                         120     0.37
+  d28r2fp                         120     0.37
+  d28fpost                        120     0.34
+  d28fbase                        120     0.34
+  d25r12fast                      120     0.31
+  stm3                             20     0.26
+  d25r14fix2                      120     0.24
+  d25r14base2                     120     0.24
+  d25r13fix                       120     0.24
+  d65s08                          120     0.15
+  d28dlfp                         120     0.14
+  PASS  GATE O5: no release log's event dir exists (clear)
+  PASS  GATE O6: every target resolves inside work/ (clear)
+  PASS  GATE O7: malformed names excluded, not guessed at (0)
+  PASS  GATE O8: keep list loaded: 49 kept arm tags
+  list: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/files_orphanlogs_pdvd_20260921.txt  (23896 lines, 18.43 GiB)
+
+==============================================================================
+== pdhd   (/home/xqian/toolkit-dev/wcp-porting-img/pdhd/work)
+==============================================================================
+  universe 7439 logs
+  RELEASE  6337 logs = 8.96 GiB
+  held: 1102 event dir alive | 0 arm kept | 0 PROTECTED | 0 written <1 h | 0 malformed name | 0 not a regular file
+  --- RELEASE ---                logs      GiB
+  h26q2dprod                       61     0.11
+  d101hold                         61     0.11
+  h28prod                          61     0.11
+  h28off                           61     0.11
+  h26q2d                           61     0.11
+  h28wl                            61     0.11
+  h100a                            61     0.11
+  h100b                            61     0.11
+  h21z                             61     0.11
+  h22t                             61     0.11
+  h23a                             61     0.11
+  h22c                             61     0.11
+  h26conf                          61     0.11
+  h22p3                            61     0.11
+  h22p2                            61     0.11
+  PASS  GATE O5: no release log's event dir exists (clear)
+  PASS  GATE O6: every target resolves inside work/ (clear)
+  PASS  GATE O7: malformed names excluded, not guessed at (0)
+  PASS  GATE O8: keep list loaded: 41 kept arm tags
+  list: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/files_orphanlogs_pdhd_20260921.txt  (6337 lines, 8.96 GiB)
+
+==============================================================================
+GRAND TOTAL orphan logs 27.39 GiB
+This script retired nothing.  Review the lists, then run the driver (CONFIRM=yes).

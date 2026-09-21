@@ -1,0 +1,5 @@
+== pdvd: 23896 logs, 18.43 GiB, frozen 1:1 in pdvd-orphanlogs.manifest.tsv
+   DRY RUN -- nothing removed.  e.g. .batch_pr_039252_0_d101vkfpr.log
+== pdhd: 6337 logs, 8.96 GiB, frozen 1:1 in pdhd-orphanlogs.manifest.tsv
+   DRY RUN -- nothing removed.  e.g. .batch_pr_028084_0_d101hold.log
+done (CONFIRM=no)
