@@ -1,0 +1,43 @@
+# doc 118 G1 -- flipped production default vs the doc-116 `tfull` arm, per event
+# archive members by content (M2); logs, rc.txt, .time.meta and the compiled cfg are not products
+
+## cv: tfull 2017 events, flip 18, compared 18
+   files compared            : 82
+   differ, provenance/timing only: 28
+   differ, NOT explained     : 0
+
+## nuecc: tfull 2001 events, flip 24, compared 24
+   files compared            : 120
+   differ, provenance/timing only: 48
+   differ, NOT explained     : 0
+
+## off: tfull 1000 events, flip 20, compared 20
+   files compared            : 82
+   differ, provenance/timing only: 21
+   differ, NOT explained     : 0
+
+PASS -- every difference is provenance (the fit-JSON path and the hashes derived
+       from it) or a stopwatch; no physics product differs
+
+================================================================================
+# THE CONTROL: the same gate, on two runs of ONE configuration (the flipped one).
+#   work-r3cv-d118flip vs work-r3cv-d118fliprep, cv f000, 18 events
+# Without it, 'provenance/timing only' is an assertion.  With it, the two classes the
+# gate forgives above are shown to be exactly the classes that move when NOTHING moves.
+
+   events compared               : 18
+   files compared                : 82
+   differ, provenance/timing only: 28
+   differ, NOT explained         : 0
+
+# Per-tree detail (scripts/d118/root_gate.py), same control:
+## same config, two runs: 18 common events
+   Trun: 1 branch(es) ever differ: ['wcp_git']
+
+# and the flip against the measured arm:
+## flip vs tfull, cv: 18 common events
+   Trun: 4 branch(es) ever differ: ['op_config_sha256', 'toolkit_git', 'trackfitting_config', 'wcp_git']
+## flip vs tfull, nuecc: 24 common events
+   Trun: 4 branch(es) ever differ: ['op_config_sha256', 'toolkit_git', 'trackfitting_config', 'wcp_git']
+## flip vs tfull, off: 20 common events
+   Trun: 4 branch(es) ever differ: ['op_config_sha256', 'toolkit_git', 'trackfitting_config', 'wcp_git']

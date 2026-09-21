@@ -1,0 +1,45 @@
+# d118 cfg diff  toolkit=0a2807f4(dirty)  wcp=7c422e4a  2026-09-20_16:43
+PRE  cfg tree: /home/xqian/tmp/d118_cfgdiff.36zX/pre/cfg   (git HEAD, pristine)
+POST cfg tree: /nfs/data/1/xqian/toolkit-dev/toolkit/cfg      (working tree)
+pre   rc=0  sha=4ee005c935dac7df
+post  rc=0 sha=3db5df01e33ff853
+-- node diff pre -> post: only pre ['BlobSampler:live-apa0-0', 'BlobSampler:live-apa1-0']  only post ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']
+   changed node CreateSteinerGraph:pr: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode']
+       base_weight_blank_alpha: None  ->  0.5
+       base_weight_scope: None  ->  tree+path
+       terminal_blank_plane_mode: None  ->  prefer3
+   changed node CreateSteinerGraph:prrefresh: keys ['base_weight_blank_alpha', 'base_weight_scope', 'terminal_blank_plane_mode']
+       base_weight_blank_alpha: None  ->  0.5
+       base_weight_scope: None  ->  tree+path
+       terminal_blank_plane_mode: None  ->  prefer3
+   changed node ImproveCluster_2:pr: keys ['samplers']
+       samplers: [{'apa': 0, 'face': 0, 'name': 'BlobSampler:live-apa0-0'}, {'apa': 1, 'face': 0, 'name': 'BlobSampler:live-apa1-0'}]  ->  [{'apa': 0, 'face': 0, 'name': 'BlobSampler:live-cs-apa0-0'}, {'apa': 1, 'face': 0, 'name': 'BlobSampler:live-cs-apa1-0'
+   changed nodes: 3
+-- trackfitting_config_file moved on: []  (expected: [])
+
+-- CROSS-CHECK against the measured arms (docs/116_figs/116_cfg_proof.txt):
+     csp3bw cell compile sha = 3db5df01e33ff853
+     post-flip no-TLA compile = 3db5df01e33ff853   IDENTICAL
+   i.e. the flipped production default compiles byte-for-byte to the doc-116 `csp3bw` cell's
+   config.  `tfull` = that config plus --tla-str trackfitting_config=<the arm's copy of the fit
+   JSON>; after the flip the production path resolves to the in-tree sbnd_track_fitting.json,
+   whose 47 live keys gate G2 proves identical to the arm's copy.  So the production operating
+   point after this flip IS doc 116's `tfull`, proven on both halves.
+
+-- G5: the LArSoft 1-step chain (sbnd/wcls-img-clus-matching-xin.jsonnet, pr_operating_point=sync,
+   which imports the GENERATED sbnd/pr-operating-point.jsonnet).  That wrapper carries 22 knobs and
+   none of these four, which is exactly why the flip was placed at the clus.jsonnet CALL SITES and
+   not at the wct-pr-perevt.jsonnet TLA defaults (clus.jsonnet:1005 records the same trap for
+   flash_by_gid: "a TLA-only flip would have left LArSoft on the defect").  Compiled pre vs post:
+
+     only post ['BlobSampler:live-cs-apa0-0', 'BlobSampler:live-cs-apa1-0']
+     changed node CreateSteinerGraph:pr        keys [base_weight_blank_alpha, base_weight_scope,
+                                                     terminal_blank_plane_mode] -> 0.5, tree+path, prefer3
+     changed node CreateSteinerGraph:prrefresh  same three
+     changed node ImproveCluster_2:pr           samplers -> the live-cs-* pair
+     changed nodes: 3
+
+   Identical to the per-event PR job's diff above: the two chains move together, no regeneration of
+   pr-operating-point.jsonnet needed.  (The pre-flip live-apa{0,1}-0 samplers remain present in the
+   combined chain because the clustering stage's own 3-D point cloud still uses them; only the
+   RETILE samplers that feed steiner/steiner_refresh are swapped, which is the documented scope.)

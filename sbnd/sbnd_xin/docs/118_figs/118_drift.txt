@@ -1,0 +1,28 @@
+reference : ref/prod-2026-09-17b
+cfg tree  : /nfs/data/1/xqian/toolkit-dev/toolkit/cfg
+compiling : /home/xqian/tmp/prodcfg-vsje10g5
+checked   : 21 artifacts
+DRIFT     : bare_prjob.json, prod_prjob.json, sbnd_pr.json
+
+SBND PR job, key by key (reference -> current tree):
+  REMOVED [11].data.strategy[0] = 'stepped'
+  ADDED   [11].data.strategy[0].disable_mix_dead_cell = False
+  ADDED   [11].data.strategy[0].name = 'charge_stepped'
+  CHANGED [11].name : 'live-apa0-0' -> 'live-cs-apa0-0'
+  REMOVED [12].data.strategy[0] = 'stepped'
+  ADDED   [12].data.strategy[0].disable_mix_dead_cell = False
+  ADDED   [12].data.strategy[0].name = 'charge_stepped'
+  CHANGED [12].name : 'live-apa1-0' -> 'live-cs-apa1-0'
+  CHANGED [13].data.samplers[0].name : 'BlobSampler:live-apa0-0' -> 'BlobSampler:live-cs-apa0-0'
+  CHANGED [13].data.samplers[1].name : 'BlobSampler:live-apa1-0' -> 'BlobSampler:live-cs-apa1-0'
+  ADDED   [14].data.base_weight_blank_alpha = 0.5
+  ADDED   [14].data.base_weight_scope = 'tree+path'
+  ADDED   [14].data.terminal_blank_plane_mode = 'prefer3'
+  ADDED   [20].data.base_weight_blank_alpha = 0.5
+  ADDED   [20].data.base_weight_scope = 'tree+path'
+  ADDED   [20].data.terminal_blank_plane_mode = 'prefer3'
+
+If this drift is an intended flip, re-run with --refresh and record it in the
+round doc.  If it is not, something changed the production operating point
+without a round behind it -- that is what this gate exists to catch.
+(compiled set left at /home/xqian/tmp/prodcfg-vsje10g5)

@@ -31,6 +31,18 @@ echo "prod_sbnd rc=$?"
 $QL/scripts/compile_ub_cfg.sh "$CFG" "$OUT/uboone.json" 2> "$OUT/uboone.err"
 echo "uboone rc=$?"
 
+# (f) The three detectors' TrackFitting parameter JSONs.  doc sbnd_xin/118: these are read at
+# RUNTIME by TaggerCheckSTM / CheckSTM_Michel / TaggerCheckNeutrino (Persist::resolve + a plain
+# ifstream), never compiled, so every artifact above is blind to them -- doc 118's own flip added
+# fit_weight_pow 1.5 / assoc_cont_center 1 to the SBND file and moved ZERO of the 21.  A flip of
+# this family is a production operating-point change like any other; hashing the files is what
+# makes the tripwire able to see it.  They are copied, not compiled: the gate hashes bytes.
+for _det_tf in sbnd/sbnd_track_fitting.json pdhd/pdhd_track_fitting.json \
+               protodunevd/pdvd_track_fitting.json; do
+    cp -f "$CFG/pgrapher/experiment/$_det_tf" "$OUT/$(basename "$_det_tf")" 2>/dev/null
+    echo "trackfit $(basename "$_det_tf") rc=$?"
+done
+
 # (e) SBND PR job bare (default pipeline, default operating point)
 export WIRECELL_PATH=$CFG:$DATA:$DATA/sbnd/photodet
 $W -A input=in.tar.gz -A output_dir=out -S run=1 -S subrun=1 -S event=1 -A reality=data \

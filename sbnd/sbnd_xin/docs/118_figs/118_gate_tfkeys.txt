@@ -1,0 +1,4 @@
+# doc 118 G2 -- live (non '_') keys of the fit JSON
+prod : /nfs/data/1/xqian/toolkit-dev/toolkit/cfg/pgrapher/experiment/sbnd/sbnd_track_fitting.json  (47 live keys)
+arm  : /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/149_figs/149_tf_sbnd_kf.json  (47 live keys)
+PASS -- identical
