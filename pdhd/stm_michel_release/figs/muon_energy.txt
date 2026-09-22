@@ -1,0 +1,2 @@
+PDHD: 135 stopping muons; MCS available on 125; median KE range 424 MeV, median MCS/range 0.943, median dQdx/range 1.071
+wrote /home/xqian/toolkit-dev/wcp-porting-img/pdhd/stm_michel_release/figs/muon_energy.png

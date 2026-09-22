@@ -12,6 +12,12 @@
 #             work/<RUN_PADDED>_allpd<EVENT>_nocut so an alternate config (e.g. with the
 #             flash quality cut disabled) does not clobber the production archives.
 #   Output: work/<RUN_PADDED>_allpd<EVENT><SUFFIX>/opflash_pdhd-allpd-wct.tar.gz
+#   PDHD_LIGHT_FRAMES=1 additionally dumps the optical waveform frames of both
+#             branches (raw + decon [+ decon_roi], FrameFileSink) into
+#             work/<...>/light-frames-allpd-{snip,fs}-wct.tar.bz2 through the
+#             jsonnet frames_dir knob (doc pdhd/30, the STM+Michel release).
+#             Default unset => the wcsonnet call is unchanged (byte-identical
+#             config); the flashes are the same either way.
 #
 # The two inputs are the decoana files produced by fullstream_to_decoana.py
 # (ch 0-120 for the snippet branch, ch 120-160 for the full stream).  If the
@@ -82,6 +88,11 @@ PY
 echo "trigger offset_us: $OFFSET_US"
 
 # 3. single all-PD light chain (two branches -> OpHitMerge -> OpFlashFinder).
+# PDHD_LIGHT_FRAMES=1: also dump the raw/decon optical frames (see header).
+FRAMES_ARG=()
+if [ "${PDHD_LIGHT_FRAMES:-0}" = 1 ]; then
+    FRAMES_ARG=(-A "frames_dir=${WORKDIR}")
+fi
 cfg="$WORKDIR/.wct-light-allpd.json"
 wcsonnet \
     -A "snip_file=${SNIPCONV}" \
@@ -90,6 +101,7 @@ wcsonnet \
     -S "run=${RUN}" \
     -S "event=${EVENT}" \
     -S "offset_us=${OFFSET_US}" \
+    "${FRAMES_ARG[@]}" \
     -o "$cfg" \
     "$PDHD_DIR/wct-light-allpd-reco.jsonnet"
 # Resource recording (additive; does not change reco output, disable with

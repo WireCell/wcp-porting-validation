@@ -1,0 +1,2 @@
+PDVD: 285 stopping muons; MCS available on 249; median KE range 329 MeV, median MCS/range 0.968, median dQdx/range 1.053
+wrote /home/xqian/toolkit-dev/wcp-porting-img/pdvd/stm_michel_release/figs/muon_energy.png

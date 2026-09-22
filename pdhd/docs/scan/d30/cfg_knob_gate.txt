@@ -1,0 +1,5 @@
+knob-off gate pdhd: byte-identical (md5 7cb3f9189005)
+knob-off gate pdvd: byte-identical (md5 9038443a02db)
+knob-off gate pdvd_bare: byte-identical (md5 c8db4806d252)
+knob-on pdhd: ['FrameFileSink:snip', 'FrameFileSink:fs', 'FrameFanout:snip_frames', 'FrameFanout:fs_frames']
+knob-on pdvd: ['FrameFileSink:cath', 'FrameFileSink:mem', 'FrameFileSink:pmt', 'FrameFanout:cath_frames', 'FrameFanout:mem_frames', 'FrameFanout:pmt_frames']

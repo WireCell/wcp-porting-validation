@@ -1,0 +1,449 @@
+[
+	{
+		"data" : 
+		{
+			"apps" : 
+			[
+				"Pgrapher"
+			],
+			"plugins" : 
+			[
+				"WireCellRoot",
+				"WireCellFlash",
+				"WireCellGen",
+				"WireCellSio",
+				"WireCellAux",
+				"WireCellPgraph"
+			]
+		},
+		"type" : "wire-cell"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 0,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"event" : 1135,
+			"filename" : "/x/snip.root",
+			"run" : 29107
+		},
+		"name" : "snip",
+		"type" : "PDHDOpWaveformSource"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 0,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"event" : 1135,
+			"filename" : "/x/fs.root",
+			"run" : 29107
+		},
+		"name" : "fs",
+		"type" : "PDHDOpWaveformSource"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 0
+		},
+		"data" : 
+		{
+			"outname" : "/x/out/opflash_pdhd-allpd-wct.tar.gz",
+			"prefix" : "opflash_"
+		},
+		"name" : "allpd",
+		"type" : "TensorFileSink"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 0
+		},
+		"data" : 
+		{
+			"digitize" : false,
+			"outname" : "/x/out/light-frames-allpd-snip-wct.tar.bz2",
+			"tags" : 
+			[
+				"raw",
+				"decon"
+			]
+		},
+		"name" : "snip",
+		"type" : "FrameFileSink"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 0
+		},
+		"data" : 
+		{
+			"digitize" : false,
+			"outname" : "/x/out/light-frames-allpd-fs-wct.tar.bz2",
+			"tags" : 
+			[
+				"raw",
+				"decon",
+				"decon_roi"
+			]
+		},
+		"name" : "fs",
+		"type" : "FrameFileSink"
+	},
+	{
+		"type" : "FftwDFT"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"detect_saturation" : true,
+			"dft" : "FftwDFT",
+			"fixed_snr" : 0.0050000000000000001,
+			"fold_postfilter" : true,
+			"noise_file" : "",
+			"samples" : 1024,
+			"saturation_pad" : 1024,
+			"use_real_dft" : true
+		},
+		"name" : "snip",
+		"type" : "OpDecon"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"algo" : 
+			{
+				"split_enable" : true,
+				"split_min_peak" : 3,
+				"split_min_prominence" : 0.40000000000000002,
+				"split_min_prominence_abs" : 100,
+				"split_min_separation" : 2
+			},
+			"hit_threshold" : 3,
+			"robust_baseline" : false,
+			"veto_saturation" : true
+		},
+		"name" : "snip",
+		"type" : "OpHitFinder"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"detect_saturation" : true,
+			"dft" : "FftwDFT",
+			"fixed_snr" : 0.0050000000000000001,
+			"fold_postfilter" : true,
+			"noise_file" : "",
+			"samples" : 343808,
+			"saturation_pad" : 1024,
+			"use_real_dft" : true
+		},
+		"name" : "fs",
+		"type" : "OpDecon"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"dft" : "FftwDFT",
+			"hpf_tau_mhz" : 0.050000000000000003,
+			"roi_ext_nsigma" : 3,
+			"roi_pad_pre" : 50,
+			"roi_post_peak" : 300,
+			"roi_seed_nsigma" : 5,
+			"use_real_dft" : true,
+			"veto_channels" : 
+			[
+				135,
+				147
+			],
+			"veto_sigma" : 0.10000000000000001
+		},
+		"name" : "fs",
+		"type" : "OpRoi"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"algo" : 
+			{
+				"split_enable" : true,
+				"split_min_peak" : 3,
+				"split_min_prominence" : 0.40000000000000002,
+				"split_min_prominence_abs" : 100,
+				"split_min_separation" : 2
+			},
+			"fixed_ped_sigma" : 2,
+			"hit_threshold" : 11,
+			"intag" : "decon_roi",
+			"robust_baseline" : false,
+			"veto_saturation" : true
+		},
+		"name" : "fs",
+		"type" : "OpHitFinder"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 2,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"meta_port" : 0,
+			"multiplicity" : 2
+		},
+		"name" : "allpd",
+		"type" : "OpHitMerge"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"flash_refine" : true,
+			"group_by_side" : true,
+			"min_fired_pds" : 5,
+			"min_fired_pe" : 1,
+			"min_total_pe" : 20,
+			"nchan" : 160,
+			"offset_us" : 249.72800000000001,
+			"refine_fired_pe" : 0.5,
+			"refine_max_fired" : 2,
+			"refine_pe_ratio" : 0.5,
+			"refine_subset_merge" : true,
+			"refine_window_us" : 8
+		},
+		"name" : "",
+		"type" : "OpFlashFinder"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 2
+		},
+		"data" : 
+		{
+			"multiplicity" : 2
+		},
+		"name" : "snip_frames",
+		"type" : "FrameFanout"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 2
+		},
+		"data" : 
+		{
+			"multiplicity" : 2
+		},
+		"name" : "fs_frames",
+		"type" : "FrameFanout"
+	},
+	{
+		"data" : 
+		{
+			"edges" : 
+			[
+				{
+					"head" : 
+					{
+						"node" : "OpDecon:snip",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "PDHDOpWaveformSource:snip",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "FrameFanout:snip_frames",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "OpDecon:snip",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "FrameFileSink:snip",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "FrameFanout:snip_frames",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "OpHitFinder:snip",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "FrameFanout:snip_frames",
+						"port" : 1
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "OpDecon:fs",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "PDHDOpWaveformSource:fs",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "OpRoi:fs",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "OpDecon:fs",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "FrameFanout:fs_frames",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "OpRoi:fs",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "FrameFileSink:fs",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "FrameFanout:fs_frames",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "OpHitFinder:fs",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "FrameFanout:fs_frames",
+						"port" : 1
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "OpHitMerge:allpd",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "OpHitFinder:snip",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "OpHitMerge:allpd",
+						"port" : 1
+					},
+					"tail" : 
+					{
+						"node" : "OpHitFinder:fs",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "OpFlashFinder",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "OpHitMerge:allpd",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "TensorFileSink:allpd",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "OpFlashFinder",
+						"port" : 0
+					}
+				}
+			]
+		},
+		"type" : "Pgrapher"
+	}
+]

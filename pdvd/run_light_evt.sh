@@ -13,6 +13,12 @@
 #   -s SUFFIX appends to the work-dir name so alternate configs do not
 #     clobber the production archives.
 #   Output: work/<RUN_PADDED>_light<EVENT><SUFFIX>/opflash_pdvd-wct.tar.gz
+#   PDVD_LIGHT_FRAMES=1 additionally dumps the optical waveform frames of the
+#     three branches (raw + decon [+ decon_roi], FrameFileSink) into
+#     work/<...>/light-frames-{cath,mem,pmt}-wct.tar.bz2 through the jsonnet
+#     frames_dir knob (doc pdhd/30, the STM+Michel release).  Default unset =>
+#     the wcsonnet call is unchanged (byte-identical config); the flashes are
+#     the same either way.
 #
 # Per-event light<->charge offsets are measured from the rawwf trigoff
 # tree (per CRATE: the TDE/BDE charge windows open up to ~32 us apart,
@@ -203,6 +209,11 @@ if [ "${PDVD_FLASH_TAIL_MERGE:-1}" = 1 ]; then
     [ -n "${PDVD_TAIL_WINDOW_US:-}" ]    && VETO_SAT_ARG+=(-S "tail_window_us=${PDVD_TAIL_WINDOW_US}")
     [ -n "${PDVD_TAIL_MIN_WIDTH_US:-}" ] && VETO_SAT_ARG+=(-S "tail_min_width_us=${PDVD_TAIL_MIN_WIDTH_US}")
     [ -n "${PDVD_TAIL_PE_FRAC:-}" ]      && VETO_SAT_ARG+=(-S "tail_pe_frac=${PDVD_TAIL_PE_FRAC}")
+fi
+
+# PDVD_LIGHT_FRAMES=1: also dump the raw/decon optical frames (see header).
+if [ "${PDVD_LIGHT_FRAMES:-0}" = 1 ]; then
+    VETO_SAT_ARG+=(-A "frames_dir=${WORKDIR}")
 fi
 
 wcsonnet \

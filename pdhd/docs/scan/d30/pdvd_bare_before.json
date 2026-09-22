@@ -1,0 +1,441 @@
+[
+	{
+		"data" : 
+		{
+			"apps" : 
+			[
+				"Pgrapher"
+			],
+			"plugins" : 
+			[
+				"WireCellRoot",
+				"WireCellFlash",
+				"WireCellGen",
+				"WireCellSio",
+				"WireCellAux",
+				"WireCellPgraph"
+			]
+		},
+		"type" : "wire-cell"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 0,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"event" : 298567,
+			"filename" : "/x/raw.root",
+			"opch_hi" : 1999,
+			"opch_lo" : 1000,
+			"run" : 39252
+		},
+		"name" : "cath",
+		"type" : "PDVDOpWaveformSource"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 0,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"event" : 298567,
+			"filename" : "/x/raw.root",
+			"opch_hi" : 2999,
+			"opch_lo" : 2000,
+			"run" : 39252
+		},
+		"name" : "mem",
+		"type" : "PDVDOpWaveformSource"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 0,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"event" : 298567,
+			"filename" : "/x/raw.root",
+			"opch_hi" : 3999,
+			"opch_lo" : 3000,
+			"run" : 39252
+		},
+		"name" : "pmt",
+		"type" : "PDVDOpWaveformSource"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 0
+		},
+		"data" : 
+		{
+			"outname" : "/x/out/opflash_pdvd-wct.tar.gz",
+			"prefix" : "opflash_"
+		},
+		"name" : "allpd",
+		"type" : "TensorFileSink"
+	},
+	{
+		"type" : "FftwDFT"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"apply_postfilter" : false,
+			"detect_saturation" : true,
+			"dft" : "FftwDFT",
+			"input_polarity" : 1,
+			"noise_file" : "",
+			"samples" : 468864,
+			"saturation_pad" : 1024,
+			"spe_file" : "pgrapher/experiment/protodunevd/pdvd-spe-templates.json",
+			"use_real_dft" : true,
+			"wi_power" : 2,
+			"wi_sigma_mhz" : 1.25,
+			"wiener_inspired" : true
+		},
+		"name" : "cath",
+		"type" : "OpDecon"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"dft" : "FftwDFT",
+			"hpf_tau_mhz" : 0.050000000000000003,
+			"roi_ext_nsigma" : 3,
+			"roi_pad_pre" : 50,
+			"roi_post_peak" : 300,
+			"roi_seed_nsigma" : 5,
+			"use_real_dft" : true,
+			"veto_channels" : [],
+			"veto_sigma" : 0.10000000000000001
+		},
+		"name" : "cath",
+		"type" : "OpRoi"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"algo" : 
+			{
+				"split_enable" : true,
+				"split_min_peak" : 3,
+				"split_min_prominence" : 0.40000000000000002,
+				"split_min_prominence_abs" : 100,
+				"split_min_separation" : 2
+			},
+			"fixed_ped_sigma" : 0.75,
+			"hit_threshold" : 3.7000000000000002,
+			"intag" : "decon_roi",
+			"robust_baseline" : false,
+			"veto_saturation" : true
+		},
+		"name" : "cath",
+		"type" : "OpHitFinder"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"apply_postfilter" : false,
+			"detect_saturation" : true,
+			"dft" : "FftwDFT",
+			"input_polarity" : 1,
+			"noise_file" : "",
+			"samples" : 1024,
+			"saturation_pad" : 1024,
+			"spe_file" : "pgrapher/experiment/protodunevd/pdvd-spe-templates.json",
+			"use_real_dft" : true,
+			"wi_power" : 2,
+			"wi_sigma_mhz" : 1,
+			"wiener_inspired" : true
+		},
+		"name" : "mem",
+		"type" : "OpDecon"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"algo" : 
+			{
+				"split_enable" : true,
+				"split_min_peak" : 3,
+				"split_min_prominence" : 0.40000000000000002,
+				"split_min_prominence_abs" : 100,
+				"split_min_separation" : 2
+			},
+			"hit_threshold" : 4,
+			"robust_baseline" : false,
+			"veto_saturation" : true
+		},
+		"name" : "mem",
+		"type" : "OpHitFinder"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"apply_postfilter" : false,
+			"detect_saturation" : true,
+			"dft" : "FftwDFT",
+			"input_polarity" : 1,
+			"noise_file" : "",
+			"samples" : 1024,
+			"saturation_pad" : 1024,
+			"spe_file" : "pgrapher/experiment/protodunevd/pdvd-spe-templates.json",
+			"use_real_dft" : true,
+			"wi_power" : 2,
+			"wi_sigma_mhz" : 3.5,
+			"wiener_inspired" : true
+		},
+		"name" : "pmt",
+		"type" : "OpDecon"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"algo" : 
+			{
+				"split_enable" : true,
+				"split_min_peak" : 3,
+				"split_min_prominence" : 0.40000000000000002,
+				"split_min_prominence_abs" : 100,
+				"split_min_separation" : 2
+			},
+			"hit_threshold" : 2.2000000000000002,
+			"robust_baseline" : false,
+			"veto_saturation" : true
+		},
+		"name" : "pmt",
+		"type" : "OpHitFinder"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 3,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"meta_port" : 0,
+			"multiplicity" : 3
+		},
+		"name" : "allpd",
+		"type" : "OpHitMerge"
+	},
+	{
+		"_pnode" : 
+		{
+			"nin" : 1,
+			"nout" : 1
+		},
+		"data" : 
+		{
+			"channel_map_file" : "pgrapher/experiment/protodunevd/pdvd-opch-map.json",
+			"flash_refine" : false,
+			"geom_file" : "pgrapher/experiment/protodunevd/pdvd-opdet-geom.json",
+			"group_by_side" : false,
+			"min_fired_pds" : 2,
+			"min_fired_pe" : 1,
+			"min_total_pe" : 10,
+			"nchan" : 40,
+			"offset_us" : 0
+		},
+		"name" : "",
+		"type" : "OpFlashFinder"
+	},
+	{
+		"data" : 
+		{
+			"edges" : 
+			[
+				{
+					"head" : 
+					{
+						"node" : "OpDecon:cath",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "PDVDOpWaveformSource:cath",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "OpRoi:cath",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "OpDecon:cath",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "OpHitFinder:cath",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "OpRoi:cath",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "OpDecon:mem",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "PDVDOpWaveformSource:mem",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "OpHitFinder:mem",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "OpDecon:mem",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "OpDecon:pmt",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "PDVDOpWaveformSource:pmt",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "OpHitFinder:pmt",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "OpDecon:pmt",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "OpHitMerge:allpd",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "OpHitFinder:cath",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "OpHitMerge:allpd",
+						"port" : 1
+					},
+					"tail" : 
+					{
+						"node" : "OpHitFinder:mem",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "OpHitMerge:allpd",
+						"port" : 2
+					},
+					"tail" : 
+					{
+						"node" : "OpHitFinder:pmt",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "OpFlashFinder",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "OpHitMerge:allpd",
+						"port" : 0
+					}
+				},
+				{
+					"head" : 
+					{
+						"node" : "TensorFileSink:allpd",
+						"port" : 0
+					},
+					"tail" : 
+					{
+						"node" : "OpFlashFinder",
+						"port" : 0
+					}
+				}
+			]
+		},
+		"type" : "Pgrapher"
+	}
+]

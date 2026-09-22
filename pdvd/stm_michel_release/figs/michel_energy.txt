@@ -1,0 +1,5 @@
+PDVD: 178 STM+Michel candidates; region twin (offline sum from T_michel_2d vs stored) max relative deviation 5.96e-15
+  michel_ke_q2d_region: median 31.8 MeV, mean 31.4, > 52.8 MeV: 6
+  michel_ke_best      : median 22.4 MeV, mean 24.4
+  body control (ctl)  : median 2.1 MeV
+wrote /home/xqian/toolkit-dev/wcp-porting-img/pdvd/stm_michel_release/figs/michel_energy.png
