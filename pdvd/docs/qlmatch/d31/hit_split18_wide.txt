@@ -1,9 +1,11 @@
-# 18 events run 039252, 2786 cathode rail runs; window [i-3000, j+6000); ratios median [16,84]
+# 18 events run 039252, 2786 cathode rail runs (0 dropped: ROI sum <= 0 in an arm); window [i-3000, j+6000); ratios median [16,84]
       ToT     n |           hits/roi twoside               hits/roi tot | nhit ts nhit tot |                 roi tot/ts                hits tot/ts
    1-20    1021 |       1.008 [1.000, 1.022]       1.007 [1.001, 1.022] |      20       20 |       1.001 [0.980, 1.004]       1.001 [0.995, 1.005]
   20-71     659 |       1.009 [1.002, 1.020]       1.006 [1.001, 1.016] |      20       19 |       0.956 [0.878, 0.993]       0.957 [0.882, 0.995]
   71-141    553 |       1.010 [1.001, 1.026]       1.005 [1.001, 1.012] |      21       19 |       0.864 [0.665, 0.939]       0.885 [0.742, 0.945]
  141-260    401 |       0.504 [0.230, 1.006]       1.002 [0.994, 1.006] |      23       19 |       0.660 [0.346, 0.791]       1.163 [0.779, 1.802]
  260-5000   152 |       0.088 [0.016, 0.181]       0.481 [0.343, 0.591] |      36       22 |       0.297 [0.108, 0.461]       1.503 [1.205, 2.193]
+ToT >= 71: hit PE summed over runs  twoside 7.497e+06  tot 8.516e+06  (twoside/tot 0.880)
 ToT >= 71: sum over runs  roi twoside 4.999e+08  hits twoside 7.497e+06 (0.015)  |  roi tot 1.378e+07  hits tot 8.516e+06 (0.618)
+ToT >= 141: hit PE summed over runs  twoside 4.299e+06  tot 5.695e+06  (twoside/tot 0.755)
 ToT >= 141: sum over runs  roi twoside 4.933e+08  hits twoside 4.299e+06 (0.009)  |  roi tot 1.078e+07  hits tot 5.695e+06 (0.528)

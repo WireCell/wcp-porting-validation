@@ -51,8 +51,11 @@ def main():
                 rows.append((evt, c, j - i, ra[lo:hi].sum(), rb[lo:hi].sum(), sa[:, 5].sum(), sb[:, 5].sum(),
                              len(sa), len(sb)))
     r = np.array(rows, float)
+    n0 = len(r)
+    r = r[(r[:, 3] > 0) & (r[:, 4] > 0)]          # a ratio needs a positive ROI sum in both arms
     f = lambda x: f"{np.median(x):.3f} [{np.percentile(x, 16):.3f}, {np.percentile(x, 84):.3f}]"
-    print(f"# 18 events run 039252, {len(r)} cathode rail runs; window [i-{W0}, j+{W1}); ratios median [16,84]")
+    print(f"# 18 events run 039252, {n0} cathode rail runs ({n0 - len(r)} dropped: ROI sum <= 0 in an arm); "
+          f"window [i-{W0}, j+{W1}); ratios median [16,84]")
     print(f"{'ToT':>9} {'n':>5} | {'hits/roi twoside':>26} {'hits/roi tot':>26} | {'nhit ts':>7} {'nhit tot':>8} | "
           f"{'roi tot/ts':>26} {'hits tot/ts':>26}")
     for lo, hi in ((1, 20), (20, 71), (71, 141), (141, 260), (260, 5000)):
@@ -64,6 +67,8 @@ def main():
               f"{f(r[s, 6] / np.maximum(r[s, 5], 1e-9)):>26}")
     for lo in (71, 141):
         s = r[:, 2] >= lo
+        print(f"ToT >= {lo}: hit PE summed over runs  twoside {r[s, 5].sum():.4g}  tot {r[s, 6].sum():.4g}  "
+              f"(twoside/tot {r[s, 5].sum() / r[s, 6].sum():.3f})")
         print(f"ToT >= {lo}: sum over runs  roi twoside {r[s, 3].sum():.4g}  hits twoside {r[s, 5].sum():.4g} "
               f"({r[s, 5].sum() / r[s, 3].sum():.3f})  |  roi tot {r[s, 4].sum():.4g}  hits tot {r[s, 6].sum():.4g} "
               f"({r[s, 6].sum() / r[s, 4].sum():.3f})")

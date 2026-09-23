@@ -1,0 +1,2 @@
+single-start v2 parameters, default tolerances: n 857, [16,84] [-0.036, +0.031] -> sigma_ff 0.034
+single-start v2 parameters, tight tolerances: n 857, [16,84] [-0.036, +0.035] -> sigma_ff 0.036

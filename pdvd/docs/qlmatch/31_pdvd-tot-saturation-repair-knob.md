@@ -79,8 +79,10 @@ because the v1 template was anomalous. `saturation_tot_study.py --spe v2` theref
 - **What it looks like.** Restarts from 6 points land on different parameters with similar rms, τ_s anywhere from 80
   to 122 ticks (`d31/refit_starts.txt`, `least_squares` status 3 = x-step tolerance).
 - **The fix.** `--spe v2` now takes the lowest-cost fit of 6 starts, with `xtol = ftol = 1e-12` and an `x_scale`. The
-  per-pulse prompt-fraction spread uses the same tolerances. Its sim σ_ff becomes 0.017; the single-start value 0.034
-  was also an early stop.
+  per-pulse prompt-fraction spread uses the same tolerances. On the new parameters the default-tolerance sub-fit stopped
+  early (σ_ff 0.005); the tight one gives 0.017. The single-start value 0.034 was **not** an early stop: it comes out
+  0.036 with tight tolerances on those parameters (`d31/sff_check.txt`). It is simply a property of the
+  single-start parameters.
 - **Superseded records.** The single-start v2 records are kept in `d31/singlestart/`. The single-start light / Q/L arm
   (`_q31tot` / `q31tot`) is superseded and quoted only in §7.
 
@@ -201,8 +203,12 @@ default light run is therefore not production light.
 | > 260 | 152 | **0.075** [0.013, 0.163] | **0.469** [0.332, 0.571] | 16 / 3 |
 
 - **What happens under twoside.** The bridge makes a tall, narrow spike. After decon, the hit finder cuts it into
-  several hits and drops the slow tail between them. On runs of ToT ≥ 141, hits carry 0.7 % of the (grossly
-  over-filled) ROI PE.
+  several hits and drops the slow tail between them.
+  - In the 141–260 bin the median run keeps 45 % of its ROI PE in hits.
+  - Summed over all runs with ToT ≥ 141, twoside's hit PE is 0.72× ToT's (3.6e6 vs 5.0e6 PE; 0.76× in the wide
+    window).
+  - Twoside's summed ROI there (4.9e8 PE) is not a meaningful denominator: the exponential extrapolation over-fills the
+    ToT > 260 runs by orders of magnitude.
 - **Worked example.** Ch 1021, ToT 205: twoside ROI 15 568 PE → 6 hits, 5 231 PE. ToT: ROI 9 587 → 1 hit, 9 600 PE.
 - **Window check.** Widening the window to [i − 3000, j + 6000) changes nothing (`hit_split18_wide.txt`), so the PE is
   lost, not booked elsewhere.
@@ -303,7 +309,8 @@ map is a post-hoc diagnostic in the doc 26 style, and it fails too.
    `q31tot2m`: 25 newly missed, 12 recovered, 8 + 13 phantom movers and the new unknowns, about 80 items. Without it,
    the scan can only say that ToT disagrees with verdicts taken on twoside flashes.
 2. **Fix the hit-level loss (§5) first; it is mode-independent.**
-   - Twoside keeps 0.7 % of the ROI PE on runs of ToT ≥ 141, and ToT keeps about 50 % above ToT 260.
+   - Twoside's median run keeps 45 % of its ROI PE in hits at ToT 141–260, and twoside's summed hit PE on ToT ≥ 141
+     runs is 0.72× ToT's. ToT itself keeps about 50 % above ToT 260.
    - The hit finder also creates the split flashes that doc 26's tail merge exists to repair.
    - A default-OFF OpHitFinder knob (for example, one hit per flagged rail run) is the candidate. It needs the same
      gates as this doc.
@@ -329,7 +336,7 @@ map is a post-hoc diagnostic in the doc 26 style, and it fails too.
   - `saturation_tot_study.py` (`--spe v2`, multi-start under v2);
   - `export_tot_shapes.py`, `d31_tot_doctest_ref.py`, `d31_refit_starts.py`;
   - `d31_light_arms.sh`, `d31_ql_arms.sh`, `d31_compile_light.sh`;
-  - `d31_flash_pe.py`, `d31_hit_split18.py`, `d31_frames_closure.py`, `d31_roi_closure.py`, `d31_run_census.py`;
+  - `d31_flash_pe.py`, `d31_hit_split18.py`, `d31_sff_check.py`, `d31_frames_closure.py`, `d31_roi_closure.py`, `d31_run_census.py`;
   - `d31_time_map.py`, `d31_scan_pairs.py`, `d31_scan_subset.py`, `d31_sat_terms.py`;
 - `docs/qlmatch/d31/`:
   - the records, including `prereg.md` and `gate/`;
