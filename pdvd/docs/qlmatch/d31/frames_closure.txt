@@ -1,0 +1,14 @@
+tickinfo raw [   0.   16. 1068.] decon [   0.   16. 1068.] shapes (16, 468800) (16, 468864)
+runs 111
+ToT 1-20 n 43: C++ tot/ts 1.002 [0.999,1.005] | replica tot/ts 1.002 [0.999,1.005] | C++ts/replica-ts 1.001 [0.989,1.023] | C++tot/replica-tot 1.001 [0.989,1.023]
+ToT 20-71 n 20: C++ tot/ts 0.965 [0.934,0.983] | replica tot/ts 0.965 [0.933,0.983] | C++ts/replica-ts 1.004 [0.994,1.009] | C++tot/replica-tot 1.004 [0.994,1.010]
+ToT 71-141 n 27: C++ tot/ts 0.868 [0.627,0.924] | replica tot/ts 0.866 [0.618,0.922] | C++ts/replica-ts 1.011 [1.000,1.022] | C++tot/replica-tot 1.017 [1.001,1.029]
+ToT 141-260 n 21: C++ tot/ts 0.718 [0.424,0.813] | replica tot/ts 0.714 [0.416,0.811] | C++ts/replica-ts 1.013 [1.008,1.016] | C++tot/replica-tot 1.022 [1.011,1.037]
+chan 1021 i 244378 ToT 205  C++ ts 15908 tot 10140 | replica ts 15695 tot 9923
+chan 1051 i 181727 ToT 201  C++ ts 21683 tot 7194 | replica ts 21431 tot 6939
+chan 1061 i 41686 ToT 196  C++ ts 15891 tot 10619 | replica ts 15654 tot 10383
+chan 1051 i 451563 ToT 195  C++ ts 20663 tot 6813 | replica ts 20396 tot 6544
+chan 1071 i 172561 ToT 195  C++ ts 12405 tot 8486 | replica ts 12167 tot 8245
+chan 1051 i 226344 ToT 180  C++ ts 14431 tot 6019 | replica ts 14231 tot 5817
+chan 1050 i 181727 ToT 178  C++ ts 6955 tot 5233 | replica ts 6903 tot 5179
+chan 1070 i 172561 ToT 178  C++ ts 8513 tot 6112 | replica ts 8383 tot 5982

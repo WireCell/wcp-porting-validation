@@ -42,6 +42,10 @@ METHODS = ("raw", "clip", "tail", "twoside", "tmpl", "tot_cal", "tot_fill")
 MERGE_GAP = 2                                 # rail runs separated by <= 2 samples are one run
 FF_SPREAD = None                              # set by --shape (per-pulse fast-fraction sigma)
 rng_master = np.random.default_rng(20260923)
+MULTISTART = False                            # --spe v2 (doc 31): best of FIT_STARTS, tight tolerances
+FIT_STARTS = ([0.3, 0.3, 8, 80, 1.0], [0.2, 0.4, 5, 100, 0.8], [0.35, 0.5, 6, 70, 0.7], [0.25, 0.2, 10, 120, 1.2],
+              [0.3, 0.45, 7, 90, 0.75], [0.15, 0.3, 4, 110, 0.9])
+PNG_TAG = ""                                  # "_v2" under --spe v2 (doc 31) so doc 30's figures are never overwritten
 
 
 def out(fh, *a):
@@ -110,8 +114,13 @@ def shape_fit(fh):
         W = np.stack([(seg[i, pk[i] + OFF] - b[i]) / (seg[i, pk[i]] - b[i]) for i in sel])
         med = np.median(W, 0)
         wt = np.where(med > 0.3, 3.0, 1.0)
-        r = least_squares(lambda p: wt * (shape_at(model(chd[c], *p)) - med), [0.3, 0.3, 8, 80, 1.0],
-                          bounds=([0, 0, 2, 20, 0], [1, 1, 40, 400, 20]))
+        r = None
+        for p0 in (FIT_STARTS if MULTISTART else ([0.3, 0.3, 8, 80, 1.0],)):
+            ri = least_squares(lambda p: wt * (shape_at(model(chd[c], *p)) - med), p0,
+                               bounds=([0, 0, 2, 20, 0], [1, 1, 40, 400, 20]),
+                               **(dict(xtol=1e-12, ftol=1e-12, x_scale=[0.1, 0.1, 2, 20, 0.3]) if MULTISTART else {}))
+            if r is None or ri.cost < r.cost:
+                r = ri
         par[c] = r.x
         rms = np.sqrt(np.mean((shape_at(model(chd[c], *r.x)) - med) ** 2))
         out(fh, f"{c:>6} {len(sel):>3} {r.x[0]:6.3f} {r.x[1]:6.3f} {r.x[2]:6.2f} {r.x[3]:6.1f} {r.x[4]:6.2f} {rms:7.4f}")
@@ -120,7 +129,8 @@ def shape_fit(fh):
         ff0, bi, ti, ts, sg = par[c]
         for i in np.nonzero((C == c) & (F == 0) & okw)[0]:
             w = (seg[i, pk[i] + OFF] - b[i]) / (seg[i, pk[i]] - b[i])
-            r = least_squares(lambda p: shape_at(model(chd[c], p[0], bi, ti, ts, sg)) - w, [ff0], bounds=([0], [1]))
+            r = least_squares(lambda p: shape_at(model(chd[c], p[0], bi, ti, ts, sg)) - w, [ff0], bounds=([0], [1]),
+                              **(dict(xtol=1e-12, ftol=1e-12, x_scale=[0.1]) if MULTISTART else {}))
             dff.append(r.x[0] - ff0)
     dff = np.array(dff)
     q = np.percentile(dff, [16, 84])
@@ -507,7 +517,7 @@ def plot(g, keys, title, name):
     ax.set_title(title)
     ax.legend(ncol=2, fontsize=9)
     fig.tight_layout()
-    fig.savefig(os.path.join(PICS, name), dpi=130)
+    fig.savefig(os.path.join(PICS, name.replace(".png", PNG_TAG + ".png")), dpi=130)
     plt.close(fig)
 
 
@@ -817,7 +827,23 @@ def main():
     ap = argparse.ArgumentParser()
     for s in ("shape", "sim", "develop", "bench", "data", "all"):
         ap.add_argument(f"--{s}", action="store_true")
+    ap.add_argument("--spe", choices=("v1", "v2"), default="v1",
+                    help="SPE template set: v1 = doc 30 as committed; v2 = the production templates (doc 31), "
+                         "cache /home/xqian/tmp/sat_tot_v2, records d31/")
     a = ap.parse_args()
+    if a.spe == "v2":
+        global CACHE, OUTD, PNG_TAG, MULTISTART
+        MULTISTART = True    # doc 31 sec 2: the single-start fit stops at the start point on some channels
+        v1cache = CACHE
+        CACHE, OUTD, PNG_TAG = "/home/xqian/tmp/sat_tot_v2", os.path.join(os.path.dirname(HERE), "d31"), "_v2"
+        rel = "pgrapher/experiment/protodunevd/pdvd-spe-templates-v2.json"
+        tpl = S._find_templates().replace("pdvd-spe-templates.json", "pdvd-spe-templates-v2.json")
+        assert tpl.endswith(rel) and os.path.exists(tpl), tpl
+        S._find_templates = lambda: tpl     # load_channels() looks the name up at call time
+        os.makedirs(CACHE, exist_ok=True)
+        for f in ("pulses.npz", "quiet_0.npz", "quiet_1.npz"):   # raw-data caches, template independent
+            if not os.path.exists(os.path.join(CACHE, f)) and os.path.exists(os.path.join(v1cache, f)):
+                os.symlink(os.path.join(v1cache, f), os.path.join(CACHE, f))
     os.makedirs(CACHE, exist_ok=True)
     os.makedirs(OUTD, exist_ok=True)
     for s, fn in (("shape", shape_fit), ("sim", stage_sim), ("develop", stage_develop), ("bench", stage_bench),

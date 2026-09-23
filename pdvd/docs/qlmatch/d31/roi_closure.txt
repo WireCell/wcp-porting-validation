@@ -1,0 +1,10 @@
+ToT 1-20 n 43: decon tot/ts 1.002 [0.999,1.005] | roi tot/ts 1.002 [0.999,1.005] | roi/decon ts 0.974 [0.929,0.984] tot 0.965 [0.925,0.984] | wide roi tot/ts 1.002 [1.000,1.005]
+ToT 20-71 n 20: decon tot/ts 0.965 [0.934,0.983] | roi tot/ts 0.952 [0.890,0.981] | roi/decon ts 0.988 [0.943,1.001] tot 0.971 [0.904,0.988] | wide roi tot/ts 0.944 [0.854,0.981]
+ToT 71-141 n 27: decon tot/ts 0.868 [0.627,0.924] | roi tot/ts 0.825 [0.589,0.926] | roi/decon ts 0.963 [0.938,0.988] tot 0.950 [0.901,0.982] | wide roi tot/ts 0.833 [0.600,0.928]
+ToT 141-260 n 21: decon tot/ts 0.718 [0.424,0.813] | roi tot/ts 0.692 [0.399,0.794] | roi/decon ts 0.973 [0.961,0.982] tot 0.946 [0.908,0.966] | wide roi tot/ts 0.722 [0.402,0.795]
+chan 1021 ToT 205 decon ts 15908 tot 10140 | roi ts 15568 tot 9587 | wide roi ts 15580 tot 9598
+chan 1051 ToT 201 decon ts 21683 tot 7194 | roi ts 21039 tot 6425 | wide roi ts 21055 tot 6440
+chan 1061 ToT 196 decon ts 15891 tot 10619 | roi ts 15606 tot 10138 | wide roi ts 15606 tot 10137
+chan 1051 ToT 195 decon ts 20663 tot 6813 | roi ts 19033 tot 6168 | wide roi ts 19026 tot 6676
+chan 1071 ToT 195 decon ts 12405 tot 8486 | roi ts 12119 tot 7949 | wide roi ts 14951 tot 10624
+chan 1051 ToT 180 decon ts 14431 tot 6019 | roi ts 13845 tot 5414 | wide roi ts 13903 tot 5471

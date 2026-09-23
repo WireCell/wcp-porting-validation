@@ -1,0 +1,5 @@
+# cathode-railed subset (sat on OpDet 4..11); objective tiers, long tracks, tol 0.5 us
+       tag  flashes  railed | judged  agree phantom |  pos covered missed
+    q31ctl     4062     830 |    513    482      31 |  576     482     94
+   q31tot2     4038     806 |    487    459      28 |  556     459     97
+    q31tot     4042     810 |    486    460      26 |  557     460     97

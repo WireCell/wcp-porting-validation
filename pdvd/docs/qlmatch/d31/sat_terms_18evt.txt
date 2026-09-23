@@ -1,0 +1,34 @@
+# q31ctl: 18 dumps, 4062 flashes, 883 with a rail flag
+== SELECTED matches / all railed: 706 bundles, 2017 terms | meas med   3515.4 pred med   2336.4 | meas>pred  66.5% | meas/pred med     1.48 | chi2 med     1.13 p90    145.67 max  18166.56
+     inflate 0.00 -> median     1.13  p90   145.67  max  18166.56
+     inflate 0.25 -> median     0.93  p90    11.85  max     15.97
+     inflate 0.35 -> median     0.77  p90     6.37  max      8.15
+     inflate 0.50 -> median     0.58  p90     3.22  max      4.00
+     inflate 1.00 -> median     0.24  p90     0.91  max      2.62
+     inflate 2.00 -> median     0.07  p90     0.25  max      2.60
+== SELECTED matches / cathode railed: 706 bundles, 1989 terms | meas med   3549.1 pred med   2377.5 | meas>pred  66.2% | meas/pred med     1.46 | chi2 med     1.10 p90    123.59 max  18166.56
+     inflate 0.00 -> median     1.10  p90   123.59  max  18166.56
+     inflate 0.25 -> median     0.90  p90    11.60  max     15.97
+     inflate 0.35 -> median     0.74  p90     6.20  max      8.15
+     inflate 0.50 -> median     0.57  p90     3.14  max      4.00
+     inflate 1.00 -> median     0.23  p90     0.88  max      2.62
+     inflate 2.00 -> median     0.07  p90     0.24  max      2.60
+== non-selected candidates / all railed: 28542 bundles, 76918 terms | meas med   2914.8 pred med      3.3 | meas>pred  89.9% | meas/pred med   339.59 | chi2 med  1561.61 p90   8633.93 max  23502.80
+== non-selected candidates / cathode railed: 28542 bundles, 74359 terms | meas med   2957.1 pred med      3.9 | meas>pred  89.6% | meas/pred med   276.72 | chi2 med  1584.50 p90   8606.92 max  22977.85
+# q31tot2: 18 dumps, 4038 flashes, 859 with a rail flag
+== SELECTED matches / all railed: 715 bundles, 2132 terms | meas med   4171.8 pred med   2266.4 | meas>pred  73.5% | meas/pred med     1.74 | chi2 med     1.63 p90    239.28 max  35586.91
+     inflate 0.00 -> median     1.63  p90   239.28  max  35586.91
+     inflate 0.25 -> median     1.17  p90    12.90  max     15.99
+     inflate 0.35 -> median     0.90  p90     6.80  max      8.16
+     inflate 0.50 -> median     0.64  p90     3.42  max      4.00
+     inflate 1.00 -> median     0.24  p90     0.91  max      2.50
+     inflate 2.00 -> median     0.07  p90     0.24  max      2.45
+== SELECTED matches / cathode railed: 715 bundles, 2110 terms | meas med   4193.2 pred med   2300.8 | meas>pred  73.2% | meas/pred med     1.71 | chi2 med     1.54 p90    203.67 max  35586.91
+     inflate 0.00 -> median     1.54  p90   203.67  max  35586.91
+     inflate 0.25 -> median     1.12  p90    12.65  max     15.99
+     inflate 0.35 -> median     0.89  p90     6.68  max      8.16
+     inflate 0.50 -> median     0.62  p90     3.35  max      4.00
+     inflate 1.00 -> median     0.24  p90     0.89  max      2.50
+     inflate 2.00 -> median     0.07  p90     0.23  max      2.45
+== non-selected candidates / all railed: 27754 bundles, 74044 terms | meas med   3037.6 pred med      3.3 | meas>pred  90.2% | meas/pred med   376.33 | chi2 med  1856.02 p90  10621.19 max  48855.74
+== non-selected candidates / cathode railed: 27754 bundles, 71784 terms | meas med   3072.8 pred med      3.8 | meas>pred  89.9% | meas/pred med   308.65 | chi2 med  1896.29 p90  10679.95 max  48855.74

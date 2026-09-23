@@ -1,0 +1,34 @@
+=== quality params (new dump) ===
+  pe_err_on_pred         True
+  pe_err_floor           2.0
+  pe_err_frac            0.6
+  pe_err_lowpe_frac      2.0
+  pe_err_lowpe_knee      10.0
+  chi2_sat_inflate       0.5
+  saturation_mask_fit    False
+  mask_ks                True
+
+=== rail flags in the event ===
+  flashes                 191
+  flashes with >=1 railed 31
+  railed (flash,chan) cells 79
+
+=== railed (bundle,chan) terms now entering the chi2: n=2392 ===
+  measured PE   median   3670.5  p90  11345.1
+  predicted PE  median      1.7  p90   1163.2
+  pred > meas (the clipped direction): 6.8%
+  per-channel chi2 contribution:
+    p50   2883.07
+    p90   9601.28
+    p99  18116.45
+    max   20053.67   mean 3633.52
+  effective sigma/pred at median pred: 2.16
+
+=== bundles: base 5371  new 5350  common 2477 ===
+  ndf  median 8 -> 8   (changed on 1578 bundles, mean d=-0.04)
+  chi2/ndf median 10.42 -> 11.07
+  consistent  38 -> 41  (+3)
+  contained   2477 -> 2477  (+0)
+
+=== auto-selected matches ===
+  base 68  new 68   lost 0  gained 0  moved 66

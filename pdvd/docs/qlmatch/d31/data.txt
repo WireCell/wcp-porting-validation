@@ -1,0 +1,85 @@
+# Verdict D (a): synthetic clips of real unrailed pulses (doc 11's set)
+
+closure: all 1727 pulses (doc 11 used d = 1.11 .. 4.00 with f = 0.9 .. 0.25)
+     d     n |                    raw                   clip                   tail                twoside                   tmpl                tot_cal               tot_fill | winner (min |bias|+half-band)
+  1.11  1727 |  0.961 [0.947, 0.974]*  0.995 [0.995, 0.996]*  0.999 [0.996, 1.003]*  0.998 [0.996, 1.001]*  1.022 [1.017, 1.031]*  1.017 [0.957, 1.087]*  0.998 [0.998, 1.000]* | tot_fill
+  1.43  1727 |  0.926 [0.909, 0.942]*  0.962 [0.952, 0.968]*  1.044 [1.011, 1.107]*  1.020 [0.997, 1.061]*  1.055 [1.021, 1.112]*  1.031 [0.980, 1.089]*  0.989 [0.984, 1.000]* | tot_fill
+  2.00  1727 |  0.824 [0.800, 0.846]*  0.859 [0.839, 0.876]*  1.196 [1.093, 1.496]*  1.098 [1.030, 1.261]*  1.268 [1.158, 1.474]   1.027 [0.981, 1.074]*  0.997 [0.975, 1.021]* | tot_fill
+  2.86  1727 |  0.690 [0.664, 0.716]   0.726 [0.702, 0.747]   1.388 [1.186, 2.225]   1.182 [1.058, 1.584]*  1.500 [1.296, 2.164]   1.013 [0.964, 1.068]*  0.989 [0.955, 1.027]* | tot_fill
+  4.00  1727 |  0.567 [0.541, 0.593]   0.602 [0.579, 0.624]   1.587 [1.308, 3.425]   1.281 [1.094, 2.078]   1.670 [1.416, 3.315]   0.991 [0.931, 1.055]*  0.972 [0.928, 1.021]* | tot_cal
+  5.60  1727 |  0.454 [0.429, 0.478]   0.489 [0.466, 0.510]   1.883 [1.456, 5.592]   1.437 [1.153, 2.919]   1.800 [1.497, 5.353]   0.969 [0.905, 1.044]*  0.956 [0.901, 1.018]* | tot_cal
+  6.70  1727 |  0.399 [0.376, 0.421]   0.434 [0.412, 0.455]   2.084 [1.568, 7.210]   1.544 [1.197, 3.516]   1.836 [1.528, 7.000]   0.954 [0.887, 1.037]*  0.943 [0.884, 1.018]* | tot_cal
+  (* = passes |bias| < 20 % and half-band < 30 %)
+  deepest passing row per method: raw 2.0, clip 2.0, tail 2.0, twoside 2.86, tmpl 1.43, tot_cal 6.7, tot_fill 6.7
+
+held-out file 1 (run 039253) only -- the shape model was fitted on file 0
+     d     n |                    raw                   clip                   tail                twoside                   tmpl                tot_cal               tot_fill | winner (min |bias|+half-band)
+  1.11   864 |  0.961 [0.947, 0.974]*  0.995 [0.995, 0.996]*  0.999 [0.996, 1.003]*  0.998 [0.996, 1.001]*  1.023 [1.017, 1.031]*  1.020 [0.954, 1.082]*  0.998 [0.998, 1.000]* | tot_fill
+  1.43   864 |  0.926 [0.909, 0.942]*  0.962 [0.951, 0.968]*  1.045 [1.011, 1.108]*  1.021 [0.996, 1.061]*  1.055 [1.021, 1.114]*  1.030 [0.982, 1.086]*  0.990 [0.984, 1.000]* | tot_fill
+  2.00   864 |  0.824 [0.799, 0.847]*  0.859 [0.839, 0.876]*  1.196 [1.095, 1.491]*  1.099 [1.032, 1.257]*  1.267 [1.160, 1.473]   1.027 [0.980, 1.072]*  0.997 [0.975, 1.021]* | tot_fill
+  2.86   864 |  0.689 [0.663, 0.717]   0.726 [0.701, 0.748]   1.381 [1.187, 2.246]   1.173 [1.059, 1.571]*  1.490 [1.296, 2.201]   1.012 [0.963, 1.067]*  0.989 [0.955, 1.028]* | tot_fill
+  4.00   864 |  0.566 [0.540, 0.594]   0.602 [0.577, 0.625]   1.578 [1.309, 3.400]   1.281 [1.098, 2.032]   1.668 [1.416, 3.315]   0.992 [0.928, 1.055]*  0.973 [0.927, 1.024]* | tot_cal
+  5.60   864 |  0.453 [0.428, 0.478]   0.489 [0.465, 0.512]   1.915 [1.464, 5.670]   1.447 [1.153, 2.943]   1.808 [1.504, 5.497]   0.970 [0.907, 1.046]*  0.957 [0.901, 1.023]* | tot_cal
+  6.70   864 |  0.399 [0.376, 0.422]   0.434 [0.411, 0.456]   2.118 [1.577, 7.200]   1.561 [1.202, 3.610]   1.853 [1.532, 7.001]   0.956 [0.891, 1.041]*  0.946 [0.886, 1.023]* | tot_cal
+  (* = passes |bias| < 20 % and half-band < 30 %)
+  deepest passing row per method: raw 2.0, clip 2.0, tail 2.0, twoside 2.86, tmpl 1.43, tot_cal 6.7, tot_fill 6.7
+
+# Verdict D (c): real rails whose ganged partner did NOT rail; truth = partner PE x pair ratio
+files 5; control (both unrailed, bright) pulses per pair: 1010/1011:714, 1020/1021:687, 1030/1031:720, 1040/1041:712, 1050/1051:720, 1060/1061:696, 1070/1071:720, 1080/1081:707
+       pair    n     PE_a/PE_b median [16,84]  peak ratio
+ 1010/1011   714      1.015 [0.961,1.081] (+-5.9%)       1.448
+ 1020/1021   687      1.165 [1.102,1.242] (+-6.0%)       0.738
+ 1030/1031   720      1.002 [0.959,1.043] (+-4.2%)       1.087
+ 1040/1041   712      0.755 [0.713,0.808] (+-6.3%)       0.928
+ 1050/1051   720      0.783 [0.738,0.833] (+-6.1%)       0.939
+ 1060/1061   696      1.136 [1.070,1.204] (+-5.9%)       0.710
+ 1070/1071   720      0.722 [0.682,0.767] (+-5.9%)       0.838
+ 1080/1081   707      0.840 [0.803,0.877] (+-4.4%)       0.947
+
+rail runs with a clean partner: 1137; truth-implied d quantiles 16/50/84/95: 0.99 1.11 1.29 1.38
+d bins (edges (1.0, 1.25, 1.6, 2.2, 3.2, 5.0, 8.0, 100.0)); a row key is its bin centre (last bin shown as 10)
+
+== real rails vs ganged-partner truth: PE_rec / (ratio x PE_partner)
+     d     n |                    raw                   clip                   tail                twoside                   tmpl                tot_cal               tot_fill | winner (min |bias|+half-band)
+  1.12   701 |  0.958 [0.915, 1.003]*  0.997 [0.956, 1.043]*  0.999 [0.957, 1.046]*  0.998 [0.957, 1.045]*  1.018 [0.973, 1.073]*  0.994 [0.904, 1.084]*  1.000 [0.959, 1.049]* | tot_fill
+  1.43   226 |  0.920 [0.889, 0.957]*  0.961 [0.931, 1.000]*  0.966 [0.933, 1.007]*  0.963 [0.931, 1.004]*  0.997 [0.960, 1.041]*  0.925 [0.872, 0.987]*  0.969 [0.935, 1.008]* | tmpl
+  (* = passes |bias| < 20 % and half-band < 30 %)
+  deepest passing row per method: raw 1.425, clip 1.425, tail 1.425, twoside 1.425, tmpl 1.425, tot_cal 1.425, tot_fill 1.425
+
+# Verdict D (c2): both sub-channels railed; q = (PE_a/PE_b)_rec / (PE_a/PE_b)_controls -- a method whose bias grows with depth moves q away from 1 when the two channels sit at different depths
+  pairs used: peak ratio outside [0.87, 1.15] (the two channels at clearly different depths), 1050/1051 excluded (1051's template is anomalous: PE ratio 6.5, shape-fit rms 7 %)
+  bins: ToT of the more-saturated channel (measured, estimator-free); data widths at level (sim stage): 71 ~ d 2, 108 ~ 2.9, 141 ~ 4, 175 ~ 5.6, 194 ~ 6.7 ticks
+
+== both-railed pair consistency q (row key = lower ToT-bin edge of the more-saturated channel, ticks)
+     d     n |                    raw                   clip                   tail                twoside                   tmpl                tot_cal               tot_fill | winner (min |bias|+half-band)
+     0   709 |  1.023 [0.943, 1.093]*  1.016 [0.950, 1.069]*  0.996 [0.949, 1.047]*  1.003 [0.953, 1.055]*  0.999 [0.957, 1.049]*  1.028 [0.842, 1.130]*  1.006 [0.957, 1.055]* | tmpl
+    40   391 |  1.050 [0.910, 1.133]*  1.038 [0.922, 1.104]*  0.970 [0.893, 1.036]*  0.985 [0.923, 1.041]*  0.958 [0.863, 1.055]*  1.008 [0.925, 1.090]*  1.005 [0.952, 1.051]* | tot_fill
+    71   340 |  1.063 [0.893, 1.190]*  1.059 [0.909, 1.148]*  0.922 [0.827, 1.096]*  0.958 [0.872, 1.091]*  0.893 [0.779, 1.112]*  0.946 [0.867, 1.064]*  0.975 [0.912, 1.055]* | tot_fill
+   108   256 |  1.086 [0.870, 1.218]*  1.079 [0.892, 1.166]*  0.868 [0.759, 1.338]*  0.922 [0.824, 1.223]*  0.866 [0.738, 1.236]*  0.927 [0.814, 1.063]*  0.947 [0.866, 1.059]* | tot_fill
+   141   313 |  1.105 [0.882, 1.242]*  1.093 [0.913, 1.175]*  0.866 [0.764, 1.405]   0.906 [0.816, 1.392]*  0.899 [0.790, 1.316]*  0.941 [0.851, 1.043]*  0.938 [0.869, 1.055]* | tot_fill
+   194   226 |  1.149 [0.834, 1.257]*  1.133 [0.879, 1.176]*  0.926 [0.619, 1.535]   0.959 [0.771, 1.506]   0.994 [0.684, 1.857]   0.987 [0.915, 1.093]*  0.990 [0.913, 1.083]* | tot_fill
+   260   163 |  1.192 [1.159, 1.369]*  1.179 [1.125, 1.232]*  0.898 [0.613, 6.536]   0.919 [0.674, 4.361]   1.006 [0.650,11.032]   0.949 [0.833, 1.098]*  0.953 [0.825, 1.087]* | tot_fill
+  (* = passes |bias| < 20 % and half-band < 30 %)
+  deepest passing row per method: raw 260, clip 260, tail 108, twoside 141, tmpl 141, tot_cal 260, tot_fill 260
+
+# (d) census of real cathode rail runs over 5 files (each run seen once per channel): 13357 runs; at a stream edge 12; longer than 300 ticks 366
+  run-length (ToT) quantiles 16/50/84/95/99: 8 43 162 254 379
+  runs longer than 71 ticks (~ d > 2.0): 39.0 %
+  runs longer than 141 ticks (~ d > 4.0): 20.0 %
+  runs longer than 194 ticks (~ d > 6.7): 10.6 %
+  runs longer than 245 ticks (~ d > 10.0): 5.6 %
+  runs longer than 329 ticks (~ d > 20.0): 1.9 %
+
+# Verdict D (e): tail consistency -- r = measured / tot_fill-predicted integral over the 150 ticks after the rail run (no truth needed)
+  reference: synthetic clips of held-out run-039253 pulses (isolated, single pulses by construction); real: every cathode rail run of the census files whose tail window holds no other rail sample
+  real rail runs 13357; followed by another rail within 50 ticks (dip / second pulse): 297 (2.2 %); tail window blocked by a rail (skipped): 480; longer than 345 ticks (beyond the ToT training range, d ~ 25): 204 (1.5 %)
+  pileup rate (real data): of 27840 bright unrailed cathode pulses, a second rise >= 30 % of the peak 40-200 ticks later in 0.64 %, >= 10 % in 1.85 %  (sim pileup arm = 30 % at 40-200 ticks: tot_fill +17 % at d 4, +47 % at d >= 6.7)
+  NOTE (sim): r is blind to pileup INSIDE the run (the pileup arm keeps r ~ 1.00 while tot_fill is +24..+49 %); r does see a slower tail (tau_s +20 %: r ~ 1.05, tot_fill +5..+17 % at d >= 6.7)
+ ToT>= | reference n         r median [16,84] |  real n         r median [16,84] | real/ref median real above ref p84
+     0 |        1519   1.020 [ 0.962, 1.074] |    6111   1.058 [ 0.978, 1.168] |           1.038              43.5%
+    40 |         565   1.008 [ 0.954, 1.056] |    1571   1.179 [ 1.120, 1.231] |           1.169              96.8%
+    71 |         873   0.983 [ 0.934, 1.042] |    1472   1.115 [ 1.025, 1.166] |           1.134              79.3%
+   108 |         796   0.977 [ 0.921, 1.039] |    1045   1.046 [ 0.982, 1.096] |           1.071              54.4%
+   141 |        1500   0.980 [ 0.912, 1.055] |    1234   1.019 [ 0.977, 1.058] |           1.039              17.9%
+   194 |         542   0.976 [ 0.896, 1.048] |     810   1.017 [ 0.981, 1.059] |           1.042              23.1%
+   260 |          22   0.939 [ 0.881, 1.045] |     615   1.083 [ 1.031, 1.213] |           1.154              75.4%

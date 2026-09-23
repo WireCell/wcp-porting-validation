@@ -1,0 +1,20 @@
+# q31ctl -> q31tot2: agree 683->654  phantom 97->92  missed 158->187  unknown 376->409  flash-cut misses 0->20
+  missed  : newly  35, recovered   8, common 129; sign test p = 4.19e-05
+  phantom : newly   8, recovered  13, common  83; sign test p = 0.383
+  newly missed by flash class: cathode-railed 30, not railed 5
+  recovered    by flash class: cathode-railed 7, not railed 1
+# q31ctl -> q31tot2m: agree 683->668  phantom 97->92  missed 158->173  unknown 376->395  flash-cut misses 0->1
+  missed  : newly  25, recovered  12, common 125; sign test p = 0.047
+  phantom : newly   8, recovered  13, common  83; sign test p = 0.383
+  newly missed by flash class: cathode-railed 20, not railed 5
+  recovered    by flash class: cathode-railed 11, not railed 1
+# q31ctl -> q31tot: agree 683->656  phantom 97->93  missed 158->185  unknown 376->411  flash-cut misses 0->19
+  missed  : newly  35, recovered  10, common 127; sign test p = 0.000247
+  phantom : newly   8, recovered  12, common  84; sign test p = 0.503
+  newly missed by flash class: cathode-railed 30, not railed 5
+  recovered    by flash class: cathode-railed 8, not railed 2
+# q31ctl -> q31totm: agree 683->670  phantom 97->93  missed 158->171  unknown 376->397  flash-cut misses 0->0
+  missed  : newly  25, recovered  14, common 123; sign test p = 0.108
+  phantom : newly   8, recovered  12, common  84; sign test p = 0.503
+  newly missed by flash class: cathode-railed 20, not railed 5
+  recovered    by flash class: cathode-railed 12, not railed 2

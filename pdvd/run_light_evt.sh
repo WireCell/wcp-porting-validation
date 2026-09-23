@@ -135,6 +135,14 @@ fi
 if [ "${PDVD_SAT_REPAIR:-1}" = 1 ]; then
     VETO_SAT_ARG+=(-S "saturation_repair=true")
 fi
+# PDVD_SAT_REPAIR_MODE: fill method of the repair on the cathode full streams.
+# Default empty/'twoside' = the exponential bridge (production).  'tot' = the
+# time-over-threshold fill (docs/qlmatch/30, 31; needs PDVD_SPE_V2=1).  NOT a
+# production operating point; toolkit C++/jsonnet defaults stay twoside and the
+# argument is not passed at all unless set to something else (byte-identical).
+if [ -n "${PDVD_SAT_REPAIR_MODE:-}" ] && [ "${PDVD_SAT_REPAIR_MODE}" != twoside ]; then
+    VETO_SAT_ARG+=(-A "saturation_repair_mode=${PDVD_SAT_REPAIR_MODE}")
+fi
 # PDVD_EMIT_COVERAGE: per-trace livetime rows -> OpFlashFinder flash_cov
 # tensor, so QLMatching can mask self-trigger channels (membrane XA / PMT
 # 16.4-us snippets) with no waveform over a flash's window instead of

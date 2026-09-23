@@ -1,0 +1,32 @@
+dumps: 120 (tag='q31tot')
+strict crosser anchors: 213 (209 with both halves bundled, 207 with >=1 saturated channel, 213 with >=1 uncovered channel)
+
+GLOBAL: median Sum(meas)/Sum(pred) = 0.817  [0.664, 1.459]  n=213
+  => QtoL = 0.094 x 0.817 = 0.0768   [0.0624, 0.1372]
+
+per run:
+  039252: 0.756 [0.616, 1.021] n=49 -> QtoL 0.0711
+  039253: 0.858 [0.640, 1.684] n=35 -> QtoL 0.0806
+  039349: 0.835 [0.687, 1.430] n=129 -> QtoL 0.0785
+
+per PD group (channel-restricted sums):
+  cathode XA  : 0.802 [0.651, 1.432] n=213
+  PMTs        : 1.882 [0.026, 8.095] n=172
+
+ratio vs flash total PE (flat = no saturation bias left):
+  [  1500,   3000): 0.105 [0.054, 0.156] n=2
+  [  3000,   6000): 0.168 [0.128, 0.287] n=3
+  [  6000,  12000): 0.765 [0.432, 0.825] n=4
+  [ 12000, 1000000000): 0.832 [0.675, 1.495] n=204
+
+ratio for anchors WITH vs WITHOUT saturated channels:
+  no railed ch  : 0.154 [0.093, 0.212] n=6
+  >=1 railed ch : 0.831 [0.675, 1.474] n=207
+
+cathode per-channel meas/pred vs predicted PE (unrailed channels only):
+  pred in [     9.8,    289.6): ratio 1.61 [0.93, 3.58] n=197
+  pred in [   289.6,    659.0): ratio 1.04 [0.75, 1.82] n=197
+  pred in [   659.0,   1223.4): ratio 0.93 [0.69, 1.46] n=196
+  pred in [  1223.4,   2078.9): ratio 0.79 [0.62, 1.05] n=197
+  pred in [  2078.9,  25816.1): ratio 0.67 [0.48, 0.86] n=197
+membrane per-channel meas/pred vs predicted PE:
