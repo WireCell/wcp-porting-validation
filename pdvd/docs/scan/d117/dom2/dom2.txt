@@ -1,0 +1,25 @@
+# doc pdvd/117 round 6 (d117_dom2.py); model epoch 20; in-range data Michels 56 (>= 20 MeV: 40); sim crops 3399; draws 1000; extra truncation 0.2
+
+== sim arms, paired on the same draws; d = arm - none (and, for +..., arm - base of the same end)
+arm                        slope                  d vs none                  d vs base  removed
+none                       0.912    +0.000 [+0.000, +0.000]                          -    0.000
+base_a                     0.643    -0.268 [-0.366, -0.168]                          -    0.393
+base_a+extra               0.575    -0.332 [-0.446, -0.221]    -0.063 [-0.140, +0.018]    0.510
+base_a+tau20               0.679    -0.233 [-0.334, -0.129]    +0.035 [+0.028, +0.042]    0.428
+base_a+tau20+dL0.3         0.700    -0.215 [-0.315, -0.110]    +0.054 [+0.045, +0.063]    0.428
+base_a+tau20+dL1.8         0.848    -0.065 [-0.181, +0.050]    +0.201 [+0.155, +0.247]    0.431
+base_b                     0.576    -0.329 [-0.433, -0.237]                          -    0.394
+base_b+extra               0.508    -0.404 [-0.506, -0.297]    -0.069 [-0.150, +0.010]    0.510
+base_b+tau20               0.611    -0.296 [-0.400, -0.200]    +0.034 [+0.027, +0.042]    0.428
+base_b+tau20+dL0.3         0.631    -0.277 [-0.383, -0.181]    +0.053 [+0.044, +0.062]    0.428
+base_b+tau20+dL1.8         0.787    -0.121 [-0.240, -0.010]    +0.203 [+0.159, +0.251]    0.431
+
+== 1. data: a further 20 % truncation of the in-range production Z crops.  muon side = the principal-axis end nearer the muon-mask centroid (the Michel's start); d = arm - none on the same bootstrap resamples
+  muon-side end found for 56/56 crops (no muon pixels in the crop: 0); end a 36, b 20; median muon-centroid to end 167 mm
+  data extra 0.2 muon side (start) : slope 0.385 (none 0.421) d -0.034 [-0.082, +0.013]  d mu median -5.9  removed 0.198
+  data extra 0.2 far side          : slope 0.344 (none 0.421) d -0.082 [-0.135, -0.014]  d mu median -7.0  removed 0.198
+  (closure: the data none predictions are scores.tsv's mu_Z; max|re-scored - stored| 0.0500 cm)
+
+== 3. energy split: slope over the draws of the data Michels in each class; data: bootstrap of mu_Z
+  >= 20 MeV n 40 | sim none 0.946, base_a 0.663, base_b 0.592 | d base a -0.284 [-0.399, -0.168], b -0.349 [-0.458, -0.235] | data slope 0.461 [0.331, 0.596]
+  < 20 MeV  n 16 | sim none 0.698, base_a 0.380, base_b 0.285 | d base a -0.306 [-0.488, -0.106], b -0.402 [-0.578, -0.245] | data slope 0.232 [0.085, 0.369]

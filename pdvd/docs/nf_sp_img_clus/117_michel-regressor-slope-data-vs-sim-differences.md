@@ -1,5 +1,14 @@
 # doc pdvd/117: why the DUNE-VD drift regressor reads slope 0.42 on ProtoDUNE Michels, and how to find out
 
+**Status (2026-09-23, round 6).** Three checks on round 5 (section 11).
+- **The data respond to further truncation the way the truncated simulation does.** A further 20 % gives −0.03 to
+  −0.08 on the data, against −0.06 to −0.07 on the simulation.
+- **Truncation reproduces the energy pattern.** The low/high-energy slope ratio is 0.48-0.57 in the truncated
+  simulation, against 0.50 on data.
+- **Correction to round 5's budget.** Adding lifetime and the top-CRP D_L to the simulation raises it back to
+  0.63-0.70. That leaves **~0.1-0.18 unexplained**, not 0.05-0.12, and up to 0.3 at the whole-sample D_L. The budget
+  is now limited by the D_L systematic.
+
 **Status (2026-09-23, round 5).** The Michel-domain test ran (section 10).
 - **The muon-removal truncation is the main carrier.** Applied to the model's own simulated electrons at each data
   Michel's removed fraction, truncation plus exact-zero background compresses the simulation slope 0.912 → 0.58-0.64
@@ -738,7 +747,8 @@ between the halves, well inside that interval.
 3. **It matches the data's own M against Z gap.** On the same labels, the data crop with the muon left in reads 0.66,
    and the muon-removed crop 0.42: a gap of −0.24. The emulated truncation is −0.19 to −0.25 at the data's fraction.
    The mechanism now has a quantitative match on both sides.
-4. **The budget now closes within its uncertainties.**
+4. **The budget now closes within its uncertainties.** *(Corrected in round 6, §11.2: this left out lifetime and
+   D_L, which push the simulation back up. The remainder is ~0.1-0.18.)*
    - Emulated simulation 0.58-0.64, against data after the wire filter 0.525 (S4). What remains is about 0.05-0.12.
    - D_L can account for up to 0.1-0.15 of slope (S6), and noise and charge fluctuation are untested. Either fits in
      that remainder.
@@ -773,3 +783,103 @@ looks like**:
 2. **Recover the start end in simulation** (re-rasterise the truth depos: first depo = start). It turns the bracket into
    one number. It is only worth doing if the augmentation needs it.
 3. **The S2 noise and fluctuation rungs** for the remaining ~0.1, at low priority.
+
+## 11. Round 6: three checks on the Michel-domain result
+
+### 11.0 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/scripts
+CUDA_VISIBLE_DEVICES=1 python3 d117_dom2.py > ../../scan/d117/dom2/dom2.txt   # needs round 5's masks_pdvd.npz
+```
+
+Setup is round 5's: the same 1,000 simulation draws and the data Michels' own masks. "base a / b" means round 5's full
+emulation (zbkg + truncation at each Michel's `frac_lost`), from end a or end b.
+
+### 11.1 Check 1: the data respond to further truncation as truncated simulation does
+
+The data crops are already truncated, so the right comparison is with the already-truncated simulation (base), not
+with whole electrons.
+- **Data.** A further 20 % of charge is removed from each in-range production Z crop.
+  - It is removed from the **muon side**: the principal-axis end nearer the muon-mask centroid, which is the Michel's
+    start, known on data. This end was found for 56/56 crops.
+  - It is also removed, separately, from the far end.
+- **Simulation.** Base loses a further 20 % from the same end.
+
+| | Δslope from a further 20 % |
+|---|---|
+| data, muon side (start) | −0.034 [−0.082, +0.013] |
+| data, far side | −0.082 [−0.135, −0.014] |
+| simulation, base a / b + 20 % | −0.063 [−0.140, +0.018] / −0.069 [−0.150, +0.010] |
+
+- **The data respond like the truncated simulation.** Both respond at the same saturated rate of about −0.03 to −0.08.
+  That rate is far below the −0.16 to −0.20 that a first 20 % costs a whole electron (§10.3).
+  - This is what you expect if the data already sit on the flat part of the dose response, i.e. are already truncated
+    as round 5 emulated.
+  - Closure: re-scoring the data crops reproduces the stored mu_Z to 0.05 cm.
+
+### 11.2 Check 2: everything applied to the simulation at once
+
+Base, plus a 20 ms lifetime (S1's `tau20`), plus the D_L excess that S6 measured over the training equivalent:
+- top CRP: +0.3 cm²/s (3.4 against 3.14);
+- whole sample: +1.8 (4.9 against 3.14).
+
+| arm (a / b) | sim slope | Δ against base |
+|---|---|---|
+| base | 0.643 / 0.576 | – |
+| + tau20 | 0.679 / 0.611 | +0.035 |
+| + tau20 + D_L +0.3 (top CRP) | **0.700 / 0.631** | +0.054 |
+| + tau20 + D_L +1.8 (whole sample) | 0.848 / 0.787 | +0.20 |
+
+Target: the data after the wire filter, 0.525 (S4).
+
+**This corrects round 5's budget (§10.4 item 4).**
+- Round 5 left only ~0.05-0.12, but lifetime and D_L were not in it. Both push the simulation slope back **up**.
+- With 41 of the 56 Michels on the top CRP, the top value (+0.3) is the right central case. The joint emulation then
+  reads 0.63-0.70, and **about 0.1-0.18 of slope remains unexplained**.
+- At the whole-sample D_L the remainder would be 0.26-0.32. The D_L units make this, if anything, an underestimate:
+  the simulation-units equivalent of the data's excess is about 1.27× larger ((1.606/1.481)³).
+- **The closure is now limited by S6's D_L systematic (about ±2 cm²/s), not by the Michel domain.** The model moves
+  about +0.1 of slope per cm²/s.
+
+### 11.3 Check 3: the energy dependence
+
+Slopes over the draws of the data Michels in each energy class (`ke_best`):
+
+| class | n | sim, whole electrons | sim base a / b | data |
+|---|---|---|---|---|
+| ≥ 20 MeV | 40 | 0.946 | 0.663 / 0.592 | 0.461 [0.331, 0.596] |
+| < 20 MeV | 16 | 0.698 | 0.380 / 0.285 | 0.232 [0.085, 0.369] |
+| ratio low / high | | 0.74 | 0.57 / 0.48 | 0.50 |
+
+- **Part of the energy dependence is the model's own.** Whole simulated electrons already respond less below 20 MeV,
+  consistent with the training study's MAE of 56 cm at 5 MeV against 28 cm at ≥ 20 MeV.
+- **Truncation cuts both classes by similar absolute amounts** (−0.28 to −0.40). That turns the ratio 0.74 into
+  0.48-0.57, matching the data's 0.50.
+- So "low-energy Michels respond at half the slope" (doc 98 §6b) is reproduced by the model's intrinsic energy
+  dependence plus truncation. No low-amplitude-specific cause (hypotheses a-c) is needed for it.
+
+### 11.4 Where this leaves the list
+
+The Michel-domain result survives both checks:
+- the data respond to further truncation the way the truncated simulation does;
+- the energy pattern is reproduced.
+
+The closure is weaker than round 5 stated:
+
+| cause | slope | source |
+|---|---|---|
+| wire filter (training `Wire_col` 3 against data 10) | +0.105 | S4 |
+| muon-removal truncation + exact-zero background | −0.27 to −0.33 | round 5 |
+| lifetime 20 ms | +0.035 | round 6 (joint) |
+| D_L excess, top CRP (+0.3) | +0.02 (+0.20 at the whole-sample +1.8) | round 6 (joint), S6 |
+| D_T, collection excess, footprint | ≈ 0 | S1 |
+| **remaining** | **~0.1-0.18** (up to 0.3 at the whole-sample D_L) | – |
+
+**Next** (in order):
+1. **Tighten D_L on the top CRP.** It now dominates the uncertainty of the budget, at +0.1 slope per cm²/s, with a
+   ±2 systematic. The data-side tpw systematic of §9.3 is the thing to understand.
+2. **The S2 noise and charge-fluctuation rungs.** These are candidates for the ~0.1-0.18 left, and are higher
+   priority than before.
+3. **Retraining with truncation augmentation** remains the fix for the dominant term. It should be scored against
+   the energy split as well as the overall slope.
