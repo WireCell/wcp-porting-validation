@@ -348,8 +348,22 @@ def main():
                          "truth's (doc 26 step 5: offset-0 sweep vs truth "
                          "recorded at PDVD_QL_EXTRA_OFFSET_US=13.507 => "
                          "-13.507). Default 0 = byte-identical scoring.")
+    ap.add_argument("--override-truth", default=None,
+                    help="JSONL of {event, uid, time, positive, conf} in the "
+                         "SCORED run's uid space (doc qlmatch/32 blind scan): "
+                         "every truth entry of a listed (event, uid) is "
+                         "replaced by the file's entries for it (after "
+                         "--truth-uid-map-tag).  Default off = byte-identical "
+                         "scoring.")
     ap.add_argument("--force", action="store_true")
     args = ap.parse_args()
+    override = defaultdict(list)
+    if args.override_truth:
+        with open(args.override_truth) as fh:
+            for ln in fh:
+                if ln.strip():
+                    d = json.loads(ln)
+                    override[int(d["event"])].append(d)
 
     truth = load_truth(args.gold, args.decisions_dir)
     truth = apply_time_map(truth, args.truth_time_map, args.tol)
@@ -394,6 +408,16 @@ def main():
                          for e in truth_evt if e["uid"] in umap]
             print(f"[uid-map] evt{evt}: {len(umap)} clusters mapped, "
                   f"{unmapped} truth entries unmapped")
+        if args.override_truth:
+            ov = override.get(evt, [])
+            ov_uids = {d["uid"] for d in ov}
+            ndrop = sum(1 for e in truth_evt if e["uid"] in ov_uids)
+            truth_evt = [e for e in truth_evt if e["uid"] not in ov_uids] + [
+                dict(time=d["time"], uid=d["uid"], positive=d["positive"],
+                     conf=d["conf"]) for d in ov if d.get("time") is not None]
+            print(f"[override] evt{evt}: {len(ov_uids)} clusters, "
+                  f"{ndrop} truth entries replaced by "
+                  f"{sum(1 for d in ov if d.get('time') is not None)}")
         r = score_event(calib, truth_evt, args.tol, args.min_len_cm,
                         args.min_npoints, OBJECTIVE_TIERS)
         judged = r["agree"] + r["phantom"]

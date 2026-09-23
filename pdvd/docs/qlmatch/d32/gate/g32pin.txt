@@ -1,0 +1,4 @@
+# gate g32pin (2026-09-23): QL arm q32ctlp = pin /home/xqian/tmp/p32/libpin_q32 (= libpin_p100b with libWireCellMatch
+# replaced by the sat_flag_ignore_channels build, md5 8984c4ddefac; was 9b34214131bd),
+# knob off, light _g31off  vs  q31ctl (libpin_p100b): calib-evt*.json byte comparison (cmp)
+identical 120 / 120

@@ -1,0 +1,38 @@
+# 18 events run 039252; C++ hits whose start is in [i-50, j+300) of each cathode rail run vs the decon_roi sum there; median [16,84]
+# int_samples C++ hits == Python replica int rule: 576/576 channel-arms
+## _f31ts18 (twoside short)
+  ToT    1-20   n 1019  hits/roi 1.001 [1.000, 1.011]  nhit median 2
+  ToT   20-71   n  658  hits/roi 1.002 [1.000, 1.010]  nhit median 2
+  ToT   71-141  n  553  hits/roi 1.004 [1.000, 1.022]  nhit median 3
+  ToT  141-260  n  401  hits/roi 0.450 [0.163, 1.003]  nhit median 4
+  ToT  260-5000 n  152  hits/roi 0.075 [0.013, 0.163]  nhit median 15
+  ToT >= 71: summed hit PE 6.054e+06  summed roi 4.95e+08  ratio 0.012
+  ToT >= 141: summed hit PE 3.628e+06  summed roi 4.922e+08  ratio 0.007
+  ToT >= 260: summed hit PE 1.247e+06  summed roi 4.842e+08  ratio 0.003
+## _f31tot18 (tot short)
+  ToT    1-20   n 1020  hits/roi 1.001 [1.000, 1.008]  nhit median 2
+  ToT   20-71   n  659  hits/roi 1.001 [1.000, 1.005]  nhit median 1
+  ToT   71-141  n  553  hits/roi 1.001 [1.000, 1.004]  nhit median 1
+  ToT  141-260  n  401  hits/roi 1.000 [0.760, 1.001]  nhit median 1
+  ToT  260-5000 n  152  hits/roi 0.469 [0.332, 0.571]  nhit median 3
+  ToT >= 71: summed hit PE 7.074e+06  summed roi 1.23e+07  ratio 0.575
+  ToT >= 141: summed hit PE 5.023e+06  summed roi 1.016e+07  ratio 0.495
+  ToT >= 260: summed hit PE 2.185e+06  summed roi 6.901e+06  ratio 0.317
+## _f32si18 (twoside int)
+  ToT    1-20   n 1019  hits/roi 1.001 [1.000, 1.012]  nhit median 2
+  ToT   20-71   n  658  hits/roi 1.002 [1.000, 1.010]  nhit median 2
+  ToT   71-141  n  553  hits/roi 1.007 [1.000, 1.029]  nhit median 3
+  ToT  141-260  n  401  hits/roi 1.010 [1.001, 1.023]  nhit median 3
+  ToT  260-5000 n  152  hits/roi 1.013 [0.051, 1.022]  nhit median 2
+  ToT >= 71: summed hit PE 5.007e+08  summed roi 4.95e+08  ratio 1.012
+  ToT >= 141: summed hit PE 4.98e+08  summed roi 4.922e+08  ratio 1.012
+  ToT >= 260: summed hit PE 4.901e+08  summed roi 4.842e+08  ratio 1.012
+## _f32ti18 (tot int)
+  ToT    1-20   n 1020  hits/roi 1.001 [1.000, 1.008]  nhit median 2
+  ToT   20-71   n  659  hits/roi 1.001 [1.000, 1.005]  nhit median 1
+  ToT   71-141  n  553  hits/roi 1.001 [1.000, 1.004]  nhit median 1
+  ToT  141-260  n  401  hits/roi 1.000 [1.000, 1.001]  nhit median 1
+  ToT  260-5000 n  152  hits/roi 1.000 [1.000, 1.001]  nhit median 1
+  ToT >= 71: summed hit PE 1.192e+07  summed roi 1.23e+07  ratio 0.969
+  ToT >= 141: summed hit PE 9.874e+06  summed roi 1.016e+07  ratio 0.972
+  ToT >= 260: summed hit PE 6.748e+06  summed roi 6.901e+06  ratio 0.978

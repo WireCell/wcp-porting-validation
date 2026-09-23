@@ -1,0 +1,14 @@
+# sheets 260 (rendered 259); verdicts 259; missing 0
+# picks: {('letter', 'med'): 76, ('letter', 'high'): 45, ('letter', 'low'): 55, ('unsure', 'low'): 76, ('none', 'med'): 5, ('none', 'low'): 2}
+
+## scanner calibration vs the owner record (control light; agreement on judged candidates only)
+               all: agree 15 disagree 3 -> 83.3 %  (unsure 20, not-comparable 2)
+ cathxa (AI+owner): agree 9 disagree 1 -> 90.0 %  (unsure 14, not-comparable 2)
+      gold (owner): agree 6 disagree 2 -> 75.0 %  (unsure 6, not-comparable 0)
+   disagree: s23466 evt298567 uid4000146 gold (owner): scanner pos -2125.6052211072597 | owner pos [] neg [-2125.6052211072597]
+   disagree: s94046 evt298567 uid70 gold (owner): scanner pos 3535.670169600857 | owner pos [4737.032889462496] neg [3472.1876699497047, 4272.437541492519]
+   disagree: s86206 evt298805 uid125 cathxa (AI+owner): scanner pos -355.8979472717368 | owner pos [-1359.020717558758] neg []
+
+## duplicate-sheet consistency (different scanners, same sheet): {'one unsure': 14, 'same': 6}
+
+## consensus over 100 movers: {'positive': 28, 'unresolved:unsure': 67, 'unresolved:disagree': 5}; resolved 28 = 28.0 % (prereg minimum 60 %)

@@ -775,6 +775,13 @@ PY
     if [ "${PDVD_QL_USE_SAT_FLAG:-1}" = 1 ]; then
         QL_SATFLAG_ARG=(-S "ql_use_saturation_flag=true")
     fi
+    # PDVD_QL_SAT_IGNORE_CATHODE=1: clear the rail flag on the cathode XAs
+    # (OpDets 4-11), for light made with PDVD_SAT_REPAIR_MODE=tot
+    # PDVD_HIT_INT_SAMPLES=1 (docs/qlmatch/32).  Unset = not passed
+    # (byte-identical).
+    if [ "${PDVD_QL_SAT_IGNORE_CATHODE:-0}" = 1 ]; then
+        QL_SATFLAG_ARG+=(-S "ql_sat_flag_ignore_cathode=true")
+    fi
     # PDVD_QL_USE_COV_FLAG: per-flash readout-coverage masking in QLMatching
     # (self-trigger channels with no snippet over the flash window carry NO
     # data).  PRODUCTION DEFAULT ON since 2026-07-14

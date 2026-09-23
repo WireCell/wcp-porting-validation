@@ -143,6 +143,13 @@ fi
 if [ -n "${PDVD_SAT_REPAIR_MODE:-}" ] && [ "${PDVD_SAT_REPAIR_MODE}" != twoside ]; then
     VETO_SAT_ARG+=(-A "saturation_repair_mode=${PDVD_SAT_REPAIR_MODE}")
 fi
+# PDVD_HIT_INT_SAMPLES=1: the cathode OpHitFinder holds the scaled decon as int
+# instead of short (the short cast wraps above 327.67 PE/tick and fragments
+# bright ToT-filled pulses; docs/qlmatch/32).  Default unset = short, the
+# argument is not passed (byte-identical).
+if [ "${PDVD_HIT_INT_SAMPLES:-0}" = 1 ]; then
+    VETO_SAT_ARG+=(-S hit_int_samples=true)
+fi
 # PDVD_EMIT_COVERAGE: per-trace livetime rows -> OpFlashFinder flash_cov
 # tensor, so QLMatching can mask self-trigger channels (membrane XA / PMT
 # 16.4-us snippets) with no waveform over a flash's window instead of

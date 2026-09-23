@@ -1,0 +1,9 @@
+wave 0: 110 tool calls, 53 sheet reads, 53 recorder calls, 1 flagged
+  FLAG SubagentHandback {"message": "I recorded all 53 wave-0 verdicts, and the recorder confirmed 53/53.\n\n**Picks:**\n- **Letter picks: 34.** 26 are med or high confidence. The other 8 are low, and the rubric counts low l
+wave 1: 107 tool calls, 52 sheet reads, 52 recorder calls, 1 flagged
+  FLAG SubagentHandback {"message": "I recorded all 52 wave-1 verdicts, and the recorder confirmed \"52/52 done\". I read only the RUBRIC, the wave-1 INDEX, the 52 sheet PNGs, and ran the recorder script.\n\n**Counts:**\n- *
+wave 2: 105 tool calls, 51 sheet reads, 51 recorder calls, 0 flagged
+wave 3: 105 tool calls, 51 sheet reads, 51 recorder calls, 1 flagged
+  FLAG SubagentHandback {"message": "I recorded all 51 wave-3 verdicts, and the recorder confirmed \"wave 3: 51/51 done\". I stayed inside the blind inputs: the RUBRIC, the wave3 INDEX, the 51 sheet PNGs and the recorder.\n\
+wave 4: 107 tool calls, 52 sheet reads, 52 recorder calls, 1 flagged
+  FLAG SubagentHandback {"message": "I recorded all 52 wave-4 verdicts (the recorder reported 52/52 done, rc=0 on every call). I read only the RUBRIC, the wave-4 INDEX, the wave-4 PNGs and nothing else, and I did not read th

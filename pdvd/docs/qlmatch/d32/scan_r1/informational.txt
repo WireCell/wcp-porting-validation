@@ -1,0 +1,6 @@
+# INFORMATIONAL (post-hoc, no flip weight): the 28 consensus-positive movers; does each arm auto-select the consensus flash?
+q31ctl vs q32ti: only ctl right 12, only q32ti right 6, both 5, neither 5; sign test p = 0.238
+q31ctl vs q32tis: only ctl right 14, only q32tis right 6, both 3, neither 5; sign test p = 0.115
+
+# 100 movers by what the time map did to the CONTROL arm's auto flash(es) for that cluster (absorbed = moved >= 1 us into an earlier flash)
+{'unchanged': 38, 'retimed<=0.5us': 58, 'absorbed': 3, 'retimed>0.5us': 1}

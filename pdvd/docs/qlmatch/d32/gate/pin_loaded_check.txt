@@ -1,0 +1,8 @@
+# libWireCellFlash md5 (first 12) logged by d32_light_arms.sh at arm start; arms ran with no PIN, i.e. local/lib
+[_f32ti18] start 2026-09-23T13:46:28-07:00 envs 'PDVD_SAT_REPAIR_MODE=tot PDVD_HIT_INT_SAMPLES=1 PDVD_LIGHT_FRAMES=1' pin 'none' flash ac64d0bd66ec
+[_f32si18] start 2026-09-23T13:46:57-07:00 envs 'PDVD_HIT_INT_SAMPLES=1 PDVD_LIGHT_FRAMES=1' pin 'none' flash ac64d0bd66ec
+[_q32ti] start 2026-09-23T13:45:35-07:00 envs 'PDVD_SAT_REPAIR_MODE=tot PDVD_HIT_INT_SAMPLES=1' pin 'none' flash ac64d0bd66ec
+[_g32offb] start 2026-09-23T13:46:27-07:00 envs '' pin 'none' flash ac64d0bd66ec
+[_g32off] start 2026-09-23T13:45:35-07:00 envs '' pin 'none' flash ac64d0bd66ec
+# d31 build (pinned copy, = the lib that wrote _g31off): e219641268e2
+# current local/lib: ac64d0bd66ec
