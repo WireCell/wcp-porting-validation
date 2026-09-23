@@ -1,0 +1,25 @@
+# doc pdvd/117 S4 (d117_s4.py); model epoch 20; in-range Michels on both arms 56 (latest 80 crops, w3 80); max |d drift label| between arms 0.100 cm
+
+== A. readouts (in-range tier B).  d = arm - production on the same bootstrap resamples, median [16, 84]
+  Z all     n 56 w3   : slope 0.525 icpt   60.2 rho +0.54 | d slope +0.105 [+0.060, +0.151]  d icpt +6.7 [-1.2, +14.3]  d mu median +23.9
+  Z all     n 56 emul : slope 0.533 icpt   57.3 rho +0.57 | d slope +0.112 [+0.073, +0.155]  d icpt +3.8 [-3.5, +10.6]  d mu median +19.3
+  Z all     n 56 prod : slope 0.421 icpt   53.3 rho +0.60
+  Z top     n 41 w3   : slope 0.529 icpt   59.3 rho +0.60 | d slope +0.121 [+0.064, +0.181]  d icpt +6.9 [-4.2, +16.8]  d mu median +27.4
+  Z top     n 41 emul : slope 0.546 icpt   52.9 rho +0.62 | d slope +0.138 [+0.091, +0.188]  d icpt +0.3 [-8.8, +8.5]  d mu median +21.8
+  Z top     n 41 prod : slope 0.407 icpt   52.8 rho +0.66
+  Z bottom  n 15 w3   : slope 0.515 icpt   61.7 rho +0.48 | d slope +0.030 [-0.017, +0.088]  d icpt +10.1 [+1.7, +18.5]  d mu median +11.0
+  Z bottom  n 15 emul : slope 0.527 icpt   63.0 rho +0.47 | d slope +0.042 [-0.014, +0.121]  d icpt +11.0 [-0.2, +21.2]  d mu median +13.3
+  Z bottom  n 15 prod : slope 0.486 icpt   50.8 rho +0.54
+  M all     n 56 w3   : slope 0.785 icpt   34.8 rho +0.75 | d slope +0.122 [+0.090, +0.160]  d icpt +11.2 [+4.8, +17.7]  d mu median +33.4
+  M all     n 56 prod : slope 0.662 icpt   23.6 rho +0.76
+  per-crop d mu, real re-SP vs emulation: Pearson r +0.89; median |w3 - emul| 4.3 cm
+
+== B. pixels (Z crops, same origin only): L1 distance / production charge, median [16, 84]
+  real re-SP vs production   n 52: 0.0357 [0.0250, 0.0495]
+  emulation vs production    n 52: 0.0349 [0.0249, 0.0485]
+  real re-SP vs emulation    n 52: 0.0056 [0.0037, 0.0120]
+  crop charge w3/prod median 0.9957 [0.9917, 1.0006]; non-zero pixels w3/prod median 1.0316
+  chan rms/tick  prod median 2.222  w3 median 2.239  paired d median +0.005
+  chan rms2 p25  prod median 1.182  w3 median 1.204  paired d median +0.018
+  tick rms/ch    prod median 4.722  w3 median 5.037  paired d median +0.099
+  tick rms2 p25  prod median 11.131  w3 median 11.493  paired d median +0.221

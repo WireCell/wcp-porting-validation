@@ -1,5 +1,9 @@
 # doc pdvd/117: why the DUNE-VD drift regressor reads slope 0.42 on ProtoDUNE Michels, and how to find out
 
+**Status (2026-09-23, round 3).** Study S4 ran (section 8). The real re-SP with the training `Wire_col` raises the data
+slope 0.421 → 0.525 (Δ +0.105 [0.060, 0.151]), as S1 predicted before it ran. About 0.39 of the gap to the
+simulation's 0.91 remains, with a time-axis or Michel-domain cause.
+
 **Status (2026-09-23, round 2).** Study S1 ran; see section 6. Section 7 corrects sections 2.3 and 2.4.
 - **The transverse-diffusion budget is moot.** The model barely reads the channel axis at the D_T gap's size.
 - **The wire-filter difference is worth about +0.11 of slope,** not zero as section 2.1 assumed.
@@ -405,3 +409,77 @@ What these say:
      data noise and S/N, and charge fluctuation.
   4. **A Michel-domain test.** Apply the data's muon-removal geometry (truncated start, zeroed overlap) to simulated
      electrons, and see whether that alone compresses the slope.
+
+## 8. Round 3: study S4, the real re-SP with the training wire filter
+
+### 8.0 Repro
+
+```bash
+# toolkit 377119ee: protodunevd sp.jsonnet / wct-nf-sp-dnnroi.jsonnet TLA wire_col_sigma_x (default null)
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/scripts
+ARM=d117w3sp EXTRA="--wire-col-x 3.0" ./d117_run_sp.sh <61 events>            # work/<evt>_d117w3sp
+S=../../scan
+SP_ARM=d117w3sp python3 d117_crops.py --det pdvd --run ../d117/w3 --pdvd-arm p98vonq \
+    --pdvd-record $S/pdvd_stm_michel_p98vonq_carried_sw99_verdicts.json -j 8   # scan/d117/w3/
+CUDA_VISIBLE_DEVICES=1 python3 d98_predict.py --run ../d117/w3 --det pdvd
+CUDA_VISIBLE_DEVICES=1 python3 d117_s4.py > $S/d117/w3/s4.txt
+```
+
+**The knob.** It is new, and default OFF.
+- `make_sigproc(wire_col_sigma_x=null)` in the toolkit's `protodunevd/sp.jsonnet`, threaded through the in-tree
+  `wct-nf-sp-dnnroi.jsonnet`. The runner's `--wire-col-x X` sets it.
+- When set, the collection slot of `Wire_filters` names a filter pair (`Wire_colx_b/_t`, σ = X/√π) that is registered
+  only then.
+- **Compiled-config proof** (`/home/xqian/tmp/d117/cfg/`):
+  - off: byte-identical to the pre-edit job, both bare (md5 `966e5b3e`) and at a runner TLA set (`32040cb5`);
+  - on (X = 3.0): the two new `HfFilter`s with σ 1.6926, and `Wire_filters` changed on all eight `OmnibusSigProc`s.
+    Nothing else differs.
+- No C++ changed and no production default moved.
+
+**The arm.** `work/<evt>_d117w3sp`: 61 events, all rc 0, 8/8 frames, libraries unchanged during the run.
+- **The Michel masks and drift labels are p98vonq's on both arms** (max |Δ label| 0.1 cm), so only the SP pixels differ.
+- **Side effect on the induction planes.** They are not bit-identical (sum 0.1-0.2 % on 039252_0), because DNN-ROI
+  and L1SP downstream see the changed collection plane. The crops use W only.
+- **On W** (039252_0): charge −0.7 to −1.0 %, non-zero pixels +7 to +10 %.
+
+### 8.1 Result (`scan/d117/w3/s4.txt`; 56 in-range Michels, paired on 2000 shared bootstrap resamples)
+
+| | production SP | re-SP, `Wire_col` 3.0 | Δ (paired) | S1 emulation (predicted before this ran) |
+|---|---|---|---|---|
+| slope, Z, all | 0.421 | **0.525** | **+0.105 [0.060, 0.151]** | +0.112 [0.071, 0.154] |
+| intercept | 53.3 | 60.2 | +6.7 [−1.2, 14.3] | +3.8 |
+| median Δmu | | | +23.9 cm | +19.3 cm |
+| rho | +0.60 | +0.54 | | +0.57 |
+| slope, Z, top (n 41) | 0.407 | 0.529 | +0.121 [0.064, 0.181] | +0.138 |
+| slope, Z, bottom (n 15) | 0.486 | 0.515 | +0.030 [−0.017, 0.088] | +0.042 |
+| slope, M (muon left in) | 0.662 | 0.785 | +0.122 [0.090, 0.160] | – |
+
+- **The prediction holds.** The real re-SP moves the slope by the emulated +0.11 and mu by about 20 cm. Per Michel the
+  two agree at r = 0.89 (median |Δ| 4.3 cm).
+  - **Pixels.** The real re-SP and the emulation each differ from production by 3.6 % of the crop charge (L1 /
+    charge, 52 crops cut at the same origin), and from each other by 0.6 %.
+  - **The ROI stage adds little** beyond the filter itself.
+- **It moves the slope more than the intercept.** Doc 117 §2.1 predicted the opposite, and §7 already corrected it
+  from S1.
+  - rho does not improve (0.60 → 0.54, within noise). The response grows, but so does the scatter about it.
+- **About 0.39 of the gap remains.** 0.525 against the simulation's 0.91.
+  - The wire filter is a real, identified part of the SP mismatch, about a fifth of the gap.
+  - It is not the main part.
+- **The collection wire filter is a production SP setting.** Changing it for data would be a reconstruction change for
+  every consumer, and nothing here argues for that. For the regressor it is simpler to retrain with the data's
+  `Wire_col` 10, or to re-SP only the regressor's input. Both are the owner's call.
+
+### 8.2 Where this leaves the list
+
+The two named SP-side candidates are now measured:
+- the wire filter, +0.11 (S1 emulation, S4 real);
+- the constant collection excess, ≈ 0 (S1 gw0.21).
+
+What remains is on the time axis or in the Michel image itself. Next, in order:
+1. **S6, D_L on data** from long tracks. It is the one unmeasured transport constant, and the model is most sensitive
+   to it: about +0.1 of slope per cm²/s.
+2. **The Michel-domain test.** Apply the data's muon-removal geometry (truncated start, zeroed overlap cells) to
+   simulated electrons.
+3. **The S2 time-axis rungs:** D_L/v at 0.45 kV/cm, data noise and S/N, charge fluctuation.
+
+**Disk.** `work/*_d117w3sp` takes about 21 GB. It falls under the `d117*` prefix in `pdvd/scripts/retire/PROTECTED.txt`.

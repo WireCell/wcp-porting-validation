@@ -130,6 +130,11 @@ Options:
   --wires <file> Wire-geometry file for this job (e.g.
                  protodunevd-wires-larsoft-v5.json.bz2).  Absent = no TLA
                  passed = params.jsonnet's file (doc pdvd/99 sec 4.3).
+  --wire-col-x <X>
+                 Collection-plane SP wire filter, sigma = X/sqrt(pi) (Nyquist
+                 units; smaller X = wider kernel).  Absent = no TLA passed =
+                 the registered Wire_col_b/_t (X = 10).  3.0 = the DUNE-VD value
+                 the drift regressor was trained on (doc pdvd/117 study S4).
   -h             Show this help.
 
 Input:  input_data/<run_dir>/<evt_dir>/protodune-orig-frames-anode{0..7}.tar.bz2
@@ -164,6 +169,7 @@ L1SP_THRESH_TOP=""
 L1SP_THRESH_SINGLE=""
 TOP_GAIN_SCALE=""
 WIRES_FILE=""
+WIRE_COL_X=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -201,6 +207,7 @@ while [ $# -gt 0 ]; do
         --l1sp-thresh) L1SP_THRESH_SINGLE="$2"; shift 2 ;;
         --top-gain-scale) TOP_GAIN_SCALE="$2"; shift 2 ;;
         --wires) WIRES_FILE="$2"; shift 2 ;;
+        --wire-col-x) WIRE_COL_X="$2"; shift 2 ;;
         -w) WF_DUMP_DIR="$2"; shift 2 ;;
         -w*) WF_DUMP_DIR="${1#-w}"; shift ;;
         -A) DUMP_ALL_ROIS="$2"; DUMP_ALL_EXPLICIT=1; shift 2 ;;
@@ -433,6 +440,13 @@ if [ -n "$WIRES_FILE" ]; then
     echo "Wires:       wires_file=$WIRES_FILE"
 fi
 
+# Collection-plane wire filter override (doc pdvd/117 S4).  Only passed when given.
+WIRE_COL_TLA=()
+if [ -n "$WIRE_COL_X" ]; then
+    WIRE_COL_TLA=(--tla-code wire_col_sigma_x="$WIRE_COL_X")
+    echo "Wire_col:    wire_col_sigma_x=$WIRE_COL_X (collection wire filter sigma = X/sqrt(pi))"
+fi
+
 # L1SP-DNN per-ROI debug dump (one NPZ per call with channel, score,
 # fired, polarity, waveform, scalars). Required for LASSO-fire verification.
 L1SP_DNN_DBG_TLA=()
@@ -493,6 +507,7 @@ wire-cell \
     "${L1SP_CALIB_TLA[@]}" \
     "${TOP_GAIN_TLA[@]}" \
     "${WIRES_TLA[@]}" \
+    "${WIRE_COL_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &
 WC_PID=$!
 
