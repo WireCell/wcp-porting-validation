@@ -66,6 +66,11 @@ d113vbase d113vnone	the doc-113 session's open follow-up (its message 2026-09-16
 d111vst	named in the Repro blocks of docs pdvd/112 and 113; d112_case_anatomy.py / d112_terminal_planes.py take --arm d111vst.  d113vbase == d111vst 120/120 (figs/113_gate_base_pdvd.txt).	docs pdvd/112-113 Repro
 /home/xqian/tmp/d102/cfg	the shared compiled-config proof dir of d102_compile_pr.sh (docs 102-113, despite its round-102 name).  Doc pdvd/113's G1 row cites d113knob{off,none}_{pdhd,pdvd}.json here.  The round-D sweep released it and those four files were restored byte-identical (doc sbnd_xin/111 sec 8).	doc pdvd/113 sec 2 G1; restore_d102cfg_20260916.log
 
+# --- added 2026-09-23 (doc pdvd/117, owner: "protect the frames"): the regressor study's inputs + a LIVE round ---
+d117sp	THE ONLY SURVIVING COPY OF THE LATEST-ARM SP FRAMES for the 61 events that hold doc pdvd/98's latest-arm Michels (p98von's own frames were retired 2026-09-16, see the pvdimg line).  Production-default SP == p98von (doc pdvd/100 F2); proven by d117_cell_identity.py 61/61 (scan/d117/latest/cell_identity.txt).  21 GB.  Every doc 117 study re-crops from these	doc pdvd/117 sec 6.1; scripts/d117_crops.py
+p98vonq	the PR arm whose tracking-pr.root (T_stm_michel_2d cells, T_stm_michel rows) defines doc 98/117's Michel masks and labels, and the arm the carried hand record pdvd_stm_michel_p98vonq_carried_sw99_verdicts.json is keyed to.  Was protected by nothing	doc pdvd/98 sec 11; doc pdvd/117 sec 6
+d117*	A LIVE ROUND, by PREFIX (the 09-04 lesson): doc pdvd/117's study arms (S4 re-SP d117w3*, later S2/S6 arms) are being created from 2026-09-23	doc pdvd/117
+
 # ================= RETIRED =================
 
 # 2026-09-16 round D (doc sbnd_xin/111): RELEASED on the owner's instruction --
