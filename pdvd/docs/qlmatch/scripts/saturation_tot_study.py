@@ -16,7 +16,8 @@ Stages (each caches into /home/xqian/tmp/sat_tot/):
   --bench    Verdict S: held-out sim, real 16383 rail, d = 1.1 .. 20, plus stress arms.
   --data     Verdict D: (a) synthetic clips of the doc 11 pulses (closure to doc 11 + held-out file 1 to d = 6.7);
              (c) real rails whose ganged partner sub-channel did not rail (truth = partner PE x the pair's ratio);
-             (d) a census of all real cathode rail runs.
+             (c2) both sub-channels railed: pair-ratio consistency; (d) a census of all real cathode rail runs;
+             (e) the real-rail tail shape vs the ToT prediction, and the real pileup rate.
 Nothing in the toolkit or in doc 11's script is modified; saturation_recovery_study.py is imported read-only.
 """
 import argparse
@@ -536,6 +537,7 @@ def stage_data(fh):
     table(fh, "held-out file 1 (run 039253) only -- the shape model was fitted on file 0", g_1, DDATA, METHODS)
     plot(g_1, DDATA, "data: synthetic clips, run 039253 (held out)", "saturation_tot_data_synthetic.png")
     stage_partner(fh, chd, shapes, cal)
+    stage_tail(fh, chd, shapes)
 
 
 def seg_at(w, s):
@@ -699,6 +701,116 @@ def stage_partner(fh, chd, shapes, cal, nfiles=5):
             + " ".join(f"{q:.0f}" for q in np.percentile(tots_all, [16, 50, 84, 95, 99])))
     for tt, dd in ((71, 2.0), (141, 4.0), (194, 6.7), (245, 10.0), (329, 20.0)):          # model widths at 1/d
         out(fh, f"  runs longer than {tt} ticks (~ d > {dd}): {100 * np.mean(tots_all > tt):.1f} %")
+
+
+TAIL = 150                 # post-run window for the tail-consistency check, ticks
+TEDGES = (0, 40, 71, 108, 141, 194, 260, 2000)
+
+
+def tail_ratio(seg, i, j, base, R, shp):
+    """measured / tot_fill-predicted integral over [j, j+TAIL) after a rail run [i, j); None if unusable."""
+    if j + TAIL > len(seg):
+        return None
+    lam = shp.level_for(j - i)
+    A = R / lam
+    k0 = shp.u[min(len(shp.u) - 1, int(np.searchsorted(shp.lam, lam)))]
+    kk = k0 + (j - i) + np.arange(TAIL)
+    pred = A * np.where(kk < len(shp.s), shp.s[np.clip(kk, 0, len(shp.s) - 1)], 0.0)
+    meas = seg[j:j + TAIL] - base
+    if pred.sum() <= 0:
+        return None
+    return float(meas.sum() / pred.sum())
+
+
+def stage_tail(fh, chd, shapes, nfiles=5):
+    """(e) Tail consistency: does the pulse after a REAL rail look like the single clean pulse ToT assumes?"""
+    import uproot
+    out(fh, f"\n# Verdict D (e): tail consistency -- r = measured / tot_fill-predicted integral over the {TAIL} ticks after the "
+            "rail run (no truth needed)")
+    out(fh, "  reference: synthetic clips of held-out run-039253 pulses (isolated, single pulses by construction); "
+            "real: every cathode rail run of the census files whose tail window holds no other rail sample")
+    z = load_pulses()
+    seg, pk, b, C, F = z["seg"], z["pk"], z["base"], z["chan"], z["fidx"]
+    ref, real = {}, {}
+    for d in DDATA:
+        for i in np.nonzero(F == 1)[0]:
+            c = int(C[i])
+            s_ = seg[i].astype(np.float64)
+            rl = b[i] + (s_[pk[i]] - b[i]) / d
+            cl = np.minimum(s_, rl)
+            rr = rail_run(cl, rl - 0.5, max(0, pk[i] - S.WIN_PRE), pk[i] + S.WIN_POST)
+            if rr is None or (cl[rr[1]:rr[1] + TAIL] >= rl - 0.5).any():
+                continue
+            r = tail_ratio(cl, rr[0], rr[1], b[i], rl - b[i], shapes[c])
+            if r is not None:
+                k = TEDGES[int(np.searchsorted(TEDGES, rr[1] - rr[0], side="right")) - 1]
+                ref.setdefault(k, []).append(r)
+    files = sorted(glob.glob(os.path.join(RAWWF, "*_rawwf.root")))[:nfiles]
+    n_runs = n_close = n_skip = 0
+    beyond = 0
+    pile = {"n": 0, "r10": 0, "r30": 0}
+    for rf in files:
+        t = uproot.open(rf)["rawdump/raw_waveform"]
+        for ev in sorted(set(t.arrays(["event"], library="np")["event"])):
+            (waves, _), _ = load_cathode_streams(rf, ev)
+            for c, w in waves.items():
+                if c not in shapes:
+                    continue
+                # pileup rate: a second rise (4-tick, 3-tick smoothed) of >= 10 % / 30 % of the first pulse's
+                # amplitude 40-200 ticks after a bright (> 3000 ADC) unrailed pulse -- the sim pileup arm's geometry
+                wf = np.asarray(w, np.float64)
+                hh = wf - np.median(wf)
+                sm = np.convolve(hh, np.ones(3) / 3, "same")
+                rise = sm[4:] - sm[:-4]
+                last = -10 ** 9
+                for i0 in np.flatnonzero((hh > 3000) & (wf < RAIL)):
+                    if i0 - last < 400:
+                        continue
+                    p0 = i0 + int(np.argmax(hh[i0:i0 + 10]))
+                    if (wf[max(0, p0 - 400):p0 + 400] >= RAIL).any() or p0 + 200 > len(rise):
+                        continue
+                    last = i0
+                    mx = rise[p0 + 40:p0 + 200].max()
+                    pile["n"] += 1
+                    pile["r10"] += int(mx > 0.1 * hh[p0])
+                    pile["r30"] += int(mx > 0.3 * hh[p0])
+                ivs = rail_intervals(w)
+                for q, (a, e) in enumerate(ivs):
+                    n_runs += 1
+                    nxt = ivs[q + 1][0] if q + 1 < len(ivs) else None
+                    if nxt is not None and nxt - e <= 50:
+                        n_close += 1              # another rail within 50 ticks: a dip / second pulse
+                    if e - a > 345:
+                        beyond += 1
+                    if nxt is not None and nxt < e + TAIL:
+                        n_skip += 1
+                        continue
+                    sg_, o_ = seg_at(w, a)
+                    bs_ = S.seg_baseline(sg_)
+                    r = tail_ratio(sg_, a - o_, e - o_, bs_, RAIL - bs_, shapes[c])
+                    if r is not None:
+                        k = TEDGES[int(np.searchsorted(TEDGES, e - a, side="right")) - 1]
+                        real.setdefault(k, []).append(r)
+    out(fh, f"  real rail runs {n_runs}; followed by another rail within 50 ticks (dip / second pulse): {n_close} "
+            f"({100 * n_close / max(1, n_runs):.1f} %); tail window blocked by a rail (skipped): {n_skip}; "
+            f"longer than 345 ticks (beyond the ToT training range, d ~ 25): {beyond} ({100 * beyond / max(1, n_runs):.1f} %)")
+    out(fh, f"  pileup rate (real data): of {pile['n']} bright unrailed cathode pulses, a second rise >= 30 % of the peak "
+            f"40-200 ticks later in {100 * pile['r30'] / max(1, pile['n']):.2f} %, >= 10 % in "
+            f"{100 * pile['r10'] / max(1, pile['n']):.2f} %  (sim pileup arm = 30 % at 40-200 ticks: tot_fill +17 % at d 4, "
+            f"+47 % at d >= 6.7)")
+    out(fh, "  NOTE (sim): r is blind to pileup INSIDE the run (the pileup arm keeps r ~ 1.00 while tot_fill is +24..+49 %); "
+            "r does see a slower tail (tau_s +20 %: r ~ 1.05, tot_fill +5..+17 % at d >= 6.7)")
+    out(fh, f"{'ToT>=':>6} | {'reference n':>11} {'r median [16,84]':>24} | {'real n':>7} {'r median [16,84]':>24} | "
+            f"{'real/ref median':>15} {'real above ref p84':>18}")
+    for k in TEDGES[:-1]:
+        a_, b_ = np.array(ref.get(k, [])), np.array(real.get(k, []))
+        fa = (f"{len(a_):>11} {np.median(a_):7.3f} [{np.percentile(a_, 16):6.3f},{np.percentile(a_, 84):6.3f}]"
+              if len(a_) else f"{0:>11} {'-':>24}")
+        fb = (f"{len(b_):>7} {np.median(b_):7.3f} [{np.percentile(b_, 16):6.3f},{np.percentile(b_, 84):6.3f}]"
+              if len(b_) else f"{0:>7} {'-':>24}")
+        rat = (f"{np.median(b_) / np.median(a_):15.3f} {100 * np.mean(b_ > np.percentile(a_, 84)):17.1f}%"
+               if len(a_) and len(b_) else "")
+        out(fh, f"{k:>6} | {fa} | {fb} | {rat}")
 
 
 def main():

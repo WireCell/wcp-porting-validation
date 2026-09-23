@@ -33,11 +33,21 @@ over threshold). The owner asked for:
 3. **Verdict D (data): ToT wins on each data test that can separate the methods.**
    - **Synthetic clips of held-out real pulses:** ToT passes to d = 6.7 with ≤ 5 % bias. Twoside fails from d = 4.
    - **Real rails where both ganged sub-channels saturate:** ToT keeps the pair ratio within 1–5 % out to the deepest
-     rails (d ≳ 10). Twoside's band opens to ×1.4–4.
+     rails (d ≳ 10). Twoside's band opens to ×1.4–4. This is a relative test.
    - **Real rails whose partner did not saturate** only reach d ≈ 1.1–1.4. There all methods tie.
 4. **The two verdicts agree.** The main weakness of ToT is also clear: it relies on the light's time profile. A
    ±20 % shift in the LAr slow constant biases it by up to ±15 % at d = 20, and a pileup pulse inside the rail run
    biases it by +20–50 %.
+5. **What the data establish, and what they don't.**
+   - **Absolute accuracy on data is measured up to d = 6.7, but only on synthetic clips of isolated pulses.**
+   - **On real rails it is measured absolutely only to d ≈ 1.4** (partner truth).
+   - **Beyond that, the real-rail evidence is indirect:**
+     - relative pair consistency (§6.3), which cancels effects common to both sub-channels;
+     - a tail-shape check (§6.5): at d ≈ 4–10 real rails look like clean single pulses, but at ToT 40–108 and ≥ 260
+       their tails carry 7–17 % more charge than the model predicts.
+   - **The pileup failure mode is rare:** a second pulse of at least 30 % of the peak within 40–200 ticks follows 0.64 %
+     of real bright pulses (1.85 % at 10 %). That rate is measured, but pileup hidden inside a rail run cannot be seen
+     directly.
 
 ## 1. Search: ToT in LArSoft
 
@@ -152,6 +162,14 @@ Real 16383 rail; 320 pulses per depth; values are PE_rec/PE_true, median [16, 84
 
 ## 6. Verdict D: PDVD data (`d30/data.txt`, `pics/saturation_tot_data_synthetic.png`)
 
+**Dropped check.** The approved plan had a check (b): doc 11 §2.3's prediction-scaled test on hand-confirmed railed
+flashes. It was dropped for two reasons:
+- its input, the `work/039252_0_satoff` calib dump, was removed in a disk cleanup;
+- more importantly, doc 11 §6 measured a median meas/pred of 3.66 on railed matches, a photon-model and QtoL problem.
+  A prediction-scaled truth would therefore rank the methods by the model's error, not by their own.
+
+The partner-based tests (c) and (c2) replace it with measured light.
+
 ### 6.1 (a) Synthetic clips of real unrailed pulses
 
 - **Closure:** on all 1727 pulses, the raw, clip, tail, twoside and tmpl columns reproduce doc 11's §2.1 table exactly
@@ -214,8 +232,9 @@ depth. `tot_fill` avoids that because it fills the run and then measures the unr
   tail seen in (a) and in the sim.
 - **ToT** stays within 1–5 % of 1, with a half-band of 0.09–0.14. This is roughly the √2 × ±6 % expected from the
   control ratio alone.
-- This is the only data test of deep **real** rails in this doc, and ToT passes it. It is a **relative** test: a shape
-  error common to both sub-channels partly cancels in q. The absolute depth dependence is covered by (a) up to 6.7.
+- This is the only direct method-to-method comparison on deep **real** rails, and ToT passes it. It is a **relative**
+  test: a shape error common to both sub-channels partly cancels in q, and so does pileup, since both sub-channels see
+  the same light. The absolute depth dependence is covered by (a) up to 6.7, and indirectly by (e).
 
 ### 6.4 (d) Census of real cathode rail runs
 
@@ -231,6 +250,54 @@ depth. `tot_fill` avoids that because it fills the run and then measures the unr
 About a fifth of real rail runs are in the regime where twoside fails. Bright flashes collect exactly these runs: doc
 11 §2.2 found a median of d ≈ 5.6 for the deepest rail of a railed flash.
 
+**Multiple runs per pulse and the calibration range**, from §6.5's pass over the same runs:
+- 2.2 % of runs are followed by another rail within 50 ticks: a dip in the plateau or a second pulse. The 2-sample
+  merge does not join these.
+- 1.5 % are longer than 345 ticks, beyond the ToT training range (d ≈ 25), where `tot_cal` extrapolates in log-log.
+  `tot_fill` uses the model shape directly and does not extrapolate a table.
+
+### 6.5 (e) Tail consistency on real rails, and the real pileup rate
+
+- **The check:** after `tot_fill` solves the amplitude from ToT, the model predicts the unrailed samples that follow
+  the run.
+- **The metric:** r = measured ÷ predicted integral over the 150 ticks after the run. It needs no truth and is binned by
+  the measured ToT.
+- **Samples:**
+  - reference: synthetic clips of held-out isolated pulses;
+  - real: every cathode rail run whose tail window holds no other rail sample (12,858 of 13,357).
+
+| ToT ≥ (ticks) | ~d | reference r | real r | real/ref | real above ref p84 |
+|---|---|---|---|---|---|
+| 0 | < 1.4 | 1.013 [0.943, 1.071] | 1.044 [0.952, 1.166] | 1.03 | 40 % |
+| 40 | 1.4–2 | 1.009 [0.942, 1.062] | 1.183 [1.099, 1.237] | **1.17** | 87 % |
+| 71 | 2–2.9 | 0.986 [0.928, 1.052] | 1.115 [0.980, 1.176] | **1.13** | 74 % |
+| 108 | 2.9–4 | 0.978 [0.917, 1.056] | 1.043 [0.919, 1.104] | 1.07 | 42 % |
+| 141 | 4–6.7 | 0.984 [0.909, 1.076] | 1.012 [0.951, 1.058] | 1.03 | 12 % |
+| 194 | 6.7–10 | 0.980 [0.896, 1.080] | 1.008 [0.950, 1.056] | 1.03 | 12 % |
+| ≥ 260 | ≳ 10 | 0.929 [0.887, 1.045] (n = 22) | 1.072 [1.018, 1.258] | **1.15** | 67 % |
+
+**What r can and cannot see** (sim cross-check, not in the record):
+- a slower LAr tail (τ_s +20 %) shows up as r ≈ 1.05, together with a `tot_fill` bias of +5 to +17 % at d ≥ 6.7;
+- **pileup inside the run is invisible**: the pileup arm keeps r ≈ 1.00 while `tot_fill` is +24–49 %, because the extra
+  pulse lengthens ToT and the predicted tail scales up with it.
+
+**Reading:**
+- **d ≈ 4–10 (15 % of real runs):** real tails match clean single pulses to 3 %. That excludes a slow-tail mismatch of
+  the τ_s ±20 % size there.
+- **ToT 40–108 (d ≈ 1.4–2.9) and ≥ 260 (d ≳ 10):** real tails carry 7–17 % more charge than the model predicts.
+  - At shallow depth this barely moves the PE: `tot_fill` measures the tail directly. Partner truth (§6.2) puts
+    `tot_fill` at 0.97–1.00 there.
+  - At d ≳ 10, if the excess is a slower-tail effect, the sim's τ_s arm suggests `tot_fill` overestimates by about
+    +10–15 %. This is unmeasured in absolute terms. The reference has only 22 pulses there.
+
+**Real pileup rate:**
+- **After bright unrailed pulses:** of 27,840 cathode pulses above 3000 ADC in the census files, a second rise of at
+  least 30 % of the peak arrives 40–200 ticks later in **0.64 %** of cases, and one of at least 10 % in 1.85 %. This is
+  the sim pileup arm's geometry.
+- **After real rails:** the visible rates are 0.21 % and 1.09 %.
+- **So ToT's worst failure mode touches about 1–2 % of bright pulses**, not the bulk. That assumes pileup is independent
+  of how deep the first pulse is; pileup under a rail cannot be observed directly.
+
 ## 7. The two verdicts side by side
 
 | test | twoside | ToT (tot_fill) | better |
@@ -240,11 +307,21 @@ About a fifth of real rail runs are in the regime where twoside fails. Bright fl
 | **S** pileup at d = 4 | 2.00 [1.28, 3.75] | 1.17 [0.94, 1.52] | ToT (both fail) |
 | **D (a)** held-out real pulses, d 4 / 6.7 | 1.23 / 1.45, fails | 0.97 / 0.95, passes | ToT |
 | **D (c)** real rails, partner truth, d ≤ 1.4 | 0.997 / 0.963 | 1.000 / 0.969 | tie |
-| **D (c2)** real deep rails, pair consistency | band to ×1.4–4.4 | ±10 % | ToT |
+| **D (c2)** real deep rails, pair consistency (relative) | band to ×1.4–4.4 | ±10 % | ToT |
+| **D (e)** real-rail tail shape vs clean pulses | (not applicable) | 3 % at d 4–10; +7–17 % excess at d 1.4–2.9 and ≳ 10 | ToT's shape assumption holds at d 4–10 |
+| **D (e)** real pileup rate (≥ 30 % within 40–200 ticks) | also biased by pileup (worse) | 0.64 % of bright pulses | failure mode is rare |
 
 **The two judgements agree.** The sim predicts that ToT removes twoside's growing overshoot, and the data show exactly
 that, with a slightly smaller margin: ToT's data bias is 3–5 % low at d ≥ 4, against 1 % in sim, and twoside's data
 overshoot is a little smaller than in sim.
+
+**How far the data establish it:**
+
+| regime | evidence for ToT |
+|---|---|
+| synthetic clips of isolated real pulses, d ≤ 6.7 | absolute |
+| real rails, d ≲ 1.4 | absolute (partner truth) |
+| real rails, deeper | **relative / indirect**: pair consistency (§6.3) plus the tail shape (§6.5). At d ≳ 10 the tail excess allows a ToT overestimate of about +10–15 %, which is unmeasured. |
 
 ## 8. Pros and cons
 
@@ -253,7 +330,7 @@ overshoot is a little smaller than in sim.
 | **+** | no shape model, only the SPE template's τ; purely local; already in production behind a knob, byte-gated | uses a measured *time* over the whole run, not a few anchor samples; bias flat to d = 20 in sim and ≤ 5 % to d = 6.7 on data; consistent on deep real rails |
 | **+** | exact at d ≲ 1.5 | `tot_fill` is exact at shallow depth too, so there is no hand-over |
 | **−** | overshoot grows with depth (×1.2 at d = 4, ×1.45 at d = 6.7 on data), with a long upper tail (×2–4); fails for the ≈ 20 % of real runs beyond d ≈ 4 | needs a per-channel bright-pulse shape (template ⊗ LAr profile). The profile depends on the LAr triplet τ (purity, N₂ quenching; any xenon doping would change it completely) and on particle type (prompt fraction). ±20 % in τ_s gives ±15 % at d = 20, ±5 % at d = 6.7. |
-| **−** | | a second pulse inside the run lengthens ToT: +17 % at d = 4, +47 % at d ≥ 6.7 in sim |
+| **−** | | a second pulse inside the run lengthens ToT: +17 % at d = 4, +47 % at d ≥ 6.7 in sim. It cannot be seen from the tail. The real rate is 0.64 % of bright pulses (≥ 30 %) or 1.85 % (≥ 10 %). |
 | **−** | | the calibration must be kept current per run period (shape fit plus quiet windows; 4 minutes here). Channels with an anomalous SPE template (1051) have a poor shape model. |
 | **−** | | tested here only on **cathode full-stream** rails. Membrane and PMT self-trigger snippets are short, and doc 14's overflow-to-0 runs may be truncated by the snippet end, making ToT a lower bound there. Not assessed. |
 | **−** | | `tot_cal` alone is quantised at d ≲ 1.4 and mis-reads pileup at shallow depth; `tot_fill` is the variant to keep |
@@ -273,8 +350,11 @@ overshoot is a little smaller than in sim.
 - **Open items before a flip:**
   - (i) repeat the shape fit on a later run, to see whether τ_s drifts with purity;
   - (ii) check membrane and PMT self-trigger snippets for ToT truncation;
-  - (iii) decide whether a run that is visibly two pulses (a dip back below the rail > 2 ticks) should fall back to
-    twoside.
+  - (iii) decide whether a run that is visibly two pulses should fall back to twoside. That is a dip back below the
+    rail of more than 2 ticks, or another rail within 50 ticks, which is 2.2 % of real runs.
+  - (iv) find an absolute real-rail truth at d ≳ 4, where the evidence is only relative and indirect (§7). Candidates
+    are an attenuated or lower-gain readout of the same light (for example a membrane module viewing the same flash
+    with a known ratio), or a run taken at reduced SiPM bias. The tail excess at d ≳ 10 (§6.5) is the thing to explain.
 
 ## 10. Files
 - `scripts/saturation_tot_study.py`: this study.

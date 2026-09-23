@@ -69,3 +69,17 @@ d bins (edges (1.0, 1.25, 1.6, 2.2, 3.2, 5.0, 8.0, 100.0)); a row key is its bin
   runs longer than 194 ticks (~ d > 6.7): 10.6 %
   runs longer than 245 ticks (~ d > 10.0): 5.6 %
   runs longer than 329 ticks (~ d > 20.0): 1.9 %
+
+# Verdict D (e): tail consistency -- r = measured / tot_fill-predicted integral over the 150 ticks after the rail run (no truth needed)
+  reference: synthetic clips of held-out run-039253 pulses (isolated, single pulses by construction); real: every cathode rail run of the census files whose tail window holds no other rail sample
+  real rail runs 13357; followed by another rail within 50 ticks (dip / second pulse): 297 (2.2 %); tail window blocked by a rail (skipped): 480; longer than 345 ticks (beyond the ToT training range, d ~ 25): 204 (1.5 %)
+  pileup rate (real data): of 27840 bright unrailed cathode pulses, a second rise >= 30 % of the peak 40-200 ticks later in 0.64 %, >= 10 % in 1.85 %  (sim pileup arm = 30 % at 40-200 ticks: tot_fill +17 % at d 4, +47 % at d >= 6.7)
+  NOTE (sim): r is blind to pileup INSIDE the run (the pileup arm keeps r ~ 1.00 while tot_fill is +24..+49 %); r does see a slower tail (tau_s +20 %: r ~ 1.05, tot_fill +5..+17 % at d >= 6.7)
+ ToT>= | reference n         r median [16,84] |  real n         r median [16,84] | real/ref median real above ref p84
+     0 |        1519   1.013 [ 0.943, 1.071] |    6111   1.044 [ 0.952, 1.166] |           1.031              40.4%
+    40 |         565   1.009 [ 0.942, 1.062] |    1571   1.183 [ 1.099, 1.237] |           1.172              86.8%
+    71 |         873   0.986 [ 0.928, 1.052] |    1472   1.115 [ 0.980, 1.176] |           1.131              73.8%
+   108 |         796   0.978 [ 0.917, 1.056] |    1045   1.043 [ 0.919, 1.104] |           1.067              41.8%
+   141 |        1500   0.984 [ 0.909, 1.076] |    1234   1.012 [ 0.951, 1.058] |           1.028              12.2%
+   194 |         542   0.980 [ 0.896, 1.080] |     810   1.008 [ 0.950, 1.056] |           1.029              11.7%
+   260 |          22   0.929 [ 0.887, 1.045] |     615   1.072 [ 1.018, 1.258] |           1.154              67.0%
