@@ -1,0 +1,19 @@
+# sheets 736 (rendered 736); verdicts 736; missing 0
+# picks: {('letter', 'high'): 95, ('letter', 'low'): 121, ('letter', 'med'): 276, ('none', 'med'): 4, ('tie', 'low'): 65, ('tie', 'med'): 73, ('unsure', 'low'): 102}
+
+## scanner calibration vs the owner record (committed verdicts on owner-judged candidates)
+               all: agree 19 disagree 2 -> 90.5 %  (unsure 14, tie 3, not-comparable 2)
+ cathxa (AI+owner): agree 13 disagree 0 -> 100.0 %  (unsure 12, tie 2, not-comparable 1)
+      gold (owner): agree 6 disagree 2 -> 75.0 %  (unsure 2, tie 1, not-comparable 1)
+   disagree: s69771 evt298567 uid4000146 gold (owner): scanner ('pos', -2125.605) | owner pos [] neg [-2125.6052211072597]
+   disagree: s40541 evt298567 uid4000114 gold (owner): scanner ('pos', -1077.361) | owner pos [] neg [-1077.360538800865]
+
+## duplicate-sheet consistency (different scanners, same sheet): {'one unsure': 22, 'compatible': 11}
+
+## target over 329 movers: {'resolved:none': 2, 'resolved:pos': 200, 'resolved:tie': 43, 'unresolved:unsure': 84}
+   resolved 245 = 74.5 % (prereg minimum 60 %); of which tie 43 (13.1 %, neutral)
+   odd events: {'resolved:pos': 91, 'resolved:tie': 21, 'unresolved:unsure': 43}
+   even events: {'resolved:none': 2, 'resolved:pos': 109, 'resolved:tie': 22, 'unresolved:unsure': 41}
+
+## POST HOC: round-1 verdicts under the round-2 rule: {'resolved:none': 1, 'resolved:pos': 53, 'resolved:tie': 5, 'unresolved:contradiction': 5, 'unresolved:unsure': 36}; resolved 59/100 = 59.0 %
+   round-1 vs round-2 positive truth on the same mover (reproducibility): {'same': 31, 'different': 6}

@@ -1,0 +1,9 @@
+# owner record (wfresc gold + cathxa), ql_agree_score.py --truth-uid-map-tag keep; agree / phantom / missed
+ q31ctl: 683 / 97 / 158
+  q32ti: 652 / 88 / 189
+  q33ts: 654 / 89 / 187
+  q33cs: 684 / 98 / 157
+  q33tm: 595 / 96 / 246
+  q33cm: 597 / 93 / 244
+  q33tu: 653 / 82 / 188
+  q33cu: 674 / 93 / 167

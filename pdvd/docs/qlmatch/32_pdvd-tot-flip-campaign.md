@@ -170,6 +170,9 @@ Scored against the owner record: agree / phantom / missed, and missed after doc 
 - So the LASSO decides the movers, not the KS/chi2/ratio gates.
 
 **`sat_flag_ignore_channels`** (toolkit `d8fef1f1`, default OFF).
+- **Erratum (doc 33 §2).** Railed rows are zeroed in three of the four LASSO fill sites, not all: `fit_round2_shared`
+  (the round-2 joint solve PDVD uses) kept them. Skipping them there too (knob `sat_skip_round2_shared`) moves only
+  2–3 clusters, so the readings below stand; the ToT-vs-twoside movers come from railed PE in chi2/KS (doc 33 §2).
 - **What it does.** Railed cathode rows are zeroed in the LASSO in production, so the natural first lever was to let
   ToT's repaired cathode PE into the fit. The knob clears the per-flash rail flag on the listed OpDets when the flash
   is read (`Opflash::clear_sat`).
@@ -270,7 +273,7 @@ each mover:
 - 3: absorbed.
 
 So the lever is **not** the flash set: twoside's split fragments disappearing under ToT account for only 3 movers.
-Something inside the fit changes. The railed rows are zeroed in the LASSO in both arms, but the railed PE still enters
+Something inside the fit changes. The railed rows are zeroed in the LASSO in both arms (round-2 exception: doc 33 §2), but the railed PE still enters
 chi2/KS (production `saturation_mask_fit=false`). That is a candidate route by which bundle eligibility, and so the
 LASSO's column set, changes. To be traced in round 2.
 

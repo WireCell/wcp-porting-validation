@@ -1,0 +1,24 @@
+# d33 neutrality: q31ctl vs q32ti on the bundles of 329 movers (union over q32ti:T,q33ts:T,q33tm:T,q33tu:T,q33cs:C,q33cm:C,q33cu:C)
+bundles: 15504
+pred_pe identical: 5940
+pred_pe differs: 9511
+other_clusters identical: 15451
+other_clusters differ: 0
+sat identical: 15209
+sat differs: 242
+unrailed pe within 1 %: 14389
+unrailed pe differs > 1 %: 1062
+clusters: 328
+clusters whose other_clusters vary by flash: 0
+no ToT bundle on the mapped flash: 53
+worst pred_pe rel diff 0.0584; worst unrailed pe rel diff 1
+  example evt uid t dpred dunrailed: (298567, 112, 243.99, 0.0001, 0.0)
+  example evt uid t dpred dunrailed: (298567, 112, 274.43, 0.0006, 0.0001)
+  example evt uid t dpred dunrailed: (298567, 112, 421.06, 0.0004, 0.0)
+  example evt uid t dpred dunrailed: (298567, 112, 730.16, 0.0002, 0.0)
+  example evt uid t dpred dunrailed: (298567, 112, 819.06, 0.0007, 1.0)
+  example evt uid t dpred dunrailed: (298567, 112, 1134.84, 0.0001, 0.0)
+  example evt uid t dpred dunrailed: (298567, 112, 1423.47, 0.0002, 0.0)
+  example evt uid t dpred dunrailed: (298567, 112, 1946.21, 0.0003, 0.0)
+  example evt uid t dpred dunrailed: (298567, 112, 1975.85, 0.0006, 0.0)
+  example evt uid t dpred dunrailed: (298567, 18, 2705.52, 0.0, 0.0)

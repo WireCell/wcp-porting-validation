@@ -1,0 +1,10 @@
+q31ctl:C:q32ti:T 100
+q33cs:C:q33ts:T 100
+q33cm:C:q33tm:T 40
+q33cu:C:q33tu:T 96
+q31ctl:C:q33cs:C 2
+q31ctl:C:q33cm:C 250
+q31ctl:C:q33cu:C 48
+q31ctl:C:q33ts:T 102
+q31ctl:C:q33tm:T 252
+q31ctl:C:q33tu:T 125

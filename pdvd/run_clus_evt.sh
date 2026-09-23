@@ -782,6 +782,17 @@ PY
     if [ "${PDVD_QL_SAT_IGNORE_CATHODE:-0}" = 1 ]; then
         QL_SATFLAG_ARG+=(-S "ql_sat_flag_ignore_cathode=true")
     fi
+    # PDVD_QL_SAT_SKIP_R2=1: skip rail-flagged rows in the round-2 shared
+    # LASSO like the other fit sites (docs/qlmatch/33).  Unset = not passed
+    # (byte-identical).
+    if [ "${PDVD_QL_SAT_SKIP_R2:-0}" = 1 ]; then
+        QL_SATFLAG_ARG+=(-S "ql_sat_skip_round2=true")
+    fi
+    # PDVD_QL_LASSO_W_UNRAILED=1: shared-fit LASSO weight base from the
+    # unrailed channels (docs/qlmatch/33).  Unset = not passed (byte-identical).
+    if [ "${PDVD_QL_LASSO_W_UNRAILED:-0}" = 1 ]; then
+        QL_SATFLAG_ARG+=(-S "ql_lasso_weight_unrailed=true")
+    fi
     # PDVD_QL_USE_COV_FLAG: per-flash readout-coverage masking in QLMatching
     # (self-trigger channels with no snippet over the flash window carry NO
     # data).  PRODUCTION DEFAULT ON since 2026-07-14

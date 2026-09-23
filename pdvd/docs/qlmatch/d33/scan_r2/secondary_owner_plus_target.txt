@@ -1,0 +1,10 @@
+# SECONDARY: owner record with every scanned mover's entries replaced by the round-2 target (unresolved/tie dropped);
+# ql_agree_score.py --truth-uid-map-tag keep --override-truth d33/scan_r2/override_target_<arm>.jsonl; agree / phantom / missed
+ q31ctl: 634 / 163 / 195
+  q32ti: 629 / 161 / 206
+  q33ts: 632 / 160 / 203
+  q33tm: 615 / 183 / 221
+  q33tu: 635 / 154 / 199
+  q33cs: 636 / 162 / 193
+  q33cm: 614 / 181 / 215
+  q33cu: 633 / 164 / 196

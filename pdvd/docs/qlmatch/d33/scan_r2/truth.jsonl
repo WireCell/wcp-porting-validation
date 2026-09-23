@@ -1,0 +1,245 @@
+{"evt": 298567, "idx": 0, "uid": 18, "kind": "pos", "times": [3222.119]}
+{"evt": 298567, "idx": 0, "uid": 4000031, "kind": "pos", "times": [3760.119]}
+{"evt": 298567, "idx": 0, "uid": 4000074, "kind": "pos", "times": [3760.119]}
+{"evt": 298581, "idx": 1, "uid": 1, "kind": "pos", "times": [501.659]}
+{"evt": 298581, "idx": 1, "uid": 36, "kind": "tie", "times": [2306.279, 2343.836]}
+{"evt": 298581, "idx": 1, "uid": 80, "kind": "pos", "times": [2912.073]}
+{"evt": 298581, "idx": 1, "uid": 114, "kind": "pos", "times": [3502.929]}
+{"evt": 298581, "idx": 1, "uid": 117, "kind": "pos", "times": [348.374]}
+{"evt": 298581, "idx": 1, "uid": 4000001, "kind": "pos", "times": [1794.625]}
+{"evt": 298581, "idx": 1, "uid": 4000004, "kind": "pos", "times": [1794.625]}
+{"evt": 298581, "idx": 1, "uid": 4000014, "kind": "pos", "times": [501.659]}
+{"evt": 298581, "idx": 1, "uid": 4000040, "kind": "pos", "times": [3651.685]}
+{"evt": 298581, "idx": 1, "uid": 4000042, "kind": "tie", "times": [2938.29, 3651.685]}
+{"evt": 298581, "idx": 1, "uid": 4000047, "kind": "pos", "times": [2343.836]}
+{"evt": 298581, "idx": 1, "uid": 4000103, "kind": "tie", "times": [2463.696, 2686.051]}
+{"evt": 298581, "idx": 1, "uid": 4000216, "kind": "pos", "times": [-985.839]}
+{"evt": 298581, "idx": 1, "uid": 4000400, "kind": "pos", "times": [430.117]}
+{"evt": 298595, "idx": 2, "uid": 5, "kind": "pos", "times": [1285.119]}
+{"evt": 298595, "idx": 2, "uid": 33, "kind": "pos", "times": [1427.656]}
+{"evt": 298595, "idx": 2, "uid": 136, "kind": "pos", "times": [-800.231]}
+{"evt": 298595, "idx": 2, "uid": 4000001, "kind": "tie", "times": [4590.119, 4843.397]}
+{"evt": 298595, "idx": 2, "uid": 4000010, "kind": "pos", "times": [1927.787]}
+{"evt": 298595, "idx": 2, "uid": 4000110, "kind": "pos", "times": [2277.104]}
+{"evt": 298595, "idx": 2, "uid": 4000118, "kind": "pos", "times": [2718.345]}
+{"evt": 298595, "idx": 2, "uid": 4000338, "kind": "pos", "times": [1269.496]}
+{"evt": 298595, "idx": 2, "uid": 4000354, "kind": "tie", "times": [1285.119, 1299.453]}
+{"evt": 298595, "idx": 2, "uid": 4000414, "kind": "tie", "times": [1285.119, 1299.453]}
+{"evt": 298609, "idx": 3, "uid": 107, "kind": "pos", "times": [2899.69]}
+{"evt": 298609, "idx": 3, "uid": 150, "kind": "pos", "times": [740.63]}
+{"evt": 298609, "idx": 3, "uid": 4000001, "kind": "pos", "times": [904.141]}
+{"evt": 298609, "idx": 3, "uid": 4000002, "kind": "pos", "times": [2899.69]}
+{"evt": 298609, "idx": 3, "uid": 4000012, "kind": "pos", "times": [3249.224]}
+{"evt": 298609, "idx": 3, "uid": 4000052, "kind": "tie", "times": [-1882.841, -1865.897]}
+{"evt": 298609, "idx": 3, "uid": 4000081, "kind": "pos", "times": [-308.673]}
+{"evt": 298609, "idx": 3, "uid": 4000094, "kind": "tie", "times": [-1158.744, -800.695]}
+{"evt": 298609, "idx": 3, "uid": 4000097, "kind": "pos", "times": [2689.331]}
+{"evt": 298609, "idx": 3, "uid": 4000175, "kind": "pos", "times": [-87.395]}
+{"evt": 298609, "idx": 3, "uid": 4000255, "kind": "pos", "times": [-722.902]}
+{"evt": 298609, "idx": 3, "uid": 4000325, "kind": "pos", "times": [144.051]}
+{"evt": 298623, "idx": 4, "uid": 9, "kind": "pos", "times": [3799.896]}
+{"evt": 298623, "idx": 4, "uid": 12, "kind": "pos", "times": [0.245]}
+{"evt": 298623, "idx": 4, "uid": 13, "kind": "pos", "times": [3073.723]}
+{"evt": 298623, "idx": 4, "uid": 40, "kind": "pos", "times": [2947.838]}
+{"evt": 298623, "idx": 4, "uid": 50, "kind": "pos", "times": [-484.425]}
+{"evt": 298623, "idx": 4, "uid": 112, "kind": "pos", "times": [1959.202]}
+{"evt": 298623, "idx": 4, "uid": 4000005, "kind": "pos", "times": [1959.202]}
+{"evt": 298623, "idx": 4, "uid": 4000008, "kind": "pos", "times": [3799.896]}
+{"evt": 298623, "idx": 4, "uid": 4000031, "kind": "pos", "times": [3073.723]}
+{"evt": 298623, "idx": 4, "uid": 4000042, "kind": "pos", "times": [-614.883]}
+{"evt": 298623, "idx": 4, "uid": 4000087, "kind": "tie", "times": [2284.623, 2290.429]}
+{"evt": 298623, "idx": 4, "uid": 4000098, "kind": "pos", "times": [3142.167]}
+{"evt": 298623, "idx": 4, "uid": 4000136, "kind": "pos", "times": [0.245]}
+{"evt": 298623, "idx": 4, "uid": 4000137, "kind": "pos", "times": [2512.625]}
+{"evt": 298623, "idx": 4, "uid": 4000212, "kind": "tie", "times": [-761.802, -653.526]}
+{"evt": 298623, "idx": 4, "uid": 4000213, "kind": "pos", "times": [-238.967]}
+{"evt": 298623, "idx": 4, "uid": 4000288, "kind": "pos", "times": [2512.625]}
+{"evt": 298623, "idx": 4, "uid": 4000392, "kind": "pos", "times": [1959.202]}
+{"evt": 298623, "idx": 4, "uid": 4000488, "kind": "pos", "times": [794.172]}
+{"evt": 298623, "idx": 4, "uid": 4000556, "kind": "pos", "times": [-278.774]}
+{"evt": 298637, "idx": 5, "uid": 36, "kind": "tie", "times": [3503.714, 3513.251]}
+{"evt": 298637, "idx": 5, "uid": 75, "kind": "tie", "times": [3108.261, 3503.714]}
+{"evt": 298637, "idx": 5, "uid": 88, "kind": "tie", "times": [3108.261, 3195.444]}
+{"evt": 298637, "idx": 5, "uid": 124, "kind": "pos", "times": [3349.245]}
+{"evt": 298637, "idx": 5, "uid": 4000003, "kind": "pos", "times": [3340.888]}
+{"evt": 298637, "idx": 5, "uid": 4000016, "kind": "pos", "times": [1391.743]}
+{"evt": 298637, "idx": 5, "uid": 4000018, "kind": "pos", "times": [631.234]}
+{"evt": 298637, "idx": 5, "uid": 4000050, "kind": "tie", "times": [1231.748, 1342.33]}
+{"evt": 298637, "idx": 5, "uid": 4000060, "kind": "tie", "times": [1231.748, 1342.33]}
+{"evt": 298637, "idx": 5, "uid": 4000113, "kind": "pos", "times": [3195.444]}
+{"evt": 298637, "idx": 5, "uid": 4000369, "kind": "pos", "times": [3108.261]}
+{"evt": 298637, "idx": 5, "uid": 4000503, "kind": "pos", "times": [3144.499]}
+{"evt": 298637, "idx": 5, "uid": 4000513, "kind": "pos", "times": [-1058.692]}
+{"evt": 298637, "idx": 5, "uid": 4000561, "kind": "pos", "times": [2120.757]}
+{"evt": 298637, "idx": 5, "uid": 4000591, "kind": "tie", "times": [4367.306, 4432.334]}
+{"evt": 298651, "idx": 6, "uid": 23, "kind": "pos", "times": [619.258]}
+{"evt": 298651, "idx": 6, "uid": 25, "kind": "pos", "times": [2700.767]}
+{"evt": 298651, "idx": 6, "uid": 34, "kind": "pos", "times": [298.799]}
+{"evt": 298651, "idx": 6, "uid": 42, "kind": "pos", "times": [-518.267]}
+{"evt": 298651, "idx": 6, "uid": 45, "kind": "tie", "times": [298.799, 439.986]}
+{"evt": 298651, "idx": 6, "uid": 51, "kind": "pos", "times": [3411.479]}
+{"evt": 298651, "idx": 6, "uid": 73, "kind": "pos", "times": [2700.767]}
+{"evt": 298651, "idx": 6, "uid": 79, "kind": "none", "times": []}
+{"evt": 298651, "idx": 6, "uid": 4000001, "kind": "pos", "times": [1735.675]}
+{"evt": 298651, "idx": 6, "uid": 4000036, "kind": "pos", "times": [3824.644]}
+{"evt": 298651, "idx": 6, "uid": 4000054, "kind": "pos", "times": [450.085]}
+{"evt": 298651, "idx": 6, "uid": 4000058, "kind": "pos", "times": [3133.718]}
+{"evt": 298651, "idx": 6, "uid": 4000169, "kind": "pos", "times": [2700.767]}
+{"evt": 298651, "idx": 6, "uid": 4000185, "kind": "pos", "times": [450.085]}
+{"evt": 298651, "idx": 6, "uid": 4000238, "kind": "pos", "times": [1705.6]}
+{"evt": 298651, "idx": 6, "uid": 4000539, "kind": "tie", "times": [-1418.748, -1382.347]}
+{"evt": 298665, "idx": 7, "uid": 5, "kind": "pos", "times": [-639.349]}
+{"evt": 298665, "idx": 7, "uid": 39, "kind": "pos", "times": [3640.215]}
+{"evt": 298665, "idx": 7, "uid": 92, "kind": "tie", "times": [1711.746, 1713.213]}
+{"evt": 298665, "idx": 7, "uid": 130, "kind": "pos", "times": [-17.734]}
+{"evt": 298665, "idx": 7, "uid": 4000002, "kind": "pos", "times": [3406.13]}
+{"evt": 298665, "idx": 7, "uid": 4000038, "kind": "pos", "times": [3406.13]}
+{"evt": 298665, "idx": 7, "uid": 4000205, "kind": "pos", "times": [3573.057]}
+{"evt": 298665, "idx": 7, "uid": 4000262, "kind": "pos", "times": [1028.279]}
+{"evt": 298665, "idx": 7, "uid": 4000345, "kind": "pos", "times": [3223.189]}
+{"evt": 298665, "idx": 7, "uid": 4000349, "kind": "tie", "times": [1028.279, 1392.419]}
+{"evt": 298665, "idx": 7, "uid": 4000400, "kind": "pos", "times": [-1678.779]}
+{"evt": 298665, "idx": 7, "uid": 4000492, "kind": "pos", "times": [4031.958]}
+{"evt": 298679, "idx": 8, "uid": 17, "kind": "pos", "times": [2116.019]}
+{"evt": 298679, "idx": 8, "uid": 4000013, "kind": "pos", "times": [546.665]}
+{"evt": 298679, "idx": 8, "uid": 4000095, "kind": "pos", "times": [546.665]}
+{"evt": 298679, "idx": 8, "uid": 4000103, "kind": "pos", "times": [4001.911]}
+{"evt": 298679, "idx": 8, "uid": 4000173, "kind": "pos", "times": [2512.733]}
+{"evt": 298679, "idx": 8, "uid": 4000309, "kind": "tie", "times": [1971.459, 1972.951]}
+{"evt": 298679, "idx": 8, "uid": 4000380, "kind": "pos", "times": [2091.952]}
+{"evt": 298693, "idx": 9, "uid": 3, "kind": "tie", "times": [-367.908, -349.466]}
+{"evt": 298693, "idx": 9, "uid": 5, "kind": "pos", "times": [-151.46]}
+{"evt": 298693, "idx": 9, "uid": 14, "kind": "pos", "times": [2141.719]}
+{"evt": 298693, "idx": 9, "uid": 32, "kind": "pos", "times": [-778.071]}
+{"evt": 298693, "idx": 9, "uid": 45, "kind": "pos", "times": [-462.293]}
+{"evt": 298693, "idx": 9, "uid": 59, "kind": "pos", "times": [2246.852]}
+{"evt": 298693, "idx": 9, "uid": 4000022, "kind": "pos", "times": [3194.608]}
+{"evt": 298693, "idx": 9, "uid": 4000061, "kind": "tie", "times": [3179.947, 3961.515]}
+{"evt": 298693, "idx": 9, "uid": 4000186, "kind": "pos", "times": [2857.329]}
+{"evt": 298693, "idx": 9, "uid": 4000188, "kind": "pos", "times": [3156.222]}
+{"evt": 298693, "idx": 9, "uid": 4000227, "kind": "pos", "times": [398.182]}
+{"evt": 298707, "idx": 10, "uid": 5, "kind": "pos", "times": [-892.849]}
+{"evt": 298707, "idx": 10, "uid": 84, "kind": "pos", "times": [-1401.193]}
+{"evt": 298707, "idx": 10, "uid": 97, "kind": "pos", "times": [-79.741]}
+{"evt": 298707, "idx": 10, "uid": 116, "kind": "pos", "times": [4452.776]}
+{"evt": 298707, "idx": 10, "uid": 145, "kind": "pos", "times": [-1405.046]}
+{"evt": 298707, "idx": 10, "uid": 146, "kind": "pos", "times": [-42.471]}
+{"evt": 298707, "idx": 10, "uid": 178, "kind": "pos", "times": [2481.032]}
+{"evt": 298707, "idx": 10, "uid": 184, "kind": "pos", "times": [4267.247]}
+{"evt": 298707, "idx": 10, "uid": 4000003, "kind": "pos", "times": [-892.849]}
+{"evt": 298707, "idx": 10, "uid": 4000032, "kind": "pos", "times": [1193.941]}
+{"evt": 298707, "idx": 10, "uid": 4000063, "kind": "tie", "times": [-1233.139, 4.473]}
+{"evt": 298707, "idx": 10, "uid": 4000075, "kind": "pos", "times": [1193.941]}
+{"evt": 298707, "idx": 10, "uid": 4000148, "kind": "pos", "times": [2580.063]}
+{"evt": 298707, "idx": 10, "uid": 4000172, "kind": "pos", "times": [-42.471]}
+{"evt": 298707, "idx": 10, "uid": 4000177, "kind": "pos", "times": [1701.88]}
+{"evt": 298707, "idx": 10, "uid": 4000215, "kind": "pos", "times": [-79.741]}
+{"evt": 298707, "idx": 10, "uid": 4000230, "kind": "pos", "times": [2481.032]}
+{"evt": 298707, "idx": 10, "uid": 4000233, "kind": "tie", "times": [-1477.354, -1405.046]}
+{"evt": 298721, "idx": 11, "uid": 1, "kind": "pos", "times": [3202.011]}
+{"evt": 298721, "idx": 11, "uid": 18, "kind": "pos", "times": [16.045]}
+{"evt": 298721, "idx": 11, "uid": 43, "kind": "pos", "times": [614.125]}
+{"evt": 298721, "idx": 11, "uid": 69, "kind": "pos", "times": [925.262]}
+{"evt": 298721, "idx": 11, "uid": 4000009, "kind": "pos", "times": [295.922]}
+{"evt": 298721, "idx": 11, "uid": 4000019, "kind": "pos", "times": [2512.782]}
+{"evt": 298721, "idx": 11, "uid": 4000069, "kind": "pos", "times": [-396.918]}
+{"evt": 298721, "idx": 11, "uid": 4000073, "kind": "pos", "times": [-1205.748]}
+{"evt": 298721, "idx": 11, "uid": 4000134, "kind": "pos", "times": [614.125]}
+{"evt": 298721, "idx": 11, "uid": 4000155, "kind": "tie", "times": [2711.077, 2749.545]}
+{"evt": 298721, "idx": 11, "uid": 4000229, "kind": "pos", "times": [-749.867]}
+{"evt": 298721, "idx": 11, "uid": 4000294, "kind": "pos", "times": [2890.792]}
+{"evt": 298735, "idx": 12, "uid": 7, "kind": "tie", "times": [1786.648, 1814.67]}
+{"evt": 298735, "idx": 12, "uid": 12, "kind": "none", "times": []}
+{"evt": 298735, "idx": 12, "uid": 32, "kind": "pos", "times": [-208.736]}
+{"evt": 298735, "idx": 12, "uid": 41, "kind": "pos", "times": [3308.761]}
+{"evt": 298735, "idx": 12, "uid": 56, "kind": "pos", "times": [3378.027]}
+{"evt": 298735, "idx": 12, "uid": 87, "kind": "pos", "times": [3833.148]}
+{"evt": 298735, "idx": 12, "uid": 123, "kind": "tie", "times": [3160.97, 3378.027]}
+{"evt": 298735, "idx": 12, "uid": 161, "kind": "tie", "times": [71.373, 74.437]}
+{"evt": 298735, "idx": 12, "uid": 4000001, "kind": "pos", "times": [2512.813]}
+{"evt": 298735, "idx": 12, "uid": 4000009, "kind": "tie", "times": [1814.67, 2179.271]}
+{"evt": 298735, "idx": 12, "uid": 4000013, "kind": "tie", "times": [231.268, 248.179]}
+{"evt": 298735, "idx": 12, "uid": 4000014, "kind": "pos", "times": [-1152.873]}
+{"evt": 298735, "idx": 12, "uid": 4000027, "kind": "pos", "times": [3318.487]}
+{"evt": 298735, "idx": 12, "uid": 4000172, "kind": "tie", "times": [-305.083, -44.455]}
+{"evt": 298735, "idx": 12, "uid": 4000238, "kind": "pos", "times": [3467.721]}
+{"evt": 298735, "idx": 12, "uid": 4000314, "kind": "pos", "times": [3068.694]}
+{"evt": 298749, "idx": 13, "uid": 9, "kind": "pos", "times": [60.651]}
+{"evt": 298749, "idx": 13, "uid": 54, "kind": "pos", "times": [2728.213]}
+{"evt": 298749, "idx": 13, "uid": 4000001, "kind": "pos", "times": [60.651]}
+{"evt": 298749, "idx": 13, "uid": 4000023, "kind": "pos", "times": [1031.897]}
+{"evt": 298749, "idx": 13, "uid": 4000099, "kind": "pos", "times": [4429.455]}
+{"evt": 298749, "idx": 13, "uid": 4000103, "kind": "pos", "times": [3597.163]}
+{"evt": 298749, "idx": 13, "uid": 4000172, "kind": "pos", "times": [2326.846]}
+{"evt": 298749, "idx": 13, "uid": 4000232, "kind": "pos", "times": [2512.546]}
+{"evt": 298749, "idx": 13, "uid": 4000257, "kind": "pos", "times": [-1180.308]}
+{"evt": 298763, "idx": 14, "uid": 18, "kind": "tie", "times": [-1905.826, -1904.459]}
+{"evt": 298763, "idx": 14, "uid": 40, "kind": "pos", "times": [65.69]}
+{"evt": 298763, "idx": 14, "uid": 74, "kind": "tie", "times": [1515.897, 1836.984]}
+{"evt": 298763, "idx": 14, "uid": 84, "kind": "pos", "times": [-725.25]}
+{"evt": 298763, "idx": 14, "uid": 107, "kind": "pos", "times": [55.551]}
+{"evt": 298763, "idx": 14, "uid": 124, "kind": "pos", "times": [2674.078]}
+{"evt": 298763, "idx": 14, "uid": 4000003, "kind": "pos", "times": [3344.476]}
+{"evt": 298763, "idx": 14, "uid": 4000004, "kind": "pos", "times": [3344.476]}
+{"evt": 298763, "idx": 14, "uid": 4000070, "kind": "pos", "times": [1312.671]}
+{"evt": 298763, "idx": 14, "uid": 4000095, "kind": "pos", "times": [545.292]}
+{"evt": 298763, "idx": 14, "uid": 4000137, "kind": "pos", "times": [1868.427]}
+{"evt": 298763, "idx": 14, "uid": 4000174, "kind": "tie", "times": [-1905.826, -1904.459, -1888.471]}
+{"evt": 298763, "idx": 14, "uid": 4000266, "kind": "tie", "times": [2744.644, 3963.886]}
+{"evt": 298763, "idx": 14, "uid": 4000321, "kind": "pos", "times": [3087.48]}
+{"evt": 298763, "idx": 14, "uid": 4000445, "kind": "pos", "times": [3344.476]}
+{"evt": 298763, "idx": 14, "uid": 4000447, "kind": "pos", "times": [2796.877]}
+{"evt": 298763, "idx": 14, "uid": 4000449, "kind": "pos", "times": [4250.741]}
+{"evt": 298763, "idx": 14, "uid": 4000510, "kind": "pos", "times": [2324.992]}
+{"evt": 298763, "idx": 14, "uid": 4000519, "kind": "pos", "times": [65.69]}
+{"evt": 298763, "idx": 14, "uid": 4000614, "kind": "pos", "times": [4043.13]}
+{"evt": 298763, "idx": 14, "uid": 4000642, "kind": "pos", "times": [2674.078]}
+{"evt": 298763, "idx": 14, "uid": 4000658, "kind": "pos", "times": [3993.476]}
+{"evt": 298777, "idx": 15, "uid": 3, "kind": "pos", "times": [4154.441]}
+{"evt": 298777, "idx": 15, "uid": 4, "kind": "pos", "times": [2634.558]}
+{"evt": 298777, "idx": 15, "uid": 14, "kind": "pos", "times": [-130.318]}
+{"evt": 298777, "idx": 15, "uid": 21, "kind": "pos", "times": [-758.245]}
+{"evt": 298777, "idx": 15, "uid": 24, "kind": "pos", "times": [2966.218]}
+{"evt": 298777, "idx": 15, "uid": 63, "kind": "tie", "times": [40.753, 48.531]}
+{"evt": 298777, "idx": 15, "uid": 97, "kind": "tie", "times": [3975.069, 4005.583]}
+{"evt": 298777, "idx": 15, "uid": 125, "kind": "pos", "times": [15.615]}
+{"evt": 298777, "idx": 15, "uid": 209, "kind": "pos", "times": [2046.468]}
+{"evt": 298777, "idx": 15, "uid": 4000004, "kind": "pos", "times": [2966.218]}
+{"evt": 298777, "idx": 15, "uid": 4000037, "kind": "pos", "times": [3664.317]}
+{"evt": 298777, "idx": 15, "uid": 4000042, "kind": "pos", "times": [3614.272]}
+{"evt": 298777, "idx": 15, "uid": 4000064, "kind": "tie", "times": [2270.573, 2271.739]}
+{"evt": 298777, "idx": 15, "uid": 4000096, "kind": "pos", "times": [-1800.344]}
+{"evt": 298777, "idx": 15, "uid": 4000141, "kind": "tie", "times": [-130.318, -112.577]}
+{"evt": 298777, "idx": 15, "uid": 4000151, "kind": "tie", "times": [-112.577, 9.575]}
+{"evt": 298777, "idx": 15, "uid": 4000187, "kind": "pos", "times": [1195.757]}
+{"evt": 298777, "idx": 15, "uid": 4000257, "kind": "pos", "times": [2046.468]}
+{"evt": 298777, "idx": 15, "uid": 4000276, "kind": "pos", "times": [523.09]}
+{"evt": 298791, "idx": 16, "uid": 1, "kind": "pos", "times": [2735.289]}
+{"evt": 298791, "idx": 16, "uid": 20, "kind": "pos", "times": [2580.989]}
+{"evt": 298791, "idx": 16, "uid": 51, "kind": "pos", "times": [2633.132]}
+{"evt": 298791, "idx": 16, "uid": 78, "kind": "pos", "times": [-339.192]}
+{"evt": 298791, "idx": 16, "uid": 87, "kind": "pos", "times": [746.806]}
+{"evt": 298791, "idx": 16, "uid": 93, "kind": "pos", "times": [391.398]}
+{"evt": 298791, "idx": 16, "uid": 94, "kind": "pos", "times": [13.163]}
+{"evt": 298791, "idx": 16, "uid": 101, "kind": "pos", "times": [1008.743]}
+{"evt": 298791, "idx": 16, "uid": 143, "kind": "pos", "times": [1343.138]}
+{"evt": 298791, "idx": 16, "uid": 158, "kind": "pos", "times": [2911.864]}
+{"evt": 298791, "idx": 16, "uid": 236, "kind": "tie", "times": [1787.807, 1820.057]}
+{"evt": 298791, "idx": 16, "uid": 253, "kind": "pos", "times": [343.771]}
+{"evt": 298791, "idx": 16, "uid": 330, "kind": "pos", "times": [2720.257]}
+{"evt": 298791, "idx": 16, "uid": 4000001, "kind": "pos", "times": [2580.989]}
+{"evt": 298791, "idx": 16, "uid": 4000003, "kind": "pos", "times": [2086.42]}
+{"evt": 298791, "idx": 16, "uid": 4000009, "kind": "tie", "times": [696.557, 746.806]}
+{"evt": 298791, "idx": 16, "uid": 4000094, "kind": "pos", "times": [-781.214]}
+{"evt": 298791, "idx": 16, "uid": 4000304, "kind": "pos", "times": [-851.06]}
+{"evt": 298791, "idx": 16, "uid": 4000375, "kind": "pos", "times": [391.398]}
+{"evt": 298791, "idx": 16, "uid": 4000647, "kind": "pos", "times": [-704.055]}
+{"evt": 298791, "idx": 16, "uid": 4000648, "kind": "pos", "times": [391.398]}
+{"evt": 298805, "idx": 17, "uid": 1, "kind": "pos", "times": [1639.597]}
+{"evt": 298805, "idx": 17, "uid": 75, "kind": "pos", "times": [-393.452]}
+{"evt": 298805, "idx": 17, "uid": 83, "kind": "pos", "times": [734.017]}
+{"evt": 298805, "idx": 17, "uid": 4000008, "kind": "pos", "times": [2841.18]}
+{"evt": 298805, "idx": 17, "uid": 4000012, "kind": "pos", "times": [2512.61]}
+{"evt": 298805, "idx": 17, "uid": 4000017, "kind": "pos", "times": [2841.18]}
+{"evt": 298805, "idx": 17, "uid": 4000079, "kind": "pos", "times": [3889.91]}
+{"evt": 298805, "idx": 17, "uid": 4000349, "kind": "pos", "times": [2512.61]}

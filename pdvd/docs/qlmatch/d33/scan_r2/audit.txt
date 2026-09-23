@@ -1,0 +1,20 @@
+wave 0: 165 tool calls, 81 sheet reads, 81 recorder calls, 1 flagged
+  FLAG SubagentHandback {"message": "Wave 0 is finished: 81 of 81 sheets have a recorded verdict. The recorder confirmed \"wave 0: 81/81 done\". I read only the rubric, the wave0 INDEX.md, the wave0 PNGs and the recorder scr
+wave 1: 167 tool calls, 82 sheet reads, 82 recorder calls, 1 flagged
+  FLAG SubagentHandback {"message": "Wave 1 is finished: I recorded 82 of 82 verdicts, and the recorder confirmed \"82/82 done\". I read only the rubric, the wave1 INDEX.md, the wave1 PNGs and the recorder command.\n\n**Coun
+wave 2: 165 tool calls, 81 sheet reads, 81 recorder calls, 1 flagged
+  FLAG SubagentHandback {"message": "Wave 2 is complete: I recorded 81 of 81 verdicts, and the recorder's last line was \"81/81 done\". I read only the rubric, the wave 2 INDEX.md, the wave 2 PNGs and the recorder script, an
+wave 3: 165 tool calls, 81 sheet reads, 81 recorder calls, 1 flagged
+  FLAG SubagentHandback {"message": "Wave 3 is finished: all 81 sheets have a verdict, and the recorder confirmed 81/81. I read only the rubric, the wave 3 INDEX.md and PNGs, and ran the recorder, one sheet at a time (view, 
+wave 4: 165 tool calls, 81 sheet reads, 81 recorder calls, 1 flagged
+  FLAG SubagentHandback {"message": "Wave 4 is finished: all 81 sheets have a verdict, and the recorder's last line read \"81/81 done\". I read only RUBRIC.md, the wave 4 INDEX.md and its PNGs, and used Bash only to run the 
+wave 5: 165 tool calls, 81 sheet reads, 81 recorder calls, 1 flagged
+  FLAG SubagentHandback {"message": "I recorded all 81 wave-5 verdicts; the recorder confirmed \"wave 5: 81/81 done\". I followed the blindness rules: I read only the rubric, the wave-5 INDEX.md and PNGs, and ran only the re
+wave 6: 165 tool calls, 81 sheet reads, 81 recorder calls, 1 flagged
+  FLAG SubagentHandback {"message": "I recorded a verdict for all 81 sheets in wave 6; the recorder's last line was \"wave 6: 81/81 done\". For blindness, I read only the rubric, wave6/INDEX.md and the wave-6 PNGs, and used 
+wave 7: 165 tool calls, 81 sheet reads, 81 recorder calls, 1 flagged
+  FLAG SubagentHandback {"message": "I recorded all 81 wave 7 verdicts; the recorder confirmed \"81/81 done\". I read only the rubric, the wave 7 INDEX.md, the wave 7 PNGs and nothing else, and used Bash only to run the reco
+wave 8: 167 tool calls, 82 sheet reads, 82 recorder calls, 1 flagged
+  FLAG SubagentHandback {"message": "Wave 8 is complete: all 82 sheets have a verdict, and the recorder's last line read \"82/82 done\". I read only the rubric, the wave 8 INDEX.md, the wave 8 PNGs and the recorder, and used
+wave 9: 13 tool calls, 5 sheet reads, 5 recorder calls, 1 flagged
+  FLAG SubagentHandback {"message": "Wave 9 is finished: I recorded 5 of 5 verdicts, and the recorder refused none of them.\n\nBy pick type and confidence:\n- **Single letter:** 4 (1 high, 3 med).\n- **Tie:** 1 (med).\n- **N

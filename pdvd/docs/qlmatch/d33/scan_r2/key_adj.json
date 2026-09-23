@@ -1,0 +1,546 @@
+{
+ "seed": 3309,
+ "of_key": "/home/xqian/tmp/p33/scan_key_r2d/key.json",
+ "sheets": [
+  {
+   "kind": "adj",
+   "evt": 298637,
+   "idx": 5,
+   "uid": 4000503,
+   "moved_in": [
+    "q33tm",
+    "q33cm"
+   ],
+   "ctl_auto": [
+    3144.4993630841896
+   ],
+   "arm_auto": {
+    "q32ti": [
+     3144.499363079748
+    ],
+    "q33ts": [
+     3144.499363079748
+    ],
+    "q33tm": [
+     1738.46376454964
+    ],
+    "q33tu": [
+     3144.499363079748
+    ],
+    "q33cs": [
+     3144.4993630841896
+    ],
+    "q33cm": [
+     1738.4636923974138
+    ],
+    "q33cu": [
+     3144.4993630841896
+    ]
+   },
+   "owner": [
+    {
+     "time": 3144.4993630841896,
+     "positive": false,
+     "conf": "med"
+    }
+   ],
+   "keys": [
+    3144.4993630841896,
+    3144.499363079748,
+    3144.499363079748,
+    1738.46376454964,
+    3144.499363079748,
+    3144.4993630841896,
+    1738.4636923974138,
+    3144.4993630841896,
+    3144.4993630841896
+   ],
+   "key_overflow": false,
+   "keys_missing": [],
+   "arm_picks_not_drawn": [],
+   "fallback": [],
+   "wave": 9,
+   "look": 2,
+   "shuffle_seed": 893723234,
+   "id": "s88226",
+   "letters": {
+    "A": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_5_q31ctl/calib-evt298637.json",
+     "bundle_idx": 6558,
+     "flash_gid": 167,
+     "time": 3144.4993630841896,
+     "time_own_dump": 3144.4993630841896,
+     "co_matched_n": 1
+    },
+    "B": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_5_q31ctl/calib-evt298637.json",
+     "bundle_idx": 5453,
+     "flash_gid": 126,
+     "time": 1738.4636923974138,
+     "time_own_dump": 1738.4636923974138,
+     "co_matched_n": 1
+    },
+    "C": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_5_q31ctl/calib-evt298637.json",
+     "bundle_idx": 5499,
+     "flash_gid": 128,
+     "time": 1883.3094905232294,
+     "time_own_dump": 1883.3094905232294,
+     "co_matched_n": 0
+    },
+    "D": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_5_q31ctl/calib-evt298637.json",
+     "bundle_idx": 5661,
+     "flash_gid": 134,
+     "time": 1975.1800885665054,
+     "time_own_dump": 1975.1800885665054,
+     "co_matched_n": 0
+    },
+    "E": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_5_q31ctl/calib-evt298637.json",
+     "bundle_idx": 6018,
+     "flash_gid": 147,
+     "time": 2426.8075286974226,
+     "time_own_dump": 2426.8075286974226,
+     "co_matched_n": 0
+    }
+   }
+  },
+  {
+   "kind": "adj",
+   "evt": 298651,
+   "idx": 6,
+   "uid": 4000036,
+   "moved_in": [
+    "q33tm",
+    "q33tu",
+    "q33cm",
+    "q33cu"
+   ],
+   "ctl_auto": [
+    3568.1945273182355
+   ],
+   "arm_auto": {
+    "q32ti": [
+     3568.1945273182355
+    ],
+    "q33ts": [
+     3568.1945273182355
+    ],
+    "q33tm": [
+     3824.643555172801
+    ],
+    "q33tu": [
+     3824.643555172801
+    ],
+    "q33cs": [
+     3568.1945273182355
+    ],
+    "q33cm": [
+     3824.643555172801
+    ],
+    "q33cu": [
+     3824.643555172801
+    ]
+   },
+   "owner": [
+    {
+     "time": 2700.76724886754,
+     "positive": false,
+     "conf": "high"
+    }
+   ],
+   "keys": [
+    3568.1945273182355,
+    3568.1945273182355,
+    3568.1945273182355,
+    3824.643555172801,
+    3824.643555172801,
+    3568.1945273182355,
+    3824.643555172801,
+    3824.643555172801,
+    2700.76724886754
+   ],
+   "key_overflow": false,
+   "keys_missing": [],
+   "arm_picks_not_drawn": [],
+   "fallback": [],
+   "wave": 9,
+   "look": 2,
+   "shuffle_seed": 243131962,
+   "id": "s96989",
+   "letters": {
+    "A": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_6_q31ctl/calib-evt298651.json",
+     "bundle_idx": 6203,
+     "flash_gid": 162,
+     "time": 2700.76724886754,
+     "time_own_dump": 2700.76724886754,
+     "co_matched_n": 2
+    },
+    "B": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_6_q31ctl/calib-evt298651.json",
+     "bundle_idx": 7103,
+     "flash_gid": 192,
+     "time": 3631.2927321316806,
+     "time_own_dump": 3631.2927321316806,
+     "co_matched_n": 3
+    },
+    "C": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_6_q31ctl/calib-evt298651.json",
+     "bundle_idx": 6856,
+     "flash_gid": 183,
+     "time": 3292.4222525721007,
+     "time_own_dump": 3292.4222525721007,
+     "co_matched_n": 0
+    },
+    "D": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_6_q31ctl/calib-evt298651.json",
+     "bundle_idx": 7249,
+     "flash_gid": 198,
+     "time": 3824.643555172801,
+     "time_own_dump": 3824.643555172801,
+     "co_matched_n": 0
+    },
+    "E": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_6_q31ctl/calib-evt298651.json",
+     "bundle_idx": 7077,
+     "flash_gid": 191,
+     "time": 3568.1945273182355,
+     "time_own_dump": 3568.1945273182355,
+     "co_matched_n": 0
+    }
+   }
+  },
+  {
+   "kind": "adj",
+   "evt": 298763,
+   "idx": 14,
+   "uid": 124,
+   "moved_in": [
+    "q33tm",
+    "q33cm"
+   ],
+   "ctl_auto": [
+    2674.078132238216
+   ],
+   "arm_auto": {
+    "q32ti": [
+     2674.0781321907116
+    ],
+    "q33ts": [
+     2674.0781321907116
+    ],
+    "q33tm": [
+     1303.8183646521238,
+     1304.822401868299
+    ],
+    "q33tu": [
+     2674.0781321907116
+    ],
+    "q33cs": [
+     2674.078132238216
+    ],
+    "q33cm": [
+     1303.8183646521238
+    ],
+    "q33cu": [
+     2674.078132238216
+    ]
+   },
+   "owner": [
+    {
+     "time": 2674.078132238216,
+     "positive": true,
+     "conf": "high"
+    }
+   ],
+   "keys": [
+    2674.078132238216,
+    2674.0781321907116,
+    2674.0781321907116,
+    1303.8183646521238,
+    1304.822401868299,
+    2674.0781321907116,
+    2674.078132238216,
+    1303.8183646521238,
+    2674.078132238216,
+    2674.078132238216
+   ],
+   "key_overflow": false,
+   "keys_missing": [],
+   "arm_picks_not_drawn": [],
+   "fallback": [],
+   "wave": 9,
+   "look": 2,
+   "shuffle_seed": 598539846,
+   "id": "s24571",
+   "letters": {
+    "A": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_14_q31ctl/calib-evt298763.json",
+     "bundle_idx": 1991,
+     "flash_gid": 145,
+     "time": 2085.4485566702206,
+     "time_own_dump": 2085.4485566702206,
+     "co_matched_n": 1
+    },
+    "B": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_14_q31ctl/calib-evt298763.json",
+     "bundle_idx": 2576,
+     "flash_gid": 170,
+     "time": 2778.7379524358066,
+     "time_own_dump": 2778.7379524358066,
+     "co_matched_n": 2
+    },
+    "C": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_14_q31ctl/calib-evt298763.json",
+     "bundle_idx": 2529,
+     "flash_gid": 168,
+     "time": 2674.078132238216,
+     "time_own_dump": 2674.078132238216,
+     "co_matched_n": 1
+    },
+    "D": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_14_q31ctl/calib-evt298763.json",
+     "bundle_idx": 1422,
+     "flash_gid": 118,
+     "time": 1304.822401868299,
+     "time_own_dump": 1304.822401868299,
+     "co_matched_n": 0
+    },
+    "E": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_14_q31ctl/calib-evt298763.json",
+     "bundle_idx": 1401,
+     "flash_gid": 117,
+     "time": 1303.8183646521238,
+     "time_own_dump": 1303.8183646521238,
+     "co_matched_n": 1
+    }
+   }
+  },
+  {
+   "kind": "adj",
+   "evt": 298777,
+   "idx": 15,
+   "uid": 4,
+   "moved_in": [
+    "q33cm"
+   ],
+   "ctl_auto": [
+    2271.7388118804915
+   ],
+   "arm_auto": {
+    "q32ti": [
+     2270.573262595374,
+     2271.7388118804915
+    ],
+    "q33ts": [
+     2270.573262595374,
+     2271.7388118804915
+    ],
+    "q33tm": [
+     2270.573262595374,
+     2271.7388118804915
+    ],
+    "q33tu": [
+     2270.573262595374,
+     2271.7388118804915
+    ],
+    "q33cs": [
+     2271.7388118804915
+    ],
+    "q33cm": [
+     2270.573262595374
+    ],
+    "q33cu": [
+     2271.7388118804915
+    ]
+   },
+   "owner": [
+    {
+     "time": 2271.7388118804915,
+     "positive": true,
+     "conf": "med"
+    }
+   ],
+   "keys": [
+    2271.7388118804915,
+    2270.573262595374,
+    2271.7388118804915,
+    2270.573262595374,
+    2271.7388118804915,
+    2270.573262595374,
+    2271.7388118804915,
+    2270.573262595374,
+    2271.7388118804915,
+    2271.7388118804915,
+    2270.573262595374,
+    2271.7388118804915,
+    2271.7388118804915
+   ],
+   "key_overflow": false,
+   "keys_missing": [],
+   "arm_picks_not_drawn": [],
+   "fallback": [],
+   "wave": 9,
+   "look": 2,
+   "shuffle_seed": 620289363,
+   "id": "s75022",
+   "letters": {
+    "A": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_15_q31ctl/calib-evt298777.json",
+     "bundle_idx": 2455,
+     "flash_gid": 151,
+     "time": 2781.628325226968,
+     "time_own_dump": 2781.628325226968,
+     "co_matched_n": 0
+    },
+    "B": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_15_q31ctl/calib-evt298777.json",
+     "bundle_idx": 2143,
+     "flash_gid": 136,
+     "time": 2270.573262595374,
+     "time_own_dump": 2270.573262595374,
+     "co_matched_n": 0
+    },
+    "C": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_15_q31ctl/calib-evt298777.json",
+     "bundle_idx": 2345,
+     "flash_gid": 146,
+     "time": 2634.5577806877727,
+     "time_own_dump": 2634.5577806877727,
+     "co_matched_n": 1
+    },
+    "D": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_15_q31ctl/calib-evt298777.json",
+     "bundle_idx": 2163,
+     "flash_gid": 137,
+     "time": 2271.7388118804915,
+     "time_own_dump": 2271.7388118804915,
+     "co_matched_n": 0
+    },
+    "E": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_15_q31ctl/calib-evt298777.json",
+     "bundle_idx": 2264,
+     "flash_gid": 142,
+     "time": 2431.5031102789203,
+     "time_own_dump": 2431.5031102789203,
+     "co_matched_n": 2
+    }
+   }
+  },
+  {
+   "kind": "adj",
+   "evt": 298777,
+   "idx": 15,
+   "uid": 63,
+   "moved_in": [
+    "q32ti",
+    "q33ts",
+    "q33tm",
+    "q33tu",
+    "q33cm"
+   ],
+   "ctl_auto": [
+    676.1580516918785
+   ],
+   "arm_auto": {
+    "q32ti": [
+     48.53062793811969,
+     49.85749420325365
+    ],
+    "q33ts": [
+     48.53062793811969,
+     49.85749420325365
+    ],
+    "q33tm": [
+     40.752634402939584
+    ],
+    "q33tu": [
+     48.53062793811969,
+     49.85749420325365
+    ],
+    "q33cs": [
+     676.1580516918785
+    ],
+    "q33cm": [
+     40.752634402939584
+    ],
+    "q33cu": [
+     676.1580516918785
+    ]
+   },
+   "owner": [
+    {
+     "time": 49.85749420325365,
+     "positive": true,
+     "conf": "med"
+    }
+   ],
+   "keys": [
+    676.1580516918785,
+    48.53062793811969,
+    49.85749420325365,
+    48.53062793811969,
+    49.85749420325365,
+    40.752634402939584,
+    48.53062793811969,
+    49.85749420325365,
+    676.1580516918785,
+    40.752634402939584,
+    676.1580516918785,
+    49.85749420325365
+   ],
+   "key_overflow": false,
+   "keys_missing": [],
+   "arm_picks_not_drawn": [],
+   "fallback": [],
+   "wave": 9,
+   "look": 2,
+   "shuffle_seed": 569042342,
+   "id": "s85689",
+   "letters": {
+    "A": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_15_q31ctl/calib-evt298777.json",
+     "bundle_idx": 1131,
+     "flash_gid": 81,
+     "time": 48.53062793811969,
+     "time_own_dump": 48.53062793811969,
+     "co_matched_n": 0
+    },
+    "B": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_15_q31ctl/calib-evt298777.json",
+     "bundle_idx": 1371,
+     "flash_gid": 94,
+     "time": 676.1580516918785,
+     "time_own_dump": 676.1580516918785,
+     "co_matched_n": 0
+    },
+    "C": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_15_q31ctl/calib-evt298777.json",
+     "bundle_idx": 1153,
+     "flash_gid": 82,
+     "time": 49.85749420325365,
+     "time_own_dump": 49.85749420325365,
+     "co_matched_n": 0
+    },
+    "D": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_15_q31ctl/calib-evt298777.json",
+     "bundle_idx": 1108,
+     "flash_gid": 80,
+     "time": 40.752634402939584,
+     "time_own_dump": 40.752634402939584,
+     "co_matched_n": 2
+    },
+    "E": {
+     "src": "/home/xqian/tmp/p31/wroot/039252_15_q31ctl/calib-evt298777.json",
+     "bundle_idx": 1405,
+     "flash_gid": 96,
+     "time": 854.3601309049786,
+     "time_own_dump": 854.3601309049786,
+     "co_matched_n": 1
+    }
+   }
+  }
+ ]
+}

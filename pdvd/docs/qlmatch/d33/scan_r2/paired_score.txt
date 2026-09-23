@@ -1,0 +1,33 @@
+# PRIMARY: paired right/wrong vs q31ctl on resolved non-tie movers (truth ../d33/scan_r2/truth.jsonl)
+       arm  half    n arm right ctl right  wins losses  net      p
+     q32ti   odd   91        39        39    10     10   +0  1.000
+     q32ti  even  111        40        44    11     15   -4  0.557
+     q32ti   all  202        79        83    21     25   -4  0.659
+     q33ts   odd   91        41        39    12     10   +2  0.832
+     q33ts  even  111        40        44    11     15   -4  0.557
+     q33ts   all  202        81        83    23     25   -2  0.885
+     q33tm   odd   91        31        39    23     31   -8  0.341
+     q33tm  even  111        40        44    33     37   -4  0.720
+     q33tm   all  202        71        83    56     68  -12  0.323
+     q33tu   odd   91        41        39    12     10   +2  0.832
+     q33tu  even  111        46        44    14     12   +2  0.845
+     q33tu   all  202        87        83    26     22   +4  0.665
+     q33cs   odd   91        41        39     2      0   +2  0.500
+     q33cs  even  111        44        44     0      0   +0  1.000
+     q33cs   all  202        85        83     2      0   +2  0.500
+     q33cm   odd   91        32        39    23     30   -7  0.410
+     q33cm  even  111        39        44    31     36   -5  0.625
+     q33cm   all  202        71        83    54     66  -12  0.315
+     q33cu   odd   91        39        39     3      3   +0  1.000
+     q33cu  even  111        46        44     4      2   +2  0.688
+     q33cu   all  202        85        83     7      5   +2  0.774
+
+# SECONDARY: agree / phantom / missed on the resolved non-tie movers
+  ctl:q31ctl: odd 42/45/49  even 48/56/61  all 90/101/110
+       q32ti: odd 40/39/51  even 45/60/64  all 85/99/115
+       q33ts: odd 42/38/49  even 46/60/63  all 88/98/112
+       q33tm: odd 31/52/60  even 40/69/69  all 71/121/129
+       q33tu: odd 42/38/49  even 49/54/60  all 91/92/109
+       q33cs: odd 44/44/47  even 48/56/61  all 92/100/108
+       q33cm: odd 32/53/59  even 38/66/71  all 70/119/130
+       q33cu: odd 41/48/50  even 48/54/61  all 89/102/111
