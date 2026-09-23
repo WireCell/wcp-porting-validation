@@ -1,0 +1,4 @@
+# doc pdvd/98 -- tick-route vs fit-route drift label, per detector (cm)
+pdvd: n=22 (finite 22) median(tick-fit)=+0.07 mean=+0.16 sd=0.32 max|d|=0.86  gate median|d|<3: PASS
+   frac_lost q10/50/90 = [0.11, 0.23, 0.55], n<0.2: 8;  frac_overlap q10/50/90 = [0.17, 0.38, 0.62]
+   (trigger_offset_us, drift_speed_mmus) pairs seen: [(-2512.157, 1.48073), (-2500.764999, 1.48073), (-2500.301001, 1.48073), (-2499.724998, 1.48073), (-2499.485001, 1.48073), (-2499.101, 1.48073)] ...

@@ -1,5 +1,10 @@
 # doc pdvd/117: why the DUNE-VD drift regressor reads slope 0.42 on ProtoDUNE Michels, and how to find out
 
+**Status (2026-09-23, round 2).** Study S1 ran; see section 6. Section 7 corrects sections 2.3 and 2.4.
+- **The transverse-diffusion budget is moot.** The model barely reads the channel axis at the D_T gap's size.
+- **The wire-filter difference is worth about +0.11 of slope,** not zero as section 2.1 assumed.
+- **The "time width does not grow on data" reading is not established:** 1σ on 56 Michels.
+
 ## Repro
 
 ```bash
@@ -263,3 +268,140 @@ in-range Michels with a held-out third.
 - The per-face D_T,eff values are joint over the three planes; only the all-face value is W-only.
 - The bottom CRP's regressor slope (n = 8) is not interpreted.
 - PDHD also differs in pitch (4.792 against 5.100 mm) and D_L (6.2); nothing here is PDHD-specific.
+
+## 6. Round 2: study S1 on the restored latest-arm crops
+
+### 6.0 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/scripts
+./d117_run_sp.sh <61 events>          # production-default SP -> work/<evt>_d117sp (setarch -R, 6 jobs); list = events of
+                                      # scan/d117/latest/candidates.tsv; logs in /home/xqian/tmp/d117/sp_logs
+python3 d117_cell_identity.py <61 events>        # -> scan/d117/latest/cell_identity.txt
+S=../../scan
+python3 d117_crops.py --det pdvd --run ../d117/latest --pdvd-arm p98vonq \
+    --pdvd-record $S/pdvd_stm_michel_p98vonq_carried_sw99_verdicts.json -j 8   # scan/d117/latest/, crops /home/xqian/tmp/d117/latest/
+CUDA_VISIBLE_DEVICES=1 python3 d98_predict.py --run ../d117/latest --det pdvd  # scan/d117/latest/scores.tsv
+CUDA_VISIBLE_DEVICES=1 python3 d117_s1.py --run latest > $S/d117/latest/s1_paired.txt
+# round-1 check: python3 d98_michel_crops.py --det pdvd --run ../d117/r1regen -j 8; d98_predict.py --run ../d117/r1regen --det pdvd
+```
+
+### 6.1 Restoring doc 98's inputs
+
+The crops in `/home/xqian/tmp/d98/` had been swept. The SP frames of the latest arm (`p98von`) and of today's
+production (`pvdimg`) had been removed by the disk-cleanup rounds.
+
+- **Round 1's frames still exist for 24 of the 120 events** (`d27fresh`). Doc 98 §0 says the July frames were
+  retired, which is wrong for those 24 events. Its 22 Michels rebuild and re-score identically: max |Δ| 0 on mu_Z and
+  drift against `scan/d98/scores.tsv` (`scan/d117/r1regen/`).
+- **The latest arm's frames were regenerated.**
+  - Production-default SP reproduces `p98von` (doc pdvd/100 F2). It was run for the 61 events that hold doc 98's
+    latest-arm candidates, into `work/<evt>_d117sp`. That is 21 GB, not protected from the next cleanup round.
+  - **Check:** every frame-measured cell of `p98vonq`'s `T_stm_michel_2d` (roles 1/3/4, `flag == 1`) re-sums
+    exactly from the new frames, on **61/61 events** (`scan/d117/latest/cell_identity.txt`).
+  - Two kinds of row are not frame sums and are excluded:
+    - role-0 region rows, whose `time` steps tick by tick;
+    - `flag == 0` rows: induction-plane cells on channels whose whole frame row is empty.
+    Doc 98 §2.1's "charge == frame sum" therefore holds for `flag == 1` only.
+  - `039349_27` exited rc=2 after all eight frame sinks had closed (a teardown fault). Its frames pass the check.
+- **Doc 98's latest arm is restored exactly.** 80/80 crops, 56 in range; max |Δ| 0 on mu_Z, mu_M, drift_tick,
+  frac_lost and n_pix against `scan/d98/latest_sw99/scores.tsv`.
+
+### 6.2 What S1 does
+
+`d117_s1.py` re-scores two image sets under each transform, using the published bf16 CUDA function:
+- **data:** the 56 in-range Michel-only (Z) crops;
+- **simulation:** the 3,399 test-split electrons that neighbour a data Michel (±15 cm, ±5 MeV).
+
+**Paired design.** The 1,000 matched simulation draws and the 1,000 data bootstrap resamples are fixed once and
+reused for every transform. Each Δ is transform minus none, on the same draws, quoted as median [16, 84].
+
+**Closure.** Against the published predictions, data 0.05 cm and simulation 0.005 cm.
+
+Baseline: data slope 0.421; simulation 0.912 [0.857, 0.963].
+
+### 6.3 Results (`scan/d117/latest/s1_paired.txt`)
+
+| transform | what it emulates | sim Δslope | sim Δintercept (cm) | data Δslope | data Δmu (cm) |
+|---|---|---|---|---|---|
+| gt1.0\|sp, gt2.0\|sp | a constant tick blur (1, 2 ticks), support kept | +0.085, +0.04 | +28, +136 | +0.11, +0.21 | +18, +75 |
+| filt3/10\|sp | training / data `Wire_col` ratio (S4 without ROI), support kept | **+0.121 [0.089, 0.157]** | +13 | **+0.112 [0.071, 0.154]** | +19 |
+| gw0.21 | a constant 1.05 mm channel blur (the data-only W excess) | +0.009 | +2 | +0.011 | +2 |
+| gw0.5\|sp | 2.5 mm channel blur, support kept | +0.40 | +66 | +0.27 | +91 |
+| dT2, dT4, dT8 | drift-proportional transverse diffusion, +2 / 4 / 8 cm²/s | 0.000, +0.080, +0.015 | ≈ 0 | * | * |
+| dL2\|sp, dL4\|sp, dL8\|sp | drift-proportional longitudinal diffusion | +0.22, +0.37, +0.48 | small | +0.24, +0.40, +0.57 * | * |
+| sup_t1 / sup_t3 / sup_c1 (1e-3 e) | the non-zero footprint grown by 1-3 ticks or 1 channel, charge untouched | 0.000 | 0 | 0.000 | 0 |
+| sup_t2 (50 e) | a 2-tick ring at 50 electrons | +0.008 | +3 | −0.07 | −6 |
+| floor1e-3 | 1e-3 e on all 262k pixels | −0.14 | +113 | +0.08 | +85 |
+| tau20 | a 20 ms lifetime applied to sim, undone on data | +0.037 | −4 | −0.028 | −2 |
+| zbkg | sim: exact zeros outside the dilated main component | −0.040 [−0.085, 0.002] | +10 | – | – |
+
+`*` The data blur is built from the drift label. Its slope change is injected by construction, so only its size
+against the simulation's is read.
+
+What these say:
+
+1. **The model reads charge shape, not the non-zero footprint.**
+   - Growing the footprint at 1e-3 electrons moves nothing.
+   - Blurs that keep the original support still move the model.
+   - The `floor1e-3` effect comes from a pedestal integrated over the whole crop, not from the edge. It says the
+     network is fragile to a whole-image pedestal; no data effect is known to supply one.
+   - Hypothesis (a) of section 3, ROI trimming, can therefore act only through the charge shape it leaves, not through
+     the footprint.
+2. **Section 2.0's frame holds only approximately.**
+   - Constant widths move mostly the intercept.
+   - Constant widths also raise the slope by +0.04 to +0.12 at plausible sizes, because the network is not a linear
+     inverter.
+   - Drift-proportional time width moves the slope strongly, by about +0.1 per cm²/s of D_L.
+3. **The channel axis is nearly dead at the relevant size.**
+   - Channel blurs of ≤ 0.2-0.3 wire do nothing: gw0.21 and dT2-dT8 reach 0.28 wire at 200 cm.
+   - A 0.5-wire channel blur moves the intercept by +270 cm: a threshold response.
+   - So the transverse-diffusion difference of section 2.3 is not a lever.
+4. **The wire-filter difference is worth +0.11 of slope.** The emulated re-SP with `Wire_col` 3.0 takes the data
+   slope 0.42 → 0.53 and mu up about 20 cm. It is the right direction and a fifth of the 0.49 gap.
+   - This is S4's prediction.
+   - The emulation cannot include the ROI stage; the real re-SP arm is the test.
+5. **The data images are not insensitive.** Per unit of injected longitudinal diffusion, the data respond as the
+   simulation does (+0.24 against +0.22 at 2 cm²/s).
+6. **Lifetime and background are small.**
+   - The lifetime effect is under 0.04, and on data its sign is wrong for a cause.
+   - The exact-zero background costs the simulation −0.04 [−0.085, 0.002].
+
+**Model-free time width (section C of the file) is not a lead yet.**
+
+| sample | Δw2 per 100 cm |
+|---|---|
+| doc 98's estimator, all 79 data crops | +0.90 [0.31, 1.55] (doc 98's number, reproduced) |
+| doc 98's estimator, the 56 in-range data crops | −0.22 [−1.20, +0.86] |
+| matched simulation | +1.07 [0.30, 1.70] |
+| naive expectation, data parameters | +1.02 |
+
+- Doc 98's positive slope comes from the Michels below 80 cm.
+- In range, data and simulation differ by about 1σ.
+- The Zw mask gives the same numbers, so the mask width is not what sets them.
+- A second variant (5 % of the total charge per channel, section B) gives −0.70 [−1.81, +0.42] against +2.15 [0.98,
+  3.13]: about 2σ.
+- Neither variant is a measurement at n = 56. S6, D_L from long tracks, is the one with the statistics.
+
+## 7. Corrections to sections 2-4 after S1
+
+- **§2.3 and §2.4, D_T.** The k_data/k_train ratios of 0.85 / 0.60 are not a slope budget for this model. The
+  network does not respond to transverse broadening of that size (6.3, item 3). The D_T row of the §2.4 table should
+  read "channel axis ≈ dead at this size; not a lever".
+- **§2.1, the wire filter.** It is not a pure intercept term. Emulated, it raises the slope by +0.11 [0.07, 0.15] and mu
+  by about 20 cm. It is the one measured lever of the three named candidates.
+- **§2.2, the data-only collection excess.** A 1.05 mm channel blur moves nothing (gw0.21). It is not a lever either
+  way.
+- **§3.** The "top CRP predicts about 1" argument used the D_T ratio. With the channel axis dead, the top/bottom D_T
+  difference cannot explain a top/bottom difference either. The remaining gap, 0.42 + 0.11 (filter) against 0.91,
+  about 0.38, needs a time-axis or charge-shape cause:
+  - D_L on data (never measured; S6);
+  - SP time-domain effects that grow with drift (hypothesis a, through the shape);
+  - the Michel domain shift (hypothesis d, the Z against M gap).
+- **§4, the next studies, reordered.**
+  1. **S4, the real re-SP arm with `Wire_col` 3.0.** It checks the +0.11 with the ROI stage included.
+  2. **S6, D_L on data.**
+  3. **S2, the simulation ladder.** Its most informative rungs are now the time-axis ones: D_L/v at 0.45 kV/cm, the
+     data noise and S/N, and charge fluctuation.
+  4. **A Michel-domain test.** Apply the data's muon-removal geometry (truncated start, zeroed overlap) to simulated
+     electrons, and see whether that alone compresses the slope.
