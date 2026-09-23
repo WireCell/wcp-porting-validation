@@ -1,0 +1,11 @@
+[pdvd p98vonq] population 441 (record items missing a candidate: 177)
+    160  hand STM_MICHEL, kind attached/both
+     92  + Bragg-path accept & michel_found
+     92  + conn_type attached(1)/bridged(2)
+     87  + no retreat/split, no near-arm
+     82  + 0 < ke_best <= 52.8 MeV
+     80  + Michel W cells in one (apa,face)
+     80  + frames present
+# doc pdvd/117 round 5 mask capture (d117_dom_masks.py): 80 selected, 80 built; reference /home/xqian/tmp/d117/latest/crops_pdvd.npz (80 crops)
+gate: M * (keep & ~muon) == stored Z on 80/80 crops: PASS
+wrote /home/xqian/tmp/d117/dom/masks_pdvd.npz

@@ -1,0 +1,26 @@
+# doc pdvd/117 round 5, the Michel-domain test (d117_dom.py); model epoch 20; in-range data Michels 56; sim crops 3399, (Michel, neighbour) pairs 6881; draws 1000
+# data removal: frac_lost q10/50/90 [0.075, 0.241, 0.571], frac_overlap [0.143, 0.324, 0.626]; spearman(drift, fl) -0.12, (drift, fo) -0.10
+
+== A. sim, paired on the same draws.  d = arm - none, median [16, 84]; removed = charge fraction the arm took from the sim crop (median over draws of the per-draw mean)
+arm                    slope          d slope [16,84]         d icpt [16,84]    d mu    rho  removed
+# closure: max|mu(none) - predictions_test.csv| over the drawn crops 0.0050 cm; sim slope median 0.912 (S1: 0.912)
+none                   0.912   +0.000 [+0.000,+0.000]     +0.0 [+0,+0]    +0.0  +0.89    0.000
+zbkg                   0.869   -0.040 [-0.085,+0.002]     +9.8 [+3,+19]    +0.0  +0.86    0.155
+mask_lit               0.832   -0.079 [-0.130,-0.031]     +5.8 [-2,+14]    +0.0  +0.82    0.064
+trunc0.2_a             0.756   -0.155 [-0.227,-0.091]     +9.1 [-1,+21]   -12.5  +0.78    0.195
+trunc0.2_b             0.709   -0.199 [-0.272,-0.136]    +10.4 [-0,+22]   -18.0  +0.75    0.195
+trunc0.4_a             0.689   -0.223 [-0.303,-0.141]    +14.4 [+2,+28]   -18.8  +0.72    0.395
+trunc0.4_b             0.633   -0.276 [-0.360,-0.206]    +18.2 [+6,+31]   -24.2  +0.68    0.395
+trunc0.6_a             0.589   -0.325 [-0.413,-0.229]    +23.0 [+8,+38]   -28.9  +0.61    0.595
+trunc0.6_b             0.550   -0.363 [-0.453,-0.274]    +25.3 [+11,+40]   -33.6  +0.59    0.595
+trunc_fl_a             0.716   -0.193 [-0.273,-0.119]    +12.8 [+1,+26]   -13.7  +0.72    0.279
+trunc_fl_b             0.666   -0.246 [-0.322,-0.174]    +15.7 [+4,+28]   -18.8  +0.69    0.279
+trunc_fo_a             0.682   -0.228 [-0.310,-0.152]    +15.8 [+3,+29]   -17.2  +0.70    0.351
+trunc_fo_b             0.633   -0.276 [-0.361,-0.199]    +19.1 [+6,+32]   -21.9  +0.65    0.351
+zbkg+trunc_fl_a        0.643   -0.268 [-0.366,-0.168]    +25.1 [+8,+40]   -14.8  +0.65    0.393
+zbkg+trunc_fl_b        0.576   -0.329 [-0.433,-0.237]    +28.7 [+14,+44]   -21.1  +0.60    0.394
+zbkg+mask_lit          0.792   -0.118 [-0.189,-0.054]    +16.1 [+5,+28]    +0.0  +0.77    0.214
+
+== B. data (no re-scoring): the in-range slope of mu_Z split at the median removed fraction; 1000 bootstraps within each half, d = high - low
+  frac_lost    low half n 28 (<= 0.241) slope 0.434 | high half n 28 slope 0.394 | d -0.027 [-0.259, +0.224]
+  frac_overlap low half n 28 (<= 0.324) slope 0.444 | high half n 28 slope 0.396 | d -0.055 [-0.254, +0.181]

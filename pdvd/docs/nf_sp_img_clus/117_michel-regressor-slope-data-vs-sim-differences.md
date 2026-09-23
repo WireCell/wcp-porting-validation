@@ -1,5 +1,14 @@
 # doc pdvd/117: why the DUNE-VD drift regressor reads slope 0.42 on ProtoDUNE Michels, and how to find out
 
+**Status (2026-09-23, round 5).** The Michel-domain test ran (section 10).
+- **The muon-removal truncation is the main carrier.** Applied to the model's own simulated electrons at each data
+  Michel's removed fraction, truncation plus exact-zero background compresses the simulation slope 0.912 → 0.58-0.64
+  (Δ −0.27 to −0.33, bracketing the two ends). The pre-registered "mostly intercept" prior is refuted.
+- **It matches the data's own M against Z gap** (0.66 → 0.42, −0.24).
+- **With the wire filter** (+0.105, S4), about 0.05-0.12 of the 0.49 gap remains. That is within the D_L bound (S6)
+  plus the untested noise and fluctuation.
+- **Next:** train with data-like truncation augmentation (section 10.5).
+
 **Status (2026-09-23, round 4).** Study S6 ran (section 9).
 - **D_L on PDVD data** is 4.9 [3.3, 6.8] cm²/s after calibration, consistent with the params value 4.13, with a
   subset spread of about ±2.
@@ -617,9 +626,150 @@ What is left is not a transport or SP-filter effect:
   crops read 0.66-0.79);
 - charge-shape effects that do not grow with drift: noise and charge fluctuation, hypotheses (a)-(b).
 
-**Next** (in order):
+**Next** (in order; item 1 ran in round 5, section 10):
 1. **The Michel-domain test.** Apply the data's muon-removal geometry to simulated electrons (truncate the start, zero
    the overlap cells, exact-zero background) and re-score. This is the cheapest test of the largest remaining candidate.
 2. **The S2 noise and fluctuation rungs.**
 3. **If the domain shift carries it,** a fine-tune on data Michels (S7), or training on muon-subtracted simulated
    Michels.
+
+## 10. Round 5: the Michel-domain test
+
+### 10.0 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/scripts
+S=../../scan/d117/dom
+python3 d117_dom_masks.py -j 8 > $S/mask_closure.txt           # each data Michel's keep/muon masks in crop coordinates
+                                                                # -> /home/xqian/tmp/d117/dom/masks_pdvd.npz (swept scratch)
+CUDA_VISIBLE_DEVICES=1 python3 d117_dom.py > $S/dom.txt         # the arms on S1's sim draws + the data split
+```
+
+### 10.1 Pre-registration (written before the arms ran)
+
+**The question.** A data Michel crop is the Michel with the muon removed:
+- the start is truncated by the muon mask (±1 channel, ±4 ticks around the muon cells);
+- everything outside the Michel's keep band is exact zero.
+
+The training electrons are whole. On the same labels, the muon-left-in crop reads 0.66 and the Michel-only crop 0.42
+(doc 98 §6). Does removal geometry alone, applied to the model's own electrons, compress their slope 0.91 toward the
+data's?
+
+**The prior: mostly an intercept.**
+- Doc 98 §7: variant S, which restores the Michel's share on the overlap cells, moves the slope by < 0.1 against Z.
+- The removed fraction barely correlates with drift. In-range, ρ(drift, `frac_lost`) is −0.12 and
+  ρ(drift, `frac_overlap`) is −0.10. A removal that does not grow with drift should mostly move the intercept, though
+  S1 showed this network is not a linear inverter.
+
+**The criterion.** Read on the full emulation at the data's own removed fraction (zbkg + truncation, zbkg + the
+literal mask):
+
+| Δslope | reading |
+|---|---|
+| \|Δ\| < 0.1 | removal geometry is not the carrier; the gap passes to the S2 noise and fluctuation rungs (hypothesis b) |
+| ≤ −0.2 | removal geometry is the carrier |
+| between | partial |
+
+**Scope.**
+- This test covers removal geometry only. Noise and charge fluctuation are not tested.
+- The store holds electrons and photons only, with no muons, so the muon-left-in (M) gap cannot be emulated.
+
+### 10.2 Inputs and gates
+
+- **Data masks** (`d117_dom_masks.py`). The worker runs doc 98's `build_one()` unchanged on the latest arm, wrapping
+  `dilate()` so that the keep and muon masks it builds are captured. Both are cut at the crop's own centre.
+  - **Gate:** `M·(keep & ~muon)` equals the stored Z bit for bit on **80/80** crops (`dom/mask_closure.txt`).
+- **Simulation.** S1's 3,399 test-split electrons, with the same seed and the same 1,000 matched draws. Every arm is
+  regressed on the data labels.
+  - **Closure:** `none` reads 0.912 (S1: 0.912), max |mu − published| 0.005 cm. `zbkg` reads −0.040 [−0.085, +0.002]
+    (S1: the same).
+- **Pairing.** A draw standing in for data Michel *i* gets Michel *i*'s mask or removed fraction: 6,881 (Michel,
+  neighbour) pairs.
+- **Removed fraction (in range).**
+  - `frac_lost` q10/50/90 = 0.075 / 0.241 / 0.571. It is a lower bound: the Michel's own cells only.
+  - `frac_overlap` = 0.143 / 0.324 / 0.626. It is an upper bound, because it counts muon charge too.
+- **Which end is the start?** The stored simulation crops carry no start point. The meta holds the centroid and the
+  angles; the start would need the truth depos re-rasterised. So each truncation cuts from one end of the
+  charge-weighted principal axis, and the two ends (a/b) are quoted as a **bracket**.
+
+### 10.3 Results (`scan/d117/dom/dom.txt`)
+
+Simulation slope, and its change against `none` on the same draws, median [16, 84]. "Removed" is the fraction of crop
+charge the arm took away.
+
+| arm | removed | sim slope | Δslope | Δintercept (cm) |
+|---|---|---|---|---|
+| none | 0 | 0.912 | – | – |
+| zbkg (exact zeros off the main component) | 0.155 | 0.869 | −0.040 [−0.085, +0.002] | +10 |
+| mask_lit (Michel *i*'s literal muon mask) | 0.064 | 0.832 | −0.079 [−0.130, −0.031] | +6 |
+| trunc 0.2, a / b | 0.195 | 0.756 / 0.709 | −0.155 / −0.199 | +9 / +10 |
+| trunc 0.4, a / b | 0.395 | 0.689 / 0.633 | −0.223 / −0.276 | +14 / +18 |
+| trunc 0.6, a / b | 0.595 | 0.589 / 0.550 | −0.325 / −0.363 | +23 / +25 |
+| trunc at Michel *i*'s `frac_lost`, a / b | 0.279 | 0.716 / 0.666 | −0.193 [−0.273, −0.119] / −0.246 [−0.322, −0.174] | +13 / +16 |
+| trunc at Michel *i*'s `frac_overlap`, a / b | 0.351 | 0.682 / 0.633 | −0.228 / −0.276 | +16 / +19 |
+| **zbkg + trunc `frac_lost`, a / b** | 0.39 | **0.643 / 0.576** | **−0.268 [−0.366, −0.168] / −0.329 [−0.433, −0.237]** | +25 / +29 |
+| zbkg + mask_lit | 0.214 | 0.792 | −0.118 [−0.189, −0.054] | +16 |
+
+**Data-side split** (no re-scoring; in-range slope of mu_Z, split at the median removed fraction):
+
+| split | low half | high half | Δ (high − low) |
+|---|---|---|---|
+| `frac_lost` | 0.434 | 0.394 | −0.027 [−0.259, +0.224] |
+| `frac_overlap` | 0.444 | 0.396 | −0.055 [−0.254, +0.181] |
+
+At n = 28 per half this split is uninformative. The simulation dose response predicts a difference of about −0.1
+between the halves, well inside that interval.
+
+### 10.4 Reading
+
+1. **The pre-registered criterion is met: removal geometry is a carrier.**
+   - The full emulation at the data's own lower-bound fraction compresses the simulation slope by −0.27 to −0.33
+     (the two ends), to 0.58-0.64.
+   - Truncation alone, at the data's `frac_lost`, gives −0.19 to −0.25.
+   - The prior ("mostly an intercept", from S against Z and ρ(drift, f) ≈ −0.1) is **wrong**. A drift-independent
+     removal compresses the slope, and moves the intercept only by +10 to +30 cm.
+   - This is another instance of S1's finding that the network is not a linear inverter: a truncated image reads as a
+     nearer, less-diffused one.
+2. **It is the start-truncation that does it, not the zeros.**
+   - Exact zeros alone give −0.04.
+   - The literal data mask removes only 6 % of the simulated electron's charge, because its orientation is random
+     relative to the electron, and gives −0.08.
+   - The response grows with the fraction removed: −0.16/−0.20 at 20 %, −0.22/−0.28 at 40 %, −0.33/−0.36 at 60 %.
+3. **It matches the data's own M against Z gap.** On the same labels, the data crop with the muon left in reads 0.66,
+   and the muon-removed crop 0.42: a gap of −0.24. The emulated truncation is −0.19 to −0.25 at the data's fraction.
+   The mechanism now has a quantitative match on both sides.
+4. **The budget now closes within its uncertainties.**
+   - Emulated simulation 0.58-0.64, against data after the wire filter 0.525 (S4). What remains is about 0.05-0.12.
+   - D_L can account for up to 0.1-0.15 of slope (S6), and noise and charge fluctuation are untested. Either fits in
+     that remainder.
+   - The terms are not strictly additive: the network is nonlinear, and each was measured on its own.
+
+| cause | slope | source |
+|---|---|---|
+| wire filter (training `Wire_col` 3 against data 10) | +0.105 | S4 |
+| **muon-removal truncation + exact-zero background** | **−0.27 to −0.33** (simulation emulation) | this round |
+| D_L | ≤ 0.1-0.15 | S6 |
+| D_T, collection excess, lifetime, footprint | ≈ 0 | S1 |
+| remainder (noise, charge fluctuation, non-additivity) | ~0.05-0.12 | – |
+
+**What this does not show.**
+- **The direction.** Which end the data truncation removes is known: the start, where the muon stopped. The emulation
+  brackets both ends because the start is not stored. The bracket is narrow (≈ 0.05), so the conclusion does not
+  depend on it.
+- **The dose.** `frac_lost` counts only the Michel's own cells under the muon mask. The true loss, including Michel
+  charge the clustering assigned to the muon, lies between it and `frac_overlap`, and both give the same reading.
+- **Noise and charge fluctuation.** They remain untested (S2 rungs 3 and 5).
+
+### 10.5 Where this leaves the list
+
+The slope gap is now mostly accounted for. Most of it is the **Michel domain** (muon-removal truncation), with the wire
+filter second. It is not transport physics: D_L and D_T on data are consistent with the simulation.
+
+For using the regressor on data, this points away from correcting the data and toward **training on what the data
+looks like**:
+1. **Retrain or fine-tune on truncated electrons.** Apply the data-like start truncation (the `frac_lost`/`frac_overlap`
+   distribution) plus exact-zero background as training augmentation, with the data's `Wire_col` 10. This is cheaper
+   and more principled than S7's fine-tune on 56 data Michels, which remains the check.
+2. **Recover the start end in simulation** (re-rasterise the truth depos: first depo = start). It turns the bracket into
+   one number. It is only worth doing if the augmentation needs it.
+3. **The S2 noise and fluctuation rungs** for the remaining ~0.1, at low priority.
