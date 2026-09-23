@@ -3173,3 +3173,12 @@ Stage B on the doc 102 stage A `work-*-d102m`, toolkit `ecba69ee` (cfg threading
 - `work-{nuecc48,ncpi0,mcp1k,mcp2k}-d113adopt` -- stage B on production stage A with nu_adopt_touching=true (doc 113 sec 7). Keep until the owner has read the doc.
 - `abtest/snap/d113pre`, `d113post` -- VACUOUS PDHD/PDVD imaging snapshots (the SP frames were not on disk; 113_figs/113_pdgate.txt). Safe to delete.
 - (`work-{mcp1k,mcp2k}-d113snew` predate this doc -- Sep 16, doc 109/110 era -- and are NOT part of it.)
+
+## prod0923 -- nueCC-48 + NCpi0-19 (data) at the current production default (2026-09-23)
+Owner ask: the 48 nueCC and 19 NCpi0 data samples at today's production default. No existing arm was: `pr150s0` is at `ref/prod-2026-09-17b` (before the doc 118 trajectory flip), and its stage A `work-*-d102m` is at `ref/prod-2026-09-08` -- `sbnd_clus.json` and `sbnd_ql.json` changed between -09-08 and -09-14. So both stages were re-run.
+- `work-{nuecc48,ncpi0}-prod0923` -- stage A (reco1 -> imaging -> clustering + Q/L), `run_chain_group.sh --size 16 --layout perevt`, same inputs and flags as doc 102. 48/48 and 19/19 pctrees, 0 empty.
+- `work-{nuecc48,ncpi0}-prod0923pr` -- stage B, the PR chain at the runner defaults, `PR_EXTRA_STAGES=pr_display`, full output (tracking-pr ROOT, mabc-pr Bee zip, calib-pr dump, nusel tables). batch summary 48 ok / 19 ok, 0 failed.
+- Operating point: toolkit `377119ee` (no C++ change since `253f1845`; `wcbuild` a no-op), `prod_cfg_gate.py --ref ref/prod-2026-09-21d` PASS 26/26. Binary pinned `~/tmp/prod0923-libpin` (md5s: `scripts/prod0923/libpin.md5`). Runner allocator default (jemalloc), no missing-preload warnings.
+- Products: `products/prod0923/{nuecc48,ncpi0}-scores-prod0923.tsv` (`pr_scores_table.py`). mcp1k/mcp2k were NOT re-run in this epoch.
+- Not yet compared against prod0908 or pr150s0.
+- Repro: `nohup scripts/prod0923/drive.sh &` (from anywhere; it cd's into sbnd_xin), then `python3 pr_scores_table.py --root work-<s>-prod0923pr --sample <s> --out products/prod0923/<s>-scores-prod0923.tsv`.
