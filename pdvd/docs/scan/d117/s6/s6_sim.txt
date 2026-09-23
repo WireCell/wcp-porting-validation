@@ -1,0 +1,115 @@
+# doc pdvd/117 S6 simulation (d117_s6_sim.py): anode 0 face 0, 24 tracks, v 1.48073 mm/us; the data estimator applied unchanged
+  DL0_s1: T_off +441 ticks, measured 552, isolated 552
+  DL0_s2: T_off +441 ticks, measured 552, isolated 552
+  DL4_s1: T_off +441 ticks, measured 552, isolated 552
+  DL4_s2: T_off +441 ticks, measured 552, isolated 552
+  DL8_s1: T_off +441 ticks, measured 552, isolated 552
+  DL8_s2: T_off +441 ticks, measured 552, isolated 552
+  DL4_nn: T_off +441 ticks, measured 552, isolated 552
+  DL4q3_s1: T_off +441 ticks, measured 552, isolated 552
+  DL4q3_s2: T_off +441 ticks, measured 552, isolated 552
+
+== DL0
+  DL0 vc    all             n   1104: sigma_t^2 =  7.267 + 0.1181e-3 t[us] [0.0722, 0.1951]  -> D_L,eff 0.32 [0.20, 0.53] cm^2/s
+  DL0 vc    peak >= 3000 e  n   1104: sigma_t^2 =  7.267 + 0.1181e-3 t[us] [0.0609, 0.2139]  -> D_L,eff 0.32 [0.17, 0.59] cm^2/s
+  DL0 vc    peak >= 8000 e  n      0: too few
+  DL0 vc    tpw < 1         n    552: sigma_t^2 =  7.242 + 0.1927e-3 t[us] [0.0507, 0.2578]  -> D_L,eff 0.53 [0.14, 0.71] cm^2/s
+  DL0 vc    tpw 1-2         n    552: sigma_t^2 =  7.211 + 0.1256e-3 t[us] [0.0280, 0.2201]  -> D_L,eff 0.34 [0.08, 0.60] cm^2/s
+  DL0 vc    tpw 2-3         n      0: too few
+  DL0 vc6   all             n   1104: sigma_t^2 =  6.247 + 0.0538e-3 t[us] [0.0353, 0.0734]  -> D_L,eff 0.15 [0.10, 0.20] cm^2/s
+  DL0 vc6   peak >= 3000 e  n   1104: sigma_t^2 =  6.247 + 0.0538e-3 t[us] [0.0385, 0.0761]  -> D_L,eff 0.15 [0.11, 0.21] cm^2/s
+  DL0 vc6   peak >= 8000 e  n      0: too few
+  DL0 vc6   tpw < 1         n    552: sigma_t^2 =  6.264 + 0.0552e-3 t[us] [0.0165, 0.0632]  -> D_L,eff 0.15 [0.05, 0.17] cm^2/s
+  DL0 vc6   tpw 1-2         n    552: sigma_t^2 =  6.205 + 0.0734e-3 t[us] [0.0459, 0.1052]  -> D_L,eff 0.20 [0.13, 0.29] cm^2/s
+  DL0 vc6   tpw 2-3         n      0: too few
+  DL0 var   all             n   1104: sigma_t^2 =  7.329 + 0.1360e-3 t[us] [0.0639, 0.2103]  -> D_L,eff 0.37 [0.18, 0.58] cm^2/s
+  DL0 var   peak >= 3000 e  n   1104: sigma_t^2 =  7.329 + 0.1360e-3 t[us] [0.0579, 0.1999]  -> D_L,eff 0.37 [0.16, 0.55] cm^2/s
+  DL0 var   peak >= 8000 e  n      0: too few
+  DL0 var   tpw < 1         n    552: sigma_t^2 =  7.242 + 0.1927e-3 t[us] [0.0530, 0.2603]  -> D_L,eff 0.53 [0.15, 0.71] cm^2/s
+  DL0 var   tpw 1-2         n    552: sigma_t^2 =  7.398 + 0.1256e-3 t[us] [0.0342, 0.2081]  -> D_L,eff 0.34 [0.09, 0.57] cm^2/s
+  DL0 var   tpw 2-3         n      0: too few
+  binned median sigma_t^2 (var, all isolated): 0-300us:7.216(n184)  300-600us:7.488(n184)  600-900us:7.438(n92)  900-1200us:7.617(n184)  1200-1500us:7.343(n92)  1500-1800us:7.605(n184)  1800-2100us:7.763(n92)
+
+== DL4
+  DL4 vc    all             n   1104: sigma_t^2 =  7.155 + 1.5184e-3 t[us] [1.4183, 1.6338]  -> D_L,eff 4.16 [3.89, 4.48] cm^2/s
+  DL4 vc    peak >= 3000 e  n   1101: sigma_t^2 =  7.101 + 1.6208e-3 t[us] [1.4391, 1.6507]  -> D_L,eff 4.44 [3.94, 4.52] cm^2/s
+  DL4 vc    peak >= 8000 e  n      0: too few
+  DL4 vc    tpw < 1         n    552: sigma_t^2 =  7.149 + 1.5434e-3 t[us] [1.3554, 1.5896]  -> D_L,eff 4.23 [3.71, 4.36] cm^2/s
+  DL4 vc    tpw 1-2         n    552: sigma_t^2 =  6.990 + 1.5819e-3 t[us] [1.4995, 1.7561]  -> D_L,eff 4.34 [4.11, 4.81] cm^2/s
+  DL4 vc    tpw 2-3         n      0: too few
+  DL4 vc6   all             n   1104: sigma_t^2 =  6.241 + 0.7646e-3 t[us] [0.7450, 0.8179]  -> D_L,eff 2.10 [2.04, 2.24] cm^2/s
+  DL4 vc6   peak >= 3000 e  n   1101: sigma_t^2 =  6.221 + 0.8268e-3 t[us] [0.7541, 0.8341]  -> D_L,eff 2.27 [2.07, 2.29] cm^2/s
+  DL4 vc6   peak >= 8000 e  n      0: too few
+  DL4 vc6   tpw < 1         n    552: sigma_t^2 =  6.316 + 0.7861e-3 t[us] [0.7644, 0.8272]  -> D_L,eff 2.15 [2.09, 2.27] cm^2/s
+  DL4 vc6   tpw 1-2         n    552: sigma_t^2 =  6.149 + 0.7678e-3 t[us] [0.7429, 0.8202]  -> D_L,eff 2.10 [2.04, 2.25] cm^2/s
+  DL4 vc6   tpw 2-3         n      0: too few
+  DL4 var   all             n   1104: sigma_t^2 =  7.194 + 1.5536e-3 t[us] [1.4395, 1.6260]  -> D_L,eff 4.26 [3.95, 4.46] cm^2/s
+  DL4 var   peak >= 3000 e  n   1101: sigma_t^2 =  7.150 + 1.6316e-3 t[us] [1.4524, 1.6610]  -> D_L,eff 4.47 [3.98, 4.55] cm^2/s
+  DL4 var   peak >= 8000 e  n      0: too few
+  DL4 var   tpw < 1         n    552: sigma_t^2 =  7.149 + 1.5434e-3 t[us] [1.3273, 1.5874]  -> D_L,eff 4.23 [3.64, 4.35] cm^2/s
+  DL4 var   tpw 1-2         n    552: sigma_t^2 =  7.177 + 1.5819e-3 t[us] [1.4760, 1.7673]  -> D_L,eff 4.34 [4.05, 4.84] cm^2/s
+  DL4 var   tpw 2-3         n      0: too few
+  binned median sigma_t^2 (var, all isolated): 0-300us:7.520(n184)  300-600us:7.936(n184)  600-900us:8.395(n92)  900-1200us:8.745(n184)  1200-1500us:9.371(n92)  1500-1800us:9.817(n184)  1800-2100us:10.289(n92)
+
+== DL8
+  DL8 vc    all             n   1104: sigma_t^2 =  7.101 + 2.7709e-3 t[us] [2.6633, 2.9222]  -> D_L,eff 7.59 [7.30, 8.01] cm^2/s
+  DL8 vc    peak >= 3000 e  n    793: sigma_t^2 =  7.396 + 2.5161e-3 t[us] [2.3973, 2.7152]  -> D_L,eff 6.90 [6.57, 7.44] cm^2/s
+  DL8 vc    peak >= 8000 e  n      0: too few
+  DL8 vc    tpw < 1         n    552: sigma_t^2 =  7.156 + 2.7234e-3 t[us] [2.5527, 2.8108]  -> D_L,eff 7.46 [7.00, 7.70] cm^2/s
+  DL8 vc    tpw 1-2         n    552: sigma_t^2 =  6.898 + 2.9000e-3 t[us] [2.7262, 3.0848]  -> D_L,eff 7.95 [7.47, 8.45] cm^2/s
+  DL8 vc    tpw 2-3         n      0: too few
+  DL8 vc6   all             n   1104: sigma_t^2 =  6.264 + 1.3049e-3 t[us] [1.2679, 1.3653]  -> D_L,eff 3.58 [3.47, 3.74] cm^2/s
+  DL8 vc6   peak >= 3000 e  n    793: sigma_t^2 =  6.307 + 1.3373e-3 t[us] [1.3219, 1.4849]  -> D_L,eff 3.67 [3.62, 4.07] cm^2/s
+  DL8 vc6   peak >= 8000 e  n      0: too few
+  DL8 vc6   tpw < 1         n    552: sigma_t^2 =  6.323 + 1.3142e-3 t[us] [1.2445, 1.3676]  -> D_L,eff 3.60 [3.41, 3.75] cm^2/s
+  DL8 vc6   tpw 1-2         n    552: sigma_t^2 =  6.157 + 1.3366e-3 t[us] [1.2917, 1.4297]  -> D_L,eff 3.66 [3.54, 3.92] cm^2/s
+  DL8 vc6   tpw 2-3         n      0: too few
+  DL8 var   all             n   1104: sigma_t^2 =  7.168 + 2.7694e-3 t[us] [2.6669, 2.9365]  -> D_L,eff 7.59 [7.31, 8.05] cm^2/s
+  DL8 var   peak >= 3000 e  n    793: sigma_t^2 =  7.417 + 2.5693e-3 t[us] [2.4059, 2.7404]  -> D_L,eff 7.04 [6.59, 7.51] cm^2/s
+  DL8 var   peak >= 8000 e  n      0: too few
+  DL8 var   tpw < 1         n    552: sigma_t^2 =  7.156 + 2.7234e-3 t[us] [2.5828, 2.8261]  -> D_L,eff 7.46 [7.08, 7.75] cm^2/s
+  DL8 var   tpw 1-2         n    552: sigma_t^2 =  7.085 + 2.9000e-3 t[us] [2.7168, 3.1249]  -> D_L,eff 7.95 [7.45, 8.56] cm^2/s
+  DL8 var   tpw 2-3         n      0: too few
+  binned median sigma_t^2 (var, all isolated): 0-300us:7.799(n184)  300-600us:8.501(n184)  600-900us:9.343(n92)  900-1200us:10.245(n184)  1200-1500us:10.638(n92)  1500-1800us:11.834(n184)  1800-2100us:12.990(n92)
+
+== DL4_nn
+  DL4_nn vc    all             n    552: sigma_t^2 =  6.887 + 1.4094e-3 t[us] [1.2154, 1.7036]  -> D_L,eff 3.86 [3.33, 4.67] cm^2/s
+  DL4_nn vc    peak >= 3000 e  n    552: sigma_t^2 =  6.887 + 1.4094e-3 t[us] [1.1749, 1.6616]  -> D_L,eff 3.86 [3.22, 4.55] cm^2/s
+  DL4_nn vc    peak >= 8000 e  n      0: too few
+  DL4_nn vc    tpw < 1         n    276: sigma_t^2 =  7.078 + 1.5065e-3 t[us] [1.4674, 1.5528]  -> D_L,eff 4.13 [4.02, 4.26] cm^2/s
+  DL4_nn vc    tpw 1-2         n    276: sigma_t^2 =  6.242 + 1.3319e-3 t[us] [1.1208, 1.5858]  -> D_L,eff 3.65 [3.07, 4.35] cm^2/s
+  DL4_nn vc    tpw 2-3         n      0: too few
+  DL4_nn vc6   all             n    552: sigma_t^2 =  6.252 + 0.7745e-3 t[us] [0.7411, 0.8714]  -> D_L,eff 2.12 [2.03, 2.39] cm^2/s
+  DL4_nn vc6   peak >= 3000 e  n    552: sigma_t^2 =  6.252 + 0.7745e-3 t[us] [0.7419, 0.8641]  -> D_L,eff 2.12 [2.03, 2.37] cm^2/s
+  DL4_nn vc6   peak >= 8000 e  n      0: too few
+  DL4_nn vc6   tpw < 1         n    276: sigma_t^2 =  6.309 + 0.8047e-3 t[us] [0.7752, 0.8367]  -> D_L,eff 2.21 [2.12, 2.29] cm^2/s
+  DL4_nn vc6   tpw 1-2         n    276: sigma_t^2 =  6.034 + 0.8033e-3 t[us] [0.7753, 0.8942]  -> D_L,eff 2.20 [2.12, 2.45] cm^2/s
+  DL4_nn vc6   tpw 2-3         n      0: too few
+  DL4_nn var   all             n    552: sigma_t^2 =  6.966 + 1.4345e-3 t[us] [1.2022, 1.6322]  -> D_L,eff 3.93 [3.29, 4.47] cm^2/s
+  DL4_nn var   peak >= 3000 e  n    552: sigma_t^2 =  6.966 + 1.4345e-3 t[us] [1.2160, 1.6801]  -> D_L,eff 3.93 [3.33, 4.60] cm^2/s
+  DL4_nn var   peak >= 8000 e  n      0: too few
+  DL4_nn var   tpw < 1         n    276: sigma_t^2 =  7.078 + 1.5065e-3 t[us] [1.4678, 1.5485]  -> D_L,eff 4.13 [4.02, 4.24] cm^2/s
+  DL4_nn var   tpw 1-2         n    276: sigma_t^2 =  6.429 + 1.3319e-3 t[us] [1.1235, 1.5691]  -> D_L,eff 3.65 [3.08, 4.30] cm^2/s
+  DL4_nn var   tpw 2-3         n      0: too few
+  binned median sigma_t^2 (var, all isolated): 0-300us:7.280(n92)  300-600us:7.698(n92)  600-900us:8.274(n46)  900-1200us:8.605(n92)  1200-1500us:8.816(n46)  1500-1800us:9.363(n92)  1800-2100us:10.106(n46)
+
+== DL4q3
+  DL4q3 vc    all             n   1104: sigma_t^2 =  7.005 + 1.4688e-3 t[us] [1.4021, 1.5375]  -> D_L,eff 4.03 [3.84, 4.21] cm^2/s
+  DL4q3 vc    peak >= 3000 e  n   1104: sigma_t^2 =  7.005 + 1.4688e-3 t[us] [1.4161, 1.5496]  -> D_L,eff 4.03 [3.88, 4.25] cm^2/s
+  DL4q3 vc    peak >= 8000 e  n   1104: sigma_t^2 =  7.005 + 1.4688e-3 t[us] [1.4038, 1.5475]  -> D_L,eff 4.03 [3.85, 4.24] cm^2/s
+  DL4q3 vc    tpw < 1         n    552: sigma_t^2 =  7.055 + 1.4777e-3 t[us] [1.4078, 1.5340]  -> D_L,eff 4.05 [3.86, 4.20] cm^2/s
+  DL4q3 vc    tpw 1-2         n    552: sigma_t^2 =  6.914 + 1.4802e-3 t[us] [1.4270, 1.6280]  -> D_L,eff 4.06 [3.91, 4.46] cm^2/s
+  DL4q3 vc    tpw 2-3         n      0: too few
+  DL4q3 vc6   all             n   1104: sigma_t^2 =  6.269 + 0.7883e-3 t[us] [0.7815, 0.8437]  -> D_L,eff 2.16 [2.14, 2.31] cm^2/s
+  DL4q3 vc6   peak >= 3000 e  n   1104: sigma_t^2 =  6.269 + 0.7883e-3 t[us] [0.7749, 0.8354]  -> D_L,eff 2.16 [2.12, 2.29] cm^2/s
+  DL4q3 vc6   peak >= 8000 e  n   1104: sigma_t^2 =  6.269 + 0.7883e-3 t[us] [0.7796, 0.8403]  -> D_L,eff 2.16 [2.14, 2.30] cm^2/s
+  DL4q3 vc6   tpw < 1         n    552: sigma_t^2 =  6.293 + 0.8139e-3 t[us] [0.7710, 0.8402]  -> D_L,eff 2.23 [2.11, 2.30] cm^2/s
+  DL4q3 vc6   tpw 1-2         n    552: sigma_t^2 =  6.183 + 0.8079e-3 t[us] [0.7940, 0.8472]  -> D_L,eff 2.21 [2.18, 2.32] cm^2/s
+  DL4q3 vc6   tpw 2-3         n      0: too few
+  DL4q3 var   all             n   1104: sigma_t^2 =  7.083 + 1.4831e-3 t[us] [1.4278, 1.5503]  -> D_L,eff 4.06 [3.91, 4.25] cm^2/s
+  DL4q3 var   peak >= 3000 e  n   1104: sigma_t^2 =  7.083 + 1.4831e-3 t[us] [1.4338, 1.5572]  -> D_L,eff 4.06 [3.93, 4.27] cm^2/s
+  DL4q3 var   peak >= 8000 e  n   1104: sigma_t^2 =  7.083 + 1.4831e-3 t[us] [1.4332, 1.5631]  -> D_L,eff 4.06 [3.93, 4.28] cm^2/s
+  DL4q3 var   tpw < 1         n    552: sigma_t^2 =  7.055 + 1.4777e-3 t[us] [1.4093, 1.5491]  -> D_L,eff 4.05 [3.86, 4.25] cm^2/s
+  DL4q3 var   tpw 1-2         n    552: sigma_t^2 =  7.102 + 1.4802e-3 t[us] [1.4253, 1.6058]  -> D_L,eff 4.06 [3.91, 4.40] cm^2/s
+  DL4q3 var   tpw 2-3         n      0: too few
+  binned median sigma_t^2 (var, all isolated): 0-300us:7.323(n184)  300-600us:7.784(n184)  600-900us:8.369(n92)  900-1200us:8.569(n184)  1200-1500us:9.075(n92)  1500-1800us:9.552(n184)  1800-2100us:10.163(n92)

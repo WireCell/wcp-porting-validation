@@ -1,0 +1,20 @@
+# doc pdvd/117 S6 data, arm d117sp: 61 events; counts {'points': 124194, 'tpw cut': 84813, 'measured': 10705, 'isolated': 8910, 'dup channel': 5201, 'no pulse': 1143, '< 1 wire span': 21960, 'no/bad channel': 372}
+  data vc    all             n   8799: sigma_t^2 =  6.626 + 1.7042e-3 t[us] [1.1968, 2.3306]  -> D_L,eff 4.67 [3.28, 6.39] cm^2/s
+  data vc    peak >= 3000 e  n   8358: sigma_t^2 =  6.678 + 1.5528e-3 t[us] [1.0874, 2.2039]  -> D_L,eff 4.26 [2.98, 6.04] cm^2/s
+  data vc    peak >= 8000 e  n   3315: sigma_t^2 =  6.927 + 0.6183e-3 t[us] [0.2774, 1.5660]  -> D_L,eff 1.69 [0.76, 4.29] cm^2/s
+  data vc    tpw < 1         n   4841: sigma_t^2 =  6.274 + 1.2263e-3 t[us] [0.8400, 2.3514]  -> D_L,eff 3.36 [2.30, 6.44] cm^2/s
+  data vc    tpw 1-2         n   2051: sigma_t^2 =  6.899 + 1.8571e-3 t[us] [1.4308, 2.2859]  -> D_L,eff 5.09 [3.92, 6.26] cm^2/s
+  data vc    tpw 2-3         n   1907: sigma_t^2 =  8.043 + 1.4419e-3 t[us] [1.2934, 1.8494]  -> D_L,eff 3.95 [3.54, 5.07] cm^2/s
+  data vc6   all             n   8799: sigma_t^2 =  5.928 + 0.8237e-3 t[us] [0.6055, 1.1274]  -> D_L,eff 2.26 [1.66, 3.09] cm^2/s
+  data vc6   peak >= 3000 e  n   8358: sigma_t^2 =  5.953 + 0.7763e-3 t[us] [0.5618, 1.0657]  -> D_L,eff 2.13 [1.54, 2.92] cm^2/s
+  data vc6   peak >= 8000 e  n   3315: sigma_t^2 =  6.030 + 0.4435e-3 t[us] [0.1285, 0.8349]  -> D_L,eff 1.22 [0.35, 2.29] cm^2/s
+  data vc6   tpw < 1         n   4841: sigma_t^2 =  5.669 + 0.6628e-3 t[us] [0.4669, 1.3123]  -> D_L,eff 1.82 [1.28, 3.60] cm^2/s
+  data vc6   tpw 1-2         n   2051: sigma_t^2 =  6.128 + 0.9925e-3 t[us] [0.7054, 1.1319]  -> D_L,eff 2.72 [1.93, 3.10] cm^2/s
+  data vc6   tpw 2-3         n   1907: sigma_t^2 =  6.547 + 0.6302e-3 t[us] [0.5614, 0.9484]  -> D_L,eff 1.73 [1.54, 2.60] cm^2/s
+  data var   all             n   8799: sigma_t^2 =  6.730 + 1.8613e-3 t[us] [1.2017, 2.4499]  -> D_L,eff 5.10 [3.29, 6.71] cm^2/s
+  data var   peak >= 3000 e  n   8358: sigma_t^2 =  6.773 + 1.7066e-3 t[us] [1.1640, 2.3769]  -> D_L,eff 4.68 [3.19, 6.51] cm^2/s
+  data var   peak >= 8000 e  n   3315: sigma_t^2 =  7.100 + 0.5547e-3 t[us] [0.1452, 1.4593]  -> D_L,eff 1.52 [0.40, 4.00] cm^2/s
+  data var   tpw < 1         n   4841: sigma_t^2 =  6.301 + 1.2269e-3 t[us] [0.8394, 2.5955]  -> D_L,eff 3.36 [2.30, 7.11] cm^2/s
+  data var   tpw 1-2         n   2051: sigma_t^2 =  7.080 + 1.8699e-3 t[us] [1.4293, 2.2904]  -> D_L,eff 5.12 [3.92, 6.28] cm^2/s
+  data var   tpw 2-3         n   1907: sigma_t^2 =  8.526 + 1.5126e-3 t[us] [1.2893, 1.8318]  -> D_L,eff 4.15 [3.53, 5.02] cm^2/s
+  binned median sigma_t^2 (var, all isolated): 0-300us:7.159(n2625)  300-600us:7.395(n2963)  600-900us:9.456(n834)  900-1200us:7.824(n1109)  1200-1500us:8.844(n723)  1500-1800us:11.167(n420)  1800-2100us:9.921(n177)

@@ -1,5 +1,13 @@
 # doc pdvd/117: why the DUNE-VD drift regressor reads slope 0.42 on ProtoDUNE Michels, and how to find out
 
+**Status (2026-09-23, round 4).** Study S6 ran (section 9).
+- **D_L on PDVD data** is 4.9 [3.3, 6.8] cm²/s after calibration, consistent with the params value 4.13, with a
+  subset spread of about ±2.
+- **Top CRP**, with its own top-CRP calibration: 3.4 [2.2, 5.8]; tpw < 1 gives 2.7 [1.9, 4.9]. The training
+  simulation's equivalent at the data's drift speed is 3.14.
+- **D_L can account for at most about 0.1-0.15 of the remaining ~0.39 of slope** (the top CRP's lower bound). It is
+  not the main cause. The rest is in the Michel image or in charge-shape effects that do not grow with drift.
+
 **Status (2026-09-23, round 3).** Study S4 ran (section 8). The real re-SP with the training `Wire_col` raises the data
 slope 0.421 → 0.525 (Δ +0.105 [0.060, 0.151]), as S1 predicted before it ran. About 0.39 of the gap to the
 simulation's 0.91 remains, with a time-axis or Michel-domain cause.
@@ -483,3 +491,135 @@ What remains is on the time axis or in the Michel image itself. Next, in order:
 3. **The S2 time-axis rungs:** D_L/v at 0.45 kV/cm, data noise and S/N, charge fluctuation.
 
 **Disk.** `work/*_d117w3sp` takes about 21 GB. It falls under the `d117*` prefix in `pdvd/scripts/retire/PROTECTED.txt`.
+
+## 9. Round 4: study S6, D_L on PDVD data
+
+### 9.0 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/scripts
+S=../../scan/d117/s6
+python3 d117_s6_data.py -j 8 > $S/s6_data.txt     # data: 61 events, d117sp frames + p98vonq fits -> s6_data_points_d117sp.tsv.gz
+# simulation: isochronous tracks, anode 0 face 0 (the tracks/truth JSONs are copied into $S)
+python3 d117_s6_tracks.py --cfg <compiled wct-sim-xtrack-sp.jsonnet, lar_drift 1.48073> --anode 0 --face 0 --outdir /home/xqian/tmp/d117/s6sim
+./d117_run_s6sim.sh                                # DL0/DL4/DL8 x seeds 1,2 + DL4 noise-off (+ DL4q3: --charge -1500), libpin copy of local/lib
+python3 d117_s6_sim.py --arms DL0_s1,DL0_s2,DL4_s1,DL4_s2,DL8_s1,DL8_s2,DL4_nn,DL4q3_s1,DL4q3_s2 > $S/s6_sim.txt
+# top CRP (its own electronics response): the same with --anode 4 --face 0 tracks, anode_index=4 arms in .../s6sim/top
+python3 d117_s6_sim.py --dir /home/xqian/tmp/d117/s6sim/top --anode 4 --arms DL0_s1,DL0_s2,DL4_s1,DL4_s2,DL8_s1,DL8_s2 > $S/s6_sim_top.txt
+# NOTE: /home/xqian/tmp/d117/libpin and the simulation frames in /home/xqian/tmp/d117/s6sim are swept scratch;
+#       the tracks/truth JSONs (both volumes) and every summary are committed under $S
+# the data splits: s6_data_splits.txt (summarize() on subsets of the points file)
+```
+
+### 9.1 The estimator (identical on data and simulation)
+
+- **Sample.** Collection-plane pulses on fitted trajectory points. Every fitted cluster in p98vonq carries a flash t0;
+  drift = 341.55 − |x| cm, from the t0-corrected fit.
+- **Selection.** Only points where the track crosses the W wires at under 3 ticks per wire.
+  - PDVD drifts vertically, so cosmics are mostly steep in x. Under 1 tick per wire leaves 15 points per event.
+  - The track's own extent, a box of tpw ticks, is subtracted from each variance as tpw²/12.
+- **The pulse.** The contiguous ROI run holding the peak, isolated: nothing above 10 % of the peak within ±25 ticks.
+- **Two variances.**
+  - over the whole ROI run (`vc`);
+  - within ±6 ticks of the peak (`vc6`), which is less tail-sensitive but compresses the diffusion signal.
+- **Line.** σ_t² = c + k·t through the medians of 8 equal-population bins of drift time. The error is a per-event
+  bootstrap. D_L,eff = k·v²·(0.5 µs)²/2.
+- **Data yield.** 61 events, 124k fit points: 10,705 measured, 8,910 isolated. The median drift time is 497 µs
+  (74 cm); q10 / q90 are 179 / 1360 µs.
+
+### 9.2 Calibration on simulation (`s6_sim.txt`)
+
+Setup:
+- `pdvd_sim/wct-sim-xtrack-sp.jsonnet`, sim → noise → NF → production SP, anode 0 face 0, v = 1.48073 mm/µs;
+- 24 isochronous tracks, 12 drifts from 25 to 320 cm, each flat and tilted to 1.5 ticks per wire;
+- 552 pulses per arm, all isolated.
+
+| true D_L (cm²/s) | `vc` D_L,eff | `vc6` D_L,eff | c (ticks²) |
+|---|---|---|---|
+| 1e-4 | 0.32 [0.20, 0.53] | 0.15 | 7.27 |
+| 4.1307 | 4.16 [3.89, 4.48] | 2.10 | 7.16 |
+| 8.2614 | 7.59 [7.30, 8.01] | 3.58 | 7.10 |
+| 4.1307, no noise | 4.13 [4.02, 4.26] (tpw < 1) | 2.21 | 7.08 |
+| 4.1307, 3× charge (every peak ≥ 8000 e) | 4.03 [3.84, 4.21] | 2.16 | 7.01 |
+
+**The response is linear.**
+- `vc`: D_L,eff = 0.39 + 0.880·D_L.
+- `vc6`: D_L,eff = 0.23 + 0.415·D_L.
+- Noise, pulse amplitude and the box correction do not bias it: the tpw < 1 and tilted halves agree.
+
+**Top CRP** (anode 4 face 0, its own electronics response, `s6_sim_top.txt`):
+
+| true D_L (cm²/s) | `vc` D_L,eff | `vc6` D_L,eff | c (ticks²) |
+|---|---|---|---|
+| 1e-4 | −0.19 | 0.05 | 7.16 |
+| 4.1307 | 3.80 | 2.00 | 6.86 |
+| 8.2614 | 7.37 | 3.64 | 6.84 |
+
+- `vc`: D_L,eff = −0.12 + 0.915·D_L.
+- `vc6`: 0.10 + 0.435·D_L.
+- Every top-CRP number below uses this calibration, and every bottom-CRP and all-sample number the one above.
+
+### 9.3 Data (`s6_data.txt`, `s6_data_splits.txt`), calibrated
+
+| subset | isolated | `vc` → D_L | `vc6` → D_L |
+|---|---|---|---|
+| **all** | 8,799 | **4.9 [3.3, 6.8]** | **4.9 [3.5, 6.9]** |
+| top CRP (anodes 4-7), top calibration | 7,559 | 3.4 [2.2, 5.8] | 3.9 [2.2, 6.9] |
+| top CRP, tpw < 1 (least box-dependent) | 4,460 | 2.7 [1.9, 4.9] | 3.1 [1.8, 6.2] |
+| bottom CRP | 1,240 | 4.5 [1.8, 8.4] | 2.5 [0.0, 5.5] |
+| drift ≥ 50 cm | 5,847 | 6.8 [4.2, 8.5] | 6.4 [4.9, 8.2] |
+
+Uncalibrated, other subsets range from 1.3 to 10: peak ≥ 8000 e reads 1.5-1.7, bottom tpw < 1 reads 10.
+
+**The honest reading.**
+- **Central value.** The full sample gives D_L = 4.9 cm²/s on both estimators, consistent with the params value 4.13.
+  Doc pdvd/25 §13.1's 4.12 is an adopted model value, not a measurement.
+- **Systematic.** The spread across reasonable subsets is about ±2 cm²/s, larger than the bootstrap interval.
+- **The binned medians are not monotonic.** There is a bump at 600-900 µs, and the lever arm is short. The
+  simulation, with uniform drifts and isolated tracks, has neither.
+- **The tpw dependence is data-only.** On the top CRP, tpw < 1 reads 2.4 (uncalibrated) and tpw 2-3 reads 4.8, while in
+  simulation the two halves agree. tpw does not correlate with drift in the data (top r = −0.045), so this is a
+  data-side systematic of the box correction on real tracks, not a lever-arm artefact. tpw < 1 is quoted as the
+  cleanest number.
+- **The data's worse S/N** (1.5×, doc 47) can only trim diffused tails harder than the noise-on simulation does. If
+  anything the data's physical D_L is underestimated, which makes the bound of 9.4 conservative.
+- **The low high-amplitude subset is not an estimator effect** (the 3× charge arm reads 4.03). What it is, a data
+  population effect (δ-rays, dense topology) or chance, is not resolved here.
+- **This is the first D_L measurement on ProtoDUNE-VD in this tree.** It is a consistency check, not a precision
+  number.
+
+**The constant term, matched volumes** (`vc`):
+- top: data 6.73 against top simulation 6.84-7.16 (0.1-0.4 ticks² narrower in data);
+- bottom: data 8.06 against bottom simulation 7.10-7.27 (about 0.8 wider in data).
+Both are small next to the constant-blur sizes S1 found the regressor reacts to (1-2 ticks, i.e. 1-4 ticks²). They
+are not interpreted further.
+
+### 9.4 What it says about the regressor
+
+The regressor reads the time-width growth per cm of drift, k ∝ D_L / v³.
+- **Training simulation:** D_L 4.0 at 1.60563 mm/µs. At the data's 1.48073 mm/µs the same growth is D_L = 3.14 cm²/s.
+- **Data:** D_L 4.9 overall. On the top CRP, where 29 of the 37 common Michels sit, it is 3.4 [2.2, 5.8], and
+  2.7 [1.9, 4.9] for tpw < 1. The central values are at the training-equivalent, or above it overall.
+- S1 measured the regressor's response to added D_L: about +0.1 of slope per cm²/s, the same on data and simulation.
+- **The bound.** The top CRP's 68 % lower bounds (2.2, and 1.9 for tpw < 1) sit up to 1.2 cm²/s below the equivalent.
+  So D_L can account for at most about 0.1-0.15 of slope, and its central value accounts for about 0.
+
+**D_L is not the main cause of the remaining ~0.39** (0.525 after S4, against 0.91).
+
+**S6 and S1 together point at the Michel crop.**
+- On muon tracks (S6), the data's time width grows with drift at the expected rate.
+- On the in-range Michel crops (S1, section 6.3), it does not visibly grow: −0.22 [−1.20, +0.86] against the
+  simulation's +1.07 [0.30, 1.70] ticks² per 100 cm (about 1σ).
+- The drift is imprinted on the charge. What differs is how the Michel crop presents it.
+
+What is left is not a transport or SP-filter effect:
+- the Michel domain shift (hypothesis d: the truncated, muon-subtracted image with exact zeros around it; the muon-left-in
+  crops read 0.66-0.79);
+- charge-shape effects that do not grow with drift: noise and charge fluctuation, hypotheses (a)-(b).
+
+**Next** (in order):
+1. **The Michel-domain test.** Apply the data's muon-removal geometry to simulated electrons (truncate the start, zero
+   the overlap cells, exact-zero background) and re-score. This is the cheapest test of the largest remaining candidate.
+2. **The S2 noise and fluctuation rungs.**
+3. **If the domain shift carries it,** a fine-tune on data Michels (S7), or training on muon-subtracted simulated
+   Michels.
