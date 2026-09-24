@@ -1,4 +1,4 @@
-# PDVD ToT flip: the pre-flip checks — C1/C2 pass, C3 passes on Q/L, C5 transfers exactly, the STM gate is undecided and its blind scan failed calibration, NOT flipped
+# PDVD ToT flip: the pre-flip checks — C1/C2 pass, C3 passes on Q/L, C5 transfers exactly, and the STM gate passes after a calibrated blind scan; the flip is blocked on a permission
 
 **Status 2026-09-23. NOT FLIPPED.** The owner's go was conditional on the pre-flip checks (`d35/prereg.md`,
 sha in `d35/prereg_sha.txt`, written before any doc-35 arm ran). C1 and C2 pass their bars. C3 passes on Q/L, though its
@@ -7,7 +7,16 @@ transfers exactly. The STM gate (C4) is **UNDECIDED on both purities**. Its poin
 labelled, against 10 for production. The pre-registered rule makes UNDECIDED a STOP, so no runner default was changed.
 The owner's choice of how to label those items is in §6.
 
-**Update 2026-09-23, evening: the blind scan of route (a) ran and failed its calibration check. Still NOT flipped.**
+**Update 2026-09-24: with the owner's larger calibration (amendment 2, §10), C4 PASSES, but the flip is NOT yet made.**
+- The combined calibration is 30 items with 4 disagreements (13.3 %, bar 25 %), so the blind labels are usable.
+- Folded by amendment 1's rule, the STM gate passes every metric in both scenarios. Purity changes by −0.006 / −0.013
+  and efficiency by +0.022 / +0.017.
+- The runner edit was refused by the session's permission classifier ("Modify Shared Resources"). The staged edits
+  are unapplied in `/home/xqian/tmp/p35/flip/`, and F1 cannot run until the owner applies them or grants the
+  permission (§10.4).
+
+*Earlier update, 2026-09-23 evening:* the blind scan of route (a) ran and failed its calibration check. Still NOT
+flipped then.
 The owner chose route (a). It was pre-registered as amendment 1 (`d35/prereg_amend1.md`), with its sha recorded before
 any item was drawn.
 - **The scan ran cleanly (§9).** Five blind Opus scanners judged 37 items and all five audits are clean.
@@ -74,6 +83,17 @@ bash d35_shoot_round.sh pdvd round_pdvd 2          # RUBRIC.md = nf_sp_img_clus/
 #   one blind Opus agent per wave file; python3 d35_audit.py <transcript> pdvd w1_a<i>   (every scanner) -> ../d35/scan_audit.txt
 python3 d35_scan_record.py --det pdvd --round /home/xqian/tmp/p35scan/round_pdvd --items /home/xqian/tmp/p35scan/items/pdvd_items.tsv \
    --tag smx35 --record-out ../../scan/pdvd_stm_michel_smx35_verdicts.json > ../d35/scan_smx35.txt     # V2 FAIL
+# sec 10 -- amendment 2 (round /home/xqian/tmp/p35scan/round_pdvd2, scratch): 26 calibration + 1 new item
+python3 d35_calib2_items.py --out /home/xqian/tmp/p35scan/items/pdvd_items2.tsv
+(cd ../../nf_sp_img_clus/scripts && python3 d103_scan_set.py --det pdvd --items /home/xqian/tmp/p35scan/items/pdvd_items2.tsv \
+   --prep-root /home/xqian/tmp/p35scan/round --out /home/xqian/tmp/p35scan/round_pdvd2/set --seed 1036)
+bash d35_shoot_round.sh pdvd round_pdvd2 2      # nextwave.py ... w1 --agents 4 --per 7 --seed 36; 4 blind Opus scanners
+#   python3 d35_audit.py <transcript> pdvd w1_a<i> round_pdvd2 -> ../d35/scan2_audit.txt
+python3 d35_scan_record.py --det pdvd --round /home/xqian/tmp/p35scan/round_pdvd2 --items /home/xqian/tmp/p35scan/items/pdvd_items2.tsv \
+   --tag smx35c --record-out ../../scan/pdvd_stm_michel_smx35c_verdicts.json > ../d35/scan2_smx35c.txt
+python3 d35_v2_combined.py ../../scan/pdvd_stm_michel_smx35_verdicts.json ../../scan/pdvd_stm_michel_smx35c_verdicts.json > ../d35/scan_v2_combined.txt
+python3 d35_stm_grade.py --a0 q35ctl --t q35tk --scan-record ../../scan/pdvd_stm_michel_smx35_verdicts.json \
+   ../../scan/pdvd_stm_michel_smx35c_verdicts.json --unlabelled-out ../d35/c4f_unlabelled.tsv > ../d35/c4f_grade.txt   # C4 PASS
 ```
 
 ## 1. What was checked
@@ -271,6 +291,9 @@ Whichever route is taken, F1 (§5) runs before any default changes.
 | `d35/prereg_amend1.md` (sha in `prereg_sha.txt`), `scan_smx35.txt`, `scan_audit.txt`, `scan_posthoc_agreement.txt` | §9 blind scan |
 | `pdvd/docs/scan/pdvd_stm_michel_smx35_verdicts.json` | the smx35 record (37 rows): **V2 FAIL, not used for grading** |
 | `scripts/d35_scan_items.py`, `d35_shoot_round.sh`, `d35_audit.py`, `d35_scan_record.py` | §9 |
+| `d35/prereg_amend2.md`, `scan2_audit.txt`, `scan2_smx35c.txt`, `scan_v2_combined.txt`, `c4f_grade.txt`, `c4f_unlabelled.tsv`, `scan_bias_sensitivity.txt` | §10 |
+| `pdvd/docs/scan/pdvd_stm_michel_smx35c_verdicts.json` | the smx35c record (27 rows); with smx35 it passes the combined V2 |
+| `scripts/d35_calib2_items.py`, `d35_v2_combined.py` | §10 |
 | `scripts/d35_arms.sh` | clustering + PR arms with a light suffix (fork of `d29_stm_arms.sh`) |
 | `scripts/d35_crossers.py`, `d35_match_tails.py`, `d35_stm_grade.py` | C2, C3, C4 |
 | `scripts/d35_flip_compiled.sh`, `d35_light_f1.py`, `d35_f1_check.sh` | F1, prepared, not run |
@@ -358,3 +381,73 @@ decision.
 - there are no rules for tracks along the drift (039252_12/100);
 - the pin position is undefined when the decline stays above the plateau (039253_2/74, 039253_2/76);
 - an arm leaving a body vertex ~5 cm before the stop (039252_17/29).
+
+## 10. The larger calibration (amendment 2, owner 2026-09-24) — V2 PASSES, C4 PASSES
+**Pre-registration.** `d35/prereg_amend2.md`, sha appended to `prereg_sha.txt` before any item was drawn. Before the
+draw the advisor review tightened it in four ways:
+- the new calibration items come only from owner-derived sources: grade-truth source `record` (the p99rwon
+  owner-corrected record and own116v) or `owner_review`, not the AI scans smx11 / smx116;
+- the concrete threshold: at most 7 disagreements of 30;
+- a note that round 1's 4 keys were untouched by the §8 defect;
+- **one new item**: a coverage check of `c4k_unlabelled.tsv` by key membership only found `q35ctl` 039252_8/102
+  unscanned. It is unlabelled only because its record label fails to carry (the cluster split).
+
+### 10.1 The round
+- **Items** (`scripts/d35_calib2_items.py`): 26 calibration items (seed 36, from a pool of 381) plus the one new item,
+  shuffled together and all scannable.
+- **Procedure.** Round dir `/home/xqian/tmp/p35scan/round_pdvd2`, with the same prep, rubric and agent task (path
+  changed). Shots clean (27 dirs, 0 blank).
+- **Scanners and audit.** Four fresh Opus scanners (7 / 7 / 7 / 6 items). The audit (`scan2_audit.txt`) found 67 /
+  70 / 67 / 61 tool calls, 0 flagged. Three scanners rewrote records in place to fix tags or evidence, so there are no
+  double scans.
+- **Record** `pdvd/docs/scan/pdvd_stm_michel_smx35c_verdicts.json` (27 rows; `scan2_smx35c.txt`).
+
+### 10.2 The combined V2 (`scan_v2_combined.txt`, `scripts/d35_v2_combined.py`)
+
+| | calibration items judged on both sides | disagreements |
+|---|---|---|
+| amendment 1 (smx35) | 4 | 2 |
+| amendment 2 (smx35c) | 26 | 2 (039252_12/110 record THRU vs blind STM_ONLY, low; 039253_14/113 record THRU vs blind STM_MICHEL, low) |
+| **combined** | **30** | **4 = 13.3 % → PASS** (bar 25 %) |
+
+**The direction of the misses.** 3 of the 4 are record THRU called a stopper by the blind scan. That is the
+direction that would flatter ToT's purity, and it is sized in §10.3.
+
+### 10.3 The fold and C4 (`c4f_grade.txt`, `c4f_unlabelled.tsv`)
+Amendment 1 §4, unchanged:
+- smx35's non-calibration rows and smx35c's new item are folded at the lowest precedence into the corrected grade;
+- 27 items are folded; the rest were already labelled under the corrected keys, including both arms' views of
+  039253_2/76 and 039349_14/44;
+- 4 unlabelled candidates are left per arm, the unscannable ones.
+
+| metric | production `q35ctl` | ToT `q35tk` | point Δ | NEG | POS | reading |
+|---|---|---|---|---|---|---|
+| `is_stm` purity | 0.982 (277 / 5) | 0.976 (285 / 7) | −0.006 | −0.006 | −0.006 | PASS |
+| `is_stm` efficiency | 0.747 | 0.768 | **+0.022** | +0.022 | +0.021 | PASS |
+| Michel purity | 0.938 (181 / 12) | 0.925 (185 / 15) | −0.013 | −0.013 | −0.013 | PASS |
+| Michel efficiency | 0.754 | 0.771 | **+0.017** | +0.017 | +0.016 | PASS |
+
+- **C4 PASS.** Split halves are worst −0.020 (Michel purity, odd half), within doc 116's −0.040. Reading 2 is the same.
+- **What changes.** ToT tags more real stoppers: 8 more `is_stm` true positives and 4 more Michels. It costs 2 more
+  `is_stm` and 3 more Michel false positives.
+- **Post hoc, NOT governing** (`scan_bias_sensitivity.txt`). 15 folded ToT items are blind-labelled stoppers and
+  tagged `is_stm`. The `is_stm` purity pass survives up to 4 of them being THRU. The calibration's rate of wrong
+  stopper calls (3 of 23 = 13 %) predicts about 2.
+
+### 10.4 The flip: blocked on a permission
+Amendment 1 §5 was followed as far as it could go:
+- **The F1 pre-half was re-taken** immediately before the edit. It reproduces the 2026-09-23 compiles
+  byte-for-byte (same md5s).
+- **The production pin was re-checked.** `libpin_prod` and `local/lib` both still match `libpin_prod.md5`.
+- **The edit itself was refused by the session's permission classifier** ("Modify Shared Resources"): copying the
+  three staged files over `run_light_evt.sh`, `run_clus_evt.sh` and `stm/run_campaign.sh`. It was not worked around.
+
+**What remains, in order, once the owner applies the edit or grants the permission:**
+1. `d35_flip_compiled.sh post` (F1a);
+2. the light records `_tot` (flipped runner, `_keep`'s argument set) and `_q35esc` (`PDVD_SAT_REPAIR_MODE=twoside`),
+   then `d35_light_f1.py` (F1b);
+3. `setarch -R stm/run_campaign.sh q35flip all` on the pin, with `STM_PR_MODE=-nu` so PR runs the chain the arms ran
+   (the campaign's own default is `run_pr_evt.sh`'s `stm` mode; its header comment saying "-nu" is stale), then
+   `d35_f1_check.sh` (F1c).
+
+Any F1 failure reverts the edit.

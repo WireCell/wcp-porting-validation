@@ -84,7 +84,7 @@ def main():
                          "103-116); both cells are re-keyed into it.  The first doc-35 reading keyed on A0 directly, "
                          "which is wrong in 039349_39 and 039349_46 (ids shifted by 2) -- doc 35 sec 8")
     ap.add_argument("--jobs", type=int, default=16)
-    ap.add_argument("--scan-record", default=None,
+    ap.add_argument("--scan-record", default=None, nargs="+",
                     help="doc 35 amendment 1: a blind-scan record (rows carry display_arm) folded at the LOWEST "
                          "precedence; a row's native key is mapped through its display arm's re-keying")
     ap.add_argument("--unlabelled-out", default=None,
@@ -123,7 +123,7 @@ def main():
     if a.scan_record:
         import json
         n2k = {a.a0: {v: k for k, v in natA.items()}, a.t: {v: k for k, v in natT.items()}}
-        for r in json.load(open(a.scan_record)):
+        for r in (r for f in a.scan_record for r in json.load(open(f))):
             if r.get("calibration"):
                 continue
             k = n2k.get(r["display_arm"], {}).get(r["key"])
@@ -134,7 +134,7 @@ def main():
             else:
                 T[k] = G16.U.row_truth(r, "smx35")
                 folded.append((r["key"], r["display_arm"], k, r["verdict"]))
-        src = src + [(os.path.basename(a.scan_record), sum(1 for f in folded if not f[2].startswith(("UNMAPPED", "already"))))]
+        src = src + [("+".join(os.path.basename(f) for f in a.scan_record), sum(1 for f in folded if not f[2].startswith(("UNMAPPED", "already"))))]
     if a.unlabelled_out:
         with open(a.unlabelled_out, "w") as fh:
             fh.write(f"# doc qlmatch/35 C4 -- candidates with no truth, per arm; key in {a.key_arm}'s id space (A<cid> / "

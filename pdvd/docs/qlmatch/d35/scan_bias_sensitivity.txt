@@ -1,0 +1,11 @@
+# doc qlmatch/35 -- POST HOC, NOT GOVERNING: how many wrong blind stopper labels the C4 purity pass absorbs
+folded ToT items labelled stopper by the blind scan AND tagged is_stm on ToT: 15
+  k=0 of them truly THRU: is_stm purity delta -0.0062 PASS
+  k=1 of them truly THRU: is_stm purity delta -0.0097 PASS
+  k=2 of them truly THRU: is_stm purity delta -0.0131 PASS
+  k=3 of them truly THRU: is_stm purity delta -0.0165 PASS
+  k=4 of them truly THRU: is_stm purity delta -0.0199 PASS
+  k=5 of them truly THRU: is_stm purity delta -0.0234 FAIL
+  k=6 of them truly THRU: is_stm purity delta -0.0268 FAIL
+  k=7 of them truly THRU: is_stm purity delta -0.0302 FAIL
+calibration: of 23 blind stopper calls, 3 were record THRU (13 %) -> expected wrong among 15: 2.0

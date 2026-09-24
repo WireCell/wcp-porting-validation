@@ -1,0 +1,5 @@
+# doc qlmatch/35 amendment 2 -- transcript audit, round round_pdvd2 (scripts/d35_audit.py with round name round_pdvd2)
+w1_a0 rc=0 67 tool calls; flagged 0
+w1_a1 rc=0 70 tool calls; flagged 0
+w1_a2 rc=0 67 tool calls; flagged 0
+w1_a3 rc=0 61 tool calls; flagged 0

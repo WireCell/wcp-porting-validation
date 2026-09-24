@@ -1,0 +1,12 @@
+# doc pdvd/103 blind scan record (pdvd, tag smx35c); round /home/xqian/tmp/p35scan/round_pdvd2
+items 27; records 27; missing 0 []; not in the item list []
+double scans 0: 
+rubric sha on the records: {None: 27}
+verdicts (new items): {'THRU': 1}
+confidence (new items): {'medium': 1}
+
+V2 calibration: 26 scanned, 26 judged on both sides; stopper-or-not disagreements 2 (8%) -> PASS
+   039253_14/113: existing THRU (record) vs blind STM_MICHEL (low)
+   039252_12/110: existing THRU (record) vs blind STM_ONLY (low)
+
+wrote /home/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/scan/pdvd_stm_michel_smx35c_verdicts.json (27 records)

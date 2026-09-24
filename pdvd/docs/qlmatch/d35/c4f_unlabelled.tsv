@@ -1,0 +1,10 @@
+# doc qlmatch/35 C4 -- candidates with no truth, per arm; key in d116vflip's id space (A<cid> / T<cid> = no preimage there), the arm's own key, is_stm, michel_found
+# arm	key	native_key	is_stm	michel_found
+q35ctl	039349_15/41	039349_15/41	0	0
+q35ctl	039349_16/41	039349_16/41	0	0
+q35ctl	039349_64/70	039349_64/70	0	0
+q35ctl	039349_77/40	039349_77/40	1	1
+q35tk	039349_15/41	039349_15/41	0	0
+q35tk	039349_52/T53	039349_52/53	0	0
+q35tk	039349_64/70	039349_64/68	0	0
+q35tk	039349_77/40	039349_77/40	1	1

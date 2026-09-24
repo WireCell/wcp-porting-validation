@@ -1,0 +1,39 @@
+# doc qlmatch/35 amendment 2 -- combined V2 (stopper-or-not, blind vs the grade truth)
+
+## pdvd_stm_michel_smx35_verdicts.json: 4 calibration rows
+   039252_7/29      truth THRU        (record      ) blind STM_ONLY       (medium) DISAGREE
+   039253_6/124     truth STM_MICHEL  (new_agent   ) blind STM_MICHEL     (high  ) agree
+   039349_3/50      truth STM_MICHEL  (record      ) blind THRU           (low   ) DISAGREE
+   039349_56/38     truth STM_MICHEL  (record      ) blind STM_MICHEL     (high  ) agree
+   judged 4, disagreements 2
+
+## pdvd_stm_michel_smx35c_verdicts.json: 26 calibration rows
+   039252_0/75      truth STM_MICHEL  (record      ) blind STM_MICHEL     (high  ) agree
+   039252_12/110    truth THRU        (record      ) blind STM_ONLY       (low   ) DISAGREE
+   039252_16/40     truth STM_ONLY    (record      ) blind STM_ONLY       (medium) agree
+   039252_3/85      truth STM_ONLY    (record      ) blind STM_ONLY       (medium) agree
+   039252_4/104     truth THRU        (record      ) blind THRU           (high  ) agree
+   039253_14/113    truth THRU        (record      ) blind STM_MICHEL     (low   ) DISAGREE
+   039253_5/32      truth STM_MICHEL  (record      ) blind STM_MICHEL     (high  ) agree
+   039253_6/119     truth STM_MICHEL  (record      ) blind STM_MICHEL     (medium) agree
+   039253_8/65      truth STM_MICHEL  (record      ) blind STM_MICHEL     (high  ) agree
+   039253_9/106     truth STM_MICHEL  (record      ) blind STM_MICHEL     (high  ) agree
+   039349_17/53     truth THRU        (record      ) blind THRU           (medium) agree
+   039349_19/60     truth THRU        (record      ) blind THRU           (medium) agree
+   039349_21/53     truth STM_MICHEL  (record      ) blind STM_MICHEL     (high  ) agree
+   039349_24/24     truth THRU        (record      ) blind THRU           (high  ) agree
+   039349_25/45     truth STM_ONLY    (record      ) blind STM_ONLY       (high  ) agree
+   039349_25/72     truth STM_ONLY    (record      ) blind STM_ONLY       (high  ) agree
+   039349_27/45     truth STM_MICHEL  (record      ) blind STM_MICHEL     (medium) agree
+   039349_31/19     truth THRU        (record      ) blind THRU           (high  ) agree
+   039349_41/58     truth STM_MICHEL  (record      ) blind STM_MICHEL     (low   ) agree
+   039349_44/78     truth STM_MICHEL  (record      ) blind STM_ONLY       (high  ) agree
+   039349_50/49     truth STM_MICHEL  (record      ) blind STM_MICHEL     (high  ) agree
+   039349_51/56     truth STM_MICHEL  (owner_review) blind STM_MICHEL     (high  ) agree
+   039349_54/58     truth STM_MICHEL  (record      ) blind STM_MICHEL     (high  ) agree
+   039349_64/45     truth STM_MICHEL  (record      ) blind STM_MICHEL     (high  ) agree
+   039349_68/23     truth STM_ONLY    (record      ) blind STM_ONLY       (medium) agree
+   039349_81/64     truth STM_MICHEL  (record      ) blind STM_MICHEL     (high  ) agree
+   judged 26, disagreements 2
+
+COMBINED: judged on both sides 30, disagreements 4 (13.3%) -> PASS (bar <= 25 %)
