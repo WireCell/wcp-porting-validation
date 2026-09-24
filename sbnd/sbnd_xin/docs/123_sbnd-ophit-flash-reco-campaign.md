@@ -620,21 +620,24 @@ Beam window (+0.3…1.9 µs): 87 reco1 flashes, 22 with a vetoed partner ≥ 20 
 
 ### 10.5 First Q/L look on nueCC48 — the moves are NOT from the split
 
+*(Numbers corrected in round 3: the first pass of `r3_ql_compare.py` keyed the matcher's two
+anode-group blocks as one, so clusters of TPC0 and TPC1 with the same ident were compared with each
+other; the corrected comparator labels the k-th bundle-map block of an event with the k-th
+`anode N group-bbox` line. The picture did not change, the counts doubled.)*
+
 `r3_ql_compare.py` keys matched clusters by (event, anode group, cluster ident) from the Q/L log
-(null test base vs prod0923: 555/555 same) and calls two matches the same flash when their times
+(null test base vs prod0923: 963/963 same) and calls two matches the same flash when their times
 agree to 0.2 µs.
 
 | arms | matched clusters | same | moved | of which to a < 100 PE flash | beam-window matches A → B |
 |---|---|---|---|---|---|
-| base → hits | 555 / 555 | 424 | **131** | 37 | 62 → 51 |
-| base → no-split | 555 / 555 | 428 | 127 | 36 | 62 → 52 |
-| no-split → hits | 555 / 555 | 550 | **5** | 1 | 52 → 51 |
+| base → hits | 963 / 963 | 727 | **235** | 74 | 119 → 97 |
+| no-split → hits | 963 / 963 | 954 | **9** | 1 | 98 → 97 |
 
-So 24 % of the matched clusters change flash, and the pulse split accounts for 5 of the 131 moves:
+So 24 % of the matched clusters change flash, and the pulse split accounts for 9 of the 235 moves:
 the rest come from the finder's other differences — the recovered vetoed/dropped flashes (+28 %
-candidates), the extra small flashes at `flash_minPE` 50, and the join/late-light rules. 104 of the
-131 moves go to a flash more than 100 µs away; the movers are small (predicted light median 28 PE)
-and go to smaller flashes (PE median 188 vs 526). Two readings of the beam-window drop 62 → 51:
+candidates), the extra small flashes at `flash_minPE` 50, and the join/late-light rules. Two readings
+of the beam-window drop 119 → 97:
 
 - **the intended one** — evt 74544 anode 1: a 1972-PE-predicted cluster sat on the 32 k PE beam flash
   in base; with hit flashes it matches a **1101 PE flash at −495.5 µs that reco1 had vetoed** (2.8 µs
@@ -734,3 +737,57 @@ anything matches them, §15 has the knob if it does.
 MC truth for the split itself is not re-derived here: xning's `split_truth_check.py` on the 13-event
 7b1f file found 11 of 11 split points at a real new pulse and 0 wrong [C]; the round-3 MC arms (§14)
 carry the truth-level check of what the recovered flashes do to the selection.
+
+## 12. Round 2 — attribution: what the split changes, what the rest changes (2026-09-24)
+
+Three arms per sample on one imaging: reco1 flashes (`base`), the finder without the pulse split
+(`nosplit`, `ff={pulse_split:false}`), the finder (`hits`). `r3_ql_compare.py` per pair; the PR stage
+(§13) on all three for the event-level view. mcp1k's `nosplit` arm is added when it lands.
+
+| sample | matched clusters | base → hits moved | base → nosplit moved | **nosplit → hits moved** (= the split) |
+|---|---|---|---|---|
+| nueCC48 (48 evt) | 963 | 235 (24 %) | 230 | **9** |
+| NCpi0 (19 evt) | 433 | 120 (28 %) | 118 | **5** |
+| mcp1k (1000 evt) | 20 060 | 5 185 (26 %) | — | — |
+
+Event level (PR stage, `r3_pr_compare.py` on `pr_tables.sh` output, data, no truth): nueCC48
+base → hits: 48/48 events keep a candidate; νμ > 0.9 passes 5 → 5 (one flip each way), νe > 7
+passes 36 → 37 (2 lost, 3 gained), 2 vertices move > 5 cm; base → nosplit gives the same counts.
+NCpi0 base → hits: 19/19 candidates, νμ > 0.9 3 → 2, νe > 4 2 → 1, 3 vertices move; nosplit identical.
+
+So the **split is a 1–2 % effect at cluster level and invisible at event level on these samples**;
+everything the hit flashes change comes from the recovered candidates (§11) and the different
+candidate set in the global fit. This is what §7 R2 was for: a gain in §13 is not the split's, and a
+loss is not the split's either. The split's own value is the within-veto rescue cases (§11.2), which
+are rare (8 in 1000 events) but exactly the cathode-crossing neutrino topology the rescue was built
+for.
+
+## 13. Round 3 — the hit flashes in Q/L + PR, rescue ON: data (2026-09-24 →)
+
+### 13.1 Q/L level, mcp1k (1000 events, `123_r3_ql_summary_mcp1k.json`, `123_r3_moves_mcp1k.json`)
+
+| | base (reco1) | hits | note |
+|---|---|---|---|
+| matched clusters | 20 060 | 20 058 | 28 lost / 26 gained |
+| same flash | | 14 847 (74 %) | |
+| **moved** | | **5 185 (26 %)** | 1 362 to a < 100 PE flash |
+| … destination is a flash reco1 did not have | | 3 248 (2 209 dropped, 486 vetoed, 432 absorbed, 95 prepulse, 26 piece) | ≥ 100 PE: 1 940 |
+| … destination is a flash both arms had | | 1 937 | ≥ 100 PE: 1 883 — the global fit re-balanced |
+| \|Δt\| of a move | | 461 < 8 µs, 718 8–100 µs, **4 006 > 100 µs** | small clusters (predicted light median 25 PE) jumping between cosmic flashes |
+| beam-window matches | 1 738 | 1 743 | 332 leave the window, 335 enter; predicted light median 27 / 23 PE; ≥ 500 PE predicted: 21 leave, 23 enter |
+| **cathode-rescue firings** | **12** (the 12 §6 moves of mcp1k) | **4** | see below |
+
+**The rescue census, the prediction of §5:** in base the rescue fires exactly on the 12 §6 moves of
+mcp1k (8 within-veto, 1 far-unmatched, 2 same-time, 1 geom-first). With hit flashes the 8 within-veto
+moves, the far-unmatched move and the 65053 geom-first move **stop firing** — their partner is a flash
+now (§11.2) and `xtpc` / the flash group pair the halves. What still fires: the 2 same-time moves
+(169758, 395060: both halves matched to one flash time, the a/b/c/d merge rule — not a light loss,
+as §6 said) and **2 new `unmatched rescue` adoptions** (49511, 409590) where a beam-window cluster adopts
+a large unmatched cluster (198 cm / 358 cm). In both, the hit flashes *added* the beam-window flash
+(reco1 had vetoed a 61 PE / 1033 PE pulse 5–8 µs before a bright flash), a small cluster matched it,
+and the unmatched rule then attached the big cluster — the PR stage decides whether the adopted
+object is right (§13.3).
+
+The moves themselves are mostly the bookkeeping of small cosmic clusters among cosmic flashes: 77 %
+jump more than 100 µs, their predicted light is ~25 PE, and the beam-window flow is balanced (332 out,
+335 in). The event-level effect is what matters and is measured on the PR output (§13.2–13.3).

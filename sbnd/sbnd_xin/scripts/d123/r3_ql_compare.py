@@ -6,7 +6,7 @@ per event, one 'flash_bundles_map: flash id I time T ns, cluster gidx G ...' lin
 cluster, followed by its 'bundle_flags: flash id I cluster ident N gidx G | ...' line (the same
 lines tools/ql_ab_compare.py and xning's ql_compare_ours.py parse), and the cathode-rescue
 'rescue round' / 'unmatched rescue round' lines.  A group log holds all of its events; lines are
-assigned to events by TIMESTAMP against the 'loading tensor set ident=' lines, as
+assigned to events by TIMESTAMP against the all-APA 'loading tensor set ident=' lines (matcher lines precede that load, rescue lines follow it), as
 scripts/multi/slice_group_log.py does (file order is not time order across spdlog sinks).
 
 Clusters are keyed by (event, anode group, cluster ident): the imaging is shared, so an ident names the same
@@ -67,9 +67,15 @@ def parse_log(path):
         i = int(np.searchsorted(end_ts, t, side="left"))
         return ends[min(i, len(ends) - 1)][1]
 
-    out = {ev: {"matches": {}, "rescue": [], "blocks": 0} for _, ev in ends}
+    def event_of_after(t):
+        # the cathode rescue runs INSIDE the all-APA MABC step, i.e. AFTER that step's load line:
+        # its lines belong to the last clus_all_apa load at or before them
+        i = int(np.searchsorted(end_ts, t, side="right")) - 1
+        return ends[max(i, 0)][1]
+
+    out = {ev: {"matches": {}, "rescue": [], "blocks": 0, "anodes": [], "block": 0} for _, ev in ends}
     pending = {}   # (event, anode, flash id, gidx) -> (t, pred)  awaiting its bundle_flags line
-    last_t = ends[0][0]; anode = -1
+    last_t = ends[0][0]
     for ln in lines:
         t = ts(ln)
         if t is not None:
@@ -78,8 +84,17 @@ def parse_log(path):
             continue
         m = RE_ANODE.search(ln)
         if m:
-            anode = int(m.group(1)); out[event_of(last_t)]["blocks"] += 1
+            # the 'anode N group-bbox' lines of BOTH anode groups print in the pre-fit phase, before
+            # either group's bundle map; the maps then come one block per group, in the same order,
+            # each closed by 'flag_matched_mains'.  So: record the anode order here, and label the
+            # k-th map block of the event with the k-th anode.
+            e = out[event_of(last_t)]; e["anodes"].append(int(m.group(1))); e["blocks"] += 1
             continue
+        if "flag_matched_mains" in ln:
+            out[event_of(last_t)]["block"] += 1
+            continue
+        e = out[event_of(last_t)]
+        anode = e["anodes"][e["block"]] if e["block"] < len(e["anodes"]) else -1
         m = RE_MAP.search(ln)
         if m:
             ev = event_of(last_t)
@@ -95,7 +110,7 @@ def parse_log(path):
             continue
         m = RE_RESCUE.search(ln)
         if m:
-            out[event_of(last_t)]["rescue"].append(m.group(0))
+            out[event_of_after(last_t)]["rescue"].append(m.group(0))
     bad = [ev for ev, d in out.items() if d["blocks"] != 2]
     if bad:
         sys.stderr.write("%s: %d events without exactly 2 matcher blocks: %s\n" % (path, len(bad), bad[:5]))
