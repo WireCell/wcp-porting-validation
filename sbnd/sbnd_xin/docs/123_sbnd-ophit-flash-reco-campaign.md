@@ -891,3 +891,93 @@ rises from 0.9 % to 1.3 % per gate through the fit re-balancing that the larger 
 same mechanism as the "both-had" moves of §13.1; the recovered small flashes and the prepulses play no
 part in it. On beam-on data the νμ count stayed at 271 (§13.2) with 10 flips each way, so the beam-on
 gains and the extra fakes are of the same order — the MC efficiency (§14.2) is what separates them.
+
+## 15. Round 4 — the rescue under hit flashes (2026-09-24)
+
+```bash
+QLTLA=scripts/d123/tla/rescue_off.txt           scripts/d123/hits_arm.sh work-mcp1k-d123base work-mcp1k-d123hitsnr data   # whole rescue OFF
+QLTLA=scripts/d123/tla/rescue_unmatched_off.txt scripts/d123/hits_arm.sh work-mcp1k-d123base work-mcp1k-d123hitsnu data   # unmatched-adoption rule OFF
+scripts/d123/stageB.sh <arm> data; scripts/d123/pr_tables.sh <arm>pr products/d123/<name>; python3 scripts/d123/r3_pr_compare.py products/d123/mcp1k_hits products/d123/mcp1k_hitsnr
+```
+
+Same hit flashes, same imaging, the Q/L job with the cathode-bundle rescue removed by its own knobs
+(`cathode_rescue=false`, `cathode_rescue_unmatched=false`: the compiled config has no
+`ClusteringCathodeBundleRescue` node). The Q/L matches are identical by construction (the rescue runs after
+the matching, inside the all-APA step); the PR stage is where it shows.
+
+| arm (mcp1k, 1000 events) | events with a candidate | νμ > 0.9 | events changed vs `hits` |
+|---|---|---|---|
+| `hits` (rescue ON, production knobs) | 470 | 271 | — |
+| `hitsnr` — whole rescue OFF | 472 | **271** | **3** (49511 and 395060 gain a low-score candidate that the rescue had merged away; 169758's score changes) |
+| `hitsnu` — unmatched-adoption rule OFF only | 471 | **271** | 1 |
+| nueCC48 / NCpi0, rescue OFF | 48 / 19 | 5 / 2 | 1 / 0 |
+
+With reco1 flashes the rescue fires 12 times per 1000 events and its moves make the candidates of
+§13.2; with hit flashes it fires 4 times (2 same-time merges, 2 unmatched adoptions) and switching it
+off changes 3 events and no selection count. **The geometric patch is redundant once the light is
+right** — its remaining cases are the same-time cross-TPC merge (which `xtpc`/the 80 ns flash group
+should own) and the 3 within-veto pairs at |Δt0| ≤ 1.8 µs the finder does not split (§11.2).
+
+**Recommendation for the flip (owner's decision):**
+
+1. Flip the flash source: `flash_source=hits` as the standalone-chain default (runner + `ref/prod-<date>`),
+   with the `nosplit` arm retired and the `hits_arm.sh` path becoming the dump's normal path.
+2. Keep `cathode_rescue` / `cathode_rescue_unmatched` **ON** at the flip — they are inert (3/1000) and
+   cover the residual; retire them in a later round once the MC (§14.2) has ruled on the two
+   fit-vs-geometry events (169824, 59003), not before. The round-2/3 extensions (`rescue_geom_first`,
+   `rescue_pierce_test`, `rescue_in_beam_far`, …) were not tested one by one: with the whole rescue
+   inert there is nothing left for them to do on this sample.
+3. Two follow-ups the flip exposes, neither blocking: the `QLXTPC coincident` culling of a coincident
+   half (59003), and the finder's small early flashes (§11.3) — a `min_fired_pe`-type cut on SPE-only
+   flashes if §14 shows any of them matched.
+4. Cost side to state with the flip: the beam-off fake νμ rate 0.9 % → 1.3 % per gate (§14.1), from the fit
+   re-balancing, to be weighed against the MC efficiency (§14.2).
+## 16. Round 5 — the production path: a larwirecell OpHit source (design note, no build)
+
+SBND production runs Wire-Cell inside LArSoft: `cfg/pgrapher/experiment/sbnd/wcls-img-clus-matching-xin.jsonnet:66-79`
+reads `recob::OpFlash` per TPC through `wclsOpFlashSource` (`art_tag: std.extVar('opflash<N>_input_label')`),
+which emits the same `[nflash, 313]` tensor set the standalone chain reads from `opflash_apa<N>.tar.gz`, and
+`FlashTensorToOpticalPCs` (`aux/src/FlashTensorToOpticalPCs.cxx:90-97`) adds the set-metadata
+`frame_apply_at_caf` to every flash time. Nothing in that graph reads `recob::OpHit`. The v10_04_03
+larwirecell on cvmfs ships no source (`source/larwirecell` holds 9 files, none of them the components), so
+the note below is written against the component's *interface* as the toolkit sees it, not against its code;
+whoever implements it starts from `wclsOpFlashSource.cxx` in the larwirecell git repository.
+
+**What is needed (option (a) of §5.1):**
+
+1. **`wclsOpHitSource`** in larwirecell (`larwirecell/Components/`), an `IArtEventVisitor` +
+   `ITensorSetSource` like `wclsOpFlashSource`, producing per event the tensor set `SBNDReco1OpHitSource`
+   produces offline:
+   - config: `art_tag` (the `recob::OpHit` product, `ophitpmt` in reco1), `channels` (the 60 PMT
+     OpChannels of the TPC, from `sbnd-pmt-channels.json` in the jsonnet), `hit_time` (`rise` =
+     `StartTime()+RiseTime()`, the SBNDFlashFinder convention), optional `frameshift_tag`
+     (`sbnd::timing::FrameShiftInfo`, `frameshift`) whose `fFrameApplyAtCaf` (ns) becomes the
+     metadata key `frame_apply_at_caf`, exactly as `wclsOpFlashSource` must already do for the reco1
+     flashes it emits (data) and omitted on MC;
+   - output: one tensor `"ophits"` f8 `[nhit, 9]` = `{OpChannel, time, width, area, amplitude, PE,
+     start, -1, fast/total}` in ns / PE, `ident = event`, metadata `run`, `subrun`, `event`
+     (+ `frame_apply_at_caf`);
+   - ~150 lines; the only art dependency is `lardataobj/RecoBase/OpHit.h` (+ `sbnobj` for the
+     FrameShiftInfo, already a dependency of the flash source).
+2. **`SBNDOpFlashFinder`** is already in the toolkit (c2b578fe) and depends on nothing but `WireCellFlash`
+   / `WireCellAux`; the wcls job adds `WireCellFlash` to its plugin list.
+3. **Jsonnet**: in `wcls-img-clus-matching-xin.jsonnet`, behind a default-OFF `flash_source` extVar, replace
+   the two `wclsOpFlashSource` pnodes by `wclsOpHitSource:tpc<N>` → `SBNDOpFlashFinder:tpc<N>` (the
+   committed `sbnd-opdet-geom.json` as `geom_file`, `ff` overrides if any) and keep the edge into
+   `flash_attach_apa<N>` port 1. Key suppression as in `sbnd_xin/wct-reco1-dump.jsonnet` (§10.2), so the
+   compiled production config is byte-identical when off.
+4. **fcl** (sbndcode `WireCell/`): `ophit0_input_label` / `ophit1_input_label` (both `ophitpmt`) and the
+   `flash_source` extVar next to the existing `opflash<N>_input_label`.
+5. **Gates**: the standalone and the LArSoft chain must agree flash for flash — dump the LArSoft-side
+   hit-flash tensor with a `TensorFileSink` on the 48-event file and `hash_archive.py` it against
+   `work-nuecc48-d123hits/g*/opflash_apa*.tar.gz` (member content; the `ophits` tensor included). Then the
+   doc-118 two-chain gate (`scripts/cfg/two_chain_gate.py`) with the knob off.
+
+**Option (b) instead** (sbndcode owns the flash): re-run `SBNDFlashFinder` with a shorter `IntegralTime` /
+`VetoSize`, or port the split into `SimpleFlashAlgo`. That changes every SBND consumer of `opflashtpc<N>`
+(CAF, other analyses) and cannot be gated by us; §11 shows what the veto costs, which is the argument to
+bring to SBND, but (a) is the path that keeps the decision inside this chain.
+
+**Cost**: (a) is one afternoon of larwirecell work plus an sbndcode fcl change and a release; the physics
+evidence (§13–§15) does not wait on it. Until it exists, the standalone chain is the only place the hit
+flashes run, i.e. option (c) is the de-facto state.

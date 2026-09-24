@@ -1,0 +1,4 @@
+run	subrun	event	hits_numu	hits_nue	hits_Enu	hits_x	hits_y	hits_z	hitsnr_numu	hitsnr_nue	hitsnr_Enu	hitsnr_x	hitsnr_y	hitsnr_z	truth_signal
+18255	1	49511	-999.000	-999.000	0.0	0.0	0.0	0.0	-2.183	-15.000	299.8	30.4	200.0	52.3	
+18255	1	395060	-999.000	-999.000	0.0	0.0	0.0	0.0	-3.310	-15.000	519.2	8.5	69.8	0.8	
+18259	1	169758	-1.942	-15.000	0.0	0.0	0.0	0.0	0.423	-15.000	290.8	2.5	180.1	462.7	
