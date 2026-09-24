@@ -748,7 +748,7 @@ Three arms per sample on one imaging: reco1 flashes (`base`), the finder without
 |---|---|---|---|---|
 | nueCC48 (48 evt) | 963 | 235 (24 %) | 230 | **9** |
 | NCpi0 (19 evt) | 433 | 120 (28 %) | 118 | **5** |
-| mcp1k (1000 evt) | 20 060 | 5 185 (26 %) | — | — |
+| mcp1k (1000 evt) | 20 060 | 5 185 (26 %) | 5 051 | **292 (1.5 %)**; beam-window 41; **rescue firings base 12 / no-split 14 / hits 4** |
 
 Event level (PR stage, `r3_pr_compare.py` on `pr_tables.sh` output, data, no truth): nueCC48
 base → hits: 48/48 events keep a candidate; νμ > 0.9 passes 5 → 5 (one flip each way), νe > 7
@@ -757,7 +757,10 @@ NCpi0 base → hits: 19/19 candidates, νμ > 0.9 3 → 2, νe > 4 2 → 1, 3 ve
 
 So the **split is a 1–2 % effect at cluster level and invisible at event level on these samples**;
 everything the hit flashes change comes from the recovered candidates (§11) and the different
-candidate set in the global fit. This is what §7 R2 was for: a gain in §13 is not the split's, and a
+candidate set in the global fit. **Except for the rescue trigger:** without the split the finder's own 8 µs
+accumulator still merges the within-veto partners, and the cathode rescue fires 14 times on mcp1k (12
+with reco1 flashes); with the split it fires 4 times (§13.1). The split is therefore small in the counts
+but it is the piece that turns the §6 rescue cases into flash-level pairs (`123_r2_ql_nosplit_vs_hits_mcp1k.json`). This is what §7 R2 was for: a gain in §13 is not the split's, and a
 loss is not the split's either. The split's own value is the within-veto rescue cases (§11.2), which
 are rare (8 in 1000 events) but exactly the cathode-crossing neutrino topology the rescue was built
 for.
