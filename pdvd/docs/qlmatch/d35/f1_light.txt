@@ -1,0 +1,4 @@
+# doc qlmatch/35 F1(b) -- light after the runner-default flip; archive = hash_archive.py member content
+_tot vs _q32ti: archives identical 120/120, configs identical 120/120, tot + int_samples present 120/120 -> PASS
+_q35esc vs _g31off: archives identical 120/120, configs identical 120/120, neither key present 120/120 -> PASS
+VERDICT F1(b): PASS

@@ -789,15 +789,30 @@ PY
         QL_SATFLAG_ARG+=(-S "ql_sat_skip_round2=true")
     fi
     # PDVD_QL_LASSO_W_UNRAILED=1: shared-fit LASSO weight base from the
-    # unrailed channels (docs/qlmatch/33).  Unset = not passed (byte-identical).
+    # unrailed channels (docs/qlmatch/33).  PDVD_QL_KS_SAT_TOL=<tol>: railed
+    # channels enter the bundle KS clamped to within x(1+tol) of the
+    # unrailed-scaled prediction (docs/qlmatch/34).  PRODUCTION DEFAULTS 1 and
+    # 0.3075 since 2026-09-23 (docs/qlmatch/35), tuned with the ToT light of
+    # run_light_evt.sh.  Export PDVD_QL_LASSO_W_UNRAILED=0 and
+    # PDVD_QL_KS_SAT_TOL= (empty) for the pre-flip point; 0 / empty = not
+    # passed (toolkit defaults, byte-identical).
+    : "${PDVD_QL_LASSO_W_UNRAILED=1}"
+    : "${PDVD_QL_KS_SAT_TOL=0.3075}"
     if [ "${PDVD_QL_LASSO_W_UNRAILED:-0}" = 1 ]; then
         QL_SATFLAG_ARG+=(-S "ql_lasso_weight_unrailed=true")
     fi
-    # PDVD_QL_KS_SAT_TOL=<tol>: railed channels enter the bundle KS clamped to
-    # within x(1+tol) of the unrailed-scaled prediction (docs/qlmatch/34).
-    # Unset = not passed (byte-identical).
     if [ -n "${PDVD_QL_KS_SAT_TOL:-}" ]; then
         QL_SATFLAG_ARG+=(-S "ql_ks_sat_tol=${PDVD_QL_KS_SAT_TOL}")
+    fi
+    # docs/qlmatch/35: those two defaults were tuned on ToT light.  On light
+    # made without saturation_repair_mode=tot (e.g. the pre-flip _keep record)
+    # they give the control twin q34ck1, not production -- say so (stderr only;
+    # the output is unchanged).
+    if [ "$QLMATCH_EVT" = 1 ] && { [ "${PDVD_QL_LASSO_W_UNRAILED:-0}" = 1 ] || [ -n "${PDVD_QL_KS_SAT_TOL:-}" ]; }; then
+        local _LCFG; _LCFG="$(dirname "$OPFLASH_TAR")/.wct-light.json"
+        if [ -f "$_LCFG" ] && ! grep -q '"saturation_repair_mode" *: *"tot"' "$_LCFG"; then
+            echo "WARNING: the ToT-tuned Q/L defaults (lasso_weight_unrailed / ks_sat_tol) meet light made without saturation_repair_mode=tot ($_LCFG): this is the control twin, not production (docs/qlmatch/35). Export PDVD_QL_LASSO_W_UNRAILED=0 PDVD_QL_KS_SAT_TOL= for the pre-flip point." >&2
+        fi
     fi
     # PDVD_QL_USE_COV_FLAG: per-flash readout-coverage masking in QLMatching
     # (self-trigger channels with no snippet over the flash window carry NO

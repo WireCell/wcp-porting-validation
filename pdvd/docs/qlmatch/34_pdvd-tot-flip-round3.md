@@ -8,7 +8,8 @@ and doc 12 pass. The 102 unscanned events pass on Q/L (a PR sub-clause fired lit
 bar, NEG bounds −0.043 / −0.042 from 33 unlabelled ToT candidates), which the pre-registration makes a STOP. See
 `35_pdvd-tot-flip-preflip-checks.md` §6 for the owner's choice. Later the same evening the owner chose a blind agent scan of those items (doc 35 §9).
 It ran cleanly but failed its calibration check (2 of 4), so its labels are not used, and the flip is still stopped. On 2026-09-24 a larger calibration (4 + 26 = 30 items, 4 disagreements) passed. With the labels folded, the STM gate
-passes (doc 35 §10), and the runner flip awaits the owner's permission.
+passes (doc 35 §10). **FLIPPED 2026-09-24** (doc 35 §11): this doc's `q34tk1` operating point is the PDVD production
+default, and the flipped production reproduces the graded arm byte-for-byte.
 
 **Goal (owner).** Flip PDVD light to the ToT saturation fill (docs 30–33). Q/L need only **not be worse** than
 production. The owner accepted the non-inferiority margin on 2026-09-23, before any round-3 scoring (`d34/prereg.md`).

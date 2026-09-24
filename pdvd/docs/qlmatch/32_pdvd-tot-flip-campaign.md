@@ -1,5 +1,8 @@
 # PDVD ToT flip campaign: hit-finder fix, a blind same-scanner record, and Q/L tuning (round 1)
 
+**Campaign outcome 2026-09-24: FLIPPED.** ToT light (`tot` + `int_samples`) with QLMatching `lasso_weight_unrailed` +
+`ks_sat_tol` 0.3075 is the PDVD production default (runner defaults; `35_pdvd-tot-flip-preflip-checks.md` §11).
+
 **Status 2026-09-23, round 1 of a multi-session campaign. Nothing is flipped; every new knob is default OFF.**
 
 **Goal (owner).** Make the time-over-threshold (ToT) saturation fill of doc 31 viable, and flip it. The owner/AI

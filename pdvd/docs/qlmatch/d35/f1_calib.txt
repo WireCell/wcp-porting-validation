@@ -1,0 +1,4 @@
+# doc qlmatch/35 F1 -- calib dumps q35flip vs q35tk, byte for byte (cmp), events of pdvd/stm/events.txt
+SUMMARY calib dumps q35flip vs q35tk: identical 120/120, differ 0
+CONTROL calib dumps q35flip vs q35ctl (pre-flip production): events differing 120/120 (must be > 0)
+DEPLOY ks_sat_tol in calib dumps: q35flip 120/120 (must be 120), q35ctl 0/120 (must be 0)

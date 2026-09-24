@@ -1,0 +1,19 @@
+# doc qlmatch/35 F1(a) -- compiled-config proof of the PDVD_QL_LASSO_W_UNRAILED=1 / PDVD_QL_KS_SAT_TOL=0.3075 runner defaults
+# run_clus_evt.sh -s q35cfg -calib -save-pctree <run> <idx>, PDVD_CLUS_COMPILE_ONLY=1 PDVD_LIGHT_SUFFIX=_q32ti, other PDVD_* unset
+# pre_bare/pre_env = before the edit (no env / the two assignments); post_bare/post_esc = after (no env / W_UNRAILED=0 KS_SAT_TOL= empty)
+039252_0   pre_bare=0bf78c7c2a49 pre_env=a7a0ff305fee post_bare=a7a0ff305fee post_esc=0bf78c7c2a49
+  post_bare == pre_env PASS
+  post_esc == pre_bare PASS
+  ks_sat_tol present in post_bare
+039253_15   pre_bare=b219f217dab0 pre_env=ab28746dd77b post_bare=ab28746dd77b post_esc=b219f217dab0
+  post_bare == pre_env PASS
+  post_esc == pre_bare PASS
+  ks_sat_tol present in post_bare
+039349_7   pre_bare=232aa021a6a0 pre_env=bfd79e7a0c2c post_bare=bfd79e7a0c2c post_esc=232aa021a6a0
+  post_bare == pre_env PASS
+  post_esc == pre_bare PASS
+  ks_sat_tol present in post_bare
+# leaves that differ pre_bare -> pre_env (039252_0):
+  /404/data/ks_sat_tol: <absent> -> 0.3075
+  /404/data/lasso_weight_unrailed: <absent> -> True
+VERDICT F1(a): PASS

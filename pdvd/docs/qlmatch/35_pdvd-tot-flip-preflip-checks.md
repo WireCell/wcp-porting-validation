@@ -1,4 +1,4 @@
-# PDVD ToT flip: the pre-flip checks — C1/C2 pass, C3 passes on Q/L, C5 transfers exactly, and the STM gate passes after a calibrated blind scan; the flip is blocked on a permission
+# PDVD ToT flip: the pre-flip checks pass, and ToT light is now the PDVD production default
 
 **Status 2026-09-23. NOT FLIPPED.** The owner's go was conditional on the pre-flip checks (`d35/prereg.md`,
 sha in `d35/prereg_sha.txt`, written before any doc-35 arm ran). C1 and C2 pass their bars. C3 passes on Q/L, though its
@@ -7,7 +7,13 @@ transfers exactly. The STM gate (C4) is **UNDECIDED on both purities**. Its poin
 labelled, against 10 for production. The pre-registered rule makes UNDECIDED a STOP, so no runner default was changed.
 The owner's choice of how to label those items is in §6.
 
-**Update 2026-09-24: with the owner's larger calibration (amendment 2, §10), C4 PASSES, but the flip is NOT yet made.**
+**Status 2026-09-24: FLIPPED. ToT light + `lasso_weight_unrailed` + `ks_sat_tol` 0.3075 is the PDVD production default
+(§11).** The owner applied the staged runner edits, and every flip-equivalence check passes. Production with no
+overrides reproduces the graded ToT arm `q35tk` byte-for-byte on all 120 events: pctree, TLA sidecars, PR trees, Bee
+zips and calib dumps. The new production light record `_tot` equals the measured ToT light on 120 / 120.
+
+*Earlier update, 2026-09-24:* with the owner's larger calibration (amendment 2, §10), C4 passed, but the flip was not
+yet made.
 - The combined calibration is 30 items with 4 disagreements (13.3 %, bar 25 %), so the blind labels are usable.
 - Folded by amendment 1's rule, the STM gate passes every metric in both scenarios. Purity changes by −0.006 / −0.013
   and efficiency by +0.022 / +0.017.
@@ -94,6 +100,12 @@ python3 d35_scan_record.py --det pdvd --round /home/xqian/tmp/p35scan/round_pdvd
 python3 d35_v2_combined.py ../../scan/pdvd_stm_michel_smx35_verdicts.json ../../scan/pdvd_stm_michel_smx35c_verdicts.json > ../d35/scan_v2_combined.txt
 python3 d35_stm_grade.py --a0 q35ctl --t q35tk --scan-record ../../scan/pdvd_stm_michel_smx35_verdicts.json \
    ../../scan/pdvd_stm_michel_smx35c_verdicts.json --unlabelled-out ../d35/c4f_unlabelled.tsv > ../d35/c4f_grade.txt   # C4 PASS
+# sec 11 -- the flip and F1 (pre-half BEFORE the runner edit, the rest after)
+bash d35_flip_compiled.sh pre; <the runner edit>; bash d35_flip_compiled.sh post > ../d35/f1_compiled.txt
+ARM=_tot ./d32_light_arms.sh; ARM=_q35esc ENVS="PDVD_SAT_REPAIR_MODE=twoside" ./d32_light_arms.sh
+python3 d35_light_f1.py > ../d35/f1_light.txt
+(cd ../../.. && LD_LIBRARY_PATH=/home/xqian/tmp/p35/libpin_prod:$LD_LIBRARY_PATH STM_PR_MODE=-nu setarch x86_64 -R ./stm/run_campaign.sh q35flip all)
+bash d35_f1_check.sh                                        # -> ../d35/f1_identity.txt, f1_calib.txt
 ```
 
 ## 1. What was checked
@@ -294,6 +306,8 @@ Whichever route is taken, F1 (§5) runs before any default changes.
 | `d35/prereg_amend2.md`, `scan2_audit.txt`, `scan2_smx35c.txt`, `scan_v2_combined.txt`, `c4f_grade.txt`, `c4f_unlabelled.tsv`, `scan_bias_sensitivity.txt` | §10 |
 | `pdvd/docs/scan/pdvd_stm_michel_smx35c_verdicts.json` | the smx35c record (27 rows); with smx35 it passes the combined V2 |
 | `scripts/d35_calib2_items.py`, `d35_v2_combined.py` | §10 |
+| `d35/f1_compiled.txt`, `f1_light.txt`, `f1_identity.txt`, `f1_calib.txt`, `f1_warning.txt` | §11 F1 |
+| `pdvd/run_light_evt.sh`, `pdvd/run_clus_evt.sh`, `pdvd/stm/run_campaign.sh` | §11 **the production flip** |
 | `scripts/d35_arms.sh` | clustering + PR arms with a light suffix (fork of `d29_stm_arms.sh`) |
 | `scripts/d35_crossers.py`, `d35_match_tails.py`, `d35_stm_grade.py` | C2, C3, C4 |
 | `scripts/d35_flip_compiled.sh`, `d35_light_f1.py`, `d35_f1_check.sh` | F1, prepared, not run |
@@ -451,3 +465,55 @@ Amendment 1 §5 was followed as far as it could go:
    `d35_f1_check.sh` (F1c).
 
 Any F1 failure reverts the edit.
+
+## 11. The flip (2026-09-24)
+The owner applied the three staged files after the classifier refusal of §10.4:
+```
+cp /home/xqian/tmp/p35/flip/run_light_evt.sh /home/xqian/tmp/p35/flip/run_clus_evt.sh pdvd/ && cp /home/xqian/tmp/p35/flip/run_campaign.sh pdvd/stm/
+```
+
+**What changed** (wcp only; the toolkit C++ and jsonnet defaults stay OFF, the doc 12 / doc 29 precedent):
+
+| file | change | escape to the pre-flip point |
+|---|---|---|
+| `run_light_evt.sh` | `PDVD_SAT_REPAIR_MODE` defaults to `tot`, only while `PDVD_SAT_REPAIR=1` and `PDVD_SPE_V2=1`; `PDVD_HIT_INT_SAMPLES` follows the mode (1 under `tot`); twoside + int warns | `PDVD_SAT_REPAIR_MODE=twoside` (int then defaults to 0) |
+| `run_clus_evt.sh` | `PDVD_QL_LASSO_W_UNRAILED` defaults to 1, `PDVD_QL_KS_SAT_TOL` to 0.3075; a stderr warning when they meet light whose `.wct-light.json` is not `tot` | `PDVD_QL_LASSO_W_UNRAILED=0 PDVD_QL_KS_SAT_TOL=` |
+| `stm/run_campaign.sh` | `PDVD_LIGHT_SUFFIX` defaults to `_tot` instead of `_keep` | `PDVD_LIGHT_SUFFIX=_keep` |
+
+**Scope.** The same as doc 29: this repository's PDVD chain (`run_light_evt.sh`, `run_clus_evt.sh`, the campaign and
+every arm script built on them). A job that compiles the toolkit jsonnet directly still gets twoside light and the
+legacy Q/L. **Re-running any pre-flip arm** (`q31ctl`, `_g31off`, the d29 / d31–d35 arms) now needs the escape
+assignments above. The new warning names the twin case when only the light is old.
+
+**F1, all PASS:**
+- **(a) compiled config** (`d35/f1_compiled.txt`, events 039252_0 / 039253_15 / 039349_7; the pre-half was re-taken
+  just before the edit): post-flip bare equals pre-flip plus the two Q/L assignments, and post-flip escape equals
+  pre-flip bare. The only leaves that move are `ks_sat_tol` (absent → 0.3075) and `lasso_weight_unrailed`
+  (absent → true).
+- **(b) light** (`d35/f1_light.txt`): the new record `_tot`, made by the flipped runner with `_keep`'s argument set,
+  equals `_q32ti` on 120 / 120 archives (member content) and configs, and says `tot` + `int_samples`. The escape
+  `_q35esc` equals the pre-flip `_g31off` on 120 / 120, with neither key.
+- **(c) runtime** (`d35/f1_identity.txt`, `f1_calib.txt`):
+  - the run was `setarch -R stm/run_campaign.sh q35flip all` on `libpin_prod` (== `local/lib`), with no PDVD_* env
+    and `STM_PR_MODE=-nu` (the chain the arms ran);
+  - it is identical to `q35tk` on 120 / 120 events (pctree, TLAs, PR trees with 343 branches, mabc-pr) and its calib
+    dumps are byte-identical on 120 / 120;
+  - it differs from pre-flip production `q35ctl` on 120 / 120;
+  - `ks_sat_tol` is present in 120 / 120 flip dumps and 0 / 120 control dumps.
+- **Warning** (`d35/f1_warning.txt`): silent on ToT light; one line on `_keep` light with the new defaults; silent
+  again with the escape.
+
+**What production now is, against the old default, in one line each:**
+- Q/L hand-scan margin (doc 34): non-inferior, even-half worst case −0.16 clusters vs a −6.46 margin; not shown
+  better.
+- STM gate (§10): `is_stm` efficiency +0.022 and Michel +0.017, purity −0.006 / −0.013.
+- Light closure (C2): unchanged on common crossers; rail-inclusive / rail-excluded 1.038 (was 0.844 with clipped rails).
+
+**Still open:**
+- the owner-record deficit of doc 34 (26 clusters on the twoside-era record);
+- a lower `ks_sat_tol` rung;
+- the runner's `PDVD_FLASH_TAIL_MERGE=1` default, which neither `_keep` nor `_tot` used. A fresh
+  `run_light_evt.sh` with no env now gives ToT **plus** tail merge, a combination never graded. The production
+  record `_tot` is made with `PDVD_FLASH_TAIL_MERGE=0`, like `_keep` before it (`d32_light_arms.sh`);
+- the scanners' rubric gaps (§9, and the round-2 reports: a knife-edge 0.3 direction cut, the `pin_rr` origin when
+  `context.pin` ≠ `ends.stop`, and grey-only crossers at the stop's drift time).

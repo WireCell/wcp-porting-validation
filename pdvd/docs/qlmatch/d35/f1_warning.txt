@@ -1,0 +1,4 @@
+# doc qlmatch/35 F1 -- the run_clus_evt.sh twin-light warning (compile-only, run 39252 idx 0, tag q35cfg), after the flip
+light _q32ti (ToT), flipped defaults           : 0 "control twin" warning lines  (d35_flip_compiled.sh post log)
+light _keep (twoside), flipped defaults        : 1 warning line
+light _keep, PDVD_QL_LASSO_W_UNRAILED=0 PDVD_QL_KS_SAT_TOL= (pre-flip escape) : 0 warning lines

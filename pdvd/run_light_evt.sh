@@ -136,18 +136,29 @@ if [ "${PDVD_SAT_REPAIR:-1}" = 1 ]; then
     VETO_SAT_ARG+=(-S "saturation_repair=true")
 fi
 # PDVD_SAT_REPAIR_MODE: fill method of the repair on the cathode full streams.
-# Default empty/'twoside' = the exponential bridge (production).  'tot' = the
-# time-over-threshold fill (docs/qlmatch/30, 31; needs PDVD_SPE_V2=1).  NOT a
-# production operating point; toolkit C++/jsonnet defaults stay twoside and the
-# argument is not passed at all unless set to something else (byte-identical).
+# 'tot' = the time-over-threshold fill (docs/qlmatch/30, 31; needs
+# PDVD_SPE_V2=1); 'twoside' = the exponential bridge.  PRODUCTION DEFAULT 'tot'
+# since 2026-09-23 (docs/qlmatch/35, owner go after the doc 34 hand-scan margin
+# and the doc 35 pre-flip checks), applied only on the repair chain it was
+# validated on (PDVD_SAT_REPAIR=1, PDVD_SPE_V2=1) so the legacy escapes still
+# compile.  Export PDVD_SAT_REPAIR_MODE=twoside (or empty) for the pre-flip
+# light (the `_keep` record); the argument is then not passed and the toolkit
+# C++/jsonnet default twoside applies (byte-identical).
+if [ "${PDVD_SAT_REPAIR:-1}" = 1 ] && [ "${PDVD_SPE_V2:-1}" = 1 ]; then
+    : "${PDVD_SAT_REPAIR_MODE=tot}"
+fi
 if [ -n "${PDVD_SAT_REPAIR_MODE:-}" ] && [ "${PDVD_SAT_REPAIR_MODE}" != twoside ]; then
     VETO_SAT_ARG+=(-A "saturation_repair_mode=${PDVD_SAT_REPAIR_MODE}")
 fi
 # PDVD_HIT_INT_SAMPLES=1: the cathode OpHitFinder holds the scaled decon as int
 # instead of short (the short cast wraps above 327.67 PE/tick and fragments
-# bright ToT-filled pulses; docs/qlmatch/32).  Default unset = short, the
-# argument is not passed (byte-identical).
-if [ "${PDVD_HIT_INT_SAMPLES:-0}" = 1 ]; then
+# bright ToT-filled pulses; docs/qlmatch/32).  Since 2026-09-23 the default
+# FOLLOWS the repair mode (docs/qlmatch/35): 1 under 'tot', 0 otherwise --
+# twoside + int is the doc 32 over-fill (~100x PE) and is only ever explicit.
+# 0 = short, the argument is not passed (byte-identical).
+if [ "${PDVD_SAT_REPAIR_MODE:-}" = tot ]; then _PDVD_INT_DEFAULT=1; else _PDVD_INT_DEFAULT=0; fi
+if [ "${PDVD_HIT_INT_SAMPLES:-$_PDVD_INT_DEFAULT}" = 1 ]; then
+    [ "${PDVD_SAT_REPAIR_MODE:-}" = tot ] || echo "WARNING: PDVD_HIT_INT_SAMPLES=1 without PDVD_SAT_REPAIR_MODE=tot is the docs/qlmatch/32 over-fill (twoside + int, ~100x PE) -- diagnostic only" >&2
     VETO_SAT_ARG+=(-S hit_int_samples=true)
 fi
 # PDVD_EMIT_COVERAGE: per-trace livetime rows -> OpFlashFinder flash_cov

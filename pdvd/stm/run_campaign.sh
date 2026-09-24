@@ -4,7 +4,7 @@
 #
 # Usage: ./stm/run_campaign.sh <tag> [stage|clus|pr|all]      default all
 #   stage : stage work/<RUN6>_<idx>_<tag>/ from _keep (scripts/stage_ql_tag.sh; refuses existing tags)
-#   clus  : run_clus_evt.sh -s <tag> -calib -save-pctree  (Q/L + pctree + sidecar; light from _keep)
+#   clus  : run_clus_evt.sh -s <tag> -calib -save-pctree  (Q/L + pctree + sidecar; light from _tot, docs/qlmatch/35)
 #   pr    : run_pr_evt.sh -s <tag> -stm-fit               (full PDVD PR chain + tracking-stm.root)
 # Env: PDVD_MAX_JOBS (default 6), STM_RUNS="39252 39253 39349" to restrict runs,
 #      STM_PR_MODE=-stm for the cosmic-tagger-only chain (default: the full -nu chain).
@@ -13,7 +13,9 @@ set -o pipefail
 PDVD_DIR=$(cd "$(dirname "$0")/.." && pwd)
 TAG=${1:?tag}; STEP=${2:-all}
 export PDVD_MAX_JOBS=${PDVD_MAX_JOBS:-6}
-export PDVD_LIGHT_SUFFIX=${PDVD_LIGHT_SUFFIX:-_keep}
+# docs/qlmatch/35 (2026-09-23): the production light record is _tot (ToT fill + int samples, made by run_light_evt.sh
+# with _keep's argument set); set PDVD_LIGHT_SUFFIX=_keep for the pre-flip twoside record.
+export PDVD_LIGHT_SUFFIX=${PDVD_LIGHT_SUFFIX:-_tot}
 RUNS=${STM_RUNS:-"39252 39253 39349"}
 LOGD="$PDVD_DIR/stm/logs/$TAG"; mkdir -p "$LOGD"
 cd "$PDVD_DIR" || exit 1
