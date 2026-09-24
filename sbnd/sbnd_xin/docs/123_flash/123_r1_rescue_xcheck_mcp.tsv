@@ -1,0 +1,42 @@
+event	sample	class	dt0_us	verdict	hit_t_us	hit_pe
+50801	mcp2k_p1	far-unmatched		reco1-had-it	2.0463	353.8
+56463	mcp1k	within-8us-veto	4.561	restored:vetoed@A	1.1832	26338.4
+56463	mcp1k	far-unmatched		restored:vetoed@A	1.1832	26338.4
+59003	mcp1k	within-8us-veto	-2.328	restored:absorbed@A	1.5838	9167.5
+65053	mcp1k	far-flash->13us(geom-first)	580.839	reco1-had-it	0.6523	20240.5
+65289	mcp1k	within-8us-veto	-4.518	restored:vetoed@B	-2.7581	7574.9
+70128	mcp2k_p1	within-8us-veto	-0.358	none		
+70538	mcp2k_p1	same-time(no-light-loss)	0.002	reco1-had-it	1.6160	3095.3
+72759	mcp2k_p1	8-13us	8.650	restored:vetoed@A	1.7897	250.3
+73324	mcp2k_p2	within-8us-veto	4.599	restored:absorbed@B	5.7100	1287.5
+73727	mcp2k_p1	same-time(no-light-loss)	0.002	reco1-had-it	0.8793	8683.6
+78242	mcp2k_p1	far-flash->13us(geom-first)	855.317	restored:vetoed@A	1.9240	7323.1
+78369	mcp2k_p1	within-8us-veto	3.011	restored:absorbed@B	4.3090	32929.2
+79689	mcp2k_p1	same-time(no-light-loss)	0.003	reco1-had-it	0.6817	4427.3
+82608	mcp2k_p1	within-8us-veto	3.793	restored:absorbed@B	5.7607	16059.0
+99563	mcp2k_p2	same-time(no-light-loss)	0.011	reco1-had-it	1.8248	26029.9
+158601	mcp2k_p2	within-8us-veto	1.236	restored:absorbed@B	3.0174	10803.5
+161725	mcp2k_p2	within-8us-veto	-2.025	restored:vetoed@B	-1.0109	16397.4
+164576	mcp2k_p2	8-13us	12.120	reco1-had-it	13.7318	8466.6
+169758	mcp1k	same-time(no-light-loss)	0.003	reco1-had-it	1.3882	2263.6
+169824	mcp1k	within-8us-veto	-4.469	restored:vetoed@B	-3.1479	14855.9
+173450	mcp2k_p1	within-8us-veto	-1.804	none		
+173495	mcp2k_p1	same-time(no-light-loss)	-0.002	reco1-had-it	1.6323	1990.2
+179369	mcp2k_p1	within-8us-veto	1.672	restored:vetoed@A	0.2870	11296.1
+237798	mcp2k_p2	within-8us-veto	-1.174	restored:vetoed@B	0.4066	10671.1
+281165	mcp2k_p1	far-flash->13us(geom-first)	275.791	restored:vetoed@B	276.6521	15199.3
+287244	mcp2k_p2	within-8us-veto	2.017	restored:vetoed@A	1.6016	4797.9
+288952	mcp1k	within-8us-veto	-6.500	restored:vetoed@A	2.2016	4371.1
+290938	mcp2k_p1	within-8us-veto	-2.167	restored:vetoed@B	-0.0624	7794.2
+317427	mcp2k_p1	far-flash->13us(geom-first)	108.223	reco1-had-it	109.1498	24814.4
+319913	mcp2k_p1	far-flash->13us(geom-first)	28.138	reco1-had-it	0.7564	1930.3
+352365	mcp1k	within-8us-veto	1.963	restored:absorbed@B	2.7018	10879.4
+389533	mcp2k_p2	same-time(no-light-loss)	0.006	reco1-had-it	0.7667	4060.8
+392200	mcp1k	within-8us-veto	2.430	restored:absorbed@B	3.1343	5399.9
+395003	mcp2k_p1	within-8us-veto	4.212	restored:absorbed@B	5.9488	12061.5
+395060	mcp1k	same-time(no-light-loss)	0.001	reco1-had-it	1.0877	5101.4
+395148	mcp1k	within-8us-veto	-1.455	restored:vetoed@B	0.0636	19595.8
+396761	mcp2k_p1	within-8us-veto	1.015	none		
+397498	mcp2k_p1	8-13us	12.768	reco1-had-it	13.7053	20039.6
+398115	mcp2k_p2	within-8us-veto	-1.328	restored:vetoed@B	0.5523	2037.6
+407798	mcp2k_p1	8-13us	-8.544	reco1-had-it	1.5258	19532.5

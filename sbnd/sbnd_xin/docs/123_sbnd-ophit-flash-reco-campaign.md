@@ -674,6 +674,9 @@ flashes: **absorbed** (0.3–8 µs after one, inside its integral), **vetoed** (
 its veto), **prepulse** (a vetoed flash under 1 % of the reco1 flash 0.3–4 µs after it), **piece**
 (< 0.3 µs from a matched flash), **dropped** (outside every reco1 window). mcp2k is added below when
 its arm lands; nueCC48 (§10.4) and NCpi0 (`123_r1_census_ncpi0.json`) show the same shares.
+*mcp2k (2000 events, `123_r1_census_mcp2k.json`) reproduces every share: 57 057 reco1 / 74 864 hit
+flashes, 95.5 % matched, per event 1.61 absorbed, 1.83 vetoed, 0.94 prepulse, 5.56 dropped; 2 570
+beam-window reco1 flashes, 122 with an absorbed and 564 with a vetoed partner ≥ 20 PE.*
 
 ### 11.1 What reco1 loses, per 1000 data events
 
@@ -719,9 +722,22 @@ cluster's t0, near TPC at the far cluster's t0) for a hit flash within 0.3 µs:
 | same time | 2 | 0 | 2 (169758, 395060 — no light loss, as §6 said) |
 | geom-first > 13 µs | 1 | 0 | 1 (65053 — the 92 ns pair, a grouping-window case) |
 
-Every within-veto move has its missing partner in the hit flashes (`123_r1_rescue_xcheck_mcp1k.tsv`).
-mcp2k's 20 + 9 moves, including the three veto losses hidden behind longer Δt0 (72759, 78242, 317427),
-are checked when that arm lands.
+Every within-veto move of mcp1k has its missing partner in the hit flashes. With mcp2k, all 41 moves of
+§6 (`123_r1_rescue_xcheck_mcp.tsv`):
+
+| §6 class | moves | restored by a hit flash reco1 did not have | reco1 already had it | none |
+|---|---|---|---|---|
+| within the 8 µs veto | 22 | **19** (PE 0.3 k – 33 k) | 0 | 3 (70128, 173450, 396761 — Δt0 −0.4, −1.8, +1.0 µs; see below) |
+| far half unmatched | 2 | 1 (56463) | 1 (50801) | 0 |
+| 8–13 µs | 4 | **1 (72759** — the veto loss §6 predicted) | 3 | 0 |
+| geom-first > 13 µs | 5 | **2 (78242** — predicted; **281165)** | 3 (317427 — §6 read it as a veto loss; its partner is a reco1 flash at 109.15 µs, so it is a choice case; 65053, 319913) | 0 |
+| same time | 8 | 0 | 8 | 0 |
+
+So 23 of the 41 rescue moves are light losses that the hit flashes repair, 15 are Q/L choices with both
+flashes present (the same-time and most long-Δt0 cases), and 3 within-veto moves with |Δt0| ≤ 1.8 µs
+have no separate hit flash within 0.3 µs of the expected partner time — at those separations the
+finder's split (`split_min_gap_us` 0.5, dip test) does not always cut, which is the residual the
+rescue still covers (§13.1: it fires 4× instead of 12× on mcp1k).
 
 ### 11.3 The small early flashes
 
