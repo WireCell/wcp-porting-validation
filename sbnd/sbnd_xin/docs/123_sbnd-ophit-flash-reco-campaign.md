@@ -863,3 +863,31 @@ half instead of pairing it) is the first item for the round-4 look at `xtpc` (§
 reco1 folded into a cosmic flash 2–5 µs away, split out by the finder, matched by a contained ~150 cm
 track. Three pass νμ > 0.9 (numu 4.40, 2.96, 2.83). On data they are either recovered neutrinos or
 cosmics that happen to sit on a beam-window flash; the beam-off arm (§14) gives the rate of the latter.
+
+## 14. Round 3 — MC and beam-off (2026-09-24 →)
+
+### 14.1 Beam-off: the fake-candidate rate (1000 Run-1 off-beam gates, `work-r3off-d123{base,hits}pr`)
+
+```bash
+scripts/d123/mc_base.sh off; scripts/d123/mc_hits.sh off hits; scripts/d123/stageB.sh work-r3off-d123base data; scripts/d123/stageB.sh work-r3off-d123hits data
+scripts/d123/pr_tables.sh work-r3off-d123basepr products/d123/r3off_base; scripts/d123/pr_tables.sh work-r3off-d123hitspr products/d123/r3off_hits
+python3 scripts/d123/r3_pr_compare.py products/d123/r3off_base products/d123/r3off_hits --label base,hits
+```
+
+Off-beam gates hold cosmics only, so every candidate is a fake; this is the cost side of the extra
+beam-window candidates (§11: hit flashes offer 824 beam-window flashes ≥ 20 PE against reco1's 647 here).
+
+| per 1000 gates | base (reco1) | hits | |
+|---|---|---|---|
+| gates with a neutrino candidate | 85 (8.5 %) | 96 (9.6 %) | 80 in both, 5 only base, 16 only hits |
+| νμ > 0.9 | **9** | **13** | 1 lost, 5 gained |
+| νe > 7 / > 4 | 0 / 0 | 0 / 1 | |
+| Q/L level (`123_r3_ql_summary_r3off.json`) | 19 273 matched clusters | 28 % moved | beam-window matches 880 → 895; rescue firings 13 → 5 |
+
+The 5 gained νμ fakes are not small-flash accidents: they are 185–270 cm cosmic tracks (none contained)
+that the global fit moves onto a 17–26 k PE beam-window flash *both arms had* (449681: from a −303 µs
+11 k PE flash to the 0.94 µs 17.6 k one; 742853, 197600 alike), with νμ scores 0.8–2.0. So the fake rate
+rises from 0.9 % to 1.3 % per gate through the fit re-balancing that the larger candidate set causes, the
+same mechanism as the "both-had" moves of §13.1; the recovered small flashes and the prepulses play no
+part in it. On beam-on data the νμ count stayed at 271 (§13.2) with 10 flips each way, so the beam-on
+gains and the extra fakes are of the same order — the MC efficiency (§14.2) is what separates them.
