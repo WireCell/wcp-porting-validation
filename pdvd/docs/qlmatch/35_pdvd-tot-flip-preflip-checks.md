@@ -49,9 +49,9 @@ that stopped the flip.
 | C1 | doc 11 §6: railed terms on selected matches, 120 events | **PASS**, but close. ToT rails read 1.91× the prediction (bar ≤ 2.0; production's clipped rails read 1.57) |
 | C2 | doc 12: crosser closure, all three runs | **PASS**. Rail-excluded ratio to production 0.979 (1.000 on the 189 common anchors); rail-inclusive/excluded 1.038 (bar ≤ 1.10) |
 | C3 | the 102 unscanned events: crashes and match-rate tails | **PASS on the Q/L bars**: the unscanned runs move like the scanned one (mover fraction 0.126 vs 0.127). The registered PR sub-clause fired literally on one zero-candidate event, not a crash (§4.2) |
-| C4 | STM gate: `is_stm` / Michel purity and efficiency vs production | **UNDECIDED → STOP.** Point values −0.004 / −0.009 / −0.010 / −0.009 (bar −0.020); NEG bounds on the purities −0.043 / −0.042 |
+| C4 | STM gate: `is_stm` / Michel purity and efficiency vs production | First reading UNDECIDED → STOP (purity NEG −0.043 / −0.042 from unlabelled ToT candidates). **PASS after the calibrated blind scan (§10):** purity −0.006 / −0.013, efficiency +0.022 / +0.017, in both NEG and POS |
 | C5 | does the doc 34 margin transfer to the production binary? (report only, no bar) | **Exactly.** Production-binary calib dumps are byte-identical to the measured arms, 120 / 120, for both production and ToT |
-| F1 | flip equivalence | **Not run**: the flip was stopped before the edit |
+| F1 | flip equivalence | **PASS (§11)**: compiled config, the light record `_tot` == `_q32ti` 120 / 120, and production `q35flip` == `q35tk` 120 / 120 |
 
 **Repro:**
 ```
@@ -301,7 +301,7 @@ Whichever route is taken, F1 (§5) runs before any default changes.
 | `d35/c5_transfer.txt` | C5 |
 | `d35/c4k_grade.txt`, `c4k_grade_null.txt`, `c4k_unlabelled.tsv` | C4 corrected (§8) and its null |
 | `d35/prereg_amend1.md` (sha in `prereg_sha.txt`), `scan_smx35.txt`, `scan_audit.txt`, `scan_posthoc_agreement.txt` | §9 blind scan |
-| `pdvd/docs/scan/pdvd_stm_michel_smx35_verdicts.json` | the smx35 record (37 rows): **V2 FAIL, not used for grading** |
+| `pdvd/docs/scan/pdvd_stm_michel_smx35_verdicts.json` | the smx35 record (37 rows): V2 failed alone (2 / 4); **used after the combined V2 passed (§10)** |
 | `scripts/d35_scan_items.py`, `d35_shoot_round.sh`, `d35_audit.py`, `d35_scan_record.py` | §9 |
 | `d35/prereg_amend2.md`, `scan2_audit.txt`, `scan2_smx35c.txt`, `scan_v2_combined.txt`, `c4f_grade.txt`, `c4f_unlabelled.tsv`, `scan_bias_sensitivity.txt` | §10 |
 | `pdvd/docs/scan/pdvd_stm_michel_smx35c_verdicts.json` | the smx35c record (27 rows); with smx35 it passes the combined V2 |
@@ -337,7 +337,7 @@ default). An unlabelled object present in both arms shares one private key. The 
 **Corrected C4** (`c4k_grade.txt`): the table in §2. The verdict is unchanged (UNDECIDED on both purities → STOP), and
 the unlabelled count is 30 ToT / 8 production.
 
-## 9. The blind scan (amendment 1, route (a)) — calibration FAILED, labels not used
+## 9. The blind scan (amendment 1, route (a)) — calibration failed on its own 4 items; the labels were used only after amendment 2 (§10)
 **Pre-registration.** `d35/prereg_amend1.md`, sha appended to `prereg_sha.txt` at 21:12, before the item list was
 drawn.
 
@@ -503,10 +503,16 @@ assignments above. The new warning names the twin case when only the light is ol
 - **Warning** (`d35/f1_warning.txt`): silent on ToT light; one line on `_keep` light with the new defaults; silent
   again with the escape.
 
+**The flip was verified for the `-nu` PR chain.** `stm/run_campaign.sh` with no env runs `run_pr_evt.sh`'s `stm` mode
+(its header comment saying "-nu" is stale). The Q/L and light change is upstream of PR, but the byte identity was only
+shown for `-nu`.
+
 **What production now is, against the old default, in one line each:**
 - Q/L hand-scan margin (doc 34): non-inferior, even-half worst case −0.16 clusters vs a −6.46 margin; not shown
   better.
-- STM gate (§10): `is_stm` efficiency +0.022 and Michel +0.017, purity −0.006 / −0.013.
+- STM gate (§10): `is_stm` efficiency +0.022 and Michel +0.017, purity −0.006 / −0.013. **All four numbers rest on the
+  blind labels** of the ~27 folded items. Their calibration missed mostly in the stopper direction (3 of 4), so read
+  the efficiency gain as a scan-dependent estimate, not an independent measurement.
 - Light closure (C2): unchanged on common crossers; rail-inclusive / rail-excluded 1.038 (was 0.844 with clipped rails).
 
 **Still open:**
