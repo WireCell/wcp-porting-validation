@@ -1,0 +1,37 @@
+# doc qlmatch/35 C1 -- doc 11 sec 6 rerun: docs/qlmatch/scripts/d31_sat_terms.py pooled over the 120 dumps of each measured arm
+# PRE-REGISTERED READ-OUT: q34tk1 SELECTED / all railed meas/pred median must lie in [0.5, 2.0]
+# q31ctl: 120 dumps, 22239 flashes, 4799 with a rail flag
+== SELECTED matches / all railed: 3258 bundles, 8997 terms | meas med   3622.4 pred med   2148.9 | meas>pred  68.9% | meas/pred med     1.57 | chi2 med     1.29 p90    156.45 max  18166.56
+     inflate 0.00 -> median     1.29  p90   156.45  max  18166.56
+     inflate 0.25 -> median     1.02  p90    12.13  max     15.98
+     inflate 0.35 -> median     0.86  p90     6.47  max      8.16
+     inflate 0.50 -> median     0.63  p90     3.24  max      4.00
+     inflate 1.00 -> median     0.25  p90     0.91  max      2.71
+     inflate 2.00 -> median     0.07  p90     0.25  max      2.71
+== SELECTED matches / cathode railed: 3258 bundles, 8727 terms | meas med   3717.7 pred med   2296.0 | meas>pred  68.2% | meas/pred med     1.52 | chi2 med     1.22 p90    125.72 max  18166.56
+     inflate 0.00 -> median     1.22  p90   125.72  max  18166.56
+     inflate 0.25 -> median     0.97  p90    11.35  max     15.98
+     inflate 0.35 -> median     0.81  p90     6.10  max      8.16
+     inflate 0.50 -> median     0.59  p90     3.08  max      4.00
+     inflate 1.00 -> median     0.24  p90     0.87  max      2.71
+     inflate 2.00 -> median     0.07  p90     0.24  max      2.71
+== non-selected candidates / all railed: 138616 bundles, 332840 terms | meas med   2863.2 pred med      2.8 | meas>pred  89.8% | meas/pred med   350.54 | chi2 med  1404.55 p90   8390.07 max  39481.62
+== non-selected candidates / cathode railed: 138616 bundles, 307154 terms | meas med   3020.0 pred med      4.3 | meas>pred  89.3% | meas/pred med   227.18 | chi2 med  1669.00 p90   8449.69 max  22988.18
+# q34tk1: 120 dumps, 22077 flashes, 4678 with a rail flag
+== SELECTED matches / all railed: 3511 bundles, 9839 terms | meas med   3923.1 pred med   2077.3 | meas>pred  76.5% | meas/pred med     1.91 | chi2 med     2.15 p90    184.17 max 362690.36
+     inflate 0.00 -> median     2.15  p90   184.17  max 362690.36
+     inflate 0.25 -> median     1.47  p90    12.52  max     16.00
+     inflate 0.35 -> median     1.13  p90     6.63  max      8.16
+     inflate 0.50 -> median     0.77  p90     3.32  max      4.00
+     inflate 1.00 -> median     0.28  p90     0.88  max      2.68
+     inflate 2.00 -> median     0.08  p90     0.23  max      2.68
+== SELECTED matches / cathode railed: 3511 bundles, 9566 terms | meas med   4016.8 pred med   2197.5 | meas>pred  76.1% | meas/pred med     1.85 | chi2 med     2.00 p90    152.13 max 362690.36
+     inflate 0.00 -> median     2.00  p90   152.13  max 362690.36
+     inflate 0.25 -> median     1.38  p90    11.89  max     16.00
+     inflate 0.35 -> median     1.07  p90     6.32  max      8.16
+     inflate 0.50 -> median     0.74  p90     3.18  max      4.00
+     inflate 1.00 -> median     0.27  p90     0.85  max      2.68
+     inflate 2.00 -> median     0.07  p90     0.22  max      2.68
+== non-selected candidates / all railed: 134517 bundles, 321065 terms | meas med   3012.4 pred med      2.8 | meas>pred  90.1% | meas/pred med   402.57 | chi2 med  1709.38 p90  10129.41 max 952170.71
+== non-selected candidates / cathode railed: 134517 bundles, 296687 terms | meas med   3170.2 pred med      4.1 | meas>pred  89.5% | meas/pred med   264.64 | chi2 med  1976.81 p90  10469.53 max 952170.71
+VERDICT C1: q34tk1 selected-match railed meas/pred median 1.91 in [0.5, 2.0] -> PASS (control q31ctl 1.57)

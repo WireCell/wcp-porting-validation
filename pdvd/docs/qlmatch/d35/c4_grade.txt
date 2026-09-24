@@ -1,0 +1,56 @@
+# doc qlmatch/35 C4 -- STM / Michel grade, A0=q35ctl, T=q35tk (T re-keyed into A0's cluster ids by geometry)
+# truth sources (precedence order, items taken): [('pdvd_stm_michel_own116v_verdicts.json', 25), ('pdvd_stm_michel_own103v2_verdicts.json', 24), ('pdvd_stm_michel_own103v_verdicts.json', 40), ('pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json', 610), ('pdvd_stm_michel_smx11_verdicts.json', 204), ('pdvd_stm_michel_smx116_verdicts.json', 24)]
+# carry: 888 keys (truth U A0 candidates); status {'geometry ok': 865, 'geometry merged': 16, 'geometry lost': 6, 'geometry split': 1}; collisions 0 targets (0 keys)
+# T rows 537: re-keyed 513, private (no preimage) 24
+# keys not carried: 23 (of them judged in the record: 23)
+#   039252_13/66: geometry merged  truth STM_ONLY  A0 row (0, 0)
+#   039252_16/30: geometry merged  truth MESSY  A0 row (1, 1)
+#   039252_16/31: geometry merged  truth THRU  A0 row (0, 0)
+#   039252_3/45: geometry merged  truth STM_MICHEL  A0 row None
+#   039252_8/102: geometry split  truth THRU  A0 row (1, 0)
+#   039252_8/93: geometry lost  truth STM_MICHEL  A0 row (1, 1)
+#   039253_11/83: geometry merged  truth THRU  A0 row None
+#   039253_15/80: geometry merged  truth THRU  A0 row (0, 0)
+#   039253_2/13: geometry merged  truth STM_MICHEL  A0 row (0, 0)
+#   039253_2/50: geometry merged  truth THRU  A0 row None
+#   039349_22/48: geometry merged  truth THRU  A0 row None
+#   039349_25/38: geometry lost  truth THRU  A0 row None
+#   039349_28/19: geometry merged  truth STM_ONLY  A0 row None
+#   039349_4/76: geometry lost  truth MESSY  A0 row None
+#   039349_47/63: geometry merged  truth STM_ONLY  A0 row None
+#   039349_54/24: geometry merged  truth THRU  A0 row (0, 0)
+#   039349_58/22: geometry merged  truth STM_ONLY  A0 row (1, 0)
+#   039349_67/39: geometry lost  truth THRU  A0 row (0, 0)
+#   039349_69/23: geometry merged  truth THRU  A0 row (0, 0)
+#   039349_7/48: geometry lost  truth UNCLEAR  A0 row (0, 0)
+#   039349_7/61: geometry merged  truth STM_ONLY  A0 row None
+#   039349_80/52: geometry merged  truth THRU  A0 row None
+#   039349_9/42: geometry lost  truth THRU  A0 row None
+
+## reading 1 (the rule's): carry failures count as untagged in T: population 504 (fixed 366); unlabelled candidates A0 10, T 33
+  is_stm       A0  q35ctl   TP 273 FP   5 FN  79 TN  147 | purity 0.982 [0.974, 0.989] efficiency 0.776 [0.754, 0.796]
+  is_stm       T   q35tk    TP 270 FP   6 FN  82 TN  146 | purity 0.978 [0.968, 0.986] efficiency 0.767 [0.746, 0.791]
+  michel_found A0  q35ctl   TP 180 FP  11 FN  51 TN  262 | purity 0.942 [0.927, 0.960] efficiency 0.779 [0.753, 0.805]
+  michel_found T   q35tk    TP 178 FP  13 FN  53 TN  260 | purity 0.932 [0.914, 0.950] efficiency 0.771 [0.745, 0.797]
+  T is_stm       purity    : -0.004  (NEG -0.043, POS -0.003)  doc-113 UNDECIDED
+  T is_stm       efficiency: -0.009  (NEG -0.009, POS +0.023)  doc-113 PASS
+  T michel_found purity    : -0.010  (NEG -0.042, POS -0.008)  doc-113 UNDECIDED
+  T michel_found efficiency: -0.009  (NEG -0.009, POS +0.019)  doc-113 PASS
+  -> STOP (every metric PASS in both NEG and POS)
+  split-half odd: is_stm pur -0.015 eff +0.006, michel pur -0.023 eff -0.026 (reported; doc 116 guard -0.040)
+  split-half even: is_stm pur +0.006 eff -0.022, michel pur +0.001 eff +0.009 (reported; doc 116 guard -0.040)
+
+## reading 2 (sensitivity): keys whose carry failed dropped from both cells: population 494 (fixed 359); unlabelled candidates A0 10, T 33
+  is_stm       A0  q35ctl   TP 271 FP   4 FN  77 TN  142 | purity 0.985 [0.978, 0.993] efficiency 0.779 [0.757, 0.799]
+  is_stm       T   q35tk    TP 270 FP   6 FN  78 TN  140 | purity 0.978 [0.969, 0.986] efficiency 0.776 [0.754, 0.798]
+  michel_found A0  q35ctl   TP 179 FP  11 FN  50 TN  254 | purity 0.942 [0.926, 0.959] efficiency 0.782 [0.752, 0.809]
+  michel_found T   q35tk    TP 178 FP  13 FN  51 TN  252 | purity 0.932 [0.915, 0.949] efficiency 0.777 [0.750, 0.805]
+  T is_stm       purity    : -0.007  (NEG -0.046, POS -0.006)  doc-113 UNDECIDED
+  T is_stm       efficiency: -0.003  (NEG -0.003, POS +0.029)  doc-113 PASS
+  T michel_found purity    : -0.010  (NEG -0.042, POS -0.008)  doc-113 UNDECIDED
+  T michel_found efficiency: -0.004  (NEG -0.004, POS +0.023)  doc-113 PASS
+  -> STOP (every metric PASS in both NEG and POS)
+  split-half odd: is_stm pur -0.015 eff +0.006, michel pur -0.023 eff -0.026 (reported; doc 116 guard -0.040)
+  split-half even: is_stm pur -0.000 eff -0.011, michel pur +0.002 eff +0.018 (reported; doc 116 guard -0.040)
+
+VERDICT C4 q35tk vs q35ctl: STOP (reading 1)

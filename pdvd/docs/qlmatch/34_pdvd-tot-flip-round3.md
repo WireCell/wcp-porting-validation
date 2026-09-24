@@ -2,6 +2,12 @@
 
 **Status 2026-09-23. Round 3 of the doc 32/33 campaign. Nothing is flipped; the new knob is default OFF.**
 
+**Update 2026-09-23 (doc 35): the pre-flip checks of §7 ran; NOT flipped.** The Q/L stage of today's production binary
+reproduces `q34tk1` and `q31ctl` byte for byte (120 / 120), so this margin applies to production as is. Doc 11 §6,
+doc 12 and the 102 unscanned events pass. The 120-event STM gate is UNDECIDED on both purities (point values inside the
+bar, NEG bounds −0.043 / −0.042 from 33 unlabelled ToT candidates), which the pre-registration makes a STOP. See
+`35_pdvd-tot-flip-preflip-checks.md` §6 for the owner's choice.
+
 **Goal (owner).** Flip PDVD light to the ToT saturation fill (docs 30–33). Q/L need only **not be worse** than
 production. The owner accepted the non-inferiority margin on 2026-09-23, before any round-3 scoring (`d34/prereg.md`).
 
@@ -247,6 +253,10 @@ QLMatching `lasso_weight_unrailed` + `ks_sat_tol` 0.3075.** Before a go, in orde
 3. **A flip-equivalence gate.** Flipping the defaults (runner and/or jsonnet) must reproduce `q34tk1`'s calib dumps
    byte-identically.
 4. **The owner's go.** Only then does any default change.
+
+**Done 2026-09-23 in doc 35** (`35_pdvd-tot-flip-preflip-checks.md`): items 1 and 2 pass, and the production binary
+reproduces this doc's arms exactly. The added STM gate stopped the flip before item 3 (UNDECIDED purities: unlabelled
+ToT STM candidates).
 
 **Open items.**
 - The top-up calibration shortfall (80 %).

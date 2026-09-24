@@ -1,0 +1,23 @@
+# doc pdvd/103 flip gate (pdvd): d116vflip (graded, TLAs) vs q35ctl (flipped config); tree T_stm_michel
+  events compared 119 (dirs 120 / 120), clusters 489, branches 198
+  DIVERGENCES 21:
+    039252_1: branch stop_gamma_seg_id differs (first at cluster 114: np.int32(444015) vs np.int32(445015))
+    039252_11: 1 rows vs 2
+    039252_17: cannot read (KeyInFileError)
+    039252_7: 8 rows vs 7
+    039252_8: branch chain_support_min differs (first at cluster 84: np.float64(0.2631461289806479) vs np.float64(0.5961510409201515))
+    039253_10: branch michel_seg_id differs (first at cluster 93: np.int32(324022) vs np.int32(321022))
+    039253_2: 12 rows vs 13
+    039253_8: 10 rows vs 11
+    039349_14: 2 rows vs 3
+    039349_18: 9 rows vs 8
+    039349_3: 4 rows vs 5
+    039349_34: 5 rows vs 6
+    039349_39: branch cluster_id differs (first at cluster 46: np.int32(46) vs np.int32(48))
+    039349_43: 4 rows vs 3
+    039349_46: branch cluster_id differs (first at cluster 65: np.int32(65) vs np.int32(63))
+    039349_5: branch bragg_anchor_shift_cm differs (first at cluster 65: np.float64(2.7035651156588982) vs np.float64(2.703565115658955))
+    039349_52: branch bragg_anchor_shift_cm differs (first at cluster 33: np.float64(2.3613100453112565) vs np.float64(2.307050999157718))
+    039349_7: branch michel_seg_id differs (first at cluster 57: np.int32(192016) vs np.int32(195016))
+    039349_73: 2 rows vs 1
+    039349_80: branch bragg_anchor_shift_cm differs (first at cluster 24: np.float64(2.2000000000000055) vs np.float64(2.2000000000000286))

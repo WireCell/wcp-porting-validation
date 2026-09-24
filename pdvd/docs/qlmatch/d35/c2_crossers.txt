@@ -1,0 +1,52 @@
+# arm q34tk1: 120 dumps, runs 039252,039253,039349
+
+## arm q34tk1: anchors 215 (with unrailed light 215), railed samples 730
+   all railed: median r 1.024  [16 % 0.684, 84 % 1.368]  q84|ln r| 0.565 -> f = 0.760
+   per channel (railed samples):
+     ch 4 cath: n  52  median r 0.654  [0.467, 0.900]
+     ch 5 cath: n  83  median r 1.038  [0.811, 1.231]
+     ch 6 cath: n  40  median r 0.833  [0.638, 1.134]
+     ch 7 cath: n 180  median r 1.188  [0.938, 1.460]
+     ch 8 cath: n 124  median r 0.996  [0.769, 1.201]
+     ch 9 cath: n 126  median r 1.211  [0.911, 1.577]
+     ch10 cath: n  54  median r 0.978  [0.689, 1.417]
+     ch11 cath: n  68  median r 0.593  [0.217, 0.869]
+     ch21     : n   2  median r 39.940  [19.023, 83.856]
+     ch25     : n   1  median r 236.074  [236.074, 236.074]
+   r vs predicted PE (bright -> dim quintiles would show a visibility-shape trend):
+     pred [     0.8,   3454.8]: n 146  median r 1.103
+     pred [  3454.8,   5517.1]: n 146  median r 1.055
+     pred [  5517.1,   8478.4]: n 146  median r 0.974
+     pred [  8478.4,  14022.4]: n 146  median r 0.996
+     pred [ 14022.4, 150254.1]: n 146  median r 0.986
+   global median Sum(meas)/Sum(pred): rail-excluded 0.816  rail-inclusive 0.847  ratio 1.038
+# arm q31ctl: 120 dumps, runs 039252,039253,039349
+
+## arm q31ctl: anchors 192 (with unrailed light 192), railed samples 644
+   all railed: median r 0.917  [16 % 0.506, 84 % 1.295]  q84|ln r| 0.768 -> f = 1.156
+   per channel (railed samples):
+     ch 4 cath: n  46  median r 0.532  [0.275, 0.766]
+     ch 5 cath: n  75  median r 0.947  [0.660, 1.193]
+     ch 6 cath: n  35  median r 0.815  [0.545, 1.175]
+     ch 7 cath: n 159  median r 1.176  [0.866, 1.584]
+     ch 8 cath: n 108  median r 0.885  [0.563, 1.094]
+     ch 9 cath: n 110  median r 1.005  [0.490, 1.400]
+     ch10 cath: n  49  median r 0.867  [0.502, 1.275]
+     ch11 cath: n  59  median r 0.548  [0.177, 0.787]
+     ch21     : n   2  median r 39.933  [19.021, 83.835]
+     ch22     : n   1  median r 2.555  [2.555, 2.555]
+   r vs predicted PE (bright -> dim quintiles would show a visibility-shape trend):
+     pred [     0.9,   3534.5]: n 129  median r 1.100
+     pred [  3534.5,   5522.5]: n 129  median r 1.033
+     pred [  5522.5,   8596.2]: n 128  median r 0.865
+     pred [  8596.2,  13752.2]: n 129  median r 0.902
+     pred [ 13752.2,  58400.4]: n 129  median r 0.504
+   global median Sum(meas)/Sum(pred): rail-excluded 0.833  rail-inclusive 0.704  ratio 0.844
+
+# PRE-REGISTERED READ-OUT (d35/prereg.md sec 2 C2)
+   rail-excluded global median: q34tk1 0.816 (n 215)  q31ctl 0.833 (n 192)  ratio 0.979 -> PASS (|ratio - 1| <= 0.05)
+   rail-inclusive / rail-excluded on q34tk1: 1.038 -> PASS (<= 1.10)
+
+# added after the read-out (informational): the same comparison on the 189 anchors present in both arms (same event, flash time within 1.5 us)
+   rail-excluded global median: q34tk1 0.834  q31ctl 0.834  ratio 1.000
+   q34tk1-only anchors 26: median flash total_PE 51461 (harvest cut 1500 PE); common anchors' total_PE ratio q34tk1/q31ctl median 1.113

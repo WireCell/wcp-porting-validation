@@ -1,0 +1,23 @@
+# doc pdvd/103 flip gate (pdvd): d116vflip (graded, TLAs) vs q35ctl (flipped config); tree T_rec_charge
+  events compared 119 (dirs 120 / 120), clusters 154598, branches 19
+  DIVERGENCES 31:
+    039252_1: branch ndf differs (first at cluster 36: np.float64(136.0) vs np.float64(137.0))
+    039252_11: 331 rows vs 592
+    039252_17: cannot read (KeyInFileError)
+    039252_4: branch ndf differs (first at cluster 104: np.float64(399.0) vs np.float64(400.0))
+    039252_6: branch ndf differs (first at cluster 100: np.float64(616.0) vs np.float64(617.0))
+    039252_7: 2771 rows vs 2684
+    039252_8: 5042 rows vs 4898
+    039253_1: branch ndf differs (first at cluster 93: np.float64(413.0) vs np.float64(409.0))
+    039253_10: branch ndf differs (first at cluster 93: np.float64(328.0) vs np.float64(325.0))
+    039253_17: branch ndf differs (first at cluster 48: np.float64(237.0) vs np.float64(236.0))
+    039253_2: 4718 rows vs 4911
+    039253_3: branch ndf differs (first at cluster 31: np.float64(125.0) vs np.float64(122.0))
+    039253_8: 3027 rows vs 3275
+    039349_13: branch ndf differs (first at cluster 57: np.float64(204.0) vs np.float64(203.0))
+    039349_14: 251 rows vs 352
+    039349_18: 2408 rows vs 2109
+    039349_2: branch ndf differs (first at cluster 59: np.float64(225.0) vs np.float64(228.0))
+    039349_24: branch ndf differs (first at cluster 88: np.float64(240.0) vs np.float64(238.0))
+    039349_3: 1011 rows vs 1070
+    039349_33: branch ndf differs (first at cluster 54: np.float64(167.0) vs np.float64(166.0))

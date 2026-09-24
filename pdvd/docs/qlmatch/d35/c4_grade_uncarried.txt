@@ -1,0 +1,44 @@
+# doc pdvd/116 grade (pdvd); truth sources in precedence order (items taken): [('pdvd_stm_michel_own116v_verdicts.json', 25), ('pdvd_stm_michel_own103v2_verdicts.json', 24), ('pdvd_stm_michel_own103v_verdicts.json', 40), ('pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json', 610), ('pdvd_stm_michel_smx11_verdicts.json', 204), ('pdvd_stm_michel_smx116_verdicts.json', 24)]
+# cells: A0=q35ctl, T=q35tk, P=d116vflip; base A0; bar A_x - A0 >= -0.02 on the point value, NEG bound >= -0.03
+population 514 (fixed 366); Michel population 514 (excluded 0); unlabelled candidates of any cell 233
+  unlabelled candidates of A0: 10; is_stm 1 5, michel_found 1 3
+  unlabelled candidates of T: 228; is_stm 1 139, michel_found 1 96
+  unlabelled candidates of P: 5; is_stm 1 1, michel_found 1 1
+
+== is_stm
+  A0   q35ctl        TP 273 FP   5 FN  83 TN  153 | purity 0.982 [0.974, 0.989] efficiency 0.767 [0.744, 0.789]
+  T    q35tk         TP 138 FP  13 FN 218 TN  145 | purity 0.914 [0.892, 0.936] efficiency 0.388 [0.362, 0.412]
+  P    d116vflip     TP 273 FP   5 FN  83 TN  153 | purity 0.982 [0.974, 0.989] efficiency 0.767 [0.744, 0.789]
+
+== michel_found
+  A0   q35ctl        TP 180 FP  11 FN  50 TN  273 | purity 0.942 [0.926, 0.959] efficiency 0.783 [0.755, 0.811]
+  T    q35tk         TP  90 FP  16 FN 140 TN  268 | purity 0.849 [0.815, 0.886] efficiency 0.391 [0.362, 0.424]
+  P    d116vflip     TP 180 FP  11 FN  50 TN  273 | purity 0.942 [0.925, 0.959] efficiency 0.783 [0.756, 0.811]
+
+== reading per cell vs A0 (point value; NEG / POS bounds for the unlabelled); rule: point >= -0.02 AND NEG >= -0.03
+  T    is_stm       purity    : -0.068  (NEG -0.489, POS -0.027)  FAIL   [doc-113 reading FAIL]
+  T    is_stm       efficiency: -0.379  (NEG -0.379, POS -0.002)  FAIL   [doc-113 reading UNDECIDED]
+  T    michel_found purity    : -0.093  (NEG -0.482, POS -0.023)  FAIL   [doc-113 reading FAIL]
+  T    michel_found efficiency: -0.391  (NEG -0.391, POS +0.006)  FAIL   [doc-113 reading UNDECIDED]
+  T    T -> FAIL
+  P    is_stm       purity    : +0.000  (NEG +0.014, POS -0.000)  PASS   [doc-113 reading PASS]
+  P    is_stm       efficiency: +0.000  (NEG +0.000, POS -0.007)  PASS   [doc-113 reading PASS]
+  P    michel_found purity    : +0.000  (NEG +0.010, POS -0.001)  PASS   [doc-113 reading PASS]
+  P    michel_found efficiency: +0.000  (NEG +0.000, POS -0.004)  PASS   [doc-113 reading PASS]
+  P    T -> PASS
+
+== split-half guard: the grade on the odd / even halves of the sorted event list (bar -0.040 per metric)
+  odd  half (60 events, pop 240) T   : is_stm_pur -0.042, is_stm_eff -0.355, michel_pur -0.112, michel_eff -0.395  -> FAIL
+  odd  half (60 events, pop 240) P   : is_stm_pur +0.000, is_stm_eff +0.006, michel_pur -0.011, michel_eff +0.000  -> PASS
+  even half (60 events, pop 274) T   : is_stm_pur -0.090, is_stm_eff -0.402, michel_pur -0.077, michel_eff -0.388  -> FAIL
+  even half (60 events, pop 274) P   : is_stm_pur -0.000, is_stm_eff -0.005, michel_pur +0.009, michel_eff +0.000  -> PASS
+
+== movers T vs A0: is_stm fp_gone 4, is_stm fp_new 12, is_stm tp_lost 144, is_stm tp_new 9, michel_found fp_gone 7, michel_found fp_new 12, michel_found tp_lost 91, michel_found tp_new 1  -> /home/xqian/tmp/p35/c4_movers_T.tsv
+
+== movers P vs A0: is_stm tp_lost 4, is_stm tp_new 4, michel_found fp_gone 1, michel_found fp_new 1, michel_found tp_lost 1, michel_found tp_new 1  -> /home/xqian/tmp/p35/c4_movers_P.tsv
+
+== candidates on one side only, vs A0, by hand class
+  T only: 240 {'stopper': 5, 'non-stopper': 8, 'unjudged': 4, 'unlabelled': 223}
+  A0 only (vs T): 251 {'stopper': 171, 'non-stopper': 55, 'unjudged': 20, 'unlabelled': 5}
+  P only: 7 {'stopper': 4, 'non-stopper': 2, 'unjudged': 1, 'unlabelled': 0}
+  A0 only (vs P): 9 {'stopper': 3, 'non-stopper': 0, 'unjudged': 1, 'unlabelled': 5}

@@ -1,0 +1,4 @@
+# doc qlmatch/35 C5 -- binary transfer: production-binary arms (pin libpin_prod = local/lib 2026-09-23) vs the measured pinned arms (q31ctl: libpin_p100b, q34tk1: libpin_q34), calib dumps byte for byte (cmp)
+q35ctl vs q31ctl: identical 120/120, differ 0
+q35tk vs q34tk1: identical 120/120, differ 0
+# movers on run 039252 follow: the dumps are identical, so q35ctl -> q35tk = q31ctl -> q34tk1 = 161 time-mapped (d34/mover_counts.txt)
