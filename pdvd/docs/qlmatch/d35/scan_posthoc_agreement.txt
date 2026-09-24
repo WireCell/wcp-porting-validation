@@ -1,0 +1,6 @@
+# doc qlmatch/35 -- POST HOC, NOT GOVERNING: new scan items that are record-labelled objects under the corrected keys
+  q35ctl 039349_39/48 -> 039349_39/46: record STM_ONLY (owner_review) vs blind STM_ONLY (high) agree
+  q35ctl 039349_39/58 -> 039349_39/56: record THRU (record) vs blind THRU (medium) agree
+  q35tk 039349_39/46 -> 039349_39/46: record STM_ONLY (owner_review) vs blind STM_ONLY (high) agree
+  q35tk 039349_39/56 -> 039349_39/56: record THRU (record) vs blind THRU (medium) agree
+  q35tk 039349_46/63 -> 039349_46/65: record STM_ONLY (record) vs blind STM_ONLY (high) agree

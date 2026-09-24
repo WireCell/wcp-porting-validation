@@ -7,14 +7,16 @@ flash association and the PR cluster ids are renumbered (first reading: 228 unla
 251 control-only candidates -- d35/c4_grade_uncarried.txt).  Doc 29 met the same thing and carried the record by
 geometry (d100_carry_verdicts.py).  This does the same inside the grade:
 
-  every truth key and every control candidate (keyed on the control arm A0, where the records apply as-is: A0 grades
-  identically to d116vflip) is carried to the candidate arm by d100_carry_verdicts.one() -- the same pctree keeps the
-  key, else d99_match.match_cluster / status_of on the Bee clustering-global points with doc 99's pre-registered
-  thresholds (R 1 cm, F_OK 0.7, split / merged / ambiguous refused, t0 x-offset retried), carried only on status ok;
-  the candidate arm's rows are re-keyed into A0's key space through the inverse of that map (a target claimed by two
-  keys is a collision and dropped); rows with no preimage keep a private key "<evt>/T<cid>" (unlabelled -> NEG / POS);
-  the grade is then d116_grade.reading() unchanged.  Keys whose carry failed are listed; a second reading drops them
-  from both cells (sensitivity only -- the first reading is the rule's).
+  the records are keyed on the doc 103-116 lineage (--key-arm, default d116vflip: the d103vflip pctrees).  Every truth
+  key and every key-arm candidate is carried key-arm -> A0 and key-arm -> T by d100_carry_verdicts.one() (same pctree
+  keeps the key, else d99_match.match_cluster / status_of on the Bee clustering-global points with doc 99's
+  pre-registered thresholds, R 1 cm, F_OK 0.7, split / merged / ambiguous refused, t0 x-offset retried; carried only
+  on status ok), and each cell's rows are re-keyed through the inverse of its map (a target claimed twice is a
+  collision and dropped).  Rows with no preimage keep a private key "<evt>/A<cid>" / "<evt>/T<cid>", shared by the two
+  cells where the A0 -> T carry puts one object in both (unlabelled -> NEG / POS).  The grade is then
+  d116_grade.reading() unchanged.  Keys whose carry failed are listed; a second reading drops them from both cells
+  (sensitivity only -- the first reading is the rule's).  The first doc-35 version keyed A0 on the records directly,
+  which is wrong where A0 re-clustered (039349_39, 039349_46: ids shifted by 2) -- doc 35 sec 8.
 
     python3 d35_stm_grade.py --a0 q35ctl --t q35tk > ../d35/c4_grade.txt
 """
@@ -50,55 +52,113 @@ def carry_map(a0, t, keys, jobs):
     return fwd, status
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--a0", required=True)
-    ap.add_argument("--t", required=True)
-    ap.add_argument("--jobs", type=int, default=16)
-    ap.add_argument("--unlabelled-out", default=None,
-                    help="tsv of every candidate with no truth in either cell (the items a scan would have to label)")
-    a = ap.parse_args()
-    det = "pdvd"
-    T, src = G16.truth(det, EXTRA, OWNER)
-    RA = G16.U.cell_rows(det, a.a0)
-    RT_raw = G16.U.cell_rows(det, a.t)
-    keys = set(T) | set(RA)
-    fwd, status = carry_map(a.a0, a.t, keys, a.jobs)
+def rekey(key_arm, arm, R_raw, K, jobs):
+    """rows of `arm` re-keyed into key_arm's cluster ids: every key of K (key_arm space) is carried key_arm -> arm, and
+    an arm row takes the key whose carry lands on it (a target claimed twice is a collision and dropped).
+    -> (rows by key, native key by key, leftover native keys, forward map, status counter, collisions)"""
+    if arm == key_arm:
+        return dict(R_raw), {k: k for k in R_raw}, [], {k: (k, "identity") for k in K}, collections.Counter(identity=len(K)), {}
+    fwd, status = carry_map(key_arm, arm, K, jobs)
     claims = collections.defaultdict(list)
     for k, (tk, st) in fwd.items():
         if tk is not None:
             claims[tk].append(k)
     inv = {tk: ks[0] for tk, ks in claims.items() if len(ks) == 1}
-    collisions = {tk: ks for tk, ks in claims.items() if len(ks) > 1}
-    RT, private, native = {}, 0, {}
-    for k, v in RT_raw.items():
+    coll = {tk: ks for tk, ks in claims.items() if len(ks) > 1}
+    R, native, left = {}, {}, []
+    for k, v in R_raw.items():
         if k in inv:
-            RT[inv[k]] = v
+            R[inv[k]] = v
             native[inv[k]] = k
         else:
+            left.append(k)
+    return R, native, left, fwd, status, coll
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--a0", required=True)
+    ap.add_argument("--t", required=True)
+    ap.add_argument("--key-arm", default="d116vflip",
+                    help="the arm whose cluster ids the records are keyed on (the d103vflip pctree lineage of docs "
+                         "103-116); both cells are re-keyed into it.  The first doc-35 reading keyed on A0 directly, "
+                         "which is wrong in 039349_39 and 039349_46 (ids shifted by 2) -- doc 35 sec 8")
+    ap.add_argument("--jobs", type=int, default=16)
+    ap.add_argument("--scan-record", default=None,
+                    help="doc 35 amendment 1: a blind-scan record (rows carry display_arm) folded at the LOWEST "
+                         "precedence; a row's native key is mapped through its display arm's re-keying")
+    ap.add_argument("--unlabelled-out", default=None,
+                    help="tsv of every candidate with no truth in either cell (the items a scan would have to label)")
+    a = ap.parse_args()
+    det = "pdvd"
+    T, src = G16.truth(det, EXTRA, OWNER)
+    RK = G16.U.cell_rows(det, a.key_arm)
+    K = set(T) | set(RK)
+    RA_raw = G16.U.cell_rows(det, a.a0)
+    RT_raw = G16.U.cell_rows(det, a.t)
+    RA, natA, leftA, fwdA, stA, collA = rekey(a.key_arm, a.a0, RA_raw, K, a.jobs)
+    RT, natT, leftT, fwdT, stT, collT = rekey(a.key_arm, a.t, RT_raw, K, a.jobs)
+    # leftovers (no preimage in the key arm): one private key per object, shared by the two cells where the A0 -> T
+    # carry of an A0 leftover lands on a T leftover
+    shared = {}
+    if leftA and leftT:
+        fAT, _ = carry_map(a.a0, a.t, set(leftA), a.jobs)
+        lt = set(leftT)
+        cl = collections.Counter(tk for tk, _ in fAT.values() if tk in lt)
+        shared = {tk: k for k, (tk, _) in fAT.items() if tk in lt and cl[tk] == 1}
+    for k in leftA:
+        e, c = k.split("/")
+        RA[f"{e}/A{c}"] = RA_raw[k]
+        natA[f"{e}/A{c}"] = k
+    for k in leftT:
+        if k in shared:
+            e, c = shared[k].split("/")
+            pk = f"{e}/A{c}"
+        else:
             e, c = k.split("/")
-            RT[f"{e}/T{c}"] = v
-            native[f"{e}/T{c}"] = k
-            private += 1
+            pk = f"{e}/T{c}"
+        RT[pk] = RT_raw[k]
+        natT[pk] = k
+    folded = []
+    if a.scan_record:
+        import json
+        n2k = {a.a0: {v: k for k, v in natA.items()}, a.t: {v: k for k, v in natT.items()}}
+        for r in json.load(open(a.scan_record)):
+            if r.get("calibration"):
+                continue
+            k = n2k.get(r["display_arm"], {}).get(r["key"])
+            if k is None:
+                folded.append((r["key"], r["display_arm"], "UNMAPPED", r["verdict"]))
+            elif k in T:
+                folded.append((r["key"], r["display_arm"], "already labelled " + k, r["verdict"]))
+            else:
+                T[k] = G16.U.row_truth(r, "smx35")
+                folded.append((r["key"], r["display_arm"], k, r["verdict"]))
+        src = src + [(os.path.basename(a.scan_record), sum(1 for f in folded if not f[2].startswith(("UNMAPPED", "already"))))]
     if a.unlabelled_out:
         with open(a.unlabelled_out, "w") as fh:
-            fh.write(f"# doc qlmatch/35 C4 -- candidates with no truth, per arm; key in {a.a0}'s id space, the arm's own key, "
-                     "is_stm, michel_found\n# arm\tkey\tnative_key\tis_stm\tmichel_found\n")
-            for lab, arm, R_, nat in (("A0", a.a0, RA, {}), ("T", a.t, RT, native)):
+            fh.write(f"# doc qlmatch/35 C4 -- candidates with no truth, per arm; key in {a.key_arm}'s id space (A<cid> / "
+                     f"T<cid> = no preimage there), the arm's own key, is_stm, michel_found\n"
+                     "# arm\tkey\tnative_key\tis_stm\tmichel_found\n")
+            for arm, R_, nat in ((a.a0, RA, natA), (a.t, RT, natT)):
                 for k in sorted(R_):
                     if k not in T:
-                        fh.write(f"{arm}\t{k}\t{nat.get(k, k)}\t{R_[k][0]}\t{R_[k][1]}\n")
-    failed = sorted(k for k, (tk, st) in fwd.items() if tk is None or tk in collisions)
-    failed_judged = [k for k in failed if k in T]
-    print(f"# doc qlmatch/35 C4 -- STM / Michel grade, A0={a.a0}, T={a.t} (T re-keyed into A0's cluster ids by geometry)")
+                        fh.write(f"{arm}\t{k}\t{nat[k]}\t{R_[k][0]}\t{R_[k][1]}\n")
+    print(f"# doc qlmatch/35 C4 -- STM / Michel grade, A0={a.a0}, T={a.t}; both cells re-keyed by geometry into the "
+          f"record lineage's cluster ids ({a.key_arm})")
     print(f"# truth sources (precedence order, items taken): {src}")
-    print(f"# carry: {len(fwd)} keys (truth U A0 candidates); status {dict(status)}; collisions {len(collisions)} "
-          f"targets ({sum(len(v) for v in collisions.values())} keys)")
-    print(f"# T rows {len(RT_raw)}: re-keyed {len(RT_raw) - private}, private (no preimage) {private}")
-    print(f"# keys not carried: {len(failed)} (of them judged in the record: {len(failed_judged)})")
-    for k in failed_judged:
-        tk, st = fwd[k]
-        print(f"#   {k}: {st}{' (collision)' if tk in collisions else ''}  truth {T[k][0]}  A0 row {RA.get(k)}")
+    for f in folded:
+        print(f"#   fold {f[0]} ({f[1]}) -> {f[2]}: {f[3]}")
+    for lab, arm, R_raw, fwd, st, coll, left in (("A0", a.a0, RA_raw, fwdA, stA, collA, leftA),
+                                                 ("T", a.t, RT_raw, fwdT, stT, collT, leftT)):
+        moved = sum(1 for k, (tk, _) in fwd.items() if tk is not None and tk != k)
+        failed = sorted(k for k, (tk, _) in fwd.items() if (tk is None or tk in coll) and k in T)
+        print(f"# {lab} {arm}: carry of {len(fwd)} keys {dict(st)}, collisions {len(coll)}; carried to a DIFFERENT id "
+              f"{moved}; rows {len(R_raw)}, no preimage {len(left)}"
+              + (f" (shared with an A0 leftover {len(shared)})" if lab == "T" else ""))
+        print(f"#   judged keys not carried: {len(failed)}")
+        for k in failed:
+            print(f"#     {k}: {fwd[k][1]}  truth {T[k][0]}")
     cells = [("A0", a.a0), ("T", a.t)]
 
     def report(title, T_, R_):
@@ -130,8 +190,9 @@ def main():
                   f"eff {ds[3]:+.3f} (reported; doc 116 guard -0.040)")
         return verdicts
 
-    v = report("reading 1 (the rule's): carry failures count as untagged in T", T, {"A0": RA, "T": RT})
-    drop = set(failed)
+    v = report("reading 1 (the rule's): carry failures count as untagged", T, {"A0": RA, "T": RT})
+    drop = {k for fwd, coll in ((fwdA, collA), (fwdT, collT)) for k, (tk, _) in fwd.items()
+            if (tk is None or tk in coll) and k in T}
     T2 = {k: x for k, x in T.items() if k not in drop}
     report("reading 2 (sensitivity): keys whose carry failed dropped from both cells", T2,
            {"A0": {k: x for k, x in RA.items() if k not in drop}, "T": RT})

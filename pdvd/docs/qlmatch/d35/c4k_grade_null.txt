@@ -1,0 +1,35 @@
+# doc qlmatch/35 C4 -- STM / Michel grade, A0=q35ctl, T=d116vflip; both cells re-keyed by geometry into the record lineage's cluster ids (d116vflip)
+# truth sources (precedence order, items taken): [('pdvd_stm_michel_own116v_verdicts.json', 25), ('pdvd_stm_michel_own103v2_verdicts.json', 24), ('pdvd_stm_michel_own103v_verdicts.json', 40), ('pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json', 610), ('pdvd_stm_michel_smx11_verdicts.json', 204), ('pdvd_stm_michel_smx116_verdicts.json', 24)]
+# A0 q35ctl: carry of 883 keys {'geometry ok': 882, 'geometry split': 1}, collisions 0; carried to a DIFFERENT id 3; rows 548, no preimage 3
+#   judged keys not carried: 1
+#     039252_8/102: geometry split  truth THRU
+# T d116vflip: carry of 883 keys {'identity': 883}, collisions 0; carried to a DIFFERENT id 0; rows 546, no preimage 0 (shared with an A0 leftover 0)
+#   judged keys not carried: 0
+
+## reading 1 (the rule's): carry failures count as untagged: population 503 (fixed 369); unlabelled candidates A0 8, T 5
+  is_stm       A0  q35ctl   TP 275 FP   4 FN  77 TN  147 | purity 0.986 [0.978, 0.993] efficiency 0.781 [0.758, 0.804]
+  is_stm       T   d116vflip TP 273 FP   5 FN  79 TN  146 | purity 0.982 [0.974, 0.989] efficiency 0.776 [0.751, 0.799]
+  michel_found A0  q35ctl   TP 180 FP  12 FN  48 TN  263 | purity 0.938 [0.921, 0.955] efficiency 0.789 [0.761, 0.815]
+  michel_found T   d116vflip TP 180 FP  11 FN  48 TN  264 | purity 0.942 [0.927, 0.959] efficiency 0.789 [0.759, 0.814]
+  T is_stm       purity    : -0.004  (NEG +0.007, POS -0.004)  doc-113 PASS
+  T is_stm       efficiency: -0.006  (NEG -0.006, POS -0.014)  doc-113 PASS
+  T michel_found purity    : +0.005  (NEG +0.010, POS +0.005)  doc-113 PASS
+  T michel_found efficiency: +0.000  (NEG +0.000, POS -0.004)  doc-113 PASS
+  -> PASS (every metric PASS in both NEG and POS)
+  split-half odd: is_stm pur -0.007 eff -0.012, michel pur +0.010 eff +0.000 (reported; doc 116 guard -0.040)
+  split-half even: is_stm pur +0.000 eff +0.000, michel pur +0.000 eff +0.000 (reported; doc 116 guard -0.040)
+
+## reading 2 (sensitivity): keys whose carry failed dropped from both cells: population 502 (fixed 369); unlabelled candidates A0 8, T 6
+  is_stm       A0  q35ctl   TP 275 FP   4 FN  77 TN  146 | purity 0.986 [0.978, 0.993] efficiency 0.781 [0.757, 0.803]
+  is_stm       T   d116vflip TP 273 FP   4 FN  79 TN  146 | purity 0.986 [0.978, 0.993] efficiency 0.776 [0.752, 0.797]
+  michel_found A0  q35ctl   TP 180 FP  12 FN  48 TN  262 | purity 0.938 [0.920, 0.956] efficiency 0.789 [0.761, 0.815]
+  michel_found T   d116vflip TP 180 FP  11 FN  48 TN  263 | purity 0.942 [0.926, 0.960] efficiency 0.789 [0.761, 0.815]
+  T is_stm       purity    : -0.000  (NEG +0.007, POS -0.000)  doc-113 PASS
+  T is_stm       efficiency: -0.006  (NEG -0.006, POS -0.011)  doc-113 PASS
+  T michel_found purity    : +0.005  (NEG +0.010, POS +0.005)  doc-113 PASS
+  T michel_found efficiency: +0.000  (NEG +0.000, POS -0.004)  doc-113 PASS
+  -> PASS (every metric PASS in both NEG and POS)
+  split-half odd: is_stm pur -0.000 eff -0.012, michel pur +0.010 eff +0.000 (reported; doc 116 guard -0.040)
+  split-half even: is_stm pur +0.000 eff +0.000, michel pur +0.000 eff +0.000 (reported; doc 116 guard -0.040)
+
+VERDICT C4 d116vflip vs q35ctl: PASS (reading 1)

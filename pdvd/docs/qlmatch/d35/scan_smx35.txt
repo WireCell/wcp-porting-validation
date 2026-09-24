@@ -1,0 +1,12 @@
+# doc pdvd/103 blind scan record (pdvd, tag smx35); round /home/xqian/tmp/p35scan/round_pdvd
+items 43; records 37; missing 6 ['039349_15/41', '039349_16/41', '039349_52/53', '039349_64/68', '039349_64/70', '039349_77/40']; not in the item list []
+double scans 0: 
+rubric sha on the records: {None: 37}
+verdicts (new items): {'STM_MICHEL': 11, 'THRU': 8, 'FRAG_STM_ONLY': 1, 'UNCLEAR': 2, 'STM_ONLY': 10, 'MESSY': 1}
+confidence (new items): {'medium': 14, 'high': 17, 'low': 2}
+
+V2 calibration: 4 scanned, 4 judged on both sides; stopper-or-not disagreements 2 (50%) -> FAIL (> 25 %): labels not usable for grading
+   039349_3/50: existing STM_MICHEL (record) vs blind THRU (low)
+   039252_7/29: existing THRU (record) vs blind STM_ONLY (medium)
+
+wrote /home/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/scan/pdvd_stm_michel_smx35_verdicts.json (37 records)

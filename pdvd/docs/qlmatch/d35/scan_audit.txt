@@ -1,0 +1,6 @@
+# doc qlmatch/35 amendment 1 -- transcript audit (scripts/d35_audit.py; selftest 13/13 bad flagged, 0/4 good flagged)
+w1_a0: 77 tool calls; flagged 0
+w1_a1: 76 tool calls; flagged 0
+w1_a2: 77 tool calls; flagged 0
+w1_a3: 76 tool calls; flagged 0
+w1_a4: 50 tool calls; flagged 0
