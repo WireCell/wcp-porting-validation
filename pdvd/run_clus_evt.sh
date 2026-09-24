@@ -793,6 +793,12 @@ PY
     if [ "${PDVD_QL_LASSO_W_UNRAILED:-0}" = 1 ]; then
         QL_SATFLAG_ARG+=(-S "ql_lasso_weight_unrailed=true")
     fi
+    # PDVD_QL_KS_SAT_TOL=<tol>: railed channels enter the bundle KS clamped to
+    # within x(1+tol) of the unrailed-scaled prediction (docs/qlmatch/34).
+    # Unset = not passed (byte-identical).
+    if [ -n "${PDVD_QL_KS_SAT_TOL:-}" ]; then
+        QL_SATFLAG_ARG+=(-S "ql_ks_sat_tol=${PDVD_QL_KS_SAT_TOL}")
+    fi
     # PDVD_QL_USE_COV_FLAG: per-flash readout-coverage masking in QLMatching
     # (self-trigger channels with no snippet over the flash window carry NO
     # data).  PRODUCTION DEFAULT ON since 2026-07-14

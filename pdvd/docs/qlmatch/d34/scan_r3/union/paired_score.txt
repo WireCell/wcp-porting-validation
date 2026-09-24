@@ -1,0 +1,33 @@
+# PRIMARY: paired right/wrong vs q31ctl on resolved non-tie movers (truth /home/xqian/tmp/p34/union/truth_union.jsonl)
+       arm  half    n arm right ctl right  wins losses  net      p
+     q33tu   odd  124        58        56    12     10   +2  0.832
+     q33tu  even  140        61        59    14     12   +2  0.845
+     q33tu   all  264       119       115    26     22   +4  0.665
+    q34tk1   odd  124        62        56    16     10   +6  0.327
+    q34tk1  even  140        68        59    23     14   +9  0.188
+    q34tk1   all  264       130       115    39     24  +15  0.077
+    q34tk2   odd  124        59        56    17     14   +3  0.720
+    q34tk2  even  140        69        59    29     19  +10  0.193
+    q34tk2   all  264       128       115    46     33  +13  0.177
+    q34tk3   odd  124        49        56    18     25   -7  0.360
+    q34tk3  even  140        61        59    31     29   +2  0.897
+    q34tk3   all  264       110       115    49     54   -5  0.694
+    q34ck1   odd  124        53        56     8     11   -3  0.648
+    q34ck1  even  140        62        59    13     10   +3  0.678
+    q34ck1   all  264       115       115    21     21   +0  1.000
+    q34ck2   odd  124        46        56     8     18  -10  0.076
+    q34ck2  even  140        70        59    25     14  +11  0.108
+    q34ck2   all  264       116       115    33     32   +1  1.000
+    q34ck3   odd  124        39        56    12     29  -17  0.012
+    q34ck3  even  140        59        59    25     25   +0  1.000
+    q34ck3   all  264        98       115    37     54  -17  0.093
+
+# SECONDARY: agree / phantom / missed on the resolved non-tie movers
+  ctl:q31ctl: odd 59/59/65  even 63/69/75  all 122/128/140
+       q33tu: odd 59/52/65  even 64/67/74  all 123/119/139
+      q34tk1: odd 64/55/60  even 73/65/65  all 137/120/125
+      q34tk2: odd 62/63/62  even 74/65/64  all 136/128/126
+      q34tk3: odd 54/72/70  even 69/73/69  all 123/145/139
+      q34ck1: odd 57/67/67  even 66/70/72  all 123/137/139
+      q34ck2: odd 50/77/74  even 75/62/63  all 125/139/137
+      q34ck3: odd 45/83/79  even 66/73/72  all 111/156/151

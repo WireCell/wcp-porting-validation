@@ -1,0 +1,9 @@
+# owner record with every scanned mover's entries replaced by the union target (unresolved/tie dropped); ql_agree_score.py --truth-uid-map-tag keep --override-truth d34/scan_r3/union/override_target_<arm>.jsonl; agree / phantom / missed
+  q31ctl: 633 / 181 / 214
+   q33tu: 634 / 172 / 220
+  q34tk1: 648 / 171 / 206
+  q34tk2: 647 / 173 / 206
+  q34tk3: 634 / 184 / 219
+  q34ck1: 634 / 186 / 213
+  q34ck2: 636 / 179 / 211
+  q34ck3: 622 / 189 / 225

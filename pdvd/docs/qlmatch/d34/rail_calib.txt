@@ -1,0 +1,44 @@
+# arm q32ti: 18 dumps
+
+## arm q32ti: anchors 49 (with unrailed light 49), railed samples 164
+   all railed: median r 1.040  [16 % 0.690, 84 % 1.354]  q84|ln r| 0.479 -> f = 0.615
+   per channel (railed samples):
+     ch 4 cath: n  14  median r 0.670  [0.506, 0.859]
+     ch 5 cath: n  19  median r 1.071  [0.890, 1.293]
+     ch 6 cath: n  10  median r 0.795  [0.688, 1.003]
+     ch 7 cath: n  40  median r 1.183  [0.937, 1.437]
+     ch 8 cath: n  28  median r 1.016  [0.759, 1.192]
+     ch 9 cath: n  26  median r 1.207  [0.957, 1.921]
+     ch10 cath: n  14  median r 1.043  [0.688, 1.794]
+     ch11 cath: n  13  median r 0.668  [0.248, 0.896]
+   r vs predicted PE (bright -> dim quintiles would show a visibility-shape trend):
+     pred [   627.7,   3912.8]: n  33  median r 1.067
+     pred [  3912.8,   5957.3]: n  33  median r 1.124
+     pred [  5957.3,   9024.4]: n  32  median r 0.938
+     pred [  9024.4,  13582.6]: n  33  median r 1.020
+     pred [ 13582.6,  52439.1]: n  33  median r 1.024
+   global median Sum(meas)/Sum(pred): rail-excluded 0.756  rail-inclusive 0.818  ratio 1.082
+# arm q31ctl: 18 dumps
+
+## arm q31ctl: anchors 47 (with unrailed light 47), railed samples 158
+   all railed: median r 0.920  [16 % 0.500, 84 % 1.253]  q84|ln r| 0.696 -> f = 1.005
+   per channel (railed samples):
+     ch 4 cath: n  14  median r 0.559  [0.298, 0.764]
+     ch 5 cath: n  18  median r 1.039  [0.826, 1.292]
+     ch 6 cath: n  10  median r 0.790  [0.614, 1.010]
+     ch 7 cath: n  38  median r 1.164  [0.839, 1.409]
+     ch 8 cath: n  27  median r 0.933  [0.617, 1.190]
+     ch 9 cath: n  25  median r 1.012  [0.367, 1.510]
+     ch10 cath: n  14  median r 0.784  [0.500, 1.138]
+     ch11 cath: n  12  median r 0.637  [0.156, 0.736]
+   r vs predicted PE (bright -> dim quintiles would show a visibility-shape trend):
+     pred [   627.8,   3911.6]: n  32  median r 1.081
+     pred [  3911.6,   5927.3]: n  31  median r 1.023
+     pred [  5927.3,   9091.8]: n  32  median r 0.846
+     pred [  9091.8,  13203.3]: n  31  median r 1.032
+     pred [ 13203.3,  52625.9]: n  32  median r 0.550
+   global median Sum(meas)/Sum(pred): rail-excluded 0.757  rail-inclusive 0.698  ratio 0.921
+
+# PRE-REGISTERED READ-OUT (arm q32ti)
+   railed samples 164 >= 30: f = exp(q84|ln r|) - 1 = 0.615
+   QtoL trigger: rail-inclusive / rail-excluded = 1.082 -> no QtoL arm

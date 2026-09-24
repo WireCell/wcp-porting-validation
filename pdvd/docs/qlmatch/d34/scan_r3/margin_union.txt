@@ -1,0 +1,51 @@
+# doc 34 margin read-out (union: ../d34/scan_r3/union/paired_score.txt; fresh: ../d34/scan_r3/topup/paired_score.txt)
+     arm  half    n    W    L  net      p  bound95
+   q33tu   odd  124   12   10   +2  0.832    -5.72
+   q33tu  even  140   14   12   +2  0.845    -6.39
+   q33tu   all  264   26   22   +4  0.665    -7.40
+  q34tk1   odd  124   16   10   +6  0.327    -2.39
+  q34tk1  even  140   23   14   +9  0.188    -1.01
+  q34tk1   all  264   39   24  +15  0.077    +1.94
+  q34tk2   odd  124   17   14   +3  0.720    -6.16
+  q34tk2  even  140   29   19  +10  0.193    -1.40
+  q34tk2   all  264   46   33  +13  0.177    -1.62
+  q34tk3   odd  124   18   25   -7  0.360   -17.79
+  q34tk3  even  140   31   29   +2  0.897   -10.74
+  q34tk3   all  264   49   54   -5  0.694   -21.69
+  q34ck1   odd  124    8   11   -3  0.648   -10.17
+  q34ck1  even  140   13   10   +3  0.678    -4.89
+  q34ck1   all  264   21   21   +0  1.000   -10.66
+  q34ck2   odd  124    8   18  -10  0.076   -18.39
+  q34ck2  even  140   25   14  +11  0.108    +0.73
+  q34ck2   all  264   33   32   +1  1.000   -12.26
+  q34ck3   odd  124   12   29  -17  0.012   -27.53
+  q34ck3  even  140   25   25   +0  1.000   -11.63
+  q34ck3   all  264   37   54  -17  0.093   -32.69
+
+# fresh part (top-up movers only)
+   q33tu   odd   33    0    0   +0  1.000    +0.00
+   q33tu  even   29    0    0   +0  1.000    +0.00
+  q34tk1   odd   33    2    3   -1  1.000    -4.68
+  q34tk1  even   29    3    3   +0  1.000    -4.03
+  q34tk2   odd   33    2    3   -1  1.000    -4.68
+  q34tk2  even   29    5    3   +2  0.727    -2.65
+  q34tk3   odd   33    3   12   -9  0.035   -15.37
+  q34tk3  even   29    5   13   -8  0.096   -14.98
+
+# SELECTION (odd): nets q34tk1 +6, q34tk2 +3, q34tk3 -7; reference q33tu +2
+   selected q34tk1 (odd net +6 > q33tu +2)
+
+# MARGIN (q34tk1, even half): net +9 (23-14), bound -1.01 vs -6.46 -> OK
+   owner+target phantoms q34tk1 171 vs q31ctl 181 -> OK   (agree/phantom/missed (648, 171, 206) vs (633, 181, 214))
+   superiority (even, two-sided sign test): p = 0.188
+   twin q34ck1 even net +3 (13-10) -> gain ToT-specific
+
+# VERDICT: q34tk1 PASSES the owner's margin
+   owner+target   q31ctl: 633 / 181 / 214
+   owner+target    q33tu: 634 / 172 / 220
+   owner+target   q34tk1: 648 / 171 / 206
+   owner+target   q34tk2: 647 / 173 / 206
+   owner+target   q34tk3: 634 / 184 / 219
+   owner+target   q34ck1: 634 / 186 / 213
+   owner+target   q34ck2: 636 / 179 / 211
+   owner+target   q34ck3: 622 / 189 / 225

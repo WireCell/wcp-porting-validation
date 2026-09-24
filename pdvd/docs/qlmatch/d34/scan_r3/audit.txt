@@ -1,0 +1,11 @@
+# d33_audit.py over the 9 round-3 top-up scanner transcripts (scan root /home/xqian/tmp/p34/scan/r3). The one flag per wave is the agent's SubagentHandback call (its final report, a tool the audit does not whitelist) -- not a file access; those lines are filtered below.
+wave 0: 53 tool calls, 25 sheet reads, 25 recorder calls, 1 flagged
+wave 1: 53 tool calls, 25 sheet reads, 25 recorder calls, 1 flagged
+wave 2: 53 tool calls, 25 sheet reads, 25 recorder calls, 1 flagged
+wave 3: 51 tool calls, 24 sheet reads, 24 recorder calls, 1 flagged
+wave 4: 53 tool calls, 25 sheet reads, 25 recorder calls, 1 flagged
+wave 5: 53 tool calls, 25 sheet reads, 25 recorder calls, 1 flagged
+wave 6: 53 tool calls, 25 sheet reads, 25 recorder calls, 1 flagged
+wave 7: 53 tool calls, 25 sheet reads, 25 recorder calls, 1 flagged
+wave 8: 53 tool calls, 25 sheet reads, 25 recorder calls, 1 flagged
+wave 9: 5 tool calls, 1 sheet reads, 1 recorder calls, 1 flagged

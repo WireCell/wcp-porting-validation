@@ -1,0 +1,19 @@
+# sheets 226 (rendered 225); verdicts 225; missing 0
+# picks: {('letter', 'high'): 31, ('letter', 'low'): 29, ('letter', 'med'): 104, ('tie', 'low'): 10, ('tie', 'med'): 17, ('unsure', 'low'): 34}
+
+## scanner calibration vs the owner record (committed verdicts on owner-judged candidates)
+               all: agree 20 disagree 5 -> 80.0 %  (unsure 8, tie 1, not-comparable 5)
+ cathxa (AI+owner): agree 14 disagree 3 -> 82.4 %  (unsure 4, tie 1, not-comparable 5)
+      gold (owner): agree 6 disagree 2 -> 75.0 %  (unsure 4, tie 0, not-comparable 0)
+   disagree: s53079 evt298581 uid170 cathxa (AI+owner): scanner ('pos', 2246.205) | owner pos [] neg [2246.2054141337244]
+   disagree: s20349 evt298567 uid4000127 gold (owner): scanner ('pos', 2764.198) | owner pos [] neg [2764.1977044738296]
+   disagree: s98665 evt298651 uid4000565 cathxa (AI+owner): scanner ('pos', -1194.973) | owner pos [-2002.4615858630991] neg []
+   disagree: s47456 evt298567 uid4000114 gold (owner): scanner ('pos', -1077.361) | owner pos [] neg [-1077.360538800865]
+   disagree: s55390 evt298707 uid4000101 cathxa (AI+owner): scanner ('pos', 3385.856) | owner pos [4017.4000826172605] neg []
+
+## duplicate-sheet consistency (different scanners, same sheet): {'compatible': 5, 'one unsure': 3, 'contradict': 1}
+
+## target over 88 movers: {'resolved:pos': 62, 'resolved:tie': 7, 'unresolved:unsure': 19}
+   resolved 69 = 78.4 % (prereg minimum 60 %); of which tie 7 (8.0 %, neutral)
+   odd events: {'resolved:pos': 33, 'resolved:tie': 4, 'unresolved:unsure': 9}
+   even events: {'resolved:pos': 29, 'resolved:tie': 3, 'unresolved:unsure': 10}

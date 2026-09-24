@@ -1,0 +1,9 @@
+# owner record alone (the record taken on twoside light); pdvd/ql_display/ql_agree_score.py --tag <arm> --work-root /home/xqian/tmp/p31/wroot --truth-uid-map-tag keep; agree / phantom / missed
+  q31ctl: 683 / 97 / 158
+   q33tu: 653 / 82 / 188
+  q34tk1: 657 / 84 / 184
+  q34tk2: 648 / 84 / 193
+  q34tk3: 634 / 85 / 207
+  q34ck1: 677 / 89 / 164
+  q34ck2: 663 / 88 / 178
+  q34ck3: 640 / 88 / 201

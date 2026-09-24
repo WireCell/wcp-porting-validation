@@ -1,0 +1,33 @@
+# PRIMARY: paired right/wrong vs q31ctl on resolved non-tie movers (truth ../d33/scan_r2/truth.jsonl)
+       arm  half    n arm right ctl right  wins losses  net      p
+     q33tu   odd   91        41        39    12     10   +2  0.832
+     q33tu  even  111        46        44    14     12   +2  0.845
+     q33tu   all  202        87        83    26     22   +4  0.665
+    q34tk1   odd   91        46        39    14      7   +7  0.189
+    q34tk1  even  111        53        44    20     11   +9  0.150
+    q34tk1   all  202        99        83    34     18  +16  0.036
+    q34tk2   odd   91        43        39    15     11   +4  0.557
+    q34tk2  even  111        52        44    24     16   +8  0.268
+    q34tk2   all  202        95        83    39     27  +12  0.175
+    q34tk3   odd   91        41        39    15     13   +2  0.851
+    q34tk3  even  111        54        44    26     16  +10  0.164
+    q34tk3   all  202        95        83    41     29  +12  0.188
+    q34ck1   odd   91        37        39     5      7   -2  0.774
+    q34ck1  even  111        49        44    11      6   +5  0.332
+    q34ck1   all  202        86        83    16     13   +3  0.711
+    q34ck2   odd   91        32        39     5     12   -7  0.143
+    q34ck2  even  111        53        44    18      9   +9  0.122
+    q34ck2   all  202        85        83    23     21   +2  0.880
+    q34ck3   odd   91        32        39     7     14   -7  0.189
+    q34ck3  even  111        47        44    16     13   +3  0.711
+    q34ck3   all  202        79        83    23     27   -4  0.672
+
+# SECONDARY: agree / phantom / missed on the resolved non-tie movers
+  ctl:q31ctl: odd 42/45/49  even 48/56/61  all 90/101/110
+       q33tu: odd 42/38/49  even 49/54/60  all 91/92/109
+      q34tk1: odd 47/38/44  even 56/52/53  all 103/90/97
+      q34tk2: odd 45/44/46  even 56/54/53  all 101/98/99
+      q34tk3: odd 43/47/48  even 58/51/51  all 101/98/99
+      q34ck1: odd 39/51/52  even 51/55/58  all 90/106/110
+      q34ck2: odd 34/58/57  even 56/51/53  all 90/109/110
+      q34ck3: odd 34/58/57  even 51/56/58  all 85/114/115

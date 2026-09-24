@@ -1,0 +1,7 @@
+# PDHD knob-off gate (2026-09-23): pdhd/run_clus_evt.sh -s <tag> -calib on run 029107 evts 10-13 (Q/L on: flags=q1),
+# tagged work dirs pdhd/work/029107_<evt>_d34q{b,n}/ with the canonical imaging + opflash symlinked in (no existing dir written).
+# d34qb = LD_LIBRARY_PATH=/home/xqian/tmp/p34/ubbase (the 5376f739 libWireCellMatch), d34qn = installed ks_sat_tol build, knob absent.
+calib-evt*.json cmp-identical 4 / 4
+mabc-*.zip content-identical (abtest/hash_archive.py) 60 / 60
+# SBND: abtest/sbndgate_run.sh cannot run (sbnd/sbnd_xin/input_files holds no input set: "no input set for sample=10 mode=mc");
+# not gated -- structural argument only (the new branch is ks_sat_tol > 0; the dump key is written only when > 0).

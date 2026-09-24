@@ -10,6 +10,8 @@ scan with ten agents became the tuning target.
 - **Mechanism.** ToT changes Q/L matching through the railed PE that enters chi2/KS and the LASSO weights, not through
   the LASSO rows. The ToT-repaired rails read about 2× the prediction on bright cathode channels, so the right flash
   gets a worse KS and a larger LASSO penalty.
+  - *Round 3 note:* the 2× is per bundle in shared flashes. On geometric crossers, ToT rails agree with the
+    prediction (doc 34 §1).
   - A real gap exists: `fit_round2_shared` never skipped railed rows (§2). Closing it moves only 2–3 clusters.
 - **The target.** 329 contested clusters, seen by two blind scanners each on a light-neutral sheet.
   - 74.5 % resolved (bar 60 %), 13 % of them as neutral ties.
@@ -250,6 +252,12 @@ saturated light (docs 30–32).
   only under L2. A percentage on that denominator changes with the arm set.
 - **The owner sets the margin.** The margin should be stated in clusters per event set (or as a share of matched
   clusters) before round 3 scores anything.
+- **Margin accepted by the owner (2026-09-23), before any round-3 scoring** (`d34/prereg.md`):
+  - on the held-out even half, the one-sided 95 % lower bound of the paired net vs `q31ctl` must be ≥ −6.46
+    clusters (2 % of 323);
+  - **and** phantoms on the owner+target record must be ≤ `q31ctl`'s.
+  - `q33tu` meets it **post hoc**: bound −6.39 and phantoms 154 vs 163. That is a margin of 0.06 of a cluster, on an
+    even half already read, so round 3 treats `q33tu` as the reference to beat, not as a confirmed candidate.
 - **Most favourable configuration so far:** ToT + int_samples + `lasso_weight_unrailed` (`q33tu`).
   - It has the best held-out net.
   - It has the fewest phantoms on both combined records (154 vs 163; 82 vs 97).
@@ -269,6 +277,13 @@ The trace names the lever: a truly measured bright rail exceeds a prediction cal
    - Production's calibration saw rails at their clipped or wrapped values, so it is biased low on the channels ToT
      fixes.
    - This is the one lever that should let ToT's truer PE help rather than hurt.
+
+   **Correction (round 3, doc 34 §1).** The premise is wrong. Doc 12's factors exclude railed channels from both
+   sums, and unrailed PE is the same in both lights, so a refit on ToT light returns the same numbers.
+   - Measured on geometric crossers, ToT rails **agree** with the prediction: median ratio 1.04 [0.69, 1.35]
+     (`d34/rail_calib.txt`).
+   - The "about 2×" in §2 is per bundle in shared flashes, where the other clusters' light is not in that bundle's
+     prediction. It is not a calibration offset.
 2. **ToT-only railed-channel error.** Extend `chi2_sat_inflate` to also enter the KS / LASSO weight on railed
    channels, as a new default-OFF knob. Railed channels then stay in (L2 showed dropping them is worse) but with an
    honest error on a repaired value.
