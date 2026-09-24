@@ -1,8 +1,9 @@
-# PDVD ToT flip: the pre-flip checks — four pass, the STM gate is undecided, NOT flipped
+# PDVD ToT flip: the pre-flip checks — C1/C2 pass, C3 passes on Q/L, C5 transfers exactly, the STM gate is undecided, NOT flipped
 
 **Status 2026-09-23. NOT FLIPPED.** The owner's go was conditional on the pre-flip checks (`d35/prereg.md`,
-sha in `d35/prereg_sha.txt`, written before any doc-35 arm ran). Four checks pass. The STM gate (C4) is **UNDECIDED on
-both purities**. Its point values are inside the bar, but the ToT arm brings 33 STM candidates that no record has
+sha in `d35/prereg_sha.txt`, written before any doc-35 arm ran). C1 and C2 pass their bars. C3 passes on Q/L, though its
+PR sub-clause fired literally on one zero-candidate event (§4.2). C5, which carried no bar, shows the production binary
+transfers exactly. The STM gate (C4) is **UNDECIDED on both purities**. Its point values are inside the bar, but the ToT arm brings 33 STM candidates that no record has
 labelled, against 10 for production. The pre-registered rule makes UNDECIDED a STOP, so no runner default was changed.
 The owner's choice of how to label those items is in §6.
 
@@ -19,9 +20,9 @@ that stopped the flip.
 |---|---|---|
 | C1 | doc 11 §6: railed terms on selected matches, 120 events | **PASS**, but close. ToT rails read 1.91× the prediction (bar ≤ 2.0; production's clipped rails read 1.57) |
 | C2 | doc 12: crosser closure, all three runs | **PASS**. Rail-excluded ratio to production 0.979 (1.000 on the 189 common anchors); rail-inclusive/excluded 1.038 (bar ≤ 1.10) |
-| C3 | the 102 unscanned events: crashes and match-rate tails | **PASS** on Q/L; the unscanned runs move like the scanned one (mover fraction 0.126 vs 0.127). The PR sub-clause fired literally on one zero-candidate event (§4.2) |
+| C3 | the 102 unscanned events: crashes and match-rate tails | **PASS on the Q/L bars**: the unscanned runs move like the scanned one (mover fraction 0.126 vs 0.127). The registered PR sub-clause fired literally on one zero-candidate event, not a crash (§4.2) |
 | C4 | STM gate: `is_stm` / Michel purity and efficiency vs production | **UNDECIDED → STOP.** Point values −0.004 / −0.009 / −0.010 / −0.009 (bar −0.020); NEG bounds on the purities −0.043 / −0.042 |
-| C5 | does the doc 34 margin transfer to the production binary? | **Exactly.** Production-binary calib dumps are byte-identical to the measured arms, 120 / 120, for both production and ToT |
+| C5 | does the doc 34 margin transfer to the production binary? (report only, no bar) | **Exactly.** Production-binary calib dumps are byte-identical to the measured arms, 120 / 120, for both production and ToT |
 | F1 | flip equivalence | **Not run**: the flip was stopped before the edit |
 
 **Repro:**
@@ -191,6 +192,10 @@ Nothing in `run_light_evt.sh`, `run_clus_evt.sh` or `stm/run_campaign.sh` was ed
   in `/home/xqian/tmp/p35/cfg/`), the light gate `_tot` == `_q32ti` (`scripts/d35_light_f1.py`, whose comparator was
   checked on the null pair `_g31offb`/`_g31off`, PASS 120 / 120, and on a negative, FAIL 0 / 120), and the runtime gate
   `q35flip` == `q35tk` (`scripts/d35_f1_check.sh`, with the `qp.ks_sat_tol` deploy tell).
+- **The 2026-09-23 F1 pre-half is scratch.** The compiles in `/home/xqian/tmp/p35/cfg/` are tied to today's runner,
+  and `~/tmp` gets swept. Re-run `d35_flip_compiled.sh pre` immediately before the edit. Likewise, F1(c) compares
+  against arms run on `/home/xqian/tmp/p35/libpin_prod`: check that pin still exists and matches
+  `d35/libpin_prod.md5`, or re-run both arms on a fresh pin.
 
 ## 6. The owner's decision
 The flip now waits only on labels for 43 items (`d35/c4_unlabelled.tsv`). Three ways to proceed:
