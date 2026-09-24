@@ -1,0 +1,11 @@
+# wcfm gate manifest (gen_iso_tracks.py): det run evt
+wcfm 1 1
+wcfm 1 2
+wcfm 1 3
+wcfm 1 4
+wcfm 1 5
+wcfm 1 6
+wcfm 1 7
+wcfm 1 8
+wcfm 1 9
+wcfm 1 10
