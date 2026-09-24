@@ -1,0 +1,13 @@
+event	sample	class	dt0_us	verdict	hit_t_us	hit_pe
+56463	mcp1k	within-8us-veto	4.561	restored:vetoed@A	1.1832	26338.4
+56463	mcp1k	far-unmatched		restored:vetoed@A	1.1832	26338.4
+59003	mcp1k	within-8us-veto	-2.328	restored:absorbed@A	1.5838	9167.5
+65053	mcp1k	far-flash->13us(geom-first)	580.839	reco1-had-it	0.6523	20240.5
+65289	mcp1k	within-8us-veto	-4.518	restored:vetoed@B	-2.7581	7574.9
+169758	mcp1k	same-time(no-light-loss)	0.003	reco1-had-it	1.3882	2263.6
+169824	mcp1k	within-8us-veto	-4.469	restored:vetoed@B	-3.1479	14855.9
+288952	mcp1k	within-8us-veto	-6.500	restored:vetoed@A	2.2016	4371.1
+352365	mcp1k	within-8us-veto	1.963	restored:absorbed@B	2.7018	10879.4
+392200	mcp1k	within-8us-veto	2.430	restored:absorbed@B	3.1343	5399.9
+395060	mcp1k	same-time(no-light-loss)	0.001	reco1-had-it	1.0877	5101.4
+395148	mcp1k	within-8us-veto	-1.455	restored:vetoed@B	0.0636	19595.8

@@ -653,3 +653,84 @@ no-split arm stays in the ladder as the attribution control (§12).
 - toolkit `apply-pointcloud` **c2b578fe** (on 25edbe2a): the finder, its doctest, the two JSONs, `flash/docs/sbnd-flash-from-hits.md`.
 - `wire-cell-sbnd-reco1` `main` **d114880**: the OpHit source, the shared CAF-offset header, the gated OpFlashSource refactor.
 - wcp `sbnd_xin/`: the dump knob, `scripts/d123/`, this section (the commit that carries this text).
+
+## 11. Round 1 — the close-flash census on the hits (2026-09-24)
+
+### Repro
+
+```bash
+SX=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python3 $SX/scripts/d123/r1_census.py $SX/work-mcp1k-d123hits --tsv ~/tmp/r1_mcp1k.tsv --summary docs/123_flash/123_r1_census_mcp1k.json
+python3 $SX/scripts/d123/r1_rescue_xcheck.py ~/tmp/r1_mcp1k.tsv > docs/123_flash/123_r1_rescue_xcheck_mcp1k.tsv
+```
+
+Input: `work-mcp1k-d123hits/g*/{opflash,reco1flash}_apa{0,1}.tar.gz` (the hit flashes and SBND's reco1
+flashes of the same 1000 MCP2025C events, §10.2). Every reco1 flash takes the nearest hit flash within
+0.5 µs as its match; every unmatched hit flash ≥ 20 PE is classed by where it sits against the reco1
+flashes: **absorbed** (0.3–8 µs after one, inside its integral), **vetoed** (0.3–8 µs before one, inside
+its veto), **prepulse** (a vetoed flash under 1 % of the reco1 flash 0.3–4 µs after it), **piece**
+(< 0.3 µs from a matched flash), **dropped** (outside every reco1 window). mcp2k is added below when
+its arm lands; nueCC48 (§10.4) and NCpi0 (`123_r1_census_ncpi0.json`) show the same shares.
+
+### 11.1 What reco1 loses, per 1000 data events
+
+| | count | per event | ≥ 100 PE | note |
+|---|---|---|---|---|
+| reco1 flashes / hit flashes | 28 859 / 37 524 | 28.9 / 37.5 | | Δt of a match: median −8.8 ns (reco1 later: its light-travel term) |
+| matched | 27 597 (95.6 %) | | | |
+| reco1 flash with no hit flash | 1 262 (4.4 %) | 1.3 | | **734 sit 7.5–10.5 µs after a ≥ 2 k PE flash**: reco1's own 8 µs window ends and the remaining tail becomes a new "flash" (60–450 PE); the finder folds it back (late light) |
+| **absorbed** | 1 653 | 1.65 | 657 | the ≥ 100 PE ones peak 3–5 µs after the seed (≈ 100 per µs bin); the < 100 PE ones pile up at 6–8 µs (tail pieces) |
+| **vetoed** | 1 837 | 1.84 | 590 | the ≥ 100 PE ones are flat, 60–115 per µs bin, out to −8 µs; the < 100 PE ones sit at −2…0 µs (927 of 1 837, median 30 PE) |
+| prepulse | 929 | 0.93 | 13 | |
+| piece | 225 | | | |
+| **dropped** | 5 283 | 5.28 | 2 365 | PE median 92, none ≥ 1 000: light reco1 put in no flash at all |
+
+So in one TPC reco1 loses about **1.25 real pulses ≥ 100 PE per event** to its own window (657 absorbed +
+590 vetoed) and never makes a flash for 2.4 more (dropped, 100–1000 PE). The prompt-PE rule behind the
+dropped class: reco1 seeds on a 10 ns bin ≥ 20 PE, the finder on an 8 µs slice ≥ 20 PE, so light spread
+over microseconds (dim, diffuse, or far-side) never seeds in reco1.
+
+**The beam window (+0.3…1.9 µs), where Q/L matters:**
+
+| | count |
+|---|---|
+| reco1 beam-window flashes | 1 330 |
+| … carrying a ≥ 100 PE partner reco1 merged into them or vetoed | **47** (31 vetoed, 16 absorbed) |
+| hit flashes ≥ 100 PE *inside* the beam window with no reco1 flash | **127 in 124 events** (78 dropped, 39 vetoed, 10 absorbed) |
+| … the 78 dropped: PE 100–392, and in 73 of them the *other* TPC holds the reco1 beam flash | the dim half of a cathode-crossing beam-window activity — exactly what `cathode_rescue_unmatched` had to supply geometrically |
+| events with reco1 beam flashes in both TPCs | 531: 499 agree to 80 ns, 32 disagree (hit flashes agree in 3 of the 32) |
+| events with a reco1 beam flash in ONE TPC only | 268: hit flashes give an agreeing two-TPC pair in **62** of them |
+
+The last row is the 59415-type gain: 62 of 1000 events go from a one-sided beam flash to a
+time-coincident pair, which `xtpc` / `flash_group_window` can then treat as one flash.
+
+### 11.2 The cathode-rescue moves are hit-level losses — confirmed on the flashes themselves
+
+`r1_rescue_xcheck.py` looks, for every doc-123 §6 move of mcp1k, on both sides (far TPC at the near
+cluster's t0, near TPC at the far cluster's t0) for a hit flash within 0.3 µs:
+
+| move class (§6) | moves in mcp1k | restored by a hit flash reco1 did not have | reco1 already had it |
+|---|---|---|---|
+| within the 8 µs veto | 8 | **8** (PE 0.3 k – 26 k: 56463, 59003, 65289, 169824, 288952, 352365, 392200, 395148) | 0 |
+| far half unmatched | 1 | **1** (56463) | 0 |
+| same time | 2 | 0 | 2 (169758, 395060 — no light loss, as §6 said) |
+| geom-first > 13 µs | 1 | 0 | 1 (65053 — the 92 ns pair, a grouping-window case) |
+
+Every within-veto move has its missing partner in the hit flashes (`123_r1_rescue_xcheck_mcp1k.tsv`).
+mcp2k's 20 + 9 moves, including the three veto losses hidden behind longer Δt0 (72759, 78242, 317427),
+are checked when that arm lands.
+
+### 11.3 The small early flashes
+
+The −2…0 µs pile-up (prepulse + small vetoed, ≈ 1.9 per event) is made of ~25 single-photoelectron
+hits (median 1.1 PE per hit, 80 % below 1.5 PE) spread over ~1.3 µs on the PMTs that are brightest in the
+following big flash (top-10 overlap 10/10). But *every* flash below 100 PE looks like that — matched ones
+reco1 also has (1.1 PE/hit, 77 % SPE), dropped ones, prepulses — so the hit character does not separate
+them; only the time correlation with a following bright flash does. Whether they are light or an
+instrumental precursor (deconvolution pre-ringing, PMT pre-pulsing) needs waveforms, which reco1 does
+not carry. For Q/L they are ~1 extra ≥ 50 PE candidate per event at −2…+0.4 µs; §13 measures whether
+anything matches them, §15 has the knob if it does.
+
+MC truth for the split itself is not re-derived here: xning's `split_truth_check.py` on the 13-event
+7b1f file found 11 of 11 split points at a real new pulse and 0 wrong [C]; the round-3 MC arms (§14)
+carry the truth-level check of what the recovered flashes do to the selection.

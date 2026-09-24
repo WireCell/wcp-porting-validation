@@ -1,0 +1,35 @@
+#!/bin/bash
+# doc sbnd_xin/123 round 3 (MC): a hit-flash arm on every per-file sub-root of a round-3 baseline
+# (mc_base.sh), through scripts/d123/hits_arm.sh.  beam-off is one root of groups.
+#
+# Usage: [JOBS=n] scripts/d123/mc_hits.sh <cv|nuecc|off> <hits|nosplit> [extra hits_arm.sh args]
+set -u
+cd -P "$(dirname "$0")/../.." || exit 1
+SX=$PWD
+S=${1:?usage: mc_hits.sh <cv|nuecc|off> <hits|nosplit>}; ARM=${2:?}; shift 2
+J=${JOBS:-6}
+case "$S" in
+    cv)    B=$SX/work-r3cv-d123base;  O=$SX/work-r3cv-d123$ARM;  REALITY=sim;  PERFILE=1 ;;
+    nuecc) B=$SX/work-r3nue-d123base; O=$SX/work-r3nue-d123$ARM; REALITY=sim;  PERFILE=1 ;;
+    off)   B=$SX/work-r3off-d123base; O=$SX/work-r3off-d123$ARM; REALITY=data; PERFILE=0 ;;
+    *) echo "unknown sample: $S" >&2; exit 2 ;;
+esac
+case "$ARM" in
+    hits)    EXTRA=(--ref) ;;
+    nosplit) EXTRA=(--ff '{"pulse_split":false}') ;;
+    *) echo "unknown arm: $ARM (hits|nosplit)" >&2; exit 2 ;;
+esac
+[ -d "$B" ] || { echo "ERROR: no baseline $B" >&2; exit 1; }
+LOGD=$HOME/tmp/d123-mc-$S-$ARM; mkdir -p "$LOGD"
+echo "=== d123 MC $ARM arm: sample=$S base=$B out=$O jobs=$J"
+t0=$(date +%s)
+if [ "$PERFILE" = 1 ]; then
+    mkdir -p "$O"; touch "$O/.d123_hits_arm"
+    ls -d "$B"/f[0-9]* | xargs -n1 basename | xargs -P "$J" -I{} bash -c \
+        'JOBS=1 "$0/scripts/d123/hits_arm.sh" "$1/{}" "$2/{}" "$3" "${@:4}" > "$4/{}.log" 2>&1; echo "[{}] rc=$? ql_evt=$(ls -d "$2/{}"/ql_evt* 2>/dev/null | wc -l)"' \
+        "$SX" "$B" "$O" "$REALITY" "$LOGD" "${EXTRA[@]}" "$@"
+else
+    JOBS=$J "$SX/scripts/d123/hits_arm.sh" "$B" "$O" "$REALITY" "${EXTRA[@]}" "$@" > "$LOGD/all.log" 2>&1
+    echo "[all] rc=$? ql_evt=$(ls -d "$O"/ql_evt* 2>/dev/null | wc -l)"
+fi
+echo "=== $ARM arm $S finished in $(( $(date +%s) - t0 )) s; ql_evt dirs: $(ls -d "$O"/f*/ql_evt* "$O"/ql_evt* 2>/dev/null | wc -l)"
