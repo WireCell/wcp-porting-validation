@@ -872,13 +872,23 @@ cosmics that happen to sit on a beam-window flash; the beam-off arm (§14) gives
 | moved | 5 185 (26 %) | 10 243 (26 %) |
 | beam-window matches base → hits | 1 738 → 1 743 | 3 459 → 3 367 |
 | rescue firings base → hits | 12 → 4 | **29 → 16** |
-| PR level | 56 events changed; candidates 465 → 470; νμ 271 → 271 | *(filled in below when the PR stage lands)* |
+| PR level | 56 events changed; candidates 465 → 470; νμ 271 → 271 | 55 candidate-only events (27 base / 28 hits), 35 vertex moves; candidates 890 → 891; **νμ > 0.9: 513 → 513** (13 flips each way); νe > 7: 4 → 4 |
 
 The 16 residual firings on mcp2k are, by the §11.2 classes: the 6 same-time merges (expected to stay),
 the 3 within-veto pairs the finder did not split (70128, 173450, 396761), 4 cases where reco1 already had
 the partner (50801, 164576, 319913 and 72759 — whose restored 250 PE partner did not take the far half),
 and 3 new unmatched adoptions (73054, 74094, 79491). The 13 other §6 moves of mcp2k — all the ones the
 census called *restored* — stop firing, as on mcp1k.
+
+Over the 3000 mcp events the νμ > 0.9 count is **784 with reco1 flashes and 784 with hit flashes** (23 lost,
+23 gained), the candidate count 1355 → 1361. The 29 mcp2k rescue events at event level
+(`123_r3_pr_flips_mcp2k.tsv`): 24 unchanged; among the restored within-veto cases 179369 keeps its νμ
+candidate with a higher score (2.21 → 5.08), **161725 loses its νμ pass (2.24 → 0.85)** — the third
+fit-vs-geometry case with 169824 and 59003 — and 73324/287244 exchange a low-score candidate; 73727
+(same-time) stays a pass at 2.45. So on 3000 data events, 3 of the 30 within-veto rescue events change
+their νμ verdict once the partner flash exists, all three downward, against 3 + 5 new contained νμ
+candidates on flashes reco1 had merged away (§13.2 for mcp1k; mcp2k has 5 more of the same class among
+its 28 candidate-only-hits events).
 
 ## 14. Round 3 — MC and beam-off (2026-09-24 →)
 
