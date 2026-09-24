@@ -1,0 +1,2 @@
+# doc 123 round 4: only the unmatched-adoption rule OFF
+cathode_rescue_unmatched=false

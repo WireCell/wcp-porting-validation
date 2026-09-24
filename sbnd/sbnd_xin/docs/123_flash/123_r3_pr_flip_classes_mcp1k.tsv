@@ -1,0 +1,57 @@
+event	kind	mechanism	base_numu	hits_numu	base_Enu	hits_Enu	rescue_base	rescue_hits
+49467	cand-gained	small moves only (0 out/0 in)	-999.000	-1.942	0.0	0.0	0	0
+50743	cand-lost	big cluster joined beam (fit)	-2.875	-999.000	15.7	0.0	0	0
+52085	vertex-move	small moves only (0 out/1 in)	4.369	2.099	674.5	727.2	0	0
+57333	cand-gained	big cluster joined a new beam flash	-999.000	-0.931	0.0	71.6	0	0
+58169	cand-gained	small moves only (0 out/4 in)	-999.000	-1.638	0.0	118.6	0	0
+58255	cand-gained	small moves only (0 out/0 in)	-999.000	-2.975	0.0	16.9	0	0
+59003	cand-lost	big cluster left beam (fit); big cluster joined beam (fit)	3.195	-999.000	820.7	0.0	1	0
+59261	numu-flip-down+vertex-move	small moves only (2 out/0 in)	3.845	0.155	437.9	478.7	0	0
+59929	numu-flip-up	small moves only (0 out/0 in)	-0.410	1.896	460.1	566.8	0	0
+60933	numu-flip-down	small moves only (0 out/0 in)	3.749	0.826	712.9	756.1	0	0
+61711	cand-gained	big cluster joined a new beam flash	-999.000	-2.573	0.0	42.8	0	0
+62459	numu-flip-down	small moves only (0 out/1 in)	3.301	0.771	906.6	812.6	0	0
+65053	numu-flip-down+vertex-move	big cluster joined beam (fit)	2.877	-0.315	512.7	608.6	1	0
+65999	numu-flip-down+vertex-move	small moves only (1 out/1 in)	2.103	-1.138	275.6	147.6	0	0
+277298	numu-flip-down+vertex-move	small moves only (1 out/0 in)	1.282	0.894	686.9	555.5	0	0
+278266	cand-gained	big cluster joined beam (fit)	-999.000	-3.446	0.0	164.9	0	0
+280884	cand-gained	big cluster joined a new beam flash	-999.000	4.400	0.0	675.3	0	0
+281639	numu-flip-down	small moves only (0 out/0 in)	1.370	0.602	437.3	436.7	0	0
+281727	vertex-move	big cluster joined beam (fit)	-1.577	-0.213	82.5	347.7	0	0
+281808	cand-gained	big cluster joined a new beam flash	-999.000	2.961	0.0	556.7	0	0
+281901	cand-gained	big cluster left beam for a restored flash	-999.000	-1.700	0.0	107.4	0	0
+282737	vertex-move	big cluster joined beam (fit)	2.150	4.202	733.7	774.1	0	0
+282899	vertex-move	small moves only (3 out/0 in)	2.643	2.186	919.5	743.7	0	0
+284211	numu-flip-up+vertex-move	small moves only (2 out/0 in)	-0.573	2.786	204.2	639.3	0	0
+285531	numu-flip-up	small moves only (0 out/0 in)	0.467	4.244	1207.5	955.8	0	0
+285665	numu-flip-up+vertex-move	small moves only (2 out/0 in)	0.550	1.026	418.9	427.8	0	0
+287249	vertex-move	small moves only (1 out/0 in)	3.587	2.633	543.8	543.4	0	0
+293149	vertex-move	small moves only (0 out/0 in)	-1.045	-1.189	310.7	208.4	0	0
+315849	cand-lost	big cluster left beam (fit)	-0.963	-999.000	314.3	0.0	0	0
+350099	vertex-move	small moves only (0 out/2 in)	1.058	2.435	471.4	475.6	0	0
+390644	cand-gained	big cluster joined a new beam flash	-999.000	2.828	0.0	475.3	0	0
+390996	cand-lost	big cluster left beam for a restored flash	-2.109	-999.000	11.0	0.0	0	0
+393256	cand-gained	small moves only (0 out/1 in)	-999.000	-1.881	0.0	108.1	0	0
+394268	cand-gained	big cluster joined a new beam flash	-999.000	-2.159	0.0	249.0	0	0
+397480	vertex-move	small moves only (0 out/0 in)	-2.885	-1.942	26.9	0.0	0	0
+398414	vertex-move	big cluster left beam (fit)	-0.319	-2.038	60.3	107.7	0	0
+398690	cand-lost	small moves only (0 out/0 in)	-0.483	-999.000	748.8	0.0	0	0
+406444	cand-lost	small moves only (0 out/0 in)	-3.678	-999.000	11.4	0.0	0	0
+406642	cand-lost	small moves only (1 out/0 in)	-1.963	-999.000	107.2	0.0	0	0
+408094	cand-lost	big cluster left beam (fit)	-1.942	-999.000	0.0	0.0	0	0
+409458	cand-lost	big cluster left beam for a restored flash	-1.330	-999.000	139.6	0.0	0	0
+409964	vertex-move	small moves only (1 out/0 in)	4.500	2.641	792.3	679.3	0	0
+410008	vertex-move	small moves only (0 out/1 in)	0.160	0.606	461.5	354.2	0	0
+412846	cand-gained	small moves only (0 out/0 in)	-999.000	-1.640	0.0	66.6	0	0
+487853	vertex-move	small moves only (1 out/0 in)	0.267	-1.613	339.4	452.1	0	0
+66272	vertex-move	small moves only (1 out/1 in)	-1.875	-0.622	116.9	282.2	0	0
+68428	cand-gained	small moves only (0 out/0 in)	-999.000	2.539	0.0	818.3	0	0
+71530	cand-lost	big cluster left beam for a restored flash	-1.584	-999.000	183.8	0.0	0	0
+167904	cand-gained	big cluster joined a new beam flash	-999.000	-0.849	0.0	230.6	0	0
+169340	cand-gained	small moves only (0 out/2 in)	-999.000	-3.233	0.0	9.2	0	0
+169626	vertex-move	small moves only (1 out/0 in)	-0.419	0.271	669.9	827.3	0	0
+169824	cand-lost	big cluster left beam for a restored flash	5.645	-999.000	1059.0	0.0	1	0
+170792	numu-flip-up	small moves only (1 out/0 in)	0.504	0.984	658.8	828.5	0	0
+172832	numu-flip-up+vertex-move	small moves only (1 out/0 in)	0.635	3.098	775.5	633.5	0	0
+174422	cand-lost	big cluster left beam (fit)	1.404	-999.000	429.0	0.0	0	0
+176160	cand-gained	big cluster joined beam (fit)	-999.000	-1.526	0.0	341.1	0	0

@@ -791,3 +791,56 @@ object is right (§13.3).
 The moves themselves are mostly the bookkeeping of small cosmic clusters among cosmic flashes: 77 %
 jump more than 100 µs, their predicted light is ~25 PE, and the beam-window flow is balanced (332 out,
 335 in). The event-level effect is what matters and is measured on the PR output (§13.2–13.3).
+
+### 13.2 Event level, mcp1k (PR stage on both arms; `123_r3_pr_summary_mcp1k.json`, `123_r3_pr_flips_mcp1k.tsv`, `123_r3_pr_flip_classes_mcp1k.tsv`)
+
+```bash
+scripts/d123/stageB.sh work-mcp1k-d123base data; scripts/d123/stageB.sh work-mcp1k-d123hits data
+scripts/d123/pr_tables.sh work-mcp1k-d123basepr products/d123/mcp1k_base;  scripts/d123/pr_tables.sh work-mcp1k-d123hitspr products/d123/mcp1k_hits
+python3 scripts/d123/r3_pr_compare.py products/d123/mcp1k_base products/d123/mcp1k_hits --label base,hits --tsv flips.tsv
+python3 scripts/d123/r3_evidence.py mcp1k <event> --r3 <r3.tsv> --r1 <r1.tsv>      # one event's evidence sheet
+```
+
+| | base (reco1) | hits | |
+|---|---|---|---|
+| events with a neutrino candidate | 465 | 470 | 453 in both; **12 only in base, 17 only in hits** |
+| νμ > 0.9 | 271 | 271 | 10 flip each way |
+| νe > 7 / > 4 | 1 / 1 | 1 / 1 | no flip |
+| candidate vertex moves > 5 cm | | 21 | |
+| **events changed at event level** | | **56 / 1000** | |
+
+So the 26 % of clusters that change flash (§13.1) become a 5.6 % event-level perturbation with **zero net
+change in the selected counts** — on data, where the truth is unknown, that is the strongest statement the
+counts can make; §14 says which way the flips go on MC. What the 56 events are, from the Q/L moves in
+the beam window (`r3_move_classes`-style mechanism per event, the table in `123_r3_pr_flip_classes_mcp1k.tsv`):
+
+| mechanism (beam-window moves of clusters with ≥ 200 PE predicted light) | events | reading |
+|---|---|---|
+| a big cluster **joined a new beam-window flash** the hit finder recovered | 7 | reco1 had merged the beam pulse into a bright cosmic flash 2–5 µs away; 3 of the 7 become νμ candidates (280884, 281808, 390644: fully contained 150–190 cm tracks on 9–17 k PE flashes at their own time) |
+| a big cluster **left the beam flash for a restored flash** | 5 | e.g. 74544-type (§10.5): a cosmic taken off the beam bundle; 2 of the 5 are rescue events (below) |
+| a big cluster joined / left the beam flash with flashes both arms had (fit re-balance) | 6 / 4 (+1 both) | the global LASSO with a different candidate set |
+| small clusters only (predicted light < 200 PE) | 33 | vertex moves, score drifts, candidates of a few cm gained or lost |
+
+**The rescue events** (the 11 §6 events of mcp1k; `123_r3_pr_flips_mcp1k.tsv`):
+
+| event | §6 class | base → hits |
+|---|---|---|
+| 56463, 65289, 395148 | within veto | νμ candidate kept (numu 4.67→4.85, 2.60→2.60, 3.63→3.63) |
+| 288952, 352365, 392200 | within veto | no candidate in either (cosmic bundles), unchanged |
+| 169758, 395060 | same time | unchanged (rescue still fires, as expected) |
+| **169824** | within veto | **candidate lost** (numu 5.65, 325 cm, Enu 1059 MeV → none): TPC1 gained the restored −3.15 µs flash (14.9 k PE, the partner of TPC0's 39 k PE cosmic pulse), and the fit moved the TPC1 half from the beam flash (1.33 µs, 14.9 k PE) to it — both halves now sit on the −3.14 µs pulse, and the beam-window light (7.6 k + 14.9 k PE in the two TPCs) has no charge at all |
+| **59003** | within veto | **candidate lost** (numu 3.20, 298 cm → none): TPC1 gained the restored 1.584 µs flash (9.2 k PE, absorbed by reco1 into the −0.75 µs 34 k flash); the `QLXTPC coincident` step now sees the TPC0 half (cluster 3, 2162 pts) coincident with TPC1 clusters at 1.59/1.58 µs, and the TPC0 half ends **unmatched** (a 624-PE cluster takes the beam flash, the bundle is TGM-tagged) while the TPC1 half stays on the −0.74 µs flash. In base no `coincident` line exists for that cluster (TPC1 had no flash there) and the rescue merged the halves geometrically |
+| 65053 | geom-first (92 ns pair) | numu 2.88 → −0.31, vertex moves, a second 2 cm candidate appears: the 94 cm TPC0 cluster the rescue used to bring in now matches the beam flash itself, and the bundle is STM-tagged |
+
+Reading: restoring the partner flash removes the rescue's *trigger* (it fires 4× instead of 12×, §13.1), and
+in 6 of 8 within-veto cases Q/L then reaches the same event-level answer on its own. In the other two the
+fit, given both flashes, assigns the cathode-crossing track differently from the rescue's geometry — and
+in 169824 leaves 22 k PE of beam-window light without any charge, which is not a stable configuration
+either. Whether the fit or the geometry is right in those two cannot be settled on data; the MC arms (§14)
+carry the truth for exactly this topology, and the 59003 pattern (a coincident pair culling the TPC0
+half instead of pairing it) is the first item for the round-4 look at `xtpc` (§15).
+
+**The gains.** The 7 "new beam-window flash" events are the class §11 predicted: a beam-window pulse
+reco1 folded into a cosmic flash 2–5 µs away, split out by the finder, matched by a contained ~150 cm
+track. Three pass νμ > 0.9 (numu 4.40, 2.96, 2.83). On data they are either recovered neutrinos or
+cosmics that happen to sit on a beam-window flash; the beam-off arm (§14) gives the rate of the latter.

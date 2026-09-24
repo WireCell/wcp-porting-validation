@@ -1,0 +1,6 @@
+# doc 123 round 4: only the round-2/3 extensions OFF (the base rescue and the unmatched rule stay ON)
+rescue_in_beam_far=false
+rescue_geom_first=false
+rescue_pierce_test=false
+rescue_dest_beam_for_new=false
+rescue_beam_main_only=false
