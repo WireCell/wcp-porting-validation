@@ -864,6 +864,22 @@ reco1 folded into a cosmic flash 2–5 µs away, split out by the finder, matche
 track. Three pass νμ > 0.9 (numu 4.40, 2.96, 2.83). On data they are either recovered neutrinos or
 cosmics that happen to sit on a beam-window flash; the beam-off arm (§14) gives the rate of the latter.
 
+### 13.3 mcp2k (2000 events): the same picture (`123_r3_ql_summary_mcp2k.json`, `123_r3_moves_mcp2k.json`, `123_r3_pr_summary_mcp2k.json`)
+
+| | mcp1k (§13.1–13.2) | mcp2k |
+|---|---|---|
+| matched clusters, base / hits | 20 060 / 20 058 | 39 768 / 39 786 |
+| moved | 5 185 (26 %) | 10 243 (26 %) |
+| beam-window matches base → hits | 1 738 → 1 743 | 3 459 → 3 367 |
+| rescue firings base → hits | 12 → 4 | **29 → 16** |
+| PR level | 56 events changed; candidates 465 → 470; νμ 271 → 271 | *(filled in below when the PR stage lands)* |
+
+The 16 residual firings on mcp2k are, by the §11.2 classes: the 6 same-time merges (expected to stay),
+the 3 within-veto pairs the finder did not split (70128, 173450, 396761), 4 cases where reco1 already had
+the partner (50801, 164576, 319913 and 72759 — whose restored 250 PE partner did not take the far half),
+and 3 new unmatched adoptions (73054, 74094, 79491). The 13 other §6 moves of mcp2k — all the ones the
+census called *restored* — stop firing, as on mcp1k.
+
 ## 14. Round 3 — MC and beam-off (2026-09-24 →)
 
 ### 14.1 Beam-off: the fake-candidate rate (1000 Run-1 off-beam gates, `work-r3off-d123{base,hits}pr`)
