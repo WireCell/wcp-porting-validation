@@ -3,13 +3,24 @@
 # `setarch x86_64 -R` through abtest/run_events.sh (snapshots abtest/snap/<label>/), plus the
 # truth tiers and the pctree copied into the snapshots, then abtest/ab_compare.sh.
 # Usage: scripts/w3_gate.sh [labelA] [labelB]     (refuses to overwrite an existing label, M13)
+#        scripts/w3_gate.sh -1 <newlabel> <existinglabel>   one new run compared with an existing
+#                                                            snapshot (doc 03 sec 5: wcfm-sb-off vs wcfm-w3-d)
 set -u
 WCFM_DIR=$(cd "$(dirname "$0")/.." && pwd)
 AB=$(cd "$WCFM_DIR/../abtest" && pwd)
+ONE=0
+if [ "${1:-}" = "-1" ]; then ONE=1; shift; fi
 LA=${1:-wcfm-w3-a}; LB=${2:-wcfm-w3-b}
-for L in "$LA" "$LB"; do
-    [ -d "$AB/snap/$L" ] && { echo "REFUSING: snapshot $L exists" >&2; exit 2; }
-done
+if [ $ONE = 1 ]; then
+    [ -d "$AB/snap/$LA" ] && { echo "REFUSING: snapshot $LA exists" >&2; exit 2; }
+    [ -d "$AB/snap/$LB" ] || { echo "reference snapshot $LB does not exist" >&2; exit 2; }
+    RUN_LABELS=("$LA")
+else
+    for L in "$LA" "$LB"; do
+        [ -d "$AB/snap/$L" ] && { echo "REFUSING: snapshot $L exists" >&2; exit 2; }
+    done
+    RUN_LABELS=("$LA" "$LB")
+fi
 extra() {
     local L=$1 det run evt r6
     while read -r det run evt; do
@@ -20,7 +31,7 @@ extra() {
     done < "$WCFM_DIR/abtest_events.txt"
 }
 cd "$AB" || exit 1
-for L in "$LA" "$LB"; do
+for L in "${RUN_LABELS[@]}"; do
     WCFM_SETARCH=1 ./run_events.sh "$L" both "$WCFM_DIR/abtest_events.txt" > "$WCFM_DIR/work/.gate_$L.log" 2>&1
     rc=$?
     echo "run_events $L rc=$rc"

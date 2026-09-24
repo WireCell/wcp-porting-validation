@@ -11,6 +11,7 @@
 //             -c wct-img-all.jsonnet
 // Output: <output_dir>/clusters-apa-anode<N>-ms-{active,masked}.tar.gz and, with depos,
 //         <output_dir>/clusters-{tru0,tru}-anode<N>-ms-active.tar.gz
+// --tla-code blob_cutting=true [--tla-code cut_length=20] inserts the sub-blob generator (doc 03).
 
 local g = import 'pgraph.jsonnet';
 local wc = import 'wirecell.jsonnet';
@@ -31,6 +32,10 @@ function(
   time_offset = P.depofill_time_offset,
   // BlobDepoFill primary plane (0,1,2); diagnostics only
   pindex = 2,
+  // wcfm doc 03 sub-blob generator: BlobCutting ahead of BlobClustering (false = doc 02 chain)
+  blob_cutting = false,
+  cut_length = 20,
+  cut_max_depth = 10,
 )
 
   local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -43,6 +48,9 @@ function(
       depofill_time_offset: time_offset,
       depofill_nsigma: P.depofill_nsigma,
       depofill_pindex: pindex,
+      blob_cutting: blob_cutting,
+      cut_length: cut_length,
+      cut_max_depth: cut_max_depth,
   });
 
   local per_anode_graph(anode) =

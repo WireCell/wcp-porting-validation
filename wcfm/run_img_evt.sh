@@ -1,9 +1,11 @@
 #!/bin/bash
 # Run imaging (+ BlobDepoFill truth tiers) for one workspace event, one wire-cell process per anode.
-# Usage: ./run_img_evt.sh [-a anode] [-T] [-t time_offset_us] [-O suffix] <run> <evt|all>
+# Usage: ./run_img_evt.sh [-a anode] [-T] [-t time_offset_us] [-C [-L wires]] [-O suffix] <run> <evt|all>
 #   -a N   only this anode ident (default: every anode with a sim-frames file)
 #   -T     no truth tiers (plain PDHD-style imaging)
 #   -t US  BlobDepoFill time_offset in microseconds (default: wcfm_params depofill_time_offset)
+#   -C     sub-blob generator: BlobCutting ahead of BlobClustering (doc 03; default off)
+#   -L N   BlobCutting length_threshold in wires (default 20; only with -C)
 #   -O S   write into work/<run6>_<evt><S>/ (reads the frames from work/<run6>_<evt>/); for scans
 # Input:  work/<run6>_<evt>/sim-frames-anode<N>.tar.bz2, sim-depos.tar.bz2 (run_sim_evt.sh)
 # Output: work/<run6>_<evt>/clusters-apa-anode<N>-ms-{active,masked}.tar.gz,
@@ -22,7 +24,7 @@ WC_PRELOAD=""
 SETARCH=""
 [ "${WCFM_SETARCH:-0}" = "1" ] && SETARCH="setarch x86_64 -R"
 
-ANODE=""; TRUTH=1; TOFF_US=""; SUFFIX=""
+ANODE=""; TRUTH=1; TOFF_US=""; SUFFIX=""; CUT=0; CUT_LEN=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -30,11 +32,13 @@ while [ $# -gt 0 ]; do
         -T) TRUTH=0; shift ;;
         -t) TOFF_US="$2"; shift 2 ;;
         -O) SUFFIX="$2"; shift 2 ;;
+        -C) CUT=1; shift ;;
+        -L) CUT_LEN="$2"; shift 2 ;;
         *) _args+=("$1"); shift ;;
     esac
 done
 set -- "${_args[@]}"
-[ $# -lt 2 ] && { echo "Usage: $0 [-a anode] [-T] [-t time_offset_us] [-O suffix] <run> <evt|all>" >&2; exit 1; }
+[ $# -lt 2 ] && { echo "Usage: $0 [-a anode] [-T] [-t time_offset_us] [-C [-L wires]] [-O suffix] <run> <evt|all>" >&2; exit 1; }
 RUN=$1; EVT=$2
 RUN_STRIPPED=$(echo "$RUN" | sed 's/^0*//'); [ -z "$RUN_STRIPPED" ] && RUN_STRIPPED=0
 RUN_PADDED=$(printf '%06d' "$RUN_STRIPPED")
@@ -56,13 +60,16 @@ process_event() {
     fi
     local TOFF_ARG=()
     [ -n "$TOFF_US" ] && TOFF_ARG=(-S "time_offset=${TOFF_US}*1000")
-    echo "event $RUN/$EVT: anodes ${ANODES[*]} truth=$TRUTH time_offset_us=${TOFF_US:-default} -> $WORKDIR"
+    local CUT_ARG=()
+    [ "$CUT" = 1 ] && CUT_ARG=(-S "blob_cutting=true")
+    [ "$CUT" = 1 ] && [ -n "$CUT_LEN" ] && CUT_ARG+=(-S "cut_length=$CUT_LEN")
+    echo "event $RUN/$EVT: anodes ${ANODES[*]} truth=$TRUTH time_offset_us=${TOFF_US:-default} blob_cutting=$CUT${CUT_LEN:+/$CUT_LEN} -> $WORKDIR"
     cd "$WCFM_DIR"
     local ai CFG rc=0
     for ai in "${ANODES[@]}"; do
         CFG="$WORKDIR/.wct-img-a${ai}.json"
         wcsonnet -A "input_prefix=$INDIR/sim-frames" -S "anode_indices=[$ai]" -A "output_dir=$WORKDIR" \
-            "${DEPO_ARG[@]}" "${TOFF_ARG[@]}" -o "$CFG" wct-img-all.jsonnet
+            "${DEPO_ARG[@]}" "${TOFF_ARG[@]}" "${CUT_ARG[@]}" -o "$CFG" wct-img-all.jsonnet
         [ -s "$CFG" ] || { echo "wcsonnet failed for anode $ai" >&2; return 1; }
     done
     {
@@ -70,6 +77,7 @@ process_event() {
         echo "wcp=$(git -C $WCT_BASE/wcp-porting-img rev-parse --short HEAD)"
         echo "wires=$(python3 -c 'import json,sys; c=json.load(open(sys.argv[1])); print(sorted({n["data"]["filename"] for n in c if n.get("type")=="WireSchemaFile"})[0])' "$WORKDIR/.wct-img-a${ANODES[0]}.json")"
         echo "truth=$TRUTH"
+        echo "blob_cutting=$(python3 -c 'import json,sys; c=json.load(open(sys.argv[1])); print(sorted({n["data"]["length_threshold"] for n in c if n.get("type")=="BlobCutting"} or {"off"})[0])' "$WORKDIR/.wct-img-a${ANODES[0]}.json")"
         echo "time_offset=$(python3 -c 'import json,sys; c=json.load(open(sys.argv[1])); print(sorted({n["data"]["time_offset"] for n in c if n.get("type")=="BlobDepoFill"} or {"none"})[0])' "$WORKDIR/.wct-img-a${ANODES[0]}.json")"
         echo "imaged=$(date -Is)"
     } > "$WORKDIR/img-provenance.txt"

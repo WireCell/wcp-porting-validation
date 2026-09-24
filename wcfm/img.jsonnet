@@ -28,6 +28,13 @@ local config = {
     depofill_time_offset: 0,
     depofill_nsigma: 3.0,
     depofill_pindex: 2,     // BlobDepoFill primary plane (diagnostics)
+    // wcfm doc 03: sub-blob generator.  false => no BlobCutting node, compiled JSON
+    // byte-identical to doc 02's chain.  true => a BlobCutting node ahead of BlobClustering
+    // on the three-plane ("active") solving path splits every blob with a U/V/W strip wider
+    // than cut_length wires (C++ defaults 20 / 10; the masked 2-view fork is never cut).
+    blob_cutting: false,
+    cut_length: 20,
+    cut_max_depth: 10,
 } + cfg;
 
 local wc = import "wirecell.jsonnet";
@@ -348,11 +355,21 @@ local img = {
                 name="uboone-solving-truth-"+aname),
         }.ret,
 
-        ret:
+        local core =
         if solving_type == "full"
         then (if config.depos == '' then g.pipeline([bc, gd1, cs1, ld1, gd2, cs2, ld2, cs3, ld3, gc],"uboone-solving")
               else full_with_truth)
         else g.pipeline([bc, cs1, ld1, gc],"simple-solving"),
+
+        // wcfm doc 03: sub-blob generator (toolkit img/BlobCutting) ahead of BlobClustering,
+        // so the tru0 truth tier and everything downstream see sub-blobs.  Off by default:
+        // no node is emitted and the compiled JSON is byte-identical to doc 02's.
+        local cutter = g.pnode({
+            type: "BlobCutting",
+            name: "blobcutting-" + aname,
+            data: { length_threshold: config.cut_length, max_depth: config.cut_max_depth },
+        }, nin=1, nout=1),
+        ret: if config.blob_cutting then g.pipeline([cutter, core], "cut-solving-" + aname) else core,
     }.ret,
 
     dump :: function(anode, aname, drift_speed, output_dir='') {
