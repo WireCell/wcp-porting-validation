@@ -3182,3 +3182,8 @@ Owner ask: the 48 nueCC and 19 NCpi0 data samples at today's production default.
 - Products: `products/prod0923/{nuecc48,ncpi0}-scores-prod0923.tsv` (`pr_scores_table.py`). mcp1k/mcp2k were NOT re-run in this epoch.
 - Not yet compared against prod0908 or pr150s0.
 - Repro: `nohup scripts/prod0923/drive.sh &` (from anywhere; it cd's into sbnd_xin), then `python3 pr_scores_table.py --root work-<s>-prod0923pr --sample <s> --out products/prod0923/<s>-scores-prod0923.tsv`.
+
+## doc sbnd_xin/123 (2026-09-24) -- SBND flashes from OpHits: investigation + campaign design
+- No work trees, no arms: design only. The probe outputs are small and committed in `docs/123_flash/` (the rescue census detail copied from `~/tmp/cbr3/`, and the per-move hit tables).
+- Raw hit dumps (`mcp1k.tsv`, `mcp2k_p{1,2}.tsv`, 6.8 MB) lived in the session scratchpad only; regenerate them with the doc's Repro block (`scripts/analysis/light/d123_ophit_probe.C`).
+- Inputs read (never written): `input_files_reco1/data_MCP2025C_reco1_frameshift_first1000ev.root` (mcp1k) and `/nfs/data/1/xning/wirecell-working/SBND/data/reco1_upstream/data_reco1/*2nd1k_part{1,2}.root` (mcp2k).
