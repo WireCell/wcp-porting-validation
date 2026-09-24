@@ -516,3 +516,140 @@ change, or standalone only.
 - `toolkit/match/docs/sbnd-opdetreco-chain.md`, `qlmatching-evt59415-xtpc-flash-split.md`;
 - `toolkit/root/docs/sbnd-reco1-source.md`; `wire-cell-sbnd-reco1/docs/DESIGN.md`;
 - sbndcode `OpDetReco/OpFlash/{job/sbnd_flashalgo.fcl, FlashFinder/SimpleFlashAlgo.cxx, SBNDFlashFinder_module.cc}`.
+
+---
+
+# Execution log (2026-09-24 →)
+
+Owner decisions before execution: bring-in commits owner-authored, crediting xning in the message;
+R5 is a design note for a larwirecell OpHit source (no LArSoft build); full samples (data: nueCC48,
+NCpi0, mcp1k, mcp2k; MC: round-3 cv, nuecc, beam-off); movers adjudicated from evidence, not by hand
+scan; production arms may use up to 32 CPUs.
+
+## 10. Round 0 — bring-in, gates, first look (2026-09-24)
+
+### Repro
+
+```bash
+SX=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+P=~/tmp/d123-libpin            # toolkit 69515f37 + the 3 flash files, reco1 85b7932 + the 7 files; libs.md5 inside
+export LD_LIBRARY_PATH=$P:$P/reco1/lib:$LD_LIBRARY_PATH
+
+# baseline (reco1 flashes), knob absent; then the two hit-flash arms on the SAME imaging
+SBND_QL_KEEP_ICLUSTER=1 SBND_MAX_JOBS=3 ./run_chain_group.sh input_files_reco1/data_filtered_decoded_reco1-fe6033f3-*_frameshift.root work-nuecc48-d123base data --size 16 --layout perevt
+JOBS=3 scripts/d123/hits_arm.sh work-nuecc48-d123base work-nuecc48-d123hits    data --ref
+JOBS=3 scripts/d123/hits_arm.sh work-nuecc48-d123base work-nuecc48-d123nosplit data --ff '{"pulse_split":false}'
+
+# gates
+python3 scripts/multi/repro_cmp.py work-nuecc48-d123base work-nuecc48-prod0923 $(cat work-nuecc48-d123base/g*/events.txt)   # (a)
+python3 scripts/d123/intime_gate.py work-nuecc48-d123hits                                                                     # (d)
+python3 scripts/d123/r1_census.py work-nuecc48-d123hits --tsv /tmp/r1.tsv                                                     # first census
+python3 scripts/d123/r3_ql_compare.py work-nuecc48-d123base work-nuecc48-d123hits --tsv /tmp/r3.tsv                          # first Q/L look
+```
+
+### 10.1 What was brought in
+
+| repo | files | commit |
+|---|---|---|
+| toolkit (`apply-pointcloud`) | `flash/{inc/WireCellFlash/SBNDOpFlashFinder.h, src/SBNDOpFlashFinder.cxx, test/doctest_sbndopflashfinder.cxx}` verbatim from xning's tree; `cfg/pgrapher/experiment/sbnd/{sbnd-opdet-geom.json, sbnd-pmt-channels.json}` (regenerated from `wire-cell-data/sbnd/photodet/semi-analytical-sbnd.json` + sbndcode `sbnd_pds_mapping.json` with xning's `make_configs.py`: byte-identical); `flash/docs/sbnd-flash-from-hits.md` (provenance, sha256s) | see §10.6 |
+| `wire-cell-sbnd-reco1` (`main`) | new `inc/WireCellRoot/SBNDReco1OpHitSource.h`, `src/SBNDReco1OpHitSource.cxx`, `src/SBNDReco1CafOffset.h`; modified `src/SBNDReco1OpFlashSource.cxx` (its CAF-offset code moved into the shared header), `CMakeLists.txt`, `test/check_factories.cmake`, `README.md` | see §10.6 |
+| wcp `sbnd_xin/` | `wct-reco1-dump.jsonnet` knob (§10.2); `scripts/d123/{hits_arm.sh, intime_gate.py, r1_census.py, r3_ql_compare.py}`; this section | see §10.6 |
+
+Build: `wcbuild` rc 0; `./build/flash/wcdoctest-flash` **32/32** (13 new `SBNDOpFlashFinder` cases,
+through the factory); `md5sum local/lib/libWireCell*.so` before/after: **only `libWireCellFlash.so`
+changed** (`ac64d0bd…` → `cb055020…`, mtime 09:38 > source); `nm -DC` finds the class. reco1: cmake build +
+install rc 0, `ctest reco1_factories` 1/1 (3 factories). Lib pin `~/tmp/d123-libpin` (toolkit + reco1 `.so`,
+`libs.md5`, `TOOLKIT_HEAD`); every arm below runs on it and records `.libs.md5.{start,end}` (all unchanged).
+
+### 10.2 The knob: `flash_source` in `sbnd_xin/wct-reco1-dump.jsonnet`
+
+New TLAs, all defaulting to today's graph: `flash_source='reco1'|'hits'`, `hit_time`, `hit_product`,
+`ff` (code, merged over the finder config), `reco1_reference` (also writes `reco1flash_apa<N>.tar.gz`),
+`with_frames`. With `hits`: `SBNDReco1OpHitSource:hits_tpc<N>` (channels from the committed
+`sbnd-pmt-channels.json`) → `SBNDOpFlashFinder:ff_tpc<N>` (`nchan 312`, the committed geometry) → the
+**same** `TensorFileSink:opflash_sink_apa<N>` and file name. `WireCellFlash` is appended to the plugin
+list only when on. **The Q/L job, the PR job and `run_chain_group.sh` are byte-untouched.**
+
+`scripts/d123/hits_arm.sh <base> <hits> <data|sim> [--ff JSON] [--ref] [--groups] [--hit-time]` builds
+a hit-flash arm on a baseline's imaging: per `g<K>` it re-runs only the flash dump (same file, entry
+range, CAF mode and frameshift product, read from the baseline's compiled dump config), checks the
+event-id set, links `frames-dnn.tar.bz2` + `icluster-*.npz`, copies `events.txt`, and runs
+`run_chain_group.sh --from ql --layout perevt`. Post-checks: `rse.json` identical, compiled Q/L config
+identical after root-path normalisation, libs unchanged.
+
+Size note: the hit-flash `opflash_apa<N>.tar.gz` also carries the finder's `flash_summary` and
+`ophits` tensors (every hit with its flash id — what §11 reads), so it is ~7 MB per 16-event group
+against 0.1 MB for reco1 flashes (a 48-event arm: 512 MB vs 779 MB total; the imaging dominates).
+
+### 10.3 Gates — all PASS
+
+| gate | what | result |
+|---|---|---|
+| (a) knob-off Q/L | `work-nuecc48-d123base` (new build, pin, knob absent) vs `work-nuecc48-prod0923` (toolkit 377119ee) | `repro_cmp.py`: **IDENTICAL same=192 differ=0** (48 events × pctree + 3 Bee zips) |
+| (b) reco1 reader refactor | re-dump nueCC48 g0–g2 with the rebuilt plugin, `hash_archive.py` vs prod0923 | **9/9 archives identical** (`opflash_apa{0,1}` ×3 groups, `frames-dnn` ×3) |
+| (c) compiled dump config | recorded `prod0923/g{0,1,2}/.wct-cfg-dump.json` vs recompiled with the new jsonnet; old-vs-new jsonnet for the data, `--fsproduct` and `--mc` TLA lists | **all identical**; knob on: finder ×2, hit source ×2 with 60 channels, `WireCellFlash`, no frame source, sinks unchanged |
+| (d) flash-time offset carried | `intime_gate.py`: events with a flash in +0.3…1.9 µs after `frame_apply_at_caf` | hits **45/48**, no-split 45/48, reco1 45/48 — the same three events missing (111412, 131357, 214469) |
+| (e) xning's comparison reproduced | 5 entries (0, 7, 19, 30, 44), their `compare_flashes.py` (time matching) | 148/152 reco1 flashes found; PE ratio ours/reco1 median **1.005** (5–95 %: 0.993–1.19); Δt median **+8.4 ns**; 194 ours vs 152 reco1 (xning, 63 entries: 91 % one-to-one, 1.005, +8.3 ns) |
+| per-PMT pattern | brightest flash of evt 10550 TPC0, reco1 vs ours | 50/50 channels, corr **1.0000**, max per-channel Δ 21.5 PE of 7418 |
+
+Post-check trap found and fixed: `run_chain_group.sh` writes the root path in the form it was given
+(relative for the baseline, absolute from the arm script), so the compiled-config comparison
+normalises both forms. A first version of `hits_arm.sh` used `GROUPS` as a variable name — bash's
+own `GROUPS` array — and read the gid instead of the group list; renamed.
+
+Arms: `work-{nuecc48,ncpi0}-d123{base,hits,nosplit}` (48 + 19 events); `work-mcp1k-d123base` started
+(63 groups, 5 at a time).
+
+### 10.4 First census on nueCC48 (48 events, `r1_census.py`, the §11 tool)
+
+Per reco1 flash the nearest hit flash within 0.5 µs is its match; unmatched hit flashes ≥ 20 PE are
+classed by where they sit against the reco1 flashes:
+
+| | count | note |
+|---|---|---|
+| reco1 flashes / hit flashes | 1387 / 1780 | |
+| matched | 1328 | Δt median −8 ns |
+| reco1 flash with no hit flash within 0.5 µs | 59 | the finder joined or removed it (late-light rule); to inspect in §11 |
+| **absorbed** (inside a reco1 flash's 8 µs integral, later) | 66 | Δt 6–7 µs dominates |
+| **vetoed** (0.3–8 µs before a reco1 flash) | 94 | PE median 42, up to 8.7 k |
+| prepulse (< 1 % of a bright flash, 0.3–4 µs before it) | 53 | 40 of the 87 beam-window flashes carry one at 20–100 PE: most likely deconvolution pre-ringing of the big pulse, not light — to confirm in §11 |
+| piece (< 0.3 µs from a matched flash) | 21 | the same pulse cut in two |
+| dropped (outside every reco1 window) | 218 | PE median 84 |
+
+Beam window (+0.3…1.9 µs): 87 reco1 flashes, 22 with a vetoed partner ≥ 20 PE, 0 with an absorbed one.
+
+### 10.5 First Q/L look on nueCC48 — the moves are NOT from the split
+
+`r3_ql_compare.py` keys matched clusters by (event, anode group, cluster ident) from the Q/L log
+(null test base vs prod0923: 555/555 same) and calls two matches the same flash when their times
+agree to 0.2 µs.
+
+| arms | matched clusters | same | moved | of which to a < 100 PE flash | beam-window matches A → B |
+|---|---|---|---|---|---|
+| base → hits | 555 / 555 | 424 | **131** | 37 | 62 → 51 |
+| base → no-split | 555 / 555 | 428 | 127 | 36 | 62 → 52 |
+| no-split → hits | 555 / 555 | 550 | **5** | 1 | 52 → 51 |
+
+So 24 % of the matched clusters change flash, and the pulse split accounts for 5 of the 131 moves:
+the rest come from the finder's other differences — the recovered vetoed/dropped flashes (+28 %
+candidates), the extra small flashes at `flash_minPE` 50, and the join/late-light rules. 104 of the
+131 moves go to a flash more than 100 µs away; the movers are small (predicted light median 28 PE)
+and go to smaller flashes (PE median 188 vs 526). Two readings of the beam-window drop 62 → 51:
+
+- **the intended one** — evt 74544 anode 1: a 1972-PE-predicted cluster sat on the 32 k PE beam flash
+  in base; with hit flashes it matches a **1101 PE flash at −495.5 µs that reco1 had vetoed** (2.8 µs
+  before a 3895 PE flash) — predicted 1097 PE, a cosmic recovered from the beam bundle;
+- **the one to watch** — evt 388 anode 1: two clusters leave a 489 PE beam flash for flashes that
+  reco1 also had (−580 and −333 µs), i.e. the global fit re-balanced, not a new flash.
+
+Flash times and `flash_x_offset` of the common flashes agree between the arms to the ns, and the
+per-PMT pattern of a matched flash is identical (corr 1.0000), so the moves are in the candidate
+set and the fit, not in a convention. Whether they are right is the question §13 answers with the
+neutrino-candidate tables (PR stage) on 3.1 k data events and §14 with truth on 4 k MC events; the
+no-split arm stays in the ladder as the attribution control (§12).
+
+### 10.6 Commits
+
+- toolkit `apply-pointcloud` **c2b578fe** (on 25edbe2a): the finder, its doctest, the two JSONs, `flash/docs/sbnd-flash-from-hits.md`.
+- `wire-cell-sbnd-reco1` `main` **d114880**: the OpHit source, the shared CAF-offset header, the gated OpFlashSource refactor.
+- wcp `sbnd_xin/`: the dump knob, `scripts/d123/`, this section (the commit that carries this text).

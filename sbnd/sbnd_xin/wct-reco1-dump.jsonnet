@@ -62,7 +62,24 @@
 
 function(input, output_dir='.', entry='-1', entry_begin='0', entry_count='-1', caf_offset_mode='none', caf_offset_override='0',
          wire_product='', badmask_product='', summary_product='', flash_process='Reco1',
-         frameshift_product='')
+         frameshift_product='',
+         flash_source='reco1', hit_time='rise', hit_product='', ff={}, reco1_reference='false',
+         with_frames='true')
+// flash_source (doc sbnd_xin/123 round 0, 2026-09-24): 'reco1' (default) takes
+// SBND's recob::OpFlash as this job always has; 'hits' rebuilds the flashes
+// from the reco1 PMT OpHits, per TPC, with SBNDReco1OpHitSource ->
+// SBNDOpFlashFinder (toolkit flash/, code by xning) and writes them to the SAME
+// opflash_apa<N>.tar.gz through the same TensorFileSink, so the Q/L and PR jobs
+// downstream are untouched.  Default 'reco1' => not one node, key or plugin
+// changes and the compiled JSON is byte-identical (gate: doc 123 sec 10).
+//   hit_time         'rise' (StartTime+RiseTime, as SBNDFlashFinder) | 'peak' | 'start'
+//   hit_product      '' => the C++ default recob::OpHits_ophitpmt__Reco1.
+//   ff               (--tla-code) object merged over the SBNDOpFlashFinder config,
+//                    e.g. ff={pulse_split:false}; its C++ defaults ARE the SBND settings
+//   reco1_reference  'true' => ALSO write SBND's OpFlash to reco1flash_apa<N>.tar.gz
+//                    (the comparison reference; never read by the chain)
+//   with_frames      'false' => no frame dump (a flash-only arm that shares the
+//                    baseline's frames + imaging, scripts/d123/hits_arm.sh)
 // caf_offset_mode: none | product | auto | override (validated in C++)
 //
 // wire_product / badmask_product / summary_product: art branch names of the
@@ -158,8 +175,64 @@ local flash_sinks = [
     for n in [0, 1]
 ];
 
-local pipes = [g.pipeline([frame_src, frame_sink], 'frames')] +
-              [g.pipeline([flash_srcs[n], flash_sinks[n]], 'flash%d' % n) for n in [0, 1]];
+// ---- flash_source=hits: OpHits -> SBNDOpFlashFinder -> the same opflash sinks ----
+local hits_on = flash_source == 'hits';
+assert flash_source == 'reco1' || hits_on : 'flash_source must be reco1 or hits';
+// PMT OpChannels per TPC (even = TPC0, odd = TPC1); only read when hits_on.
+local pmt = import 'pgrapher/experiment/sbnd/sbnd-pmt-channels.json';
+
+local hit_srcs = [
+    g.pnode({
+        type: 'SBNDReco1OpHitSource',
+        name: 'hits_tpc%d' % n,
+        data: {
+            filename: input,
+            entry: entry_num,
+            [if entry_begin_num != 0 then 'entry_begin']: entry_begin_num,
+            [if entry_count_num >= 0 then 'entry_count']: entry_count_num,
+            hit_time: hit_time,
+            channels: pmt['tpc%d' % n],
+            caf_offset_mode: caf_offset_mode,
+            [if caf_offset_mode == 'override' then 'caf_offset_override']: caf_override_ns,
+        } + (if frameshift_product != '' then { frameshift_product: frameshift_product } else {})
+          + (if hit_product != '' then { hit_product: hit_product } else {}),
+    }, nin=0, nout=1)
+    for n in [0, 1]
+];
+
+local finders = [
+    g.pnode({
+        type: 'SBNDOpFlashFinder',
+        name: 'ff_tpc%d' % n,
+        data: {
+            nchan: 312,
+            geom_file: 'pgrapher/experiment/sbnd/sbnd-opdet-geom.json',
+        } + ff,
+    }, nin=1, nout=1)
+    for n in [0, 1]
+];
+
+local ref_sinks = [
+    g.pnode({
+        type: 'TensorFileSink',
+        name: 'reco1flash_sink_apa%d' % n,
+        data: {
+            outname: output_dir + '/reco1flash_apa%d.tar.gz' % n,
+            prefix: 'opflash_',
+        },
+    }, nin=1, nout=0)
+    for n in [0, 1]
+];
+
+local flash_pipes =
+    if hits_on then [g.pipeline([hit_srcs[n], finders[n], flash_sinks[n]], 'flash%d' % n) for n in [0, 1]]
+    else [g.pipeline([flash_srcs[n], flash_sinks[n]], 'flash%d' % n) for n in [0, 1]];
+local ref_pipes =
+    if reco1_reference == 'true' then [g.pipeline([flash_srcs[n], ref_sinks[n]], 'reco1ref%d' % n) for n in [0, 1]]
+    else [];
+
+local pipes = (if with_frames == 'true' then [g.pipeline([frame_src, frame_sink], 'frames')] else []) +
+              flash_pipes + ref_pipes;
 
 local app = {
     type: 'Pgrapher',
@@ -173,7 +246,8 @@ local cmdline = {
     data: {
         // WireCellSBNDReco1 (standalone plugin) replaces WireCellRoot here --
         // the ONLY functional change from the deleted in-tree version.
-        plugins: ['WireCellSBNDReco1', 'WireCellSio', 'WireCellPgraph', 'WireCellAux'],
+        plugins: ['WireCellSBNDReco1', 'WireCellSio', 'WireCellPgraph', 'WireCellAux']
+                 + (if hits_on then ['WireCellFlash'] else []),
         apps: ['Pgrapher'],
     },
 };

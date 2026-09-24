@@ -3187,3 +3187,12 @@ Owner ask: the 48 nueCC and 19 NCpi0 data samples at today's production default.
 - No work trees, no arms: design only. The probe outputs are small and committed in `docs/123_flash/` (the rescue census detail copied from `~/tmp/cbr3/`, and the per-move hit tables).
 - Raw hit dumps (`mcp1k.tsv`, `mcp2k_p{1,2}.tsv`, 6.8 MB) lived in the session scratchpad only; regenerate them with the doc's Repro block (`scripts/analysis/light/d123_ophit_probe.C`).
 - Inputs read (never written): `input_files_reco1/data_MCP2025C_reco1_frameshift_first1000ev.root` (mcp1k) and `/nfs/data/1/xning/wirecell-working/SBND/data/reco1_upstream/data_reco1/*2nd1k_part{1,2}.root` (mcp2k).
+
+## doc sbnd_xin/123 -- SBND flashes from reco1 OpHits: campaign rounds R0-R5 (2026-09-24 ->)
+Lib pin `~/tmp/d123-libpin` (toolkit 69515f37 + the flash finder commit, reco1 85b7932 + the OpHit source commit; `libs.md5` inside). Baselines are fresh stage-A arms at that pin with `SBND_QL_KEEP_ICLUSTER=1`; every hit-flash arm is built by `scripts/d123/hits_arm.sh` on its baseline's imaging (frames + icluster symlinked, only `opflash_apa*.tar.gz` re-dumped), so base-vs-hits differences are flash differences only.
+- `work-<s>-d123base` -- reco1 flashes (the knob absent). `work-nuecc48-d123base` == `work-nuecc48-prod0923` 192/192 (the round-0 knob-off gate).
+- `work-<s>-d123hits` -- `SBNDOpFlashFinder` defaults (`--ref`: also carries `reco1flash_apa*.tar.gz`, the census reference).
+- `work-<s>-d123nosplit` -- the finder with `pulse_split:false`, the attribution control (doc 123 sec 12).
+- `work-<s>-d123{base,hits,nosplit}pr` -- stage B on the above (doc 123 sec 13/14).
+- Samples: nuecc48 (48), ncpi0 (19), mcp1k (1000), mcp2k (2000, `--gbase 63`), round-3 `r3cv` / `r3nue` / `r3off` per-file roots (doc 115 layout).
+- KEEP while doc 123 is open; the hit-flash `opflash_apa*.tar.gz` are 60x the reco1 ones (they carry every hit with its flash id) -- the first thing to drop when the campaign closes.
