@@ -1,0 +1,14 @@
+scanning 58 pin roots: 18229 files, 5322 distinct inodes, 36.37 GiB on disk
+790 content groups; 4480 files can share an inode; 12.32 GiB recoverable -> 24.05 GiB after
+
+DRY RUN.  Largest wins:
+      125.8 MB  d123-libpin/libWireCellGen.so  ->  d101/libpin/libWireCellGen.so
+      125.8 MB  d123-libpin-pre/libWireCellGen.so  ->  d101/libpin/libWireCellGen.so
+      125.8 MB  d123-libpin-r6/libWireCellGen.so  ->  d101/libpin/libWireCellGen.so
+      125.8 MB  p32/libpin_q32/libWireCellGen.so  ->  d101/libpin/libWireCellGen.so
+      125.8 MB  p33/libpin_q33/libWireCellGen.so  ->  d101/libpin/libWireCellGen.so
+      125.8 MB  p33/libpin_q33b/libWireCellGen.so  ->  d101/libpin/libWireCellGen.so
+      125.8 MB  p34/libpin_q34/libWireCellGen.so  ->  d101/libpin/libWireCellGen.so
+      125.8 MB  p35/libpin_prod/libWireCellGen.so  ->  d101/libpin/libWireCellGen.so
+
+Re-run with CONFIRM=yes to execute.  Nothing is deleted either way.

@@ -181,6 +181,12 @@ The driver `retire_files_20260925.sh` does five things:
 8. **Shared PROTECTED line split before retiring.** pdvd line 56 carried `d116vflip` (kept, as the release source) together with `d116vr2`. It was split before either changed.
 9. **INTERLOCK 14 fired on the first plan run.** The trigger was two empty (4 KB) placeholders `work-mcp10-m66d34{b,n}sb` that map to no doc. They were kept rather than excused by a ruling nobody gave; they free nothing.
 10. `PROTECTED` sbnd line 832 named a non-existent `work-r3nue-d118fliprep`. Retired with the line.
+11. **The pin dedup was never scoped to the live holds.** `dedup_pins_20260912.py` is stamp-free, so it was
+    not in the fork list. Its `LIVE_TMP` held only round C's `h26 h27 h28 p97 mg10`. It discovers any dir holding
+    at least 5 `.so` files as a pin root, so it would have hardlinked and `chmod -w`'d the live peer's seven
+    `~/tmp/d119inst/*/lib` trees while its install waiter was running. It was forked as
+    `dedup_pins_20260925.py`, with `LIVE_TMP` += `d117 d118 d119 wcfm claude-`. The report-only run shows 58 roots, none of them held.
+    The lesson from sec 2's fork list: a stamp-free helper is still part of the round, and it needs the round's holds.
 
 ## 6. The command block — the rest of the round (owner runs this from bash mode: type `!` first, then paste)
 
@@ -214,7 +220,10 @@ python3 archive_orphanlogs_20260925.py files_orphanlogs_pdvd_20260925.txt files_
 CONFIRM=yes ./retire_orphanlogs_20260925.sh > orphanlogs_run_20260925.log 2>&1; echo rc=$?; tail -6 orphanlogs_run_20260925.log
 
 # 4. the non-destructive win: hardlink identical pin libraries, nothing deleted
-CONFIRM=yes python3 dedup_pins_20260912.py > dedup_pins_20260925.log 2>&1; echo rc=$?; tail -5 dedup_pins_20260925.log
+#    FORKED as dedup_pins_20260925.py: the 09-12 original's LIVE_TMP does not hold d117/d118/d119/wcfm/claude-,
+#    and would hardlink + chmod -w the live peer's seven ~/tmp/d119inst/*/lib trees mid-install.
+#    Report-only run this session: 58 roots, none held; 12.32 GiB recoverable (dedup_pins_20260925.report.out).
+CONFIRM=yes python3 dedup_pins_20260925.py > dedup_pins_20260925.log 2>&1; echo rc=$?; tail -5 dedup_pins_20260925.log
 
 # 5. after-gates -- each must equal its sec 0 before-value
 python3 $SX/scripts/analysis/pr149/sentinels_tolerant.py --arms 'work-*-pr150s0' > sentinels_after_20260925.log 2>&1; tail -1 sentinels_after_20260925.log   # 21/0/2/7/0
@@ -228,7 +237,7 @@ Forecast for steps 1–4:
 - the file level ≈ 91 GiB;
 - `~/tmp` ≈ 20–40 GiB. The census decides: a large part of `~/tmp` is lib pins and the live peer's `d119*`;
 - orphan logs ≈ 1–2 GiB;
-- dedup a few GiB.
+- dedup ≤ 12.3 GiB (report-only; the sweep releases some of those pins first).
 
 That takes `/home/xqian` from 488 G to **roughly 600 G free**.
 
@@ -240,6 +249,7 @@ That takes `/home/xqian` from 488 G to **roughly 600 G free**.
 | record layer | `products/d123` + `bee/d123-numu3000` committed; `archive_records_20260925.py 1` froze **3562/3562** arms |
 | planner | every interlock PASS on the second run (the first run's INTERLOCK 14 fail is `plan_20260925.firstrun.out`); INTERLOCK 3: 0 sampled dirs moved, 0 tree-scoped writers |
 | directory release | INTERLOCK A re-plan **unchanged** in all three trees; record gate 115/115, 3123/3123, 324/324; **sbnd 311.99, pdvd 53.19, pdhd 4.79 GiB** removed, rc=0; broken symlinks **0 / 0 / 0** |
+| production links | the post-state **0 broken symlinks over all of sbnd_xin** already implies every `lgop` link into `d123base/g*/` resolves; the refused spot check (sec 6 step 0) re-checks it per arm |
 | free space | **120 G → 488 G** (+368 G, against a set-relative forecast of 369.6 GiB) |
 | file level, sweep, orphan logs, dedup, after-gates | **not run by this session**: the classifier refused the next command. Sec 6 is the block. |
 
