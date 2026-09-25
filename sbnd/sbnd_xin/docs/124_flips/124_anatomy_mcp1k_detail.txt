@@ -1,0 +1,236 @@
+==============================================================================================================
+mcp1k 18255/1/59003  LOST  class=QL-main  numu base 3.195 -> hits -999.000  Enu 821 -> 0  dvtx  cm
+  [base] numu 3.1952 Enu 820.7 vtx (42.6,-15.5,210.2) nt 4 vdef 0  main c19[main 298.4cm 3956pt t=1.578us tpc0 beam]  flash 1.5779/6351.8/tpc0 grp 10  pid: mu712 e0 e1 e1
+        beam-window flashes: tpc0:1.578/6352/g10
+        PR input: 4 clusters, 3982 keys; only here: 3982 keys in:
+          via=main  c19[main 298.4cm 3956pt t=1.578us tpc0 beam n=3954]  -> in other arm: c25[assoc 155.2cm 1827pt t=-0.741us tpc1 n=1799]
+          via=own   c58[assoc 1.7cm 14pt t=1.578us tpc0 beam n=14]  -> in other arm: c25[assoc 155.2cm 1827pt t=-0.741us tpc1 n=14]
+          via=own   c56[assoc 1.5cm 8pt t=1.578us tpc0 beam n=8]  -> in other arm: c25[assoc 155.2cm 1827pt t=-0.741us tpc1 n=8]
+          via=own   c57[assoc 1.2cm 6pt t=1.578us tpc0 beam n=6]  -> in other arm: c25[assoc 155.2cm 1827pt t=-0.741us tpc1 n=6]
+  [hits] no candidate.  where the other arm's main points are here:
+        1799 of 3954 keys present in this arm's PR scope
+        c25[assoc 155.2cm 1827pt t=-0.741us tpc1 n=1799]
+        beam-window flashes: tpc0 t=1.589 pe=6467 grp=18 gid=18; tpc1 t=1.584 pe=9168 grp=18 gid=1000016
+        T_bundle gid=18 t=1.589 pe=6467 n_main=2 n_dem=1 n_comp=0 rej_cosmic=2 rej_stm=0 rej_floor=1 reason=3 sel=-1
+  BDT-input groups changed: 
+==============================================================================================================
+mcp1k 18255/1/59261  LOST  class=fragment  numu base 3.845 -> hits 0.155  Enu 438 -> 479  dvtx 90.8 cm
+  [base] numu 3.8452 Enu 437.9 vtx (43.8,184.3,216.9) nt 4 vdef 0  main c11[main 94.5cm 806pt t=0.892us tpc1 beam]  flash 0.8922/6468.3/tpc1 grp 12  pid: mu235 p79 e2 e1 e2 e1 e3 e0
+        beam-window flashes: tpc0:0.903/210/g12;tpc1:0.892/6468/g12
+        PR input: 10 clusters, 898 keys; only here: 26 keys in:
+          via=own   c18[assoc 1.5cm 14pt t=0.892us tpc1 beam n=14]  -> in other arm: c15[main 1.5cm 14pt t=6.677us tpc0 LM n=14]
+          via=own   c16[assoc 1.3cm 12pt t=0.892us tpc1 beam n=12]  -> in other arm: c19[assoc 1.3cm 12pt t=6.677us tpc0 LM n=12]
+  [hits] numu 0.1546 Enu 478.7 vtx (99.7,126.1,175.3) nt 8 vdef 0  main c16[main 94.5cm 806pt t=0.902us tpc1 beam]  flash 0.9017/6513.2/tpc1 grp 6  pid: pi246 p75 e2 e1 e2 e1 e3 e0
+        beam-window flashes: tpc0:0.912/189/g6;tpc1:0.902/6513/g6
+        PR input: 8 clusters, 872 keys; only here: 0 keys in:
+  BDT-input groups changed: cosmict_16,numu_cc_12,shw_sp_8,nu_3,numu_2,neutrino_1,sel_1
+==============================================================================================================
+mcp1k 18255/1/59929  GAINED  class=fragment  numu base -0.410 -> hits 1.896  Enu 460 -> 567  dvtx 3.3 cm
+  [base] numu -0.4100 Enu 460.1 vtx (75.3,178.8,329.9) nt 8 vdef 0  main c20[main 137.6cm 1301pt t=1.932us tpc1 beam] vertex-moved-to c55[assoc 10.1cm 106pt t=1.932us tpc1 beam]  flash 1.9320/13755.7/tpc1 grp 16  pid: p99 mu331 e3 p3 e0 e2 e1 e1 e1 e1 e5 e3
+        beam-window flashes: tpc0:1.944/221/g16;tpc1:1.932/13756/g16
+        PR input: 14 clusters, 1561 keys; only here: 7 keys in:
+          via=own   c23[assoc 1.4cm 7pt t=1.932us tpc1 beam n=7]  -> in other arm: c23[assoc 1.4cm 7pt t=-321.973us tpc1 n=7]
+  [hits] numu 1.8964 Enu 566.8 vtx (78.1,177.3,330.6) nt 4 vdef 0  main c17[main 137.6cm 1301pt t=1.941us tpc1 beam]  flash 1.9414/13826.5/tpc1 grp 1000008  pid: mu331 e3 e1 e1 e1 e1 e5 p99 e7 e3
+        beam-window flashes: tpc1:1.941/13826/g1000008
+        PR input: 13 clusters, 1554 keys; only here: 0 keys in:
+  BDT-input groups changed: shw_sp_14,cosmict_12,numu_cc_10,nu_3,numu_2,neutrino_1,sel_1,vertex_1
+==============================================================================================================
+mcp1k 18255/1/60933  LOST  class=PR-only  numu base 3.749 -> hits 0.826  Enu 713 -> 756  dvtx 0.8 cm
+  [base] numu 3.7494 Enu 712.9 vtx (-68.7,25.4,276.5) nt 4 vdef 0  main c18[main 145.3cm 1553pt t=1.693us tpc0 beam]  flash 1.6934/15206.2/tpc0 grp 3  pid: p84 mu344 p154 e1 e2 e2 e2 e1
+        beam-window flashes: tpc0:1.693/15206/g3;tpc1:1.696/2588/g3
+        PR input: 6 clusters, 1617 keys; only here: 0 keys in:
+  [hits] numu 0.8262 Enu 756.1 vtx (-68.4,25.5,277.2) nt 8 vdef 0  main c19[main 145.3cm 1553pt t=1.704us tpc0 beam]  flash 1.7044/15262.9/tpc0 grp 7  pid: p86 pi355 p150 e1 e2 e2 e2 e1
+        beam-window flashes: tpc0:1.704/15263/g7;tpc1:1.705/2770/g7
+        PR input: 6 clusters, 1617 keys; only here: 0 keys in:
+  BDT-input groups changed: cosmict_13,numu_cc_10,nu_3,numu_2,neutrino_1,sel_1
+==============================================================================================================
+mcp1k 18255/1/62459  LOST  class=fragment  numu base 3.301 -> hits 0.771  Enu 907 -> 813  dvtx 0.2 cm
+  [base] numu 3.3008 Enu 906.6 vtx (65.6,197.2,405.0) nt 4 vdef 0  main c10[main 197.1cm 2324pt t=0.730us tpc1 beam]  flash 0.7296/19423.1/tpc1 grp 1000001  pid: mu462 pi77 p93 e16 e0 e1 e3
+        beam-window flashes: tpc0:1.284/1453/g9;tpc1:0.730/19423/g1000001
+        PR input: 5 clusters, 2419 keys; only here: 0 keys in:
+  [hits] numu 0.7710 Enu 812.6 vtx (65.5,197.4,405.0) nt 4 vdef 0  main c17[main 197.1cm 2324pt t=0.734us tpc1 beam]  flash 0.7339/19565.4/tpc1 grp 9  pid: pi78 p92 p12 mu453 e16 e0 e1 e3
+        beam-window flashes: tpc0:0.761/85/g9;tpc0:1.292/1444/g10;tpc1:0.734/19565/g9
+        PR input: 7 clusters, 2443 keys; only here: 24 keys in:
+          via=own   c53[assoc 1.6cm 13pt t=0.734us tpc1 beam n=13]  -> in other arm: c22[assoc 3.7cm 24pt t=824.417us tpc0 LM n=13]
+          via=own   c22[assoc 2.1cm 11pt t=0.734us tpc1 beam n=11]  -> in other arm: c22[assoc 3.7cm 24pt t=824.417us tpc0 LM n=11]
+  BDT-input groups changed: cosmict_28,shw_sp_14,numu_cc_11,numu_4,nu_3,sel_1
+==============================================================================================================
+mcp1k 18255/1/65053  LOST  class=fragment  numu base 2.877 -> hits -0.315  Enu 513 -> 609  dvtx 9.6 cm
+  [base] numu 2.8771 Enu 512.7 vtx (-143.9,45.7,300.1) nt 4 vdef 0  main c6[main 113.9cm 915pt t=0.643us tpc0 beam]  flash 0.6432/20200.8/tpc0 grp 4  pid: mu283 e13 e2 e3 e106
+        beam-window flashes: tpc0:0.643/20201/g4;tpc1:0.735/2071/g1000004
+        PR input: 8 clusters, 1193 keys; only here: 0 keys in:
+  [hits] numu -0.3145 Enu 608.6 vtx (-138.7,41.5,293.2) nt 8 vdef 0  main c22[assoc 113.9cm 915pt t=0.652us tpc0 beam] vertex-moved-to c137[assoc 11.0cm 176pt t=0.652us tpc0 beam]  flash 0.6523/20240.5/tpc0 grp 4  pid: p71 pi19 e22 p42 mu283 e13 e1
+        beam-window flashes: tpc0:0.652/20241/g4;tpc1:0.745/2089/g1000004
+        PR input: 10 clusters, 1212 keys; only here: 19 keys in:
+          via=own   c135[assoc 1.6cm 11pt t=0.652us tpc0 beam n=11]  -> in other arm: c139[assoc 1.6cm 11pt t=0.735us tpc1 beam n=11]
+          via=own   c136[assoc 1.6cm 8pt t=0.652us tpc0 beam n=8]  -> in other arm: c140[assoc 1.6cm 8pt t=0.735us tpc1 beam n=8]
+  BDT-input groups changed: ssm_223,shw_sp_162,cosmict_12,numu_cc_12,nu_3,numu_2,neutrino_1,sel_1,vertex_1
+==============================================================================================================
+mcp1k 18255/1/65999  LOST  class=fragment  numu base 2.103 -> hits -1.138  Enu 276 -> 148  dvtx 27.4 cm
+  [base] numu 2.1029 Enu 275.6 vtx (-175.2,-104.4,264.4) nt 8 vdef 0  main c27[assoc 28.8cm 344pt t=0.584us tpc0 beam]  flash 0.5840/16851.9/tpc0 grp 9  pid: e88 pi49
+        beam-window flashes: tpc0:0.584/16852/g9;tpc1:0.606/253/g9
+        PR input: 7 clusters, 466 keys; only here: 9 keys in:
+          via=own   c26[assoc 1.8cm 9pt t=0.584us tpc0 beam n=9]  -> in other arm: c1[main 1.8cm 9pt t=5.286us tpc0 n=9]
+  [hits] numu -1.1383 Enu 147.6 vtx (-201.3,-96.3,266.7) nt 10 vdef 0  main c27[assoc 28.8cm 344pt t=0.586us tpc0 beam]  flash 0.5857/15865.5/tpc0 grp 11  pid: e138 e10
+        beam-window flashes: tpc0:0.586/15865/g11;tpc1:0.616/386/g11
+        PR input: 8 clusters, 472 keys; only here: 15 keys in:
+          via=own   c28[assoc 1.3cm 12pt t=0.586us tpc0 beam n=12]  -> in other arm: c31[assoc 2.3cm 15pt t=-195.839us tpc0 n=12]
+          via=own   c92[assoc 1.0cm 3pt t=0.586us tpc0 beam n=3]  -> in other arm: c31[assoc 2.3cm 15pt t=-195.839us tpc0 n=3]
+  BDT-input groups changed: shw_sp_161,br83,ssm_70,mip43,tro41,lol22,vis20,stw19,spt13,stem10,anc10,numu_cc_10,gap8,pio6,sig6,lem6,hol6,nu_3,mgt_3,cme3,mgo_2,cosmict_2,numu_2,neutrino_1,nue_1
+==============================================================================================================
+mcp1k 18255/1/277298  LOST  class=fragment  numu base 1.282 -> hits 0.894  Enu 687 -> 556  dvtx 5.5 cm
+  [base] numu 1.2822 Enu 686.9 vtx (-167.7,-89.7,82.2) nt 4 vdef 0  main c17[main 57.3cm 1285pt t=1.854us tpc0 beam]  flash 1.8540/21171.1/tpc0 grp 3  pid: mu145 pi85 pi34 e18 e15 e0 e2 e1 e2
+        beam-window flashes: tpc0:1.854/21171/g3;tpc1:1.878/199/g3
+        PR input: 8 clusters, 1350 keys; only here: 7 keys in:
+          via=own   c23[assoc 1.6cm 7pt t=1.854us tpc0 beam TGM n=7]  -> in other arm: c24[assoc 1.6cm 7pt t=-516.397us tpc1 n=7]
+  [hits] numu 0.8943 Enu 555.5 vtx (-169.7,-90.0,77.0) nt 4 vdef 0  main c21[main 57.3cm 1285pt t=1.855us tpc0 beam]  flash 1.8552/21157.5/tpc0 grp 6  pid: e34 mu156 pi99 e18 e2 mu1
+        beam-window flashes: tpc0:1.855/21158/g6;tpc1:1.886/206/g6
+        PR input: 7 clusters, 1343 keys; only here: 0 keys in:
+  BDT-input groups changed: shw_sp_161,numu_cc_11,cosmict_9,nu_3,numu_2,sel_1
+==============================================================================================================
+mcp1k 18255/1/280884  GAINED  class=QL-main  numu base -999.000 -> hits 4.400  Enu 0 -> 675  dvtx  cm
+  [base] no candidate.  where the other arm's main points are here:
+        0 of 2991 keys present in this arm's PR scope (cluster out of scope: its t0 puts it outside the drift volume, or unmatched)
+        beam-window flashes: 
+  [hits] numu 4.4002 Enu 675.3 vtx (-132.6,75.2,428.6) nt 6 vdef 0  main c6[main 147.4cm 2994pt t=1.320us tpc0 beam]  flash 1.3199/16793.1/tpc0 grp 9  pid: mu347 pi17 mu60 e2 e3 e1
+        beam-window flashes: tpc0:1.320/16793/g9;tpc1:1.346/197/g9
+        PR input: 4 clusters, 3036 keys; only here: 3036 keys in:
+          via=main  c6[main 147.4cm 2994pt t=1.320us tpc0 beam n=2991]  -> in other arm: not present
+          via=own   c20[assoc 1.9cm 16pt t=1.320us tpc0 beam n=16]  -> in other arm: not present
+          via=own   c21[assoc 1.5cm 16pt t=1.320us tpc0 beam n=16]  -> in other arm: not present
+          via=own   c19[assoc 1.8cm 13pt t=1.320us tpc0 beam n=13]  -> in other arm: not present
+  BDT-input groups changed: 
+==============================================================================================================
+mcp1k 18255/1/281639  LOST  class=PR-only  numu base 1.370 -> hits 0.602  Enu 437 -> 437  dvtx 0.0 cm
+  [base] numu 1.3701 Enu 437.3 vtx (-166.4,-66.8,293.0) nt 8 vdef 0  main c23[main 32.7cm 394pt t=0.777us tpc0 beam] vertex-moved-to c93[assoc 15.0cm 197pt t=0.777us tpc0 beam]  flash 0.7773/22140.5/tpc0 grp 1  pid: e92 pi7 pi5 e39 e5 e5 e1 e2 e1 mu1
+        beam-window flashes: tpc0:0.777/22140/g1;tpc1:0.800/335/g1
+        PR input: 17 clusters, 1067 keys; only here: 0 keys in:
+  [hits] numu 0.6019 Enu 436.7 vtx (-166.4,-66.8,293.0) nt 8 vdef 0  main c25[main 32.7cm 394pt t=0.781us tpc0 beam] vertex-moved-to c93[assoc 15.0cm 197pt t=0.781us tpc0 beam]  flash 0.7807/22178.5/tpc0 grp 8  pid: e92 pi6 pi5 e39 e5 e5 e1 e2 e1 mu1
+        beam-window flashes: tpc0:0.781/22179/g8;tpc1:0.811/339/g8
+        PR input: 17 clusters, 1067 keys; only here: 0 keys in:
+  BDT-input groups changed: shw_sp_70,ssm_59,mip31,br31,tro15,vis10,spt8,stem7,stw5,anc5,lol5,sig4,lem3,hol3,numu_cc_3,gap2,cme2,numu_2,sel_1,pio1,nue_1
+==============================================================================================================
+mcp1k 18255/1/281808  GAINED  class=QL-main  numu base -999.000 -> hits 2.961  Enu 0 -> 557  dvtx  cm
+  [base] no candidate.  where the other arm's main points are here:
+        2440 of 2440 keys present in this arm's PR scope
+        c16[main 186.0cm 2443pt t=-2.472us tpc1 n=2440]
+        beam-window flashes: tpc0 t=0.850 pe=155 grp=11 gid=11
+        T_bundle gid=11 t=0.850 pe=155 n_main=1 n_dem=1 n_comp=0 rej_cosmic=2 rej_stm=0 rej_floor=0 reason=2 sel=-1
+  [hits] numu 2.9613 Enu 556.7 vtx (145.2,174.6,123.2) nt 4 vdef 0  main c15[main 186.0cm 2443pt t=0.839us tpc1 beam]  flash 0.8393/14217.5/tpc1 grp 6  pid: mu447 e2 p2 e1
+        beam-window flashes: tpc0:0.861/187/g6;tpc1:0.839/14217/g6
+        PR input: 4 clusters, 2473 keys; only here: 2473 keys in:
+          via=main  c15[main 186.0cm 2443pt t=0.839us tpc1 beam n=2440]  -> in other arm: c16[main 186.0cm 2443pt t=-2.472us tpc1 n=2440]
+          via=own   c30[assoc 2.0cm 16pt t=0.839us tpc1 beam n=16]  -> in other arm: c35[assoc 2.0cm 16pt t=-2.472us tpc1 n=16]
+          via=own   c29[assoc 1.4cm 9pt t=0.839us tpc1 beam n=9]  -> in other arm: c34[assoc 1.4cm 9pt t=-2.472us tpc1 n=9]
+          via=own   c31[assoc 1.6cm 8pt t=0.839us tpc1 beam n=8]  -> in other arm: c36[assoc 1.6cm 8pt t=-2.472us tpc1 n=8]
+  BDT-input groups changed: 
+==============================================================================================================
+mcp1k 18255/1/284211  GAINED  class=fragment  numu base -0.573 -> hits 2.786  Enu 204 -> 639  dvtx 21.4 cm
+  [base] numu -0.5729 Enu 204.2 vtx (-173.9,29.3,468.4) nt 4 vdef 0  main c14[main 151.7cm 1650pt t=0.841us tpc0 beam]  flash 0.8410/35398.0/tpc0 grp 0  pid: p180 e10 p2 e0 e2 e2
+        beam-window flashes: tpc0:0.841/35398/g0;tpc1:0.851/181/g0
+        PR input: 7 clusters, 1732 keys; only here: 37 keys in:
+          via=own   c22[assoc 3.5cm 27pt t=0.841us tpc0 beam n=27]  -> in other arm: c15[main 3.5cm 27pt t=149.300us tpc1 LM n=27]
+          via=own   c23[assoc 1.8cm 10pt t=0.841us tpc0 beam n=10]  -> in other arm: c23[assoc 1.8cm 10pt t=149.300us tpc1 LM n=10]
+  [hits] numu 2.7857 Enu 639.3 vtx (-175.6,42.8,451.8) nt 4 vdef 0  main c5[main 151.7cm 1650pt t=0.842us tpc0 beam]  flash 0.8421/35617.8/tpc0 grp 5  pid: p182 mu337 p2 e0 e2 e2
+        beam-window flashes: tpc0:0.842/35618/g5;tpc1:0.856/143/g5
+        PR input: 5 clusters, 1695 keys; only here: 0 keys in:
+  BDT-input groups changed: cosmict_16,numu_cc_14,shw_sp_12,nu_3,numu_3,sel_1
+==============================================================================================================
+mcp1k 18255/1/285531  GAINED  class=PR-only  numu base 0.467 -> hits 4.244  Enu 1208 -> 956  dvtx 0.2 cm
+  [base] numu 0.4665 Enu 1207.5 vtx (18.6,0.8,388.5) nt 8 vdef 0  main c15[main 221.8cm 2700pt t=1.767us tpc1 beam]  flash 1.7674/9309.4/tpc1 grp 6  pid: pi355 p455 p90 mu42 e1 e2 e0
+        beam-window flashes: tpc0:1.771/8655/g6;tpc1:1.767/9309/g6
+        PR input: 4 clusters, 2727 keys; only here: 0 keys in:
+  [hits] numu 4.2437 Enu 955.8 vtx (18.5,0.7,388.5) nt 4 vdef 0  main c19[main 221.8cm 2700pt t=1.777us tpc1 beam]  flash 1.7773/9378.3/tpc1 grp 8  pid: mu358 p455 e26 e1 e2 mu0
+        beam-window flashes: tpc0:1.780/8726/g8;tpc1:1.777/9378/g8
+        PR input: 4 clusters, 2727 keys; only here: 0 keys in:
+  BDT-input groups changed: cosmict_17,numu_cc_15,shw_sp_8,nu_3,numu_2,neutrino_1,sel_1
+==============================================================================================================
+mcp1k 18255/1/285665  GAINED  class=fragment  numu base 0.550 -> hits 1.026  Enu 419 -> 428  dvtx 89.3 cm
+  [base] numu 0.5505 Enu 418.9 vtx (-32.2,-90.2,107.0) nt 8 vdef 0  main c9[main 94.7cm 1819pt t=0.701us tpc0 beam]  flash 0.7008/8158.2/tpc0 grp 3  pid: pi250 p10 e1 e1 e2 e1 e1 e1 e1 e1 e0 e1
+        beam-window flashes: tpc0:0.701/8158/g3;tpc1:0.733/312/g3
+        PR input: 21 clusters, 2044 keys; only here: 24 keys in:
+          via=own   c14[assoc 2.4cm 16pt t=0.701us tpc0 beam n=16]  -> in other arm: c14[assoc 2.4cm 16pt t=-186.406us tpc0 n=16]
+          via=own   c15[assoc 1.6cm 8pt t=0.701us tpc0 beam TGM n=8]  -> in other arm: c6[main 1.6cm 8pt t=-1.608us tpc1 LM n=8]
+  [hits] numu 1.0261 Enu 427.8 vtx (-42.7,-103.4,19.3) nt 8 vdef 0  main c12[main 94.7cm 1819pt t=0.711us tpc0 beam]  flash 0.7113/8179.3/tpc0 grp 5  pid: pi246 e33 e1 e1 e2 e1 e1 e1 e1 e0 e1
+        beam-window flashes: tpc0:0.711/8179/g5;tpc1:0.739/310/g5
+        PR input: 19 clusters, 2020 keys; only here: 0 keys in:
+  BDT-input groups changed: shw_sp_167,numu_cc_13,nu_3,numu_2,sel_1
+==============================================================================================================
+mcp1k 18255/1/390644  GAINED  class=QL-main  numu base -999.000 -> hits 2.828  Enu 0 -> 475  dvtx  cm
+  [base] no candidate.  where the other arm's main points are here:
+        1964 of 1964 keys present in this arm's PR scope
+        c17[assoc 150.1cm 1990pt t=-1.986us tpc0 n=1964]
+        beam-window flashes: 
+  [hits] numu 2.8278 Enu 475.3 vtx (-17.4,26.2,283.2) nt 4 vdef 0  main c4[main 148.9cm 1966pt t=1.437us tpc0 beam]  flash 1.4368/9478.1/tpc0 grp 10  pid: mu342 e23 e3 e2
+        beam-window flashes: tpc0:1.437/9478/g10
+        PR input: 3 clusters, 1988 keys; only here: 1988 keys in:
+          via=main  c4[main 148.9cm 1966pt t=1.437us tpc0 beam n=1964]  -> in other arm: c17[assoc 150.1cm 1990pt t=-1.986us tpc0 n=1964]
+          via=own   c20[assoc 1.6cm 12pt t=1.437us tpc0 beam n=12]  -> in other arm: c17[assoc 150.1cm 1990pt t=-1.986us tpc0 n=12]
+          via=own   c21[assoc 1.5cm 12pt t=1.437us tpc0 beam n=12]  -> in other arm: c17[assoc 150.1cm 1990pt t=-1.986us tpc0 n=12]
+  BDT-input groups changed: 
+==============================================================================================================
+mcp1k 18259/1/68428  GAINED  class=QL-main  numu base -999.000 -> hits 2.539  Enu 0 -> 818  dvtx  cm
+  [base] no candidate.  where the other arm's main points are here:
+        3608 of 3608 keys present in this arm's PR scope
+        c6[main 195.1cm 3623pt t=-0.755us tpc0 n=3608]
+        beam-window flashes: tpc1 t=2.044 pe=206 grp=1000012 gid=1000012
+        T_bundle gid=1000012 t=2.044 pe=206 n_main=1 n_dem=1 n_comp=0 rej_cosmic=2 rej_stm=0 rej_floor=0 reason=2 sel=-1
+  [hits] numu 2.5386 Enu 818.3 vtx (-119.2,-191.4,285.6) nt 4 vdef 0  main c12[main 195.1cm 3623pt t=2.038us tpc0 beam]  flash 2.0382/14740.1/tpc0 grp 6  pid: mu252 p198 mu243 e7 e2 e1 e1
+        beam-window flashes: tpc0:2.038/14740/g6;tpc1:2.055/263/g6
+        PR input: 5 clusters, 3644 keys; only here: 3644 keys in:
+          via=main  c12[main 195.1cm 3623pt t=2.038us tpc0 beam n=3608]  -> in other arm: c6[main 195.1cm 3623pt t=-0.755us tpc0 n=3608]
+          via=own   c28[assoc 1.6cm 11pt t=2.038us tpc0 beam n=11]  -> in other arm: c26[assoc 1.6cm 11pt t=-0.755us tpc0 n=11]
+          via=own   c26[assoc 1.8cm 10pt t=2.038us tpc0 beam n=10]  -> in other arm: c24[assoc 1.8cm 10pt t=-0.755us tpc0 n=10]
+          via=own   c27[assoc 1.4cm 9pt t=2.038us tpc0 beam n=9]  -> in other arm: c25[assoc 1.4cm 9pt t=-0.755us tpc0 n=9]
+          via=own   c20[assoc 1.2cm 6pt t=2.038us tpc0 beam TGM n=6]  -> in other arm: c13[main 1.2cm 6pt t=2.044us tpc1 beam TGM/LM n=6]
+  BDT-input groups changed: 
+==============================================================================================================
+mcp1k 18259/1/169824  LOST  class=QL-main  numu base 5.645 -> hits -999.000  Enu 1059 -> 0  dvtx  cm
+  [base] numu 5.6451 Enu 1059.0 vtx (57.5,-142.8,114.3) nt 4 vdef 0  main c18[main 325.2cm 3758pt t=1.328us tpc1 beam]  flash 1.3278/14892.8/tpc1 grp 1000003  pid: pi374 mu435 e2 e2 e0 e1
+        beam-window flashes: tpc1:1.328/14893/g1000003
+        PR input: 5 clusters, 3795 keys; only here: 3795 keys in:
+          via=main  c18[main 325.2cm 3758pt t=1.328us tpc1 beam n=3753]  -> in other arm: c23[assoc 327.8cm 3800pt t=-3.134us tpc0 n=3753]
+          via=own   c42[assoc 2.2cm 14pt t=1.328us tpc1 beam n=14]  -> in other arm: c23[assoc 327.8cm 3800pt t=-3.134us tpc0 n=14]
+          via=own   c43[assoc 2.0cm 12pt t=1.328us tpc1 beam n=12]  -> in other arm: c23[assoc 327.8cm 3800pt t=-3.134us tpc0 n=12]
+          via=own   c45[assoc 1.6cm 8pt t=1.328us tpc1 beam n=8]  -> in other arm: c23[assoc 327.8cm 3800pt t=-3.134us tpc0 n=8]
+          via=own   c44[assoc 1.5cm 8pt t=1.328us tpc1 beam n=8]  -> in other arm: c23[assoc 327.8cm 3800pt t=-3.134us tpc0 n=8]
+  [hits] no candidate.  where the other arm's main points are here:
+        3753 of 3753 keys present in this arm's PR scope
+        c23[assoc 327.8cm 3800pt t=-3.134us tpc0 n=3753]
+        beam-window flashes: tpc0 t=1.336 pe=7581 grp=8 gid=8; tpc1 t=1.337 pe=14903 grp=8 gid=1000008
+  BDT-input groups changed: 
+==============================================================================================================
+mcp1k 18259/1/170792  GAINED  class=fragment  numu base 0.504 -> hits 0.984  Enu 659 -> 828  dvtx 1.5 cm
+  [base] numu 0.5038 Enu 658.8 vtx (-141.5,177.1,113.9) nt 8 vdef 0  main c10[main 56.2cm 1497pt t=1.662us tpc0 beam]  flash 1.6620/16021.1/tpc0 grp 0  pid: mu67 p27 e97 e40 e2 p303
+        beam-window flashes: tpc0:1.662/16021/g0;tpc1:1.675/288/g0
+        PR input: 5 clusters, 1555 keys; only here: 16 keys in:
+          via=own   c16[assoc 1.5cm 16pt t=1.662us tpc0 beam n=16]  -> in other arm: c6[main 1.5cm 16pt t=-2.043us tpc1 LM n=16]
+  [hits] numu 0.9843 Enu 828.5 vtx (-141.3,176.7,112.5) nt 8 vdef 0  main c2[main 56.2cm 1497pt t=1.666us tpc0 beam]  flash 1.6661/16102.8/tpc0 grp 8  pid: mu64 p34 pi33 e99 e36 e2 p299
+        beam-window flashes: tpc0:1.666/16103/g8;tpc1:1.686/364/g8
+        PR input: 4 clusters, 1539 keys; only here: 0 keys in:
+  BDT-input groups changed: numu_cc_10,shw_sp_8,cosmict_8,nu_3,numu_2,sel_1
+==============================================================================================================
+mcp1k 18259/1/172832  GAINED  class=fragment  numu base 0.635 -> hits 3.098  Enu 776 -> 634  dvtx 21.2 cm
+  [base] numu 0.6354 Enu 775.5 vtx (-59.2,-66.7,130.3) nt 4 vdef 0  main c21[main 137.1cm 1207pt t=1.174us tpc0 beam]  flash 1.1736/11709.8/tpc0 grp 3  pid: pi80 mu55 e3 p4 e0 p3 e1 e1 e0 p1 e1 e0 e2 e2 p3 mu269
+        beam-window flashes: tpc0:1.174/11710/g3;tpc1:1.185/199/g3
+        PR input: 16 clusters, 1367 keys; only here: 14 keys in:
+          via=own   c29[assoc 1.5cm 14pt t=1.174us tpc0 beam n=14]  -> in other arm: c10[main 1.5cm 14pt t=6.197us tpc1 LM n=14]
+  [hits] numu 3.0977 Enu 633.5 vtx (-74.8,-74.3,142.7) nt 4 vdef 0  main c20[main 137.1cm 1207pt t=1.182us tpc0 beam]  flash 1.1823/11819.6/tpc0 grp 6  pid: mu264 pi80 mu50 e8 e3 p4 e0 p3 e1 e1 e0 p1 e1 e0 e2 e2 p3
+        beam-window flashes: tpc0:1.182/11820/g6;tpc1:1.193/211/g6
+        PR input: 15 clusters, 1353 keys; only here: 0 keys in:
+  BDT-input groups changed: ssm_200,numu_cc_15,cosmict_12,shw_sp_8,nu_3,numu_3,sel_1
+==============================================================================================================
+mcp1k 18259/1/174422  LOST  class=QL-main  numu base 1.404 -> hits -999.000  Enu 429 -> 0  dvtx  cm
+  [base] numu 1.4039 Enu 429.0 vtx (0.7,166.8,189.6) nt 4 vdef 0  main c18[assoc 92.8cm 659pt t=0.679us tpc0 beam]  flash 0.6787/8383.6/tpc0 grp 5  pid: mu321 e2
+        beam-window flashes: tpc0:0.679/8384/g5;tpc1:0.683/8557/g5
+        PR input: 5 clusters, 706 keys; only here: 706 keys in:
+          via=main  c18[assoc 92.8cm 659pt t=0.679us tpc0 beam n=659]  -> in other arm: c11[main 93.2cm 661pt t=557.788us tpc1 n=659]
+          via=own   c46[assoc 2.6cm 17pt t=0.679us tpc0 beam n=17]  -> in other arm: c24[assoc 2.6cm 17pt t=0.690us tpc0 beam n=17]
+          via=own   c45[assoc 1.7cm 15pt t=0.679us tpc0 beam n=15]  -> in other arm: c23[assoc 1.7cm 15pt t=0.690us tpc0 beam n=15]
+          via=own   c47[assoc 1.7cm 15pt t=0.679us tpc0 beam n=15]  -> in other arm: c34[assoc 1.7cm 15pt t=557.788us tpc1 n=15]
+  [hits] no candidate.  where the other arm's main points are here:
+        659 of 659 keys present in this arm's PR scope
+        c11[main 93.2cm 661pt t=557.788us tpc1 n=659]
+        beam-window flashes: tpc0 t=0.690 pe=8452 grp=7 gid=7; tpc1 t=0.696 pe=8597 grp=7 gid=1000007
+        T_bundle gid=7 t=0.690 pe=8452 n_main=2 n_dem=0 n_comp=0 rej_cosmic=1 rej_stm=0 rej_floor=1 reason=3 sel=-1
+  BDT-input groups changed: 

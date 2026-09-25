@@ -1,0 +1,57 @@
+mcp1k  59003 LOST   QL-main  scan->reco1   c3 numuCC   B's candidate is a long forward track that starts inside at z~210, crosses the cathode and exits the downstream face at z=500 (mu712), with the vertex
+mcp1k  59261 LOST   fragment scan->hits    c1 unclear  Same short track (z 175-220, rising to y~185) in both rows with the same flash match. A puts the vertex at the upstream, lower end (a forward-going re
+mcp1k  59929 GAINED fragment scan->hits    c1 unclear  Same track (z 330-365, down from y~178) and vertex; A adds an unrelated red speck far away (z~350, x~-108, y~-50) and a tiny extra tpc0 flash match (2
+mcp1k  60933 LOST   PR-only  scan->reco1   c1 numuCC   The charge, vertex and flash match are identical, and neither row has red pieces. The only difference is the ID of the long (~135 cm) straight contain
+mcp1k  62459 LOST   fragment scan->reco1   c1 cosmic   Same main candidate (track starting at y~197 at the top face and going down, likely a top-entering cosmic in both rows); B also adds red far-away spec
+mcp1k  65053 LOST   fragment scan->unclear c1 numuCC   Same forward muon track and vertex region; A adds far unrelated red specks near z~140 (y~-185) and a few extra small particles, but A's predicted ligh
+mcp1k  65999 LOST   fragment scan->same    c1 unclear  Both rows pick the same tiny blob near the anode (z~265,y~-100) with similar flash match (pred ~10.3k vs ~16k); each adds one far unrelated red speck 
+mcp1k 277298 LOST   fragment scan->hits    c1 unclear  Same short candidate at z~80-120 and nearly identical flash prediction; A adds a far red speck at z~395, x~-195 (detector corner). The PR segmentation
+mcp1k 280884 GAINED QL-main  scan->hits    c2 numuCC   A finds an in-time tpc0 flash (1.32 us, 16793 PE, pred 10806, ticks follow bars) matched to a track starting inside at z~430,y~75 and running ~140 cm 
+mcp1k 281639 LOST   PR-only  scan->same    c2 other-nu Identical candidate charge, vertex and light match in both rows (pred ~10.5k vs ~22k PE, same underprediction); particle lists differ only by one smal
+mcp1k 281808 GAINED QL-main  scan->hits    c2 numuCC   A has NO CANDIDATE and only a 155 PE tpc0 flash. B has a tpc1 flash at 0.839 us (14218 PE) well matched (pred 11653) to a single downgoing track that 
+mcp1k 284211 GAINED fragment scan->hits    c2 numuCC   Same near-vertical track at z~450-470; A adds two far red specks (x~60 and x~140) and puts the vertex at the end of the short stub, calling the long t
+mcp1k 285531 GAINED PR-only  scan->hits    c2 numuCC   Same charge and flash (9309 PE, pred 8505 / 8655 pred 3810). The long straight track rising vertically from the vertex (~130 cm, dark) is MIP-like and
+mcp1k 285665 GAINED fragment scan->hits    c1 unclear  The same ~90 cm track (z 20-110, y~-95) in both rows. B puts the vertex at the upstream end z~20 (forward-going). A puts it at the downstream end z~10
+mcp1k 390644 GAINED QL-main  scan->hits    c3 numuCC   A has no beam-window flash and no candidate. B finds an in-time flash (9478 PE, pred 7001, ticks follow bars) matched to a contained ~150 cm forward-g
+mcp1k  68428 GAINED QL-main  scan->hits    c3 numuCC   A has NO CANDIDATE and its flash list lacks the bright in-time tpc0 flash; B matches a 14.7k PE tpc0 flash (pred 13.2k, ticks follow bars) to a long f
+mcp1k 169824 LOST   QL-main  scan->reco1   c3 numuCC   A has a contained L-shaped two-track event (vertex at z=115 y=-145, mu435 pi374) matched to the tpc1 flash (14893 PE, pred 11108, ticks follow the bar
+mcp1k 170792 GAINED fragment scan->hits    c1 unclear  Nearly identical candidate, vertex and PID near the top (y~176); A adds an unrelated red blob far away (z~210, x~35, y~33). Otherwise the same.
+mcp1k 172832 GAINED fragment scan->reco1   c1 numuCC   The same straight downward-forward track (z 130-175, y -55..-130), same light. A puts the vertex ~20 cm into what looks like one collinear line and sp
+mcp1k 174422 LOST   QL-main  scan->hits    c1 unclear  The same short downward track is placed at different x (A: x 0-110 starting at the cathode, as mu321; B: x 90-200 reaching the anode, no candidate); B
+mcp2k  53749 GAINED QL-main  scan->hits    c3 unclear  A has a clear contained interaction: a dense shower-like blob at z 200-260, y -100..-55, plus a ~60 cm track to the upper-left from the vertex. Its tp
+mcp2k  58006 LOST   fragment scan->hits    c1 unclear  Candidates and flash matches are essentially identical (Enu 468 vs 469). B adds far unrelated red specks at the detector bottom (z 220-250, y=-190), s
+mcp2k  66944 GAINED QL-main  scan->hits    c1 numuCC   A takes only the short curved piece (z 370-410) and predicts 5197 PE against 11395 measured; B adds a red straight track from z=440 exiting at z=500 (
+mcp2k  67868 GAINED fragment scan->hits    c2 numuCC   Same multi-prong interaction and vertex; A IDs a mu257 track while B calls it pi268 (no muon), and B adds red specks far away (z~50-100, y~-150) that 
+mcp2k  71642 LOST   PR-only  scan->reco1   c1 unclear  Identical charge, vertex and light; only PID differs: A labels the long curving track from the vertex as mu213, B calls it pi225 and has no muon; the 
+mcp2k  77846 GAINED fragment scan->hits    c2 unclear  Same ~140 cm track from the vertex (z~255, y~95) up to the top wall. A calls it mu375 + p139. B calls the whole event a single p137 (a proton of that 
+mcp2k 105338 GAINED QL-main  scan->hits    c2 numuCC   A has NO CANDIDATE and its flash list has no large in-time flash. B finds a tpc0 flash at 1.254 us (17458 PE) and matches it to a contained curved tra
+mcp2k 275385 GAINED PR-only  scan->hits    c2 numuCC   Same single straight track (z 320->460) and same flash match; A splits it into mu125 plus a shower-like segment along the straight track, B reconstruc
+mcp2k 281985 LOST   PR-only  scan->reco1   c2 numuCC   Same charge and light match (tpc1 ~3.9k meas vs 3.5k pred) in both; A puts the vertex at the bottom end of the vertical track (y~25) so the forward sh
+mcp2k 293536 GAINED PR-only  scan->hits    c1 unclear  Identical charge and vertex near the top (y~160); only the PID of the short dense stub at the vertex differs (A proton 108 MeV, B shower 40 MeV); a de
+mcp2k 390743 LOST   QL-main  scan->reco1   c2 numuCC   Bright in-time tpc0 flash (15k PE, upstream PMTs) is 'no match' in B, whose candidate is only a tiny edge piece at z~0,y~145 (e63); A matches the flas
+mcp2k 391777 LOST   PR-only  scan->same    c3 unclear  Rows are visually identical (same small interaction at z~90,y~-10, same vertex, same flash match 6579 pred); only negligible KE differences (p249/pi58
+mcp2k 393538 GAINED PR-only  scan->hits    c1 numuCC   Same candidate charge and flash match (49190 PE, pred 35720). Only the PR differs: the long straight track exiting at z=500 looks MIP-like, and B labe
+mcp2k 396222 GAINED fragment scan->hits    c1 other-nu Same large shower-rich event, same vertex and nearly identical particle lists in both rows; only difference is one far red speck in A (z~420, x~-70, o
+mcp2k 399963 GAINED QL-main  scan->hits    c2 unclear  A has NO CANDIDATE, and its large tpc0 flash (1.861 us, 25946 PE) is unmatched. B has a tpc0 flash at 1.053 us (10091 PE) matched by a track from a co
+mcp2k 402297 LOST   QL-main  scan->hits    c2 cosmic   The in-time object is a long track exiting the top (z~225,y~190) with a wide dense section lower down, i.e. cosmic-like; A places it at x~-110, puts t
+mcp2k 410566 LOST   fragment scan->same    c2 unclear  Same small proton-like candidate near the cathode at z~90 with identical vertex and PMT match; each row adds one different far isolated red speck (A a
+mcp2k 415564 LOST   fragment scan->reco1   c1 unclear  Same charge and flash (12520 PE, pred 7955). A puts the vertex at the upper end of the track and calls a mu315. B puts the vertex mid-track with only 
+mcp2k 480970 LOST   fragment scan->hits    c1 unclear  Same candidate, vertex and flash match; the only differences are that B adds a far-away red speck (z~200, x~135, y~-125) and small PID changes (pi27 v
+mcp2k 497399 LOST   PR-only  scan->hits    c2 unclear  Same blue candidate (short track z~100, y 160->85) and same flash match in both rows; A puts the vertex far from the candidate charge (z~245, y~-163, 
+mcp2k 157215 LOST   QL-main  scan->reco1   c2 numuCC   A's candidate is a long track starting inside (z~105,y~0,x~-150) running forward in z to the anode, matched to the bright 1.61 us tpc0 flash (49561 PE
+mcp2k 158227 LOST   QL-main  scan->hits    c2 unclear  A's candidate is the TPC1 half (z 120-340) of one long straight track at y~-160 that seems to continue in grey from the z=0 upstream face through a ca
+mcp2k 161725 LOST   fragment scan->hits    c2 numuCC   Same muon candidate starting at z~65 near the top; A adds far unrelated red specks (z~50,x~-75 in other TPC; z~60,y~195) and over-predicts the flash (
+mcp2k 163595 GAINED QL-main  scan->hits    c2 numuCC   A has a tpc1 beam flash (1.075 us, 14695 PE, pred 11215, ticks follow bars) matched to a track starting inside at z~335,y~-113 plus a nearby piece; B 
+mcp2k 165060 GAINED QL-main  scan->reco1   c3 cosmic   A's candidate is a straight vertical track running from the top (y=+200) to the bottom (y~-190) with the vertex at the bottom end, i.e. a through-goin
+mcp2k 169724 GAINED fragment scan->unclear c1 unclear  A small, compact object at z~445, y~-65 that straddles the cathode (x -25..+25), with the same charge in both rows and similar under-predicted light (
+  QL-main  GAINED prefers hits     9
+  QL-main  GAINED prefers reco1    1
+  QL-main  LOST   prefers hits     3
+  QL-main  LOST   prefers reco1    4
+  churn    GAINED prefers hits     11
+  churn    GAINED prefers reco1    1
+  churn    GAINED prefers unclear  1
+  churn    LOST   prefers hits     6
+  churn    LOST   prefers reco1    5
+  churn    LOST   prefers same     4
+  churn    LOST   prefers unclear  1

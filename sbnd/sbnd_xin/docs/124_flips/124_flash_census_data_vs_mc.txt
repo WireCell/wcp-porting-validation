@@ -1,0 +1,15 @@
+per event                      data3000       MCcv     data/evt     MC/evt
+events                             3000       2017        1.000      1.000
+n_reco1                           85916      79809       28.639     39.568
+n_ours                           112388     102929       37.463     51.031
+absorbed                           4871       1208        1.624      0.599
+vetoed                             5493       2979        1.831      1.477
+dropped                           16396      27803        5.465     13.784
+bugged                                0          0        0.000      0.000
+beam_reco1                         3900       2493        1.300      1.236
+beam_reco1_with_absorbed            194         45        0.065      0.022
+beam_reco1_with_vetoed              860         89        0.287      0.044
+beam_ours                          4528       2878        1.509      1.427
+beam_ours_unmatched                 698        401        0.233      0.199
+beam_reco1 with absorbed|vetoed partner fraction: data 0.270 MC 0.054
+beam_ours_unmatched / event (beam-window hit flashes reco1 lacks): data 0.233 MC 0.199

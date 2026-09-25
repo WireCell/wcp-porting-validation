@@ -1,0 +1,7 @@
+beam-window reco1 flashes (0.3-1.9 us) with an absorbed/vetoed hit-flash partner of >= X PE
+    X PE data 3000 (per ev, frac) MC cv 2017 (per ev, frac)
+      20     1019 (0.340, 0.265)      134 (0.066, 0.054)
+     100      160 (0.053, 0.042)      107 (0.053, 0.043)
+    1000       60 (0.020, 0.016)       54 (0.027, 0.022)
+    5000       30 (0.010, 0.008)       23 (0.011, 0.009)
+beam-window matched reco1 flashes: data 3844, MC 2464

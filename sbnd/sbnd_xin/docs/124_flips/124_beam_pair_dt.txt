@@ -1,0 +1,12 @@
+work-mcp1k-d123basepr: events 1000, with in-window flashes in both TPCs 602; paired (same group) 555
+   |t0-t1| ns bins 0-10:170 10-20:182 20-30:163 30-40:36 40-50:4 50-60:3 60-80:2 80-100:4 100-200:4 200-500:16 500-2000:18
+   pairs with 40 < dt < 60 ns (the 50 ns pairing edge): 7; in-window flashes within 100 ns of a window edge: 198
+work-mcp1k-d123hitspr: events 1000, with in-window flashes in both TPCs 733; paired (same group) 640
+   |t0-t1| ns bins 0-10:154 10-20:162 20-30:218 30-40:92 40-50:14 50-60:2 60-80:3 80-100:8 100-200:10 200-500:30 500-2000:40
+   pairs with 40 < dt < 60 ns (the 50 ns pairing edge): 16; in-window flashes within 100 ns of a window edge: 228
+work-mcp2k-d123basepr: events 2000, with in-window flashes in both TPCs 1186; paired (same group) 1101
+   |t0-t1| ns bins 0-10:372 10-20:352 20-30:302 30-40:67 40-50:8 50-60:3 60-80:6 80-100:2 100-200:7 200-500:28 500-2000:39
+   pairs with 40 < dt < 60 ns (the 50 ns pairing edge): 11; in-window flashes within 100 ns of a window edge: 491
+work-mcp2k-d123hitspr: events 2000, with in-window flashes in both TPCs 1407; paired (same group) 1214
+   |t0-t1| ns bins 0-10:341 10-20:330 20-30:337 30-40:187 40-50:19 50-60:8 60-80:11 80-100:8 100-200:18 200-500:61 500-2000:87
+   pairs with 40 < dt < 60 ns (the 50 ns pairing edge): 27; in-window flashes within 100 ns of a window edge: 544

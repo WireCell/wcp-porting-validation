@@ -1,0 +1,8 @@
+== mcp1k base
+events 20, differing 0
+== mcp1k hits
+events 20, differing 0
+== mcp2k base
+events 26, differing 0
+== mcp2k hits
+events 26, differing 0

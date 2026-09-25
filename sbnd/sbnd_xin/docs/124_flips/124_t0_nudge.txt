@@ -1,0 +1,98 @@
+170792   fragment  A   0.50 | nudged   0.84 (new, dv 0.5 cm from A) | B   0.98  verdict stays A
+           A: mu67 p27 e97 e40 e2 p303
+           N: mu65 p53 e94 e70 e2
+           B: mu64 p34 pi33 e99 e36 e2 p299
+172832   fragment  A   0.64 | nudged   0.64 (=A, dv 0.0 cm from A) | B   3.10  verdict stays A
+           A: pi80 mu55 e3 p4 e0 p3 e1 e1 e0 p1 e1 e0 e2 e2 p3 mu269
+           N: pi80 mu55 e3 p4 e0 p3 e1 e1 e0 p1 e1 e0 e2 e2 p3 mu269
+           B: mu264 pi80 mu50 e8 e3 p4 e0 p3 e1 e1 e0 p1 e1 e0 e2 e2 p3
+277298   fragment  A   1.28 | nudged   1.28 (=A, dv 0.0 cm from A) | B   0.89  verdict stays A
+           A: mu145 pi85 pi34 e18 e15 e0 e2 e1 e2
+           N: mu145 pi85 pi34 e18 e15 e0 e2 e1 e2
+           B: e34 mu156 pi99 e18 e2 mu1
+281639   PR-only   A   1.37 | nudged   1.37 (=A, dv 0.0 cm from A) | B   0.60  verdict stays A
+           A: e92 pi7 pi5 e39 e5 e5 e1 e2 e1 mu1
+           N: e92 pi7 pi5 e39 e5 e5 e1 e2 e1 mu1
+           B: e92 pi6 pi5 e39 e5 e5 e1 e2 e1 mu1
+284211   fragment  A  -0.57 | nudged  -0.57 (=A, dv 0.0 cm from A) | B   2.79  verdict stays A
+           A: p180 e10 p2 e0 e2 e2
+           N: p180 e10 p2 e0 e2 e2
+           B: p182 mu337 p2 e0 e2 e2
+285531   PR-only   A   0.47 | nudged   4.24 (=B, dv 0.2 cm from A) | B   4.24  VERDICT FOLLOWS B
+           A: pi355 p455 p90 mu42 e1 e2 e0
+           N: mu358 p455 e26 e1 e2 mu0
+           B: mu358 p455 e26 e1 e2 mu0
+285665   fragment  A   0.55 | nudged   0.55 (=A, dv 0.0 cm from A) | B   1.03  verdict stays A
+           A: pi250 p10 e1 e1 e2 e1 e1 e1 e1 e1 e0 e1
+           N: pi250 p10 e1 e1 e2 e1 e1 e1 e1 e1 e0 e1
+           B: pi246 e33 e1 e1 e2 e1 e1 e1 e1 e0 e1
+59261    fragment  A   3.85 | nudged   3.85 (=A, dv 0.0 cm from A) | B   0.15  verdict stays A
+           A: mu235 p79 e2 e1 e2 e1 e3 e0
+           N: mu235 p79 e2 e1 e2 e1 e3 e0
+           B: pi246 p75 e2 e1 e2 e1 e3 e0
+60933    PR-only   A   3.75 | nudged   3.79 (new, dv 0.4 cm from A) | B   0.83  verdict stays A
+           A: p84 mu344 p154 e1 e2 e2 e2 e1
+           N: mu344 p154 p81 e1 e2 e2 e2 e1
+           B: p86 pi355 p150 e1 e2 e2 e2 e1
+62459    fragment  A   3.30 | nudged   3.30 (=A, dv 0.0 cm from A) | B   0.77  verdict stays A
+           A: mu462 pi77 p93 e16 e0 e1 e3
+           N: mu462 pi77 p93 e16 e0 e1 e3
+           B: pi78 p92 p12 mu453 e16 e0 e1 e3
+65999    fragment  A   2.10 | nudged   2.10 (=A, dv 0.0 cm from A) | B  -1.14  verdict stays A
+           A: e88 pi49
+           N: e88 pi49
+           B: e138 e10
+tally: PR-only/nudge flips 1, PR-only/nudge keeps A 2, fragment/nudge keeps A 8
+161725   fragment  A   2.24 | nudged   1.23 (new, dv 0.2 cm from A) | B   0.85  verdict stays A
+           A: mu381 mu93 e2 e1 e1 e0 e1
+           N: pi22 mu381 mu93 e2 e1 e1 e0 e1
+           B: mu384 mu93 e2 e1 e1 e0 e1
+275385   PR-only   A  -0.30 | nudged  -0.30 (=A, dv 0.0 cm from A) | B   4.22  verdict stays A
+           A: mu125 e1 p3 e2 e2 e1 e1
+           N: mu125 e1 p3 e2 e2 e1 e1
+           B: mu367 p3 e2 e2 e1 e1
+281985   PR-only   A   2.25 | nudged   0.40 (=B, dv 50.8 cm from A) | B   0.40  VERDICT FOLLOWS B
+           A: mu151 p215 e12 e28 p2
+           N: mu145 e11 e28 p2
+           B: mu145 e11 e28 p2
+293536   PR-only   A  -1.07 | nudged   0.98 (new, dv 0.7 cm from A) | B   0.98  VERDICT FOLLOWS B
+           A: e40 e142 e59 e1 e1 e7
+           N: p107 e151 e66 e1 e1 e7
+           B: p108 e151 e66 e1 e1 e7
+391777   PR-only   A   1.15 | nudged   1.15 (=A, dv 0.0 cm from A) | B   0.89  verdict stays A
+           A: mu58 p93 p249 pi58 e1 e2 e1 e6
+           N: mu58 p93 p249 pi58 e1 e2 e1 e6
+           B: mu58 p93 p247 pi61 e1 e2 e1 e6
+393538   PR-only   A   0.36 | nudged   0.36 (=A, dv 0.0 cm from A) | B   1.08  verdict stays A
+           A: e120 p173 e29 e3
+           N: e120 p173 e29 e3
+           B: e88 p174 e7 e8 e67 e29 e3 e9 mu227
+396222   fragment  A   0.89 | nudged   1.10 (new, dv 6.3 cm from A) | B   0.93  VERDICT FOLLOWS B
+           A: e118 mu69 e12 pi76 pi48 mu278 e14 e577 e307 e2 e502 e712 e8 e11 e41 e177 e25 e4 e12 e33 e2
+           N: e238 mu8 e1757 e46 e8 e25 pi27 e46 e31 pi12 e4 e21 e31 p3 e1 e1 e2 e2 e0 e0 e3 p3 p4 e2 p1
+           B: e126 mu69 e12 pi76 pi48 mu278 e14 e577 e307 e2 e501 e714 e8 e11 e41 e177 e25 e4 e12 e33 e2
+410566   fragment  A   1.05 | nudged   0.78 (=B, dv 0.0 cm from A) | B   0.78  VERDICT FOLLOWS B
+           A: p82 e6 e1 e1 e1 e2 e1 e2
+           N: p81 e6 e1 e1 e1 e2 e1 e2
+           B: p81 e6 e1 e1 e1 e2 e1 e2
+480970   fragment  A   1.62 | nudged   1.62 (=A, dv 0.0 cm from A) | B   0.44  verdict stays A
+           A: p157 mu194 p14 e1
+           N: p157 mu194 p14 e1
+           B: p153 mu194 pi27 e1
+58006    fragment  A   0.99 | nudged   0.99 (=A, dv 0.0 cm from A) | B   0.74  verdict stays A
+           A: mu119 e47 e39 e153 e1 p4
+           N: mu119 e47 e39 e153 e1 p4
+           B: mu119 e54 e31 e153 e1 p4
+67868    fragment  A   0.47 | nudged   0.47 (=A, dv 0.0 cm from A) | B   3.25  verdict stays A
+           A: p5 p74 p64 pi268 p296 pi32 ?0 e41 e1 e0 e1 e1 e2
+           N: p5 p74 p64 pi268 p296 pi32 ?0 e41 e1 e0 e1 e1 e2
+           B: pi33 p74 p39 mu257 p297 ?0 e41 e1 e0 e1 e1 e2
+71642    PR-only   A   2.26 | nudged   0.64 (new, dv 0.3 cm from A) | B   0.64  VERDICT FOLLOWS B
+           A: pi95 mu213 p112 e624 e51 e78 e84 p4 e1 e5 e3
+           N: pi225 pi52 e254 pi103 e51 e78 e28 e119 e3 e2 e0 e2 e1 p4 e3 e251 e199
+           B: pi225 pi52 e255 pi103 e51 e78 e28 e119 e3 e2 e0 e2 e1 p4 e3 e251 e199
+77846    fragment  A  -0.56 | nudged  -0.56 (=A, dv 0.0 cm from A) | B   3.18  verdict stays A
+           A: p137 e1 p1 p1 e1 p4 e3
+           N: p137 e1 p1 p1 e1 p4 e3
+           B: mu375 p139 e1 p1 p1 e1 p4 e3
+tally: PR-only/nudge flips 3, PR-only/nudge keeps A 3, fragment/nudge flips 2, fragment/nudge keeps A 5

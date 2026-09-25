@@ -1,0 +1,50 @@
+mcf143_29.png      GAINED PR-only   truth-right reco1 scan same    c2 unclear  -> same
+mcf104_2.png       GAINED QL-main   truth-right reco1 scan hits    c3 numuCC   -> disagree
+mcf054_35.png      LOST   fragment  truth-right hits  scan reco1   c1 numuCC   -> disagree
+mcf054_49.png      LOST   PR-only   truth-right reco1 scan same    c3 numuCC   -> same
+mcf136_1.png       LOST   PR-only   truth-right reco1 scan same    c2 numuCC   -> same
+mcf151_7.png       GAINED QL-main   truth-right hits  scan hits    c2 numuCC   -> agree
+mcf122_21.png      LOST   PR-only   truth-right reco1 scan reco1   c1 numuCC   -> agree
+mcf056_50.png      GAINED QL-main   truth-right hits  scan hits    c3 numuCC   -> agree
+mcf100_39.png      GAINED QL-main   truth-right reco1 scan unclear c1 unclear  -> unclear
+mcf053_22.png      GAINED fragment  truth-right hits  scan same    c2 unclear  -> same
+mcf138_23.png      GAINED fragment  truth-right reco1 scan hits    c2 numuCC   -> disagree
+mcf073_12.png      GAINED QL-main   truth-right reco1 scan hits    c2 numuCC   -> disagree
+mcf099_19.png      LOST   PR-only   truth-right hits  scan same    c2 unclear  -> same
+mcf052_17.png      GAINED QL-main   truth-right hits  scan hits    c2 numuCC   -> agree
+mcf137_49.png      GAINED fragment  truth-right reco1 scan hits    c2 other-nu -> disagree
+mcf016_49.png      GAINED QL-main   truth-right hits  scan hits    c3 numuCC   -> agree
+mcf004_46.png      GAINED QL-main   truth-right hits  scan hits    c1 numuCC   -> agree
+mcf012_37.png      GAINED QL-main   truth-right hits  scan hits    c3 numuCC   -> agree
+mcf083_2.png       GAINED fragment  truth-right hits  scan hits    c3 numuCC   -> agree
+mcf041_26.png      GAINED QL-main   truth-right hits  scan hits    c1 unclear  -> agree
+mcf139_47.png      LOST   QL-main   truth-right hits  scan hits    c2 unclear  -> agree
+mcf094_12.png      LOST   fragment  truth-right hits  scan same    c1 numuCC   -> same
+mcf079_28.png      GAINED PR-only   truth-right reco1 scan same    c1 unclear  -> same
+mcf011_42.png      GAINED QL-main   truth-right hits  scan hits    c3 numuCC   -> agree
+mcf078_30.png      LOST   PR-only   truth-right hits  scan reco1   c1 numuCC   -> disagree
+mcf078_47.png      LOST   t0-merge  truth-right reco1 scan reco1   c2 numuCC   -> agree
+mcf007_43.png      LOST   PR-only   truth-right hits  scan same    c3 numuCC   -> same
+mcf089_13.png      GAINED QL-main   truth-right hits  scan hits    c1 unclear  -> agree
+mcf029_50.png      GAINED QL-main   truth-right hits  scan hits    c2 numuCC   -> agree
+mcf106_32.png      GAINED PR-only   truth-right hits  scan hits    c2 numuCC   -> agree
+  QL-main  agree     11
+  QL-main  disagree  2
+  QL-main  unclear   1
+  all      agree     15
+  all      disagree  6
+  all      same      8
+  all      unclear   1
+  churn    agree     4
+  churn    disagree  4
+  churn    same      8
+  conf1    agree     4
+  conf1    disagree  2
+  conf1    same      2
+  conf1    unclear   1
+  conf2    agree     6
+  conf2    disagree  3
+  conf2    same      4
+  conf3    agree     5
+  conf3    disagree  1
+  conf3    same      2

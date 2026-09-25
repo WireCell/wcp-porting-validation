@@ -1,0 +1,37 @@
+713/8/29 GAINED PR-only   numu   -0.75 ->    1.59 dvtx    1.3  signal A=False B=False  t=numu/CC dA=3.77 dB=2.44
+713/13/2 GAINED QL-main   numu -999.00 ->    2.86 dvtx         signal A=None B=False  t=numu/CC dA=- dB=1.46
+713/23/35 LOST   fragment  numu    3.26 ->   -0.23 dvtx    2.5  signal A=False B=False  t=numu/CC dA=3.88 dB=4.55
+713/23/49 LOST   PR-only   numu    0.91 ->    0.63 dvtx    0.0  signal A=True B=True  t=numu/CC dA=1.12 dB=1.11
+713/30/1 LOST   PR-only   numu    1.78 ->    0.85 dvtx    0.0  signal A=True B=True  t=numu/CC dA=0.40 dB=0.40
+713/31/7 GAINED QL-main   numu -999.00 ->    4.54 dvtx         signal A=None B=True  t=numu/CC dA=- dB=0.28
+713/50/21 LOST   PR-only   numu    1.87 ->    0.77 dvtx    0.2  signal A=True B=True  t=numu/CC dA=0.39 dB=0.45
+713/54/50 GAINED QL-main   numu -999.00 ->    4.29 dvtx         signal A=None B=True  t=numu/CC dA=- dB=0.71
+713/59/39 GAINED QL-main   numu    0.72 ->    1.26 dvtx  263.7  signal A=False B=False  t=numu/CC dA=271.43 dB=12.73
+713/62/22 GAINED fragment  numu    0.90 ->    0.96 dvtx    0.1  signal A=True B=True  t=numu/CC dA=0.74 dB=0.70
+713/77/23 GAINED fragment  numu    0.75 ->    1.34 dvtx    0.8  signal A=False B=False  t=numu/CC dA=1.74 dB=2.10
+713/91/12 GAINED QL-main   numu -999.00 ->    3.35 dvtx         signal A=None B=False  t=numu/CC dA=- dB=58.05
+714/18/19 LOST   PR-only   numu    1.16 ->    0.62 dvtx    0.4  signal A=False B=False  t=numu/CC dA=12.84 dB=12.56
+714/73/17 GAINED QL-main   numu -999.00 ->    3.57 dvtx         signal A=None B=True  t=numu/CC dA=- dB=0.30
+715/6/49 GAINED fragment  numu   -0.93 ->    3.20 dvtx   25.7  signal A=False B=False  t=numu/CC dA=26.87 dB=1.78
+715/15/49 GAINED QL-main   numu -999.00 ->    2.60 dvtx         signal A=None B=True  t=numu/CC dA=- dB=4.07
+715/36/46 GAINED QL-main   numu    0.27 ->    2.69 dvtx   86.8  signal A=False B=True  t=numu/CC dA=87.58 dB=0.74
+715/79/37 GAINED QL-main   numu -999.00 ->    2.57 dvtx         signal A=None B=True  t=numu/CC dA=- dB=0.79
+715/80/2 GAINED fragment  numu   -1.18 ->    2.10 dvtx  157.3  signal A=False B=True  t=numu/CC dA=157.34 dB=0.80
+715/94/26 GAINED QL-main   numu -999.00 ->    2.85 dvtx         signal A=None B=True  t=numu/CC dA=- dB=1.39
+717/29/47 LOST   QL-main   numu    1.51 ->    0.11 dvtx  463.4  signal A=False B=True  t=numu/CC dA=463.71 dB=0.30
+717/50/12 LOST   fragment  numu    0.93 ->   -0.45 dvtx    9.0  signal A=False B=True  t=numu/CC dA=6.79 dB=3.85
+717/88/28 GAINED PR-only   numu    0.85 ->    1.70 dvtx    0.1  signal A=False B=False  t=numu/CC dA=52.90 dB=52.86
+719/19/42 GAINED QL-main   numu -999.00 ->    3.16 dvtx         signal A=None B=True  t=numu/CC dA=- dB=0.51
+719/81/30 LOST   PR-only   numu    1.01 ->    0.67 dvtx    0.1  signal A=False B=False  t=nue/CC dA=1.68 dB=1.76
+719/81/47 LOST   t0-merge  numu    3.26 ->   -0.57 dvtx   25.3  signal A=True B=False  t=numu/CC dA=1.91 dB=25.31
+719/92/43 LOST   PR-only   numu    1.01 ->    0.59 dvtx    0.3  signal A=False B=False  t=numu/CC dA=70.80 dB=71.04
+719/96/13 GAINED QL-main   numu -999.00 ->    1.69 dvtx         signal A=None B=True  t=numu/CC dA=- dB=1.46
+720/26/50 GAINED QL-main   numu -999.00 ->    4.48 dvtx         signal A=None B=True  t=numu/CC dA=- dB=1.73
+720/45/32 GAINED PR-only   numu    0.39 ->    3.67 dvtx    0.3  signal A=True B=True  t=numu/CC dA=0.91 dB=1.03
+  QL-main  GAINED bkg    3
+  QL-main  GAINED signal 10
+  QL-main  LOST   bkg    1
+  churn    GAINED bkg    4
+  churn    GAINED signal 3
+  churn    LOST   bkg    5
+  churn    LOST   signal 4

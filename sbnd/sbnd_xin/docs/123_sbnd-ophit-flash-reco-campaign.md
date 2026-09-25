@@ -1437,3 +1437,8 @@ candidate: 6 of the lost have none in the new arm, 9 of the gained none in the o
 
 Lost index 0 (59003) and 6 (169824) are the two the light gate of §18.3 gives back; under the recommended
 knobs the new set would show them as in the old.
+
+**The anatomy of these 46 flips is doc 124** (`docs/124_sbnd-hitflash-numu-flip-anatomy.md`): 17 are Q/L-driven
+(9 recovered neutrinos, 3 cosmic candidates removed, 1 cosmic added, 4 real losses of which the light gate
+recovers 59003 and 169824), 29 are a tie-sensitivity of the PR stage to inputs that should not matter (far specks
+in the bundle, a 10 ns flash-time shift, cluster numbering) that is symmetric on MC truth.

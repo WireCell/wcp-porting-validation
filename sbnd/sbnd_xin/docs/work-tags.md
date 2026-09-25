@@ -3211,3 +3211,7 @@ Production hit flashes, the d123 lib pin, each arm on its baseline's imaging thr
 - `work-nuecc48-d123r6off` -- the r6 pin with no knob vs `work-nuecc48-d123hits`: the knob-off byte gate of the new library (`flip_gate.py --no-pr` IDENTICAL 48/48).
 - `work-r3cv-d123nr` -- the whole cathode-bundle rescue OFF (`rescue_off.txt`), the MC ruling on the rescue's 6 firings.
 - `work-*-d123{lg,lgop,nr}pr` -- stage B; products in `products/d123/{mcp1k,r3off,r3cv}_{lg,lgop}`, `products/d123/r3cv_nr`. KEEP until the owner has read sec 18.
+
+## doc sbnd_xin/124 -- anatomy of the 46 numu flips on 3000 data events (2026-09-25)
+- `work-mcp2k-d123lgop` -- the doc 123 sec 18 light gate + ceiling (`scripts/d123/tla/xtpc_lgop.txt`) on mcp2k via `hits_arm.sh`, pin `~/tmp/d123-libpin-r6` (`.libs.md5.start == .end`, Match d57af13f); compiled Q/L cfg vs `work-mcp2k-d123hits` differs only by the two knob keys, `rse.json` identical. `work-mcp2k-d123lgoppr` = stage B; products `products/d123/mcp2k_lgop`. KEEP with the d123 arms.
+- Scratch (deletable once doc 124 is read): `~/tmp/d124/null/` (the stage-B rerun null of the 46 flip events, 4 roots), `~/tmp/d124/nudge/` (the t0-nudge and repack-null Q/L + PR roots), `~/tmp/d124/census/` (r1_census of the MC hits arm per file).

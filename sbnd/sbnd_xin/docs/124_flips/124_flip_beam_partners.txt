@@ -1,0 +1,47 @@
+# per flip event: hit flashes with -10 < t < 12 us that are NOT a one-to-one reco1 match (the partner classes of r1_census), and the beam-window match count
+60933  LOST   PR-only  partners(-10..12us): none | beam-window matched reco1 flashes: 2
+71642  LOST   PR-only  partners(-10..12us): none | beam-window matched reco1 flashes: 2
+275385 GAINED PR-only  partners(-10..12us): tpc1 vetoed t=-0.76 24PE | beam-window matched reco1 flashes: 2
+281639 LOST   PR-only  partners(-10..12us): tpc0 prepulse t=-1.88 45PE; tpc1 vetoed t=-1.83 51PE | beam-window matched reco1 flashes: 2
+281985 LOST   PR-only  partners(-10..12us): none | beam-window matched reco1 flashes: 2
+285531 GAINED PR-only  partners(-10..12us): none | beam-window matched reco1 flashes: 2
+293536 GAINED PR-only  partners(-10..12us): tpc0 prepulse t=-0.72 23PE; tpc1 vetoed t=-0.01 30PE | beam-window matched reco1 flashes: 2
+391777 LOST   PR-only  partners(-10..12us): none | beam-window matched reco1 flashes: 2
+393538 GAINED PR-only  partners(-10..12us): none | beam-window matched reco1 flashes: 2
+497399 LOST   PR-only  partners(-10..12us): none | beam-window matched reco1 flashes: 2
+53749  GAINED QL-main  partners(-10..12us): tpc0 vetoed t=-4.34 22PE; tpc0 vetoed t=-3.66 154PE; tpc1 piece t=-3.75 38PE; tpc1 absorbed t=1.79 19055PE | beam-window matched reco1 flashes: 1
+59003  LOST   QL-main  partners(-10..12us): tpc0 vetoed t=-0.73 164PE; tpc1 absorbed t=1.58 9168PE | beam-window matched reco1 flashes: 1
+66944  GAINED QL-main  partners(-10..12us): none | beam-window matched reco1 flashes: 2
+68428  GAINED QL-main  partners(-10..12us): tpc0 absorbed t=2.04 14740PE | beam-window matched reco1 flashes: 0
+105338 GAINED QL-main  partners(-10..12us): tpc0 absorbed t=1.25 17458PE | beam-window matched reco1 flashes: 0
+157215 LOST   QL-main  partners(-10..12us): tpc0 piece t=1.53 63PE; tpc0 absorbed t=3.23 21866PE; tpc1 vetoed t=0.62 41PE | beam-window matched reco1 flashes: 2
+158227 LOST   QL-main  partners(-10..12us): tpc0 vetoed t=0.48 25PE; tpc0 vetoed t=1.26 10869PE; tpc1 prepulse t=-0.53 47PE | beam-window matched reco1 flashes: 1
+163595 GAINED QL-main  partners(-10..12us): tpc1 vetoed t=-0.97 35PE; tpc1 vetoed t=1.08 14695PE | beam-window matched reco1 flashes: 1
+165060 GAINED QL-main  partners(-10..12us): tpc0 vetoed t=-1.95 30PE; tpc1 prepulse t=-0.48 46PE | beam-window matched reco1 flashes: 0
+169824 LOST   QL-main  partners(-10..12us): tpc0 vetoed t=1.34 7580PE; tpc1 vetoed t=-3.15 14856PE | beam-window matched reco1 flashes: 1
+174422 LOST   QL-main  partners(-10..12us): none | beam-window matched reco1 flashes: 2
+280884 GAINED QL-main  partners(-10..12us): tpc0 vetoed t=1.32 16793PE; tpc1 vetoed t=1.35 197PE | beam-window matched reco1 flashes: 0
+281808 GAINED QL-main  partners(-10..12us): tpc0 vetoed t=-2.44 30PE; tpc1 absorbed t=0.84 14218PE | beam-window matched reco1 flashes: 1
+390644 GAINED QL-main  partners(-10..12us): tpc0 absorbed t=1.44 9478PE | beam-window matched reco1 flashes: 0
+390743 LOST   QL-main  partners(-10..12us): tpc0 prepulse t=1.56 23PE; tpc1 vetoed t=-1.91 64PE | beam-window matched reco1 flashes: 2
+399963 GAINED QL-main  partners(-10..12us): tpc0 prepulse t=-1.75 28PE; tpc0 vetoed t=1.05 10091PE; tpc1 vetoed t=-1.48 62PE | beam-window matched reco1 flashes: 2
+402297 LOST   QL-main  partners(-10..12us): tpc1 vetoed t=-1.61 22PE | beam-window matched reco1 flashes: 2
+58006  LOST   fragment partners(-10..12us): tpc0 vetoed t=-1.44 22PE; tpc0 absorbed t=8.22 40PE | beam-window matched reco1 flashes: 2
+59261  LOST   fragment partners(-10..12us): tpc0 absorbed t=6.68 71PE | beam-window matched reco1 flashes: 2
+59929  GAINED fragment partners(-10..12us): tpc0 vetoed t=-1.26 29PE; tpc0 dropped t=10.21 310PE | beam-window matched reco1 flashes: 0
+62459  LOST   fragment partners(-10..12us): tpc0 vetoed t=0.76 85PE | beam-window matched reco1 flashes: 2
+65053  LOST   fragment partners(-10..12us): none | beam-window matched reco1 flashes: 2
+65999  LOST   fragment partners(-10..12us): tpc0 absorbed t=5.29 1224PE | beam-window matched reco1 flashes: 2
+67868  GAINED fragment partners(-10..12us): tpc1 prepulse t=-0.61 28PE | beam-window matched reco1 flashes: 0
+77846  GAINED fragment partners(-10..12us): none | beam-window matched reco1 flashes: 0
+161725 LOST   fragment partners(-10..12us): tpc1 vetoed t=-1.01 16397PE | beam-window matched reco1 flashes: 1
+169724 GAINED fragment partners(-10..12us): tpc0 prepulse t=-1.14 36PE; tpc1 prepulse t=-1.27 39PE | beam-window matched reco1 flashes: 2
+170792 GAINED fragment partners(-10..12us): tpc0 prepulse t=-0.22 34PE; tpc1 vetoed t=-2.04 53PE | beam-window matched reco1 flashes: 2
+172832 GAINED fragment partners(-10..12us): tpc0 prepulse t=-1.93 30PE; tpc1 absorbed t=6.20 56PE; tpc1 dropped t=11.05 28PE | beam-window matched reco1 flashes: 2
+277298 LOST   fragment partners(-10..12us): tpc0 prepulse t=-0.05 40PE; tpc1 vetoed t=7.92 53PE | beam-window matched reco1 flashes: 2
+284211 GAINED fragment partners(-10..12us): tpc1 absorbed t=2.74 53PE; tpc1 vetoed t=9.20 17922PE | beam-window matched reco1 flashes: 2
+285665 GAINED fragment partners(-10..12us): tpc0 prepulse t=0.04 46PE; tpc1 vetoed t=-1.61 59PE | beam-window matched reco1 flashes: 2
+396222 GAINED fragment partners(-10..12us): tpc0 vetoed t=-0.28 27PE; tpc1 prepulse t=-0.67 37PE | beam-window matched reco1 flashes: 0
+410566 LOST   fragment partners(-10..12us): none | beam-window matched reco1 flashes: 2
+415564 LOST   fragment partners(-10..12us): tpc1 prepulse t=-0.50 33PE | beam-window matched reco1 flashes: 2
+480970 LOST   fragment partners(-10..12us): tpc1 vetoed t=-0.88 45PE; tpc1 absorbed t=8.78 52PE | beam-window matched reco1 flashes: 2
