@@ -1,6 +1,6 @@
 # doc pdvd/118: run 39305 kaon candidates — the chain, the run conditions, and the beam flash
 
-**Status (2026-09-25, round 1).** This round covers the 10 beam-tagged kaon candidates from run 39305 (jjo, 2 GeV/c,
+**Status (2026-09-25, round 1; amended same day: the sec 4.4 beam-parallel "2x excess" was circular and is withdrawn).** This round covers the 10 beam-tagged kaon candidates from run 39305 (jjo, 2 GeV/c,
 top drift volume only). All 10 now go through our chain: NF/SP (DNN-ROI), imaging, light, clustering + Q/L, and PR.
 The three questions:
 
@@ -9,18 +9,20 @@ The three questions:
      **byte-identical for every two-drift-side config**.
    - Two QLMatching **C++ defects** then remain on a single-side joint input. They are documented in
      [section 3.3](#33-two-qlmatching-c-defects-on-a-single-side-input-not-fixed) and **not fixed**.
-   - Clustering + Q/L therefore ran in a labelled **scratch arm**: post-fit cull OFF, `trigger_offsets` padded. It
-     is not production-equivalent.
+   - Clustering + Q/L, and therefore PR (which reads that pctree), ran in a labelled **scratch arm**: post-fit cull
+     OFF, `trigger_offsets` padded. It is not production-equivalent.
 2. **Conditions.** Run 39305 matches 039349/039252 on everything this round measured:
    - flash rate, flash PE spectrum, saturation, and PD-family light shares;
    - light↔charge timing;
    - raw noise and pedestals, and dead channels;
    - drift speed (anode↔cathode crosser edge, v/v_prod = 0.986 ± 0.024).
 
-   Gain was not measured. Three things differ:
+   Gain was not measured. Two things differ:
    - only the top drift volume is read out;
-   - the trigger fires ~420 µs into a 3.2 ms TPC window and 2500 µs into a 5.3 ms light window;
-   - there are **~2× more horizontal beam-parallel tracks** (beam halo) per event than in 039349.
+   - the trigger fires ~420 µs into a 3.2 ms TPC window and 2500 µs into a 5.3 ms light window.
+
+   Horizontal beam-parallel activity is 1.5 ± 0.4 per event against 1.1 in 039349. That is within noise, and the
+   sample is pre-selected for isochronous activity (section 4.4).
 3. **Beam flash.**
    - **Found.** It sits at trigger **−0.9 µs** in 9/10 events. That is the same −0.9 µs offset the 039349 beam
      triggers show. It is 477-84 k PE, 99 % on the cathode X-ARAPUCAs. Event 408552 has none: 19 PE at −2.3 µs.
@@ -261,7 +263,8 @@ events), into `_d118ref` dirs. Rates are counted inside the full-stream window w
 
 - The **PD response is consistent**: same PE scale, same family shares, same saturation incidence, same record
   layout.
-- 39305 has ~10-15 % more ≥100 PE flashes per ms. That is consistent with the extra beam-parallel activity in 4.4.
+- 39305 has ~10-15 % more ≥100 PE flashes per ms (24.4 ± 1.8 against 21.3 ± 1.8, event-to-event spreads). The
+  cause is not identified; the beam-parallel count in 4.4 does not show a significant excess.
 - The light↔charge offset per event (`offset_top`, −2267 to −2465 µs) is the same kind of number as in 039349
   (−2476 µs for evt 19409). The spread comes from how early the first snippet starts.
 
@@ -306,11 +309,21 @@ Long (≥ 1 m in y-z), horizontal (drift extent < ¼ of length), top-volume clus
 
 | | long clusters per event | horizontal | horizontal and beam-parallel |
 |---|---|---|---|
-| **039305** (2 GeV/c) | 13.4 | 3.5 | **2.3** |
+| 039305 (2 GeV/c), all clusters | 13.4 | 3.5 | 2.3 |
+| **039305, each event's certified cluster excluded** | 12.5 | 2.6 | **1.5 ± 0.4** (15 tracks / 10 events) |
 | 039349 (0.5 GeV/c) | 11.3 | 1.6 | **1.1** |
 
-39305 carries about twice the beam-parallel horizontal activity: beam-halo-like tracks throughout the 3.2 ms window.
-This matters for Q3.
+The first row is circular and should not be used. The beam axis is the mean of the ten certified-slab axes, and each
+certified cluster is horizontal and on that axis by construction.
+
+With them excluded, the excess is 1.5 ± 0.4 against 1.1, which is **within noise**. Two further cautions:
+
+- The 10 events are **not a random sample**: jjo's certification picked them for three-plane isochronous activity in
+  ticks 1900-2500, so any residual excess is biased upward.
+- 039349 has no such cut.
+
+**Conclusion: no measured difference in beam-parallel activity.** What 5.3 does establish is that such tracks are
+common in both runs, about 1 per event, so beam-parallel geometry alone cannot identify the triggering particle.
 
 ## 5. Q3: the beam flash, and which charge it belongs to
 
@@ -375,7 +388,7 @@ bottom-volume light into the cathode XAs, so measured > predicted is expected. A
 spill particle). What supports it:
 
 - the good Q/L matches above;
-- the 2× beam-parallel excess (4.4);
+- beam-parallel horizontal tracks being common, about 1 per event in both runs (4.4);
 - the geometry test in 5.3.
 
 **Not settled.** Reading (ii) fits better; the test in 5.5 decides between them.
@@ -435,8 +448,11 @@ From `beam_geometry.py` part C:
 ## 6. Open items
 
 - [ ] QLMatching defects 1 and 2 (3.3). Needs the owner's go, and coordination with the uncommitted `QLMatching.cxx`
-      edits of the sbnd_xin/123 session. Once fixed, rerun clustering with the production config (post-cull ON) and
-      replace the d118scratch Q/L numbers.
+      edits of the sbnd_xin/123 session. Once fixed, rerun clustering + PR with the production config (post-cull ON)
+      and replace the d118scratch Q/L numbers.
+- [ ] **d118scratch lives in the canonical `work/039305_<evt>/` dirs** (no suffix). The post-fix production rerun must
+      go to a **new suffix** (`run_clus_evt.sh -s`, or a copied input dir). Writing into those dirs later is a §5 rule-2
+      ask.
 - [ ] Beam-line pinning from `ProtoDUNEBeamEvent` tracks (5.5.1), then the beam-window association (5.5.2).
 - [ ] Gain / charge scale on 39305 (dQ/dx of crossers). Not measured this round.
 - [ ] `run_nf_sp_dnnroi_evt.sh` VmHWM race and `run_img_evt.sh` silent empty archives (3.5).
@@ -448,4 +464,5 @@ From `beam_geometry.py` part C:
 - Toolkit `cfg/pgrapher/experiment/protodunevd/{wct-clustering,qlmatching}.jsonnet`: **byte-identical** compiled config
   for two-drift-side jobs (cases A and C). Top-only compiled config intentionally changed (3.1-3.2).
 - wcp runners (`PDVD_INPUT_DATA`): default path **unchanged** (runner listings `cmp`-identical).
-- All Q/L numbers for 39305: **scratch arm d118scratch, NOT production-equivalent** (post-cull OFF).
+- All Q/L numbers **and all PR outputs** (`mabc-pr.zip`, `tracking-*.root`, from the d118scratch pctree) for 39305:
+  **scratch arm d118scratch, NOT production-equivalent** (post-cull OFF).

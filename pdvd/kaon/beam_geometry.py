@@ -54,12 +54,18 @@ for e in sorted(rows):
                    f' depth [{dep.min():.0f},{dep.max():.0f}], KS {b["ks_dis"]:.2f}, pred/meas {b["total_pred_light"] / b["total_PE"]:.2f})')
     print(f'  {e:>6}: ' + ('; '.join(out) if out else 'none'))
 print('D. horizontal (x-span < 0.25 y-z length) long (>= 1 m) top clusters within 10 deg of the axis, per event')
-for name, files in (('039305 kaon', sorted(glob.glob(f'{PDVD}/work/039305_*/calib-evt*.json'))),
-                    ('039349 q35flip', sorted(glob.glob(f'{PDVD}/work/039349_*_q35flip/calib-evt*.json')))):
+print('   (the axis is built from the cert clusters and the 10 events were selected for isochronous activity in')
+print('    ticks 1900-2500, so the second 39305 row drops each event\'s cert cluster; the selection bias remains)')
+certuid = {int(r['event']): int(r['cert_clusters'].split('(')[0]) for r in rows.values()}
+kfiles = sorted(glob.glob(f'{PDVD}/work/039305_*/calib-evt*.json'))
+for name, files, skip in (('039305 kaon, all', kfiles, False), ('039305 kaon, cert cluster excluded', kfiles, True),
+                          ('039349 q35flip', sorted(glob.glob(f'{PDVD}/work/039349_*_q35flip/calib-evt*.json')), False)):
     T = H = B = 0
     for p in files:
-        for c in json.load(open(p))['clusters']:
+        dd = json.load(open(p))
+        for c in dd['clusters']:
             if c['apa'] != 4 or c['npoints'] < 300: continue
+            if skip and c['uid'] == certuid.get(dd['charge_ident']): continue
             P = np.c_[c['y'], c['z']]; a = axis(P); L = np.ptp(P @ a)
             if L < 100: continue
             x = np.array(c['x']); hor = (np.quantile(x, .98) - np.quantile(x, .02)) < 0.25 * L

@@ -23,5 +23,8 @@ C. clusters Q/L matches to the beam flash
   351293: none
   408552: no beam flash
 D. horizontal (x-span < 0.25 y-z length) long (>= 1 m) top clusters within 10 deg of the axis, per event
-  039305 kaon (10 evts): long 13.4/evt, horizontal 3.5/evt, horizontal+beam-parallel 2.3/evt
+   (the axis is built from the cert clusters and the 10 events were selected for isochronous activity in
+    ticks 1900-2500, so the second 39305 row drops each event's cert cluster; the selection bias remains)
+  039305 kaon, all (10 evts): long 13.4/evt, horizontal 3.5/evt, horizontal+beam-parallel 2.3/evt
+  039305 kaon, cert cluster excluded (10 evts): long 12.5/evt, horizontal 2.6/evt, horizontal+beam-parallel 1.5/evt
   039349 q35flip (84 evts): long 11.3/evt, horizontal 1.6/evt, horizontal+beam-parallel 1.1/evt
