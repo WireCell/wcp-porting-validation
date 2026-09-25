@@ -1367,3 +1367,73 @@ gate — expected effect −1 signal per 2000 MC events, inside the interval, an
 **Not done in this round:** `min_fired_pe` (§17.4 item 4, no candidate sits on an SPE flash, unchanged); the
 larwirecell hit source (§16); the retire itself.
 
+
+### 18.7 Bee sets for the colleagues: the νμ > 0.9 flips on the 3000 data events, old (reco1 flashes) vs new (hit flashes)
+
+The 784 → 784 of §13.3 is 23 events lost and 23 gained (`123_r3_pr_flips_{mcp1k,mcp2k}.tsv`). Four sets,
+`make_pr_bee.py` on the `d123base{,pr}` and `d123hits{,pr}` arms of mcp1k + mcp2k, the same events in the
+same order in the old and new set of each pair (Q/L layers everywhere; PR layers where the arm selected a
+candidate: 6 of the lost have none in the new arm, 9 of the gained none in the old). νμ −999 = no candidate.
+
+**Lost with the flip** (pass at νμ > 0.9 with reco1 flashes only):
+- old, reco1 flashes: <https://www.phy.bnl.gov/twister/bee/set/36c60c1f-dd1b-42b8-8077-9b8919fa9036/event/list/>
+- new, hit flashes: <https://www.phy.bnl.gov/twister/bee/set/6a09d85a-c461-4155-8127-5dc02be26e83/event/list/>
+
+| Bee index | sample run/event | reco1: νμ / Eν (MeV) | hits: νμ / Eν (MeV) | mechanism (§13.2 classes, mcp1k only) |
+|---|---|---|---|---|
+| 0 | mcp1k 18255/59003 | 3.195 / 820.7 | -999.000 / 0.0 | big cluster left beam (fit); big cluster joined beam (fit) |
+| 1 | mcp1k 18255/59261 | 3.845 / 437.9 | 0.155 / 478.7 | small moves only (2 out/0 in) |
+| 2 | mcp1k 18255/60933 | 3.749 / 712.9 | 0.826 / 756.1 | small moves only (0 out/0 in) |
+| 3 | mcp1k 18255/62459 | 3.301 / 906.6 | 0.771 / 812.6 | small moves only (0 out/1 in) |
+| 4 | mcp1k 18255/65053 | 2.877 / 512.7 | -0.315 / 608.6 | big cluster joined beam (fit) |
+| 5 | mcp1k 18255/65999 | 2.103 / 275.6 | -1.138 / 147.6 | small moves only (1 out/1 in) |
+| 6 | mcp1k 18259/169824 | 5.645 / 1059.0 | -999.000 / 0.0 | big cluster left beam for a restored flash |
+| 7 | mcp1k 18259/174422 | 1.404 / 429.0 | -999.000 / 0.0 | big cluster left beam (fit) |
+| 8 | mcp1k 18255/277298 | 1.282 / 686.9 | 0.894 / 555.5 | small moves only (1 out/0 in) |
+| 9 | mcp1k 18255/281639 | 1.370 / 437.3 | 0.602 / 436.7 | small moves only (0 out/0 in) |
+| 10 | mcp2k 18255/58006 | 0.987 / 469.0 | 0.737 / 468.4 |  |
+| 11 | mcp2k 18255/71642 | 2.264 / 1522.4 | 0.636 / 1796.5 |  |
+| 12 | mcp2k 18259/157215 | 1.476 / 753.5 | -999.000 / 0.0 |  |
+| 13 | mcp2k 18259/158227 | 3.713 / 629.5 | -999.000 / 0.0 |  |
+| 14 | mcp2k 18259/161725 | 2.241 / 586.0 | 0.854 / 588.7 |  |
+| 15 | mcp2k 18255/281985 | 2.255 / 521.9 | 0.395 / 292.1 |  |
+| 16 | mcp2k 18255/390743 | 1.793 / 502.2 | -2.170 / 63.1 |  |
+| 17 | mcp2k 18255/391777 | 1.145 / 729.0 | 0.893 / 730.4 |  |
+| 18 | mcp2k 18255/402297 | 1.284 / 929.4 | -999.000 / 0.0 |  |
+| 19 | mcp2k 18255/410566 | 1.051 / 104.1 | 0.781 / 103.1 |  |
+| 20 | mcp2k 18255/415564 | 1.879 / 476.5 | -2.294 / 19.6 |  |
+| 21 | mcp2k 18255/480970 | 1.618 / 488.6 | 0.443 / 628.4 |  |
+| 22 | mcp2k 18255/497399 | 2.080 / 1170.8 | -2.580 / 510.9 |  |
+
+**Gained with the flip** (pass with hit flashes only):
+- old, reco1 flashes: <https://www.phy.bnl.gov/twister/bee/set/4fa42488-5669-48ec-96a9-fbbf39db4bb0/event/list/>
+- new, hit flashes: <https://www.phy.bnl.gov/twister/bee/set/87f3c3dc-0f0b-472a-8b14-9ab339848200/event/list/>
+
+| Bee index | sample run/event | reco1: νμ / Eν (MeV) | hits: νμ / Eν (MeV) | mechanism (§13.2 classes, mcp1k only) |
+|---|---|---|---|---|
+| 0 | mcp1k 18255/59929 | -0.410 / 460.1 | 1.896 / 566.8 | small moves only (0 out/0 in) |
+| 1 | mcp1k 18259/68428 | -999.000 / 0.0 | 2.539 / 818.3 | small moves only (0 out/0 in) |
+| 2 | mcp1k 18259/170792 | 0.504 / 658.8 | 0.984 / 828.5 | small moves only (1 out/0 in) |
+| 3 | mcp1k 18259/172832 | 0.635 / 775.5 | 3.098 / 633.5 | small moves only (1 out/0 in) |
+| 4 | mcp1k 18255/280884 | -999.000 / 0.0 | 4.400 / 675.3 | big cluster joined a new beam flash |
+| 5 | mcp1k 18255/281808 | -999.000 / 0.0 | 2.961 / 556.7 | big cluster joined a new beam flash |
+| 6 | mcp1k 18255/284211 | -0.573 / 204.2 | 2.786 / 639.3 | small moves only (2 out/0 in) |
+| 7 | mcp1k 18255/285531 | 0.467 / 1207.5 | 4.244 / 955.8 | small moves only (0 out/0 in) |
+| 8 | mcp1k 18255/285665 | 0.550 / 418.9 | 1.026 / 427.8 | small moves only (2 out/0 in) |
+| 9 | mcp1k 18255/390644 | -999.000 / 0.0 | 2.828 / 475.3 | big cluster joined a new beam flash |
+| 10 | mcp2k 18255/53749 | -999.000 / 0.0 | 1.599 / 871.3 |  |
+| 11 | mcp2k 18255/66944 | 0.034 / 355.7 | 1.774 / 414.2 |  |
+| 12 | mcp2k 18255/67868 | 0.475 / 1089.7 | 3.252 / 1016.9 |  |
+| 13 | mcp2k 18255/77846 | -0.559 / 156.7 | 3.175 / 639.8 |  |
+| 14 | mcp2k 18255/105338 | -999.000 / 0.0 | 1.421 / 676.8 |  |
+| 15 | mcp2k 18259/163595 | -999.000 / 0.0 | 4.003 / 718.8 |  |
+| 16 | mcp2k 18259/165060 | -999.000 / 0.0 | 1.294 / 1107.4 |  |
+| 17 | mcp2k 18259/169724 | 0.665 / 428.7 | 1.166 / 731.2 |  |
+| 18 | mcp2k 18255/275385 | -0.305 / 240.9 | 4.216 / 481.5 |  |
+| 19 | mcp2k 18255/293536 | -1.066 / 249.9 | 0.983 / 342.1 |  |
+| 20 | mcp2k 18255/393538 | 0.363 / 332.9 | 1.082 / 725.3 |  |
+| 21 | mcp2k 18255/396222 | 0.887 / 3565.5 | 0.931 / 3573.7 |  |
+| 22 | mcp2k 18255/399963 | -999.000 / 0.0 | 2.591 / 698.5 |  |
+
+Lost index 0 (59003) and 6 (169824) are the two the light gate of §18.3 gives back; under the recommended
+knobs the new set would show them as in the old.
