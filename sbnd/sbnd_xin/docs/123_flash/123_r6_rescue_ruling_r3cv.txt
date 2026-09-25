@@ -1,0 +1,40 @@
+== f012/715/79/26  rescue round 0: c3 (gid 7, t0 0.700 us, 34.5 cm) + c13 (gid 1000008, t0 0.699 us, 11.7 cm) -> gid 7 (new-path-beam; a=34.5 b=1.2 c=11.7 d=1.5 cm)
+   truth: numu RES NC E 1333.9 MeV T 0.846 us v (-705.8500, -147.5100, 335.0000)
+   truth: numu QE CC E 1697.4 MeV T 1.036 us v (-94.7900, -466.0500, 964.7300)
+   truth: numu QE CC E 752.8 MeV T 0.555 us v (-1.9000, -172.9600, 172.2600)
+   base : cl 11 numu -1.9417 Enu 0.0 vtx (0.00, 0.00, 0.00) len 1.5 cm flash 0.6900 us 1992.5 PE tpc 1 | truth   dist -1 cm
+   hits : cl 11 numu -1.9417 Enu 0.0 vtx (0.00, 0.00, 0.00) len 1.5 cm flash 0.6991 us 1992.5 PE tpc 1 | truth   dist -1 cm
+   nr   : cl 13 numu -0.0244 Enu 335.4 vtx (-0.88, -168.22, 173.28) len 34.5 cm flash 0.6997 us 1781.0 PE tpc 0 | truth numu CC dist 4.95 cm
+== f015/719/1/2  rescue round 0: c11 (gid 1000009, t0 1.639 us, 75.7 cm) + c9 (gid 11, t0 0.495 us, 120.8 cm) -> gid 1000009 (new-path-beam; a=75.7 b=0.0 c=120.8 d=137.9 cm)
+   truth: numu RES CC E 1123.1 MeV T 0.358 us v (-160.0300, -11.8400, 415.8400)
+   truth: numu QE CC E 744.5 MeV T 1.490 us v (-54.4300, -148.7300, 262.1500)
+   base : cl 10 numu 4.3822 Enu 746.2 vtx (-54.25, -147.34, 262.16) len 194.2 cm flash 1.6295 us 2991.1 PE tpc 1 | truth numu CC dist 1.41 cm
+   base : cl 51 numu 2.6537 Enu 906.1 vtx (-161.62, -11.58, 420.52) len 89.8 cm flash 0.4889 us 34845.4 PE tpc 0 | truth numu CC dist 4.95 cm
+   hits : cl 10 numu 4.3807 Enu 746.4 vtx (-54.23, -147.35, 262.11) len 194.2 cm flash 1.6394 us 2994.6 PE tpc 1 | truth numu CC dist 1.39 cm
+   hits : cl 51 numu 2.1829 Enu 1041.7 vtx (-161.41, -11.65, 420.35) len 89.8 cm flash 0.4950 us 34915.9 PE tpc 0 | truth numu CC dist 4.72 cm
+   nr   : cl 48 numu 2.1829 Enu 1041.7 vtx (-161.41, -11.65, 420.35) len 89.8 cm flash 0.4950 us 34915.9 PE tpc 0 | truth numu CC dist 4.72 cm
+   nr   : cl 9 numu 0.6618 Enu 307.6 vtx (0.67, -166.61, 353.49) len 75.7 cm flash 1.6394 us 2994.6 PE tpc 1 | truth numu CC dist 108.16 cm
+== f066/711/20/13  rescue round 0: c2 (gid 5, t0 1.469 us, 210.8 cm) + c9 (gid 1000017, t0 787.237 us, 20.0 cm) -> gid 5 (new-path-beam; a=210.8 b=0.0 c=20.0 d=0.0 cm)
+   truth: numu DIS CC E 3450.4 MeV T 0.289 us v (-6.8600, 585.9700, -447.0900)
+   truth: numu MEC CC E 1262.3 MeV T 1.322 us v (-30.3300, 49.8700, 346.2300)
+   base : cl 61 numu 0.4264 Enu 678.0 vtx (-30.15, 49.59, 345.96) len 168.1 cm flash 1.4581 us 18293.4 PE tpc 0 | truth numu CC dist 0.43 cm
+   hits : cl 69 numu 0.8531 Enu 1450.7 vtx (-30.16, 49.58, 345.96) len 168.1 cm flash 1.4688 us 18311.7 PE tpc 0 | truth numu CC dist 0.43 cm
+   nr   : cl 70 numu 0.7410 Enu 1378.6 vtx (-30.29, 49.66, 345.93) len 168.1 cm flash 1.4688 us 18311.7 PE tpc 0 | truth numu CC dist 0.37 cm
+== f078/719/81/38  rescue round 0: c3 (gid 7, t0 1.505 us, 16.4 cm) + c28 (gid 1000012, t0 1.508 us, 177.5 cm) -> gid 7 (new-path-beam; a=16.4 b=3.8 c=177.5 d=1.8 cm)
+   truth: numu QE CC E 735.1 MeV T 1.361 us v (1.2500, 101.2300, 376.3200)
+   base : cl 23 numu 5.2174 Enu 693.0 vtx (1.06, 99.98, 376.55) len 189.0 cm flash 1.4966 us 2545.8 PE tpc 0 | truth numu CC dist 1.28 cm
+   hits : cl 23 numu 5.2174 Enu 693.4 vtx (1.06, 99.98, 376.55) len 189.0 cm flash 1.5049 us 2537.4 PE tpc 0 | truth numu CC dist 1.28 cm
+   nr   : cl 22 numu 3.2342 Enu 524.1 vtx (0.60, 99.99, 377.05) len 172.6 cm flash 1.5083 us 6718.8 PE tpc 1 | truth numu CC dist 1.58 cm
+== f108/720/10/48  rescue round 0: c10 (gid 13, t0 0.758 us, 113.3 cm) + c21 (gid 1000008, t0 0.965 us, 5.4 cm) -> gid 13 (new-path-beam; a=113.3 b=0.0 c=5.4 d=1.0 cm)
+   truth: numu RES CC E 687.8 MeV T 0.614 us v (-10.1600, 30.5000, 125.9700)
+   base : cl 17 numu 2.3330 Enu 704.3 vtx (-10.46, 31.11, 128.91) len 108.6 cm flash 0.7476 us 10414.8 PE tpc 0 | truth numu CC dist 3.02 cm
+   hits : cl 21 numu 2.8085 Enu 887.4 vtx (-9.42, 33.35, 130.24) len 108.6 cm flash 0.7581 us 10420.5 PE tpc 0 | truth numu CC dist 5.18 cm
+   nr   : cl 9 numu 3.1134 Enu 1016.8 vtx (-9.73, 33.34, 130.11) len 108.6 cm flash 0.7581 us 10420.5 PE tpc 0 | truth numu CC dist 5.03 cm
+== f120/713/98/36  rescue round 0: c2 (gid 6, t0 0.527 us, 73.5 cm) + c15 (gid 1000011, t0 1.364 us, 310.2 cm) -> gid 6 (new-path-beam; a=73.5 b=61.6 c=310.2 d=0.0 cm)
+   truth: numu QE CC E 289.2 MeV T 1.136 us v (-325.4500, -463.5300, 431.0900)
+   truth: numu QE CC E 1976.1 MeV T 1.200 us v (131.3300, -46.9100, -414.6900)
+   truth: numu QE CC E 1054.2 MeV T 0.389 us v (-180.3900, 136.4900, 265.6400)
+   base : cl 18 numu 2.1992 Enu 268.8 vtx (-180.50, 136.56, 265.73) len 56.1 cm flash 0.5193 us 14217.5 PE tpc 0 | truth numu CC dist 0.16 cm
+   hits : cl 17 numu 2.1992 Enu 268.8 vtx (-180.50, 136.56, 265.73) len 56.1 cm flash 0.5270 us 14230.5 PE tpc 0 | truth numu CC dist 0.16 cm
+   nr   : cl 13 numu 3.3919 Enu 836.7 vtx (50.54, -91.02, 3.89) len 310.2 cm flash 1.3640 us 12708.0 PE tpc 1 | truth numu CC dist 416.66 cm
+   nr   : cl 17 numu 2.8063 Enu 269.7 vtx (-180.43, 136.55, 265.78) len 73.5 cm flash 0.5270 us 14230.5 PE tpc 0 | truth numu CC dist 0.15 cm

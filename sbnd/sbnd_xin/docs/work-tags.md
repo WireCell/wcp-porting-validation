@@ -3203,3 +3203,11 @@ Owner: "Let's flip this hits on for SBND production, and keep the cathode rescue
 - `work-nuecc48-d123flipoff` -- `SBND_FLASH_SOURCE=reco1`, the off path, vs `work-nuecc48-d123base`.
 - `work-r3cv-d123flip/f000` -- one MC file with `--mc`, vs `work-r3cv-d123hits/f000`.
 - KEEP as the flip's record (small: 48 + 48 + 18 events).
+
+### doc 123 round 6 (sec 18, 2026-09-25): the two follow-ups of sec 17.4 -- the QLXTPC scenario-1 light gate, and the rescue on MC
+Production hit flashes, the d123 lib pin, each arm on its baseline's imaging through `hits_arm.sh` with one `QLTLA` knob file (`scripts/d123/tla/`); MC arms through `mc_hits.sh cv <lg|nr>`.
+- `work-mcp1k-d123lg`, `work-r3off-d123lg`, `work-r3cv-d123lg` -- `xtpc_sc1_light_gate=true` (new TLA of `wct-clus-matching-perevt.jsonnet`, tri-state, null = production).
+- `work-mcp1k-d123lgop`, `work-r3cv-d123lgop`, `work-r3off-d123lgop` -- the gate + `xtpc_sc1_overpred_max=2.9` (new C++ knob, default 0), pin `~/tmp/d123-libpin-r6` (= the d123 pin + that `libWireCellMatch.so`).
+- `work-nuecc48-d123r6off` -- the r6 pin with no knob vs `work-nuecc48-d123hits`: the knob-off byte gate of the new library (`flip_gate.py --no-pr` IDENTICAL 48/48).
+- `work-r3cv-d123nr` -- the whole cathode-bundle rescue OFF (`rescue_off.txt`), the MC ruling on the rescue's 6 firings.
+- `work-*-d123{lg,lgop,nr}pr` -- stage B; products in `products/d123/{mcp1k,r3off,r3cv}_{lg,lgop}`, `products/d123/r3cv_nr`. KEEP until the owner has read sec 18.

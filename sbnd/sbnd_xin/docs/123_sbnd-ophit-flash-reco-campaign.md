@@ -4,7 +4,8 @@
 
 **Status (2026-09-25): FLIPPED.** `flash_source=hits` is the standalone chain's production default
 (§17, `ref/prod-2026-09-25`), the cathode rescue stays ON. §0–§9 are the 09-24 design as written;
-§10–§16 the campaign that demonstrated it; §17 the flip and the follow-ups it leaves.
+§10–§16 the campaign that demonstrated it; §17 the flip and the follow-ups it leaves; §18 (round 6) the
+`QLXTPC coincident` cull understood and fixed behind two default-OFF knobs, and the rescue ruled on MC.
 
 **Question.** SBND Q/L matching uses the reco1 `recob::OpFlash`. That flash merges or drops
 flashes that are a few µs apart. Can we rebuild the flashes from the reco1 `recob::OpHit`,
@@ -1159,10 +1160,11 @@ measurably slower than the reco1 one), stage B ≈ 3 min at `PR_JOBS=8`. Logs an
 2. **The cathode rescue is ON and inert** (4 firings / 1000 events, 3 events change if it is switched off,
    no selection count moves — §15). Retire it, and the round-2/3 extensions with it, only after the two
    fit-vs-geometry events (169824, 59003) have a ruling on MC — not before; a later round, with the
-   `hitsnr` arm pattern of §15 as its gate.
+   `hitsnr` arm pattern of §15 as its gate. **→ §18.4: ruled on MC (2026-09-25).**
 3. **`QLXTPC coincident` culls a coincident half** (59003, §13.2): with both TPCs' flashes now present in
    the same 80 ns group, the coincident-flash rule can drop the half the charge belongs to. Small
-   (1 event in 1000) but it is a bug in a production component, not a tuning; own round.
+   (1 event in 1000) but it is a bug in a production component, not a tuning; own round. **→ §18.1–18.3:
+   understood and fixed behind two default-OFF knobs (2026-09-25).**
 4. **SPE-only early flashes** (§11.3, ~1 per event, 1–3 µs before a bright flash): none matched in
    §13–§14, so no cut was added; a `min_fired_pe`-type threshold in the finder if a later census shows
    one adopted by a bundle.
@@ -1172,3 +1174,196 @@ measurably slower than the reco1 one), stage B ≈ 3 min at `PR_JOBS=8`. Logs an
    `opflash_apa*.tar.gz` (every hit with its flash id, 60× the reco1 ones) are the first to drop.
    `work-nuecc48-d123flip{,off,pr}` and `work-r3cv-d123flip` are the flip gate's record. The `nosplit`
    arms (§12) are closed.
+
+## 18. Round 6 — the two follow-ups of §17.4: the `QLXTPC coincident` cull (59003) and the rescue on MC (2026-09-25)
+
+```bash
+# the light gate (an existing C++ knob, now a TLA of the Q/L job) and its new over-prediction ceiling, on the production hit flashes
+QLTLA=scripts/d123/tla/xtpc_lg.txt   JOBS=4 scripts/d123/hits_arm.sh work-mcp1k-d123base work-mcp1k-d123lg   data   # ks/chi2 gate (pin ~/tmp/d123-libpin)
+PIN=~/tmp/d123-libpin-r6 QLTLA=scripts/d123/tla/xtpc_lgop.txt JOBS=4 scripts/d123/hits_arm.sh work-mcp1k-d123base work-mcp1k-d123lgop data   # + overpred ceiling
+scripts/d123/mc_hits.sh off lg; scripts/d123/mc_hits.sh cv nr; scripts/d123/mc_hits.sh cv lg; scripts/d123/mc_hits.sh cv lgop; scripts/d123/mc_hits.sh off lgop
+scripts/d123/stageB.sh <arm> <data|sim>; scripts/d123/pr_tables.sh <arm>pr products/d123/<name> [cv]
+python3 scripts/d123/r3_ql_compare.py work-mcp1k-d123hits work-mcp1k-d123lgop --tsv ql.tsv --events ev.tsv     # Q/L level
+python3 scripts/d123/r3_pr_compare.py products/d123/mcp1k_hits products/d123/mcp1k_lgop --label hits,lgop      # selection level
+python3 scripts/d123/r6_rescue_ruling.py work-r3cv-d123hits products/d115/cv/truth_base.tsv base=products/d123/r3cv_base hits=products/d123/r3cv_hits nr=products/d123/r3cv_nr
+# knob-off gate of the new library: PIN=~/tmp/d123-libpin-r6 JOBS=3 scripts/d123/hits_arm.sh work-nuecc48-d123base work-nuecc48-d123r6off data
+#                                   python3 scripts/d123/flip_gate.py work-nuecc48-d123r6off work-nuecc48-d123hits --no-pr   -> IDENTICAL 48/48
+```
+
+Owner (2026-09-25): "can you deal with 2 and 3 as you recommended" — §17.4's item 3 (the coincident cull
+drops the half the charge belongs to) and item 2 (retire the rescue only after the two fit-vs-geometry
+events have a ruling on MC). Both on the flipped production (hit flashes, `SBND_MAX_JOBS`-style lanes at
+32 CPUs, the d123 lib pin, every arm on its baseline's imaging through `hits_arm.sh` + one `QLTLA` knob
+file). The Bee sets of the beam-off events the owner asked for (§14.1, νμ > 0.9 in the FV in one arm only)
+are in §18.5.
+
+### 18.1 The mechanism, read from the logs (59003, `work-mcp1k-d123hits/g25/wct_ql.log`)
+
+`QLMatching::cull_cross_tpc` pairs main-cluster bundles across the cathode whose flashes coincide within the
+80 ns group window; a pair whose halves meet within `xtpc_dmax` 5 cm with axes within 20° ("scenario 1")
+sets `flag_xtpc_scenario1` on **both** bundles, and `cull_inconsistent` then drops every other bundle of a
+cluster that holds such a flag ("cluster kept xtpc scenario-1 crosser"). The flag is set from geometry
+alone; the light of the pair is not consulted. In 59003:
+
+| | TPC0 half (ident 3, 2162 pts) | TPC1 half (ident 11, 1799 pts) |
+|---|---|---|
+| bundles before the cull | beam flash 1.589 µs (meas 6467 PE, pred 5972, KS 0.079, χ²/ndf 1.19); a third flash (3638 PE, KS 0.38, χ²/ndf 17); **−0.733 µs (meas 164 PE, pred 5966, KS 0.13, χ²/ndf 14.6)** | 1.584 µs (9168 PE, pred 7019, KS 0.046, χ²/ndf 2.3); **−0.741 µs (25 331 PE, pred 7019, KS 0.56, χ²/ndf 272)** |
+| coincident pair | 0/3 at −0.733 µs ↔ 1/11 at −0.741 µs: d = 2.30 cm, `sc1=true pass=true pin=true` | |
+| production cull | drops the two beam-time bundles ("kept xtpc scenario-1 crosser") → cluster 3 ends **unmatched** | drops 1.584 µs → cluster 11 sits on the 25 k PE cosmic flash |
+| `xtpc_sc1_light_gate` (KS ≤ 0.3, χ²/ndf ≤ 50 on the bundle's own light) | the −0.733 µs bundle **passes** (KS 0.13, χ²/ndf 14.6): the flash is only 164 PE against a 5966 PE prediction, and a 36× over-prediction is invisible to KS (a shape) and cheap in χ² (the error term scales with the prediction) — the production over-prediction prefilter would have removed it, but exempts `at_x_boundary` bundles, which a cathode-side crosser half always is | the −0.741 µs bundle **fails** (KS 0.56): cluster 11 keeps its beam bundle and the fit moves it to 1.584 µs |
+| + `xtpc_sc1_overpred_max` 2.9 (new; deny the flags when pred > 2.9 × meas) | the −0.733 µs bundle fails (36×): no flag on cluster 3, `cull_inconsistent` keeps its high-consistent beam bundles, the fit puts it on 1.589 µs | as above |
+
+The other fit-vs-geometry event, 169824 (§13.2: both halves pulled onto a −3.14 µs cosmic pulse, 22 k PE
+of beam-window light left without charge), is the same shape with the light gate alone sufficient: the
+TPC0 half at −3.134 µs (32 343 PE, pred 5437) and the TPC1 half at −3.148 µs (14 856 PE, pred 11 092) both
+fail the KS gate, and both move to the 1.34 µs beam flash.
+
+### 18.2 What was added (all default-OFF; production byte-identical)
+
+| where | what | proof |
+|---|---|---|
+| `cfg/pgrapher/experiment/sbnd/wct-clus-matching-perevt.jsonnet` (toolkit) | TLAs `xtpc_sc1_light_gate`, `xtpc_sc1_ks_max`, `xtpc_sc1_c2n_max`, `xtpc_sc1_overpred_max`, all `null` = key omitted; threaded as the `extra` overlay of `qlm.matching()` and `qlm.matching_joint()` | `prod_cfg_gate.py` PASS 28/28 against `prod-2026-09-25` (twice: after the TLAs, after the ceiling); knob-on compile of the mcp1k g25 Q/L job differs from knob-off by exactly the emitted keys (`~/tmp/d123/r6/ql_{off,on,on2}.json`) |
+| `match/src/QLMatching.cxx`, `.h` (toolkit) | `xtpc_sc1_overpred_max` (double, default 0 = not tested): inside `sc1_light_pass`, after the KS/χ² test, deny the flags when `total_pred_light > overpred_max × max(flash total PE, 1)`; config round-trip; the calib-dump `qp` key emitted only when > 0 | `wcdoctest-match` 10/10; knob-off byte gate on nueCC-48 with the new library, `work-nuecc48-d123r6off` (hit flashes, no knob, pin `~/tmp/d123-libpin-r6` = d123 pin + this `libWireCellMatch.so`) vs `work-nuecc48-d123hits`: `flip_gate.py --no-pr` **IDENTICAL 48/48** (pctree + 3 mabc zips), `~/tmp/d123/r6/gate_r6off_vs_hits.txt` |
+| `sbnd_xin/scripts/d123/` (wcp) | `tla/xtpc_lg.txt`, `tla/xtpc_lgop.txt`; `mc_hits.sh` arms `lg`, `nr`, `lgop`; `r6_rescue_ruling.py` | — |
+
+### 18.3 The light gate on data (mcp1k, 1000 events; beam-off, 1000 gates)
+
+Q/L level (`r3_ql_compare.py`, matched clusters keyed by ident on the shared imaging):
+
+| arm vs `hits` | matched | same | moved | lost / gained | beam-window moved / lost / gained | events changed | rescue firings |
+|---|---|---|---|---|---|---|---|
+| mcp1k `lg` (gate) | 20 058 → 20 064 | 19 798 | 255 | 5 / 11 | 12 / 0 / 0 | 179 | 4 → 2 |
+| mcp1k `lgop` (gate + ceiling) | 20 058 → 20 079 | 19 798 | 258 | 2 / 23 | 13 / 0 / 1 | 185 | 4 → 2 |
+| beam-off `lg` | 19 295 → 19 305 | 19 057 | 235 | 3 / 13 | 2 / 0 / 1 | 170 | 5 → 6 |
+| beam-off `lgop` (gate + ceiling) | 19 295 → 19 318 | 19 057 | 237 | 1 / 24 | 2 / 0 / 1 | 173 | 5 → 4 |
+
+The gate touches 1.3 % of matched clusters; scenario-1 cull lines fall 3897 → 2224 (mcp1k). The beam-window
+changes of `lgop` (13 moved + 1 gained): the four halves of 59003 and 169824 arrive on their beam flash,
+and ten clusters leave a beam-window flash for one far outside the window (−567, +511, +596 µs …) — in
+production their sc1 flag made the beam-time bundle the *only* one `cull_inconsistent` kept; without the
+flag the cull keeps their high-consistent bundles and the fit prefers the far flash. None of the ten changes a selected candidate (the selection compare below
+names four events, all accounted for). The two unmatched-adoption rescue firings (49511, 409590) stop because
+the halves are now matched; the two same-time merges (395060, 169758) still fire.
+
+Selection level (`r3_pr_compare.py`, stage B on every arm):
+
+| mcp1k | events with a candidate | νμ > 0.9 | changes vs `hits` |
+|---|---|---|---|
+| `hits` (production) | 470 | 271 | — |
+| `lg` | 472 | **273** | +59003 (as its TPC1 half: 154 cm, 482 MeV, νμ 2.21), +169824 (325 cm, 1059 MeV, νμ 5.88 — the reco1-arm candidate back exactly); 49511 gains a 6.5 cm candidate at νμ −2.1, 314705 loses a 5.2 cm one at νμ −1.3 |
+| `lgop` | 472 | **273** | the same four events; 59003 now **whole**: 298 cm, νμ 3.65, 819 MeV, vertex (42.6, −15.5, 210.2) — the reco1 arm had νμ 3.20, 821 MeV at the same vertex. `lg` vs `lgop`: 0 flips, 0 candidate changes |
+
+| beam-off | any candidate | reco vertex in FV | νμ > 0.9 | νμ > 0.9 & FV | + Eν > 100 MeV |
+|---|---|---|---|---|---|
+| reco1 (`base`) | 85 | 22 | 9 | 4 | 4 |
+| `hits` (production) | 96 | 24 | 13 | 6 | 6 |
+| `lg` | 95 | 24 | 13 | **6** (same 6 events) | 6 |
+| `lgop` | 96 | 25 | 14 | **7** (the 6 + 18358/111172) | 7 |
+
+The one beam-off event the ceiling adds, 111172: a 211 cm track on a 93 k PE beam-window flash (1.15 µs)
+that the reco1 arm had as a candidate at νμ −2.5 with its vertex out of the FV, and the `hits`/`lg` arms had
+as no candidate; under the ceiling its TPC1 partner (ident 3, unmatched before) takes its own 8.1 µs flash,
+and the TPC0 track alone reads as a contained candidate at νμ 2.28, vertex (−6, −35, 57) cm. So on data:
+the gate alone recovers 169824 whole and 59003 as a half, at zero beam-off cost; the ceiling completes 59003
+(Eν 482 → 819 MeV) at **+1 fake per 1000 off-beam gates** (0.6 → 0.7 %).
+
+### 18.4 MC (round-3 inclusive BNB, 2017 events, 557 true νμCC in the FV)
+
+**The rescue's ruling (item 2).** With hit flashes the rescue fires 6 times in 2017 events, all same-time
+merges ("new-path-beam"). `work-r3cv-d123nr` is the same Q/L job with `cathode_rescue=false`,
+`cathode_rescue_unmatched=false` (§15's `hitsnr` pattern), stage B, `pr_tables.sh … cv`, `d107_selection.py`:
+
+| inclusive MC | `hits` (rescue ON, production) | `nr` (rescue OFF) |
+|---|---|---|
+| events with a candidate / νμ > 0.9 / flips | 965 / 563 / — | 965 / 563 / **0** |
+| νμCC efficiency (true νμCC in FV: 557) | 400 = 71.8 % | 399 = 71.6 % |
+| purity | 400/461 = 86.8 % | 399/460 = 86.7 % |
+| vertex-matched FV candidates | 472 (84.7 %) | 471 |
+| νe > 7 / νe > 4 | 6 / 11 | 6 / 11 |
+
+Per firing (`r6_rescue_ruling.py`, `~/tmp/d123/r6/rescue_ruling_r3cv.txt`; "ON" = `hits`, "OFF" = `nr`):
+
+| file / run / event | the merge | truth | ON | OFF | ruling |
+|---|---|---|---|---|---|
+| f015 719/1/2 | c11 (75.7 cm, 1.64 µs) + c9 (120.8 cm, on a 0.495 µs flash) | νμCC QE 745 MeV at T 1.49 µs | the 194 cm track, νμ 4.38, vertex 1.4 cm from truth, Eν 746 | only the 75.7 cm piece, νμ 0.66, vertex 108 cm off, Eν 308 | **rescue right**: the far half had taken a wrong flash; this is the −1 signal candidate of the table (the event still passes on its second νμCC) |
+| f012 715/79/26 | c3 (34.5 cm) + c13 (11.7 cm), both at 0.70 µs | νμCC QE 753 MeV at T 0.56 µs | **no candidate** (a 1.5 cm fragment at νμ −1.9) | the 34.5 cm cluster, vertex 4.95 cm from truth, νμ −0.02, Eν 335 | **rescue wrong**: the merge takes the neutrino's cluster out of the candidate role (below the cut either way) |
+| f120 713/98/36 | c2 (73.5 cm, 0.527 µs) + c15 (310 cm, 1.364 µs) | two νμCC: 1054 MeV at T 0.39 µs in the FV, 1976 MeV at T 1.20 µs at z = −415 cm (entering muon) | the FV one, νμ 2.20, vertex 0.16 cm, Eν 269 | the FV one, νμ 2.81, Eν 270, plus the 310 cm entering muon as a second candidate (z = 3.9 cm, out of FV) | **rescue wrong in physics** (two interactions 0.8 µs apart merged into one bundle), no selection effect |
+| f066 711/20/13 | c2 (211 cm, 1.469 µs) + c9 (20 cm, **t0 787 µs**) | νμCC MEC 1262 MeV | νμ 0.85, Eν 1451 | νμ 0.74, Eν 1379 | wrong in physics (an out-of-time cluster merged into the beam bundle), +72 MeV, below the cut either way |
+| f078 719/81/38 | c3 (16.4 cm) + c28 (177.5 cm), 1.51 µs | νμCC QE 735 MeV | νμ 5.22, Eν 693 | νμ 3.23, Eν 524 (the 172.6 cm piece on the TPC1 flash) | rescue right (energy) |
+| f108 720/10/48 | c10 (113 cm, 0.758 µs) + c21 (5.4 cm, 0.965 µs) | νμCC RES 688 MeV | νμ 2.81, Eν 887 | νμ 3.11, Eν 1017 | neither near the truth (the reco1 arm had 704); rescue marginally better |
+
+Two of six firings are the intended cathode re-join (f015, f078); two merge activity that does not belong
+together (f120, f066); one removes the neutrino's own cluster (f012); one is noise. Net at the selection:
+**+1 signal candidate in 2017 events for the rescue ON, purity unchanged** — inert at the counting level,
+as on data (§15), and its geometry-only rule does produce wrong merges. This is the ruling the owner asked
+for before retiring it: no measurable loss from retiring it on MC (−1/557 = −0.2 pt, inside the
+[69.9, 73.7] interval), no measurable gain from keeping it.
+
+**The light gate on MC (item 3).** `work-r3cv-d123lg` (gate) and `work-r3cv-d123lgop` (gate + ceiling, pin r6),
+each vs the production `hits` arm:
+
+| inclusive MC | `hits` | `lg` (gate) | `lgop` (gate + ceiling) |
+|---|---|---|---|
+| Q/L: matched clusters / moved / lost / gained | 35 062 | 35 068 / 623 / 5 / 11 | 35 075 / 630 / 3 / 16 |
+| Q/L: beam-window moved / lost / gained; rescue firings | — | 12 / 0 / 0; 6 → 7 | 12 / 0 / 0; 6 → 7 |
+| events with a candidate / νμ > 0.9 | 965 / 563 | 965 / 562 | 965 / 562 |
+| flips at νμ > 0.9 (hits-only / arm-only) | — | 1 / 0 (713/67/7) | 1 / 0 |
+| candidate vertex moved > 5 cm | — | 2 (the same two events) | 2: **719/1/34** νμCC DIS 3.4 GeV — a 43.6 k PE cosmic crosser that production kept in the neutrino's bundle (sc1 flag) leaves for its own 24 µs flash; the vertex goes from 169 cm off to **1.07 cm**, νμ 1.96 → 5.30, Eν 869 → 1417 MeV (**+1 signal**). **713/67/7** νμCC QE 605 MeV — a crosser pair that production had on two far flashes (−264, +250 µs) arrives on the beam-window flash pair (1.61 / 1.71 µs) and shares the neutrino's bundle; the vertex moves 10 cm off, νμ 1.30 → 0.46 (**−1 signal**) |
+| νμCC efficiency (557 true in FV) | 400 = 71.8 % | 400 = 71.8 % | **400 = 71.8 %** |
+| purity | 400/461 = 86.8 % | 400/460 = 87.0 % | **400/460 = 87.0 %** |
+| νe > 7 | 6 | 6 | 6 |
+
+On MC the gate is a wash at the efficiency (+1 −1 vertex-matched signal, both through a cosmic crosser
+entering or leaving the neutrino's bundle) and −1 background at the purity; the cosmic-side re-assignments
+(1.8 % of matched clusters) do not reach the selection otherwise. The MC sample holds no instance of the
+59003/169824 topology that the gate recovers on data: the two §14.2 losses with a vertex jump (717/29/47,
+719/81/47) are unchanged by the gate and by the rescue, so they are not this mechanism.
+
+### 18.5 The beam-off events the owner asked to see (§14.1, νμ > 0.9 & FV in one arm only)
+
+Same four gates in the same order in both sets, `make_pr_bee.py` (Q/L layers + the PR layers where the arm
+selected a candidate):
+
+| Bee index | run/event | reco1 arm | hits arm |
+|---|---|---|---|
+| 0 | 18482/444203 | νμ 3.07, 259 cm, vertex (−6, −11, 58) cm, flash 0.80 µs TPC0 | only a 1.8 cm candidate: the long track left the beam flash |
+| 1 | 18503/179510 | same 198 cm cluster, νμ 0.64 | same cluster and flash, νμ 1.16 |
+| 2 | 18269/197600 | no candidate | νμ 1.49, 185 cm, flash 2.03 µs TPC1 |
+| 3 | 18390/742853 | no candidate | νμ 2.02, 256 cm, flash 1.50 µs TPC1 |
+
+- reco1 arm (`work-r3off-d123basepr`): <https://www.phy.bnl.gov/twister/bee/set/d2b6785a-cf95-4512-8cac-332dbb49ef03/event/list/>
+- hits arm (`work-r3off-d123hitspr`): <https://www.phy.bnl.gov/twister/bee/set/e2a0657d-4c5f-484d-9b6a-a30f53148dcd/event/list/>
+
+Under the light gate (`work-r3off-d123lgpr`) and under the gate + ceiling (`work-r3off-d123lgoppr`) all four are unchanged.
+
+### 18.6 Recommendation
+
+**Item 3 — the coincident cull.** The defect is understood (§18.1) and closed behind two default-OFF knobs.
+The configuration to adopt is the gate **with** its ceiling (`xtpc_sc1_light_gate=true`,
+`xtpc_sc1_overpred_max=2.9`; the KS/χ² thresholds at their C++ defaults 0.3 / 50): on data it recovers both
+§13.2 losses whole and costs nothing above the νμ cut on mcp1k (271 → 273); on MC it is a wash at the
+efficiency (400 → 400) and +0.2 pt at the purity; the two knobs are byte-identical off (§18.2). `lg` and
+`lgop` differ in two events only: 59003 (whole vs half, +337 MeV of the neutrino's energy) and the beam-off
+fake 111172 (6 → 7 per 1000 gates); the MC does not separate them (0 flips). The ceiling is the physically
+right rule (a flash of 164 PE cannot be the light of a 5966 PE prediction, boundary or not) and the choice
+between the two is the owner's — I would take the ceiling. Flipping the
+two TLA defaults in `wct-clus-matching-perevt.jsonnet` is a production change (the compiled Q/L job moves,
+`ref/prod-<date>` must be refreshed, and the runner needs the off switch) — **the owner's decision**; until
+then both are reachable from any arm through `QLTLA=scripts/d123/tla/xtpc_lgop.txt`. Cost to state with a
+flip: 1.3 % (data) / 1.8 % (MC) of matched clusters change flash, all outside the selection except the
+events named above; mcp2k, nueCC-48 and NCpi0 were not re-run in this round (mcp1k, beam-off and the
+inclusive MC were), so a flip gate should include them.
+
+**Item 2 — the rescue.** The MC ruling is in (§18.4): with hit flashes it fires 6 times in 2017 events, two
+of them the intended cathode re-join, two merging activity that does not belong together, one removing the
+neutrino's own cluster; net **+1 signal candidate for the rescue ON, purity unchanged**. It is inert at the
+counting level on data (§15) and on MC, and it is not the mechanism behind the §14.2 vertex-jump losses.
+Under the light gate it fires less on data (4 → 2: the two unmatched adoptions stop because the halves are
+matched) and once more on MC (6 → 7). Recommendation: keep it ON through the light-gate flip (the owner's
+standing decision, zero cost), then retire `cathode_rescue`, `cathode_rescue_unmatched` and the round-2/3
+extensions together in the production refresh that follows, with one arm (`lgop` + `rescue_off.txt`) as the
+gate — expected effect −1 signal per 2000 MC events, inside the interval, and two wrong merges fewer.
+
+**Not done in this round:** `min_fired_pe` (§17.4 item 4, no candidate sits on an SPE flash, unchanged); the
+larwirecell hit source (§16); the retire itself.
+

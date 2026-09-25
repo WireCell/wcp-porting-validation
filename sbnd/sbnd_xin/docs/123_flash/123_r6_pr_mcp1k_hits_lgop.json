@@ -1,0 +1,20 @@
+{
+ "events_with_candidate_hits": 470,
+ "events_with_candidate_lgop": 472,
+ "candidate_only_hits": 1,
+ "candidate_only_lgop": 3,
+ "both": 469,
+ "vertex_moved_gt_5cm": 0,
+ "pass_numu>0.9_hits": 271,
+ "pass_numu>0.9_lgop": 273,
+ "flip_numu>0.9_hits_only": 0,
+ "flip_numu>0.9_lgop_only": 2,
+ "pass_nue>7_hits": 1,
+ "pass_nue>7_lgop": 1,
+ "flip_nue>7_hits_only": 0,
+ "flip_nue>7_lgop_only": 0,
+ "pass_nue>4_hits": 1,
+ "pass_nue>4_lgop": 1,
+ "flip_nue>4_hits_only": 0,
+ "flip_nue>4_lgop_only": 0
+}

@@ -1,0 +1,3 @@
+# doc 123 round 6: the scenario-1 light gate PLUS its over-prediction ceiling (production prefilter ratio 2.9)
+xtpc_sc1_light_gate=true
+xtpc_sc1_overpred_max=2.9

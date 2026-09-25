@@ -1,0 +1,20 @@
+{
+ "events": 1000,
+ "matched_A": 19295,
+ "matched_B": 19318,
+ "same": 19057,
+ "moved": 237,
+ "lost": 1,
+ "gained": 24,
+ "beam_A": 895,
+ "beam_B": 898,
+ "beam_same": 895,
+ "beam_moved": 2,
+ "beam_lost": 0,
+ "beam_gained": 1,
+ "rescue_A": 5,
+ "rescue_B": 4,
+ "events_changed": 173,
+ "moved_to_small": 4,
+ "gained_small": 0
+}

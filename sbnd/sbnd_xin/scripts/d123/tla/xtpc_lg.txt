@@ -1,0 +1,2 @@
+# doc 123 round 6: the QLXTPC scenario-1 crosser flags gated on the bundle's own light (QLMatching xtpc_sc1_light_gate, C++ ks 0.3 / chi2/ndf 50)
+xtpc_sc1_light_gate=true

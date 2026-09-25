@@ -19,7 +19,12 @@ esac
 case "$ARM" in
     hits)    EXTRA=(--ref) ;;
     nosplit) EXTRA=(--ff '{"pulse_split":false}') ;;
-    *) echo "unknown arm: $ARM (hits|nosplit)" >&2; exit 2 ;;
+    # doc 123 round 6 (sec 18): production hit flashes, the Q/L job with one knob file (hits_arm.sh QLTLA)
+    lg)      EXTRA=(); export QLTLA=$SX/scripts/d123/tla/xtpc_lg.txt ;;     # scenario-1 crosser flags gated on light
+    nr)      EXTRA=(); export QLTLA=$SX/scripts/d123/tla/rescue_off.txt ;;  # the whole cathode-bundle rescue OFF
+    lgop)    EXTRA=(); export QLTLA=$SX/scripts/d123/tla/xtpc_lgop.txt      # the gate + its over-prediction ceiling (needs the
+             export PIN=${PIN:-$HOME/tmp/d123-libpin-r6} ;;                 # r6 pin: libWireCellMatch with xtpc_sc1_overpred_max)
+    *) echo "unknown arm: $ARM (hits|nosplit|lg|nr|lgop)" >&2; exit 2 ;;
 esac
 [ -d "$B" ] || { echo "ERROR: no baseline $B" >&2; exit 1; }
 LOGD=$HOME/tmp/d123-mc-$S-$ARM; mkdir -p "$LOGD"
