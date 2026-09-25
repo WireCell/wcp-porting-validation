@@ -18,6 +18,12 @@ y>0 (odd), z columns of 2306.4 mm every 2323.9 mm, drift |x| up to 3629 mm.
 
     python3 gen_iso_tracks.py            # writes events/*.json + abtest_events.txt (refuses to overwrite)
     python3 gen_iso_tracks.py --force
+    python3 gen_iso_tracks.py --extend 100   # wcfm/docs/05: adds events 11..100 (random kinds, seeds 1000+evt)
+                                             # and gnn_events.txt; never rewrites an existing event file
+
+Extended events (--extend, doc 05 GNN sample): per event the seeded RNG first draws the kind --
+30 % single iso track (theta in THETAS), 40 % iso overlay of 2-4 tracks, 30 % cosmic (1-2 tracks)
+-- then the geometry exactly as make_event does for the hand-listed events 1-10.
 """
 import argparse
 import json
@@ -92,6 +98,21 @@ def cosmic_direction(rng):
     return (sz * math.cos(az), -cz, sz * math.sin(az))
 
 
+THETAS = (0.0, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0)
+
+
+def random_spec(rng):
+    """(kind, [(theta_deg|None, length_cm), ...]) for an extended event; consumes rng first."""
+    u = rng.random()
+    if u < 0.3:
+        return 'iso', [(rng.choice(THETAS), rng.randrange(200, 501, 50))]
+    if u < 0.7:
+        n = rng.randrange(2, 5)
+        return 'iso', [(rng.choice(THETAS), rng.randrange(200, 501, 50)) for _ in range(n)]
+    n = rng.randrange(1, 3)
+    return 'cosmic', [(None, rng.randrange(250, 451, 50)) for _ in range(n)]
+
+
 def make_event(evt, kind, spec, rng):
     tracks = []
     center0 = None
@@ -120,9 +141,35 @@ def make_event(evt, kind, spec, rng):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--force', action='store_true')
+    ap.add_argument('--extend', type=int, metavar='N', help='add events max(EVENTS)+1..N (doc 05); existing files are kept')
     a = ap.parse_args()
     evdir = os.path.join(HERE, 'events')
     os.makedirs(evdir, exist_ok=True)
+    if a.extend:
+        first = max(e for e, _, _ in EVENTS) + 1
+        lines = ['# wcfm GNN sample manifest (gen_iso_tracks.py --extend): det run evt kind']
+        for evt in range(1, a.extend + 1):
+            rng = random.Random(1000 * RUN + evt)
+            path = os.path.join(evdir, f'{RUN:06d}_{evt}.json')
+            if evt < first:
+                e = json.load(open(path))
+            else:
+                kind, spec = random_spec(rng)
+                e = make_event(evt, kind, spec, rng)
+                if not os.path.exists(path):
+                    with open(path, 'w') as f:
+                        json.dump(e, f, indent=1)
+                elif json.load(open(path)) != e:
+                    raise SystemExit(f'REFUSING: {path} exists and differs')
+            lines.append(f'wcfm {RUN} {evt} {e["kind"]}{len(e["tracks"])}')
+            print(f'{os.path.basename(path)}  {e["kind"]:6s}  anodes {e["anodes"]}  '
+                  + ' + '.join(f"{t['angle_deg']}deg/{t['length_cm']}cm" if t['angle_deg'] is not None
+                               else f"cosmic/{t['length_cm']}cm" for t in e['tracks']))
+        manifest = os.path.join(HERE, 'gnn_events.txt')
+        with open(manifest, 'w') as f:
+            f.write('\n'.join(lines) + '\n')
+        print(f'-> {manifest}')
+        return
     manifest = os.path.join(HERE, 'abtest_events.txt')
     if os.path.exists(manifest) and not a.force:
         raise SystemExit(f'REFUSING: {manifest} exists (use --force)')

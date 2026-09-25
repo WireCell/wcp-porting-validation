@@ -1,0 +1,27 @@
+{
+ "run": 1,
+ "event": 34,
+ "seed": 1034,
+ "kind": "cosmic",
+ "step_mm": 0.1,
+ "tracks": [
+  {
+   "tail": [
+    -157.074,
+    -142.228,
+    542.177
+   ],
+   "head": [
+    -148.512,
+    -391.283,
+    562.13
+   ],
+   "charge": -500,
+   "angle_deg": null,
+   "length_cm": 250
+  }
+ ],
+ "anodes": [
+  4
+ ]
+}
