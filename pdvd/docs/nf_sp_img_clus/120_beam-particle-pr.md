@@ -4,8 +4,10 @@
 (clus) + `run_pr_evt.sh -beam`. Byte-identical for every existing pipeline (new component, null-default TLAs; the
 `-stm` / `-nu` / `-nu-legacy` compiled configs are unchanged; hash gate d120a/d120b PASS). **Open for the owner:**
 the beam entry's drift coordinate — the GDML beam-plug axis and the data disagree by ~100 cm (sec 1.3); the
-defaults follow the data. **NOT installed in the shared tree** (this session's installs are refused by the
-permission check; the owner's commands are in sec 8). Bee set built, **not uploaded** (owner-gated).
+defaults follow the data. **Installed in the shared tree 2026-09-25 14:25 (owner's go)** and smoke-tested: the
+bare runner reproduces arm B on all six events (sec 8). **Bee set uploaded (owner's go):
+<https://www.phy.bnl.gov/twister/bee/set/68caddae-7c7a-45b6-9312-54ddfdd5fe6d/event/list/>** (sec 6). Toolkit
+`57f99628`, wcp `59e42b14` (+ this record).
 
 Owner request: for PDVD the beam is a charged particle *entering* the detector, so (1) the main vertex is the beam
 particle's ENTRY point, like the STM+Michel chain's entry; (2) the rest of the PR is the neutrino chain
@@ -263,8 +265,19 @@ owner's veto; `-S 'beam_pr_knobs={}'` restores the bare rule (Bee set `d120-beam
 `/home/xqian/tmp/d120_bee/d120-beam6.zip` (66 members, 6 events in the doc-118 order 157312, 317673, 245576,
 191916, 2001, 36591; layers `clustering`, `track_fit`, `shower_track`, `vertices`, `mc`, dead areas) and the
 no-floor control `d120-beam6-nofloor.zip`. Offline check on 157312: the `vertices` layer holds one q=15000 point at
-(110.9, 167.4, 8.3) = the entry vertex; the `mc` tree is rooted there. **Upload is the owner's call**
-(`./upload-to-bee.sh /home/xqian/tmp/d120_bee/d120-beam6.zip`).
+(110.9, 167.4, 8.3) = the entry vertex; the `mc` tree is rooted there.
+
+**Uploaded 2026-09-25 (owner's go):** <https://www.phy.bnl.gov/twister/bee/set/68caddae-7c7a-45b6-9312-54ddfdd5fe6d/event/list/>
+(`upload-to-bee.sh`, log `/home/xqian/tmp/d120_bee/upload.out`). Live check on the BNL page (Chromium under Xvfb,
+`kaon/bee_pf_check.py`, screenshots `/home/xqian/tmp/d120_pw/set2_ev*.png`), PR layers selected:
+
+| idx | event | track_fit / shower_track / vertices points | main vertex (q=15000) | PF tree root |
+|---|---|---|---|---|
+| 0 | 157312 | 468 / 1752 / 54 | (110.9, 167.4, 8.3) | reco nu 693.1 MeV |
+| 1 | 317673 | 760 / 3470 / 17 | (99.9, 125.9, 6.1) | reco nu 909.1 MeV |
+| 2 | 245576 | 967 / 2826 / 54 | (118.1, 171.9, 3.0) | reco nu 1006.7 MeV |
+| 3 | 191916 | clustering only (no PR layers, no `mc`) | — | — (entry cut, as designed) |
+| 4, 5 | 2001, 36591 | clustering only | — | — (no beam bundle) |
 
 ## 7. Open items
 
@@ -289,9 +302,15 @@ no-floor control `d120-beam6-nofloor.zip`. Offline check on 157312: the `vertice
   `cfg/pgrapher/common/clus.jsonnet`, `cfg/pgrapher/experiment/protodunevd/pr.jsonnet`,
   `cfg/pgrapher/experiment/protodunevd/wct-pr-perevt.jsonnet`, `root/src/PdvdPrMagnifyTrackingVisitor.cxx`.
 - wcp-porting-img (`main`): this doc, `pdvd/run_pr_evt.sh` (`-beam`), `pdvd/kaon/make_d120_bee_zip.py`.
-- **Install (owner; the shared tree is not touched by this session):**
-  `cd /home/xqian/toolkit-dev/toolkit && ./wcb build --notests -p --targets=WireCellClus,WireCellRoot &&
-  ./wcb install --notests -p --targets=WireCellClus,WireCellRoot`, then the freshness proof
-  `ls -la local/lib/libWireCellClus.so local/lib/libWireCellRoot.so clus/src/CheckBeamParticle.cxx`
-  and `strings local/lib/libWireCellClus.so | grep -c CheckBeamParticle` (> 0). The doctest binary in the
-  shared build links against `local/lib`, so build it AFTER the install (doc 119's trap).
+- **Installed 2026-09-25 14:25 (owner's go):** `./wcb build --notests -p --targets=WireCellClus,WireCellRoot`
+  then `./wcb install --notests -p --targets=WireCellClus,WireCellRoot` (rc 0, `/home/xqian/tmp/d120_install.log`;
+  no wire-cell process was running). Freshness: `local/lib/libWireCellClus.so` and `libWireCellRoot.so` 14:25 vs
+  `CheckBeamParticle.cxx` 14:14 / `PdvdPrMagnifyTrackingVisitor.cxx` 14:08; `strings` 679 `CheckBeamParticle`,
+  1 `T_beam_particle`. The target build also refreshed `libWireCellUtil.so` / `libWireCellAux.so` (14:25), which
+  carry the same uncommitted peer edits (`util/src/LassoModel.cxx`, `aux/src/BlobShadow.cxx`) the owner's 13:15
+  install already had; `libWireCellImg.so` untouched (13:15).
+- **Smoke test, shared install (bare runner, no pin), tag `_d120prod`:** all six events rc 0; `mabc-pr.zip`
+  member hashes equal arm B's `_d120beam10` on the three reconstructed events (157312 `f87a45ab…`, 245576
+  `eadbb007…`, 317673 `4df742db…`, 13 members each) and every `CheckBeamParticle:` verdict line is identical on
+  all six. The doctest binary in the shared build links against `local/lib`, so build it AFTER an install
+  (doc 119's trap).
