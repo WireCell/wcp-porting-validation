@@ -1,0 +1,10 @@
+== re-plan at confirm time
+   OK: F1-F9 PASS, lists unchanged
+== sbnd-icluster-split: 56408 files, 67.65 GiB + 24068 links, frozen 1:1 in sbnd-icluster-split.manifest.tsv / sbnd-icluster-split.links.tsv
+   removed 56408/56408 files, 24068/24068 links, 14102 emptied per-event dirs
+== sbnd-base-qlevt: 48510 files, 23.24 GiB + 32340 links, frozen 1:1 in sbnd-base-qlevt.manifest.tsv / sbnd-base-qlevt.links.tsv
+   removed 48510/48510 files, 32340/32340 links, 8085 emptied per-event dirs
+== pdvd/work broken symlinks: 0 -> 0
+== pdhd/work broken symlinks: 0 -> 0
+== sbnd/sbnd_xin broken symlinks: 0 -> 0
+done (CONFIRM=yes) rc=0

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Freeze the RECORD LAYER of every arm the 2026-09-06 round releases.
 
-  usage:  python3 archive_records_20260925.py 1        # tier 1
-          python3 archive_records_20260925.py 2        # tier 2
+  usage:  python3 archive_records_20260925b.py 1        # tier 1
+          python3 archive_records_20260925b.py 2        # tier 2
 
 WHAT THE RECORD LAYER IS.  The heavy classes -- pctree tarballs, mabc zips,
 tracking ROOT files, clusters-apa archives, calib dumps, npz and the SP+DNNROI
@@ -26,7 +26,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 R     = "/home/xqian/toolkit-dev/wcp-porting-img"
 HERE  = os.path.dirname(os.path.abspath(__file__))
-STAMP = "20260925"
+STAMP = "20260925b"
 OUT   = os.environ.get("RETIRE_OUT", f"{R}/sbnd/sbnd_xin/archive/records/cleanup-{STAMP}")
 JOBS  = int(os.environ.get("RETIRE_JOBS", "16"))
 
@@ -43,7 +43,7 @@ HEAVY = [re.compile(p) for p in (
     r'.*\.zst$')]
 
 # ROUND K second pass (2026-09-25, doc sbnd_xin/125 sec 9), added AFTER this round's directory
-# release and inert for it (no *.log.zst / .wct-*.json.zst existed then): compress_logs_20260925.py
+# release and inert for it (no *.log.zst / .wct-*.json.zst existed then): compress_logs_20260925b.py
 # zstd's the per-event logs and compiled configs of KEPT sbnd arms.  Those are RECORD layer, not
 # heavy -- under the `.*\.zst$` line above they would be hashed but no longer carried, and a later
 # round retiring the arm would lose its logs.  A compressed log/config is carried like its original
@@ -116,7 +116,7 @@ if __name__ == "__main__":
             p = line.strip()
             if p and os.path.isdir(p):
                 jobs.append((f"{tree}-tier{tier}", os.path.basename(p), p))
-    if not jobs: sys.exit("nothing to archive -- run plan_20260925.py first")
+    if not jobs: sys.exit("nothing to archive -- run plan_20260925b.py first")
     done = 0
     with ProcessPoolExecutor(JOBS) as ex:
         for tag, n, kept, drop, nl, sz in ex.map(archive_one, jobs):

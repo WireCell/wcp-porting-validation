@@ -83,7 +83,7 @@ while read -r p; do
   n=$((n+1))
   case "$p" in "$T"/?*) ;; *) echo "REFUSING: not under ~/tmp: $p"; exit 5;; esac
   if [ ! -e "$p" ] && [ ! -L "$p" ]; then miss=$((miss+1)); continue; fi
-  case "$p/" in "$T"/d117*|"$T"/d118*|"$T"/d119*|"$T"/wcfm*|*"/$THIS/"*) echo "REFUSING: live unit $p"; exit 6;; esac   # ROUND K: = tmp_census LIVE_TOP
+  case "$p/" in "$T"/d117*|"$T"/d118*|"$T"/d119*|"$T"/wcfm*|"$T"/d125flip*|*"/$THIS/"*) echo "REFUSING: live unit $p"; exit 6;; esac   # ROUND K: = tmp_census LIVE_TOP
   for k in $PERM; do
     case "$k/" in "$p/"*) echo "REFUSING: $p is or contains the permanent pin $k"; exit 6;; esac
   done
@@ -143,7 +143,7 @@ PY
   REMOTE=$(cat "$D/remote_head_${STAMP}.txt")
   while read -r w; do
     [ -n "$w" ] || continue
-    case "$w/" in "$T"/d117*|"$T"/d118*|"$T"/d119*|"$T"/wcfm*) echo "   WT held, skipped: $w"; continue;; esac
+    case "$w/" in "$T"/d117*|"$T"/d118*|"$T"/d119*|"$T"/wcfm*|"$T"/d125flip*) echo "   WT held, skipped: $w"; continue;; esac
     if [ -n "$(git -C "$w" status --porcelain 2>/dev/null)" ]; then echo "   WT dirty, skipped: $w"; continue; fi
     h=$(git -C "$w" rev-parse HEAD)
     if ! git -C "$R" merge-base --is-ancestor "$h" "$REMOTE"; then echo "   WT HEAD $h not on the remote, skipped: $w"; continue; fi

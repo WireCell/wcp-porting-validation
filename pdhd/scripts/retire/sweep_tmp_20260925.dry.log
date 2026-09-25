@@ -1,0 +1,15 @@
+== work release done: every tier1 dir of sbnd/pdvd/pdhd is gone
+   guards: 554 units, none written in the last hour, no process cwd inside
+   554 units | permanent pins intact: /home/xqian/tmp/d102/libpin_d102 /home/xqian/tmp/pdhdstm_libpin /home/xqian/tmp/d123-libpin-r6 /home/xqian/tmp/p35/libpin_prod
+   DRY RUN -- would freeze 554 units into /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/archive/records/cleanup-20260925/tmp, then remove them.  First 3:
+      /home/xqian/tmp/d114/libpin_d114
+      /home/xqian/tmp/d114/libpin_d114h0
+      /home/xqian/tmp/d114/libpin_d114k
+
+POST-STATE: ~/tmp 118G | free 481G
+   /home/xqian/tmp/d102/libpin_d102: intact
+   /home/xqian/tmp/pdhdstm_libpin: intact
+   /home/xqian/tmp/d123-libpin-r6: intact
+   /home/xqian/tmp/p35/libpin_prod: intact
+
+DRY RUN.  Re-run with CONFIRM=yes to execute.

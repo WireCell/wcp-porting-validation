@@ -15,9 +15,9 @@ TOTAL 104918 files, 90.89 GiB; 56408 links
             the evt<N>/ split copies of every OTHER kept arm: the sec 17/19 flip records (d123flip*, d123lgflip*) keep theirs so they stay member-comparable to their gates, and no older arm is in scope this round.  The g<N>/ group copies are excluded by F8, not here.
         declared out of sbnd-icluster-split: /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/input_files_reco1
             production input tree -- never a target
-  list: files_sbnd-icluster-split_20260925.txt  (56408 lines)
-  list: files_sbnd-icluster-split.links_20260925.txt  (24068 lines)
-  list: files_sbnd-base-qlevt_20260925.txt  (48510 lines)
-  list: files_sbnd-base-qlevt.links_20260925.txt  (32340 lines)
+  list: files_sbnd-icluster-split_20260925.confirm.txt  (56408 lines)
+  list: files_sbnd-icluster-split.links_20260925.confirm.txt  (24068 lines)
+  list: files_sbnd-base-qlevt_20260925.confirm.txt  (48510 lines)
+  list: files_sbnd-base-qlevt.links_20260925.confirm.txt  (32340 lines)
 
 This script retired nothing.  Review the lists, then run the driver (CONFIRM=yes).

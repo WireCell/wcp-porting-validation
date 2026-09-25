@@ -1,0 +1,88 @@
+===== 69314 (mcp2k)
+  pr150s0    Enu=None showers=19 nPF=27
+     nu: no in-beam/tagged row
+     PF: ['reco nu  1712.0 MeV   numu 0.000   nue 0.000', 'nu 0 (gid 1, cluster 3)', 'pi+  126 MeV', 'gamma  35 MeV', 'e-  35 MeV', 'proton  95 MeV', 'pi+  111 MeV', 'mu-  364 MeV', 'e-  78 MeV', 'neutron  1 MeV', 'mu-  1 MeV', 'proton  249 MeV', '0  0 MeV', 'mu-  65 MeV', 'e-  0 MeV', 'e-  0 MeV', 'e-  14 MeV', 'e-  11 MeV']
+     tags: {'satellite': 4, 'orphan': 12}
+  d123lgoppr Enu=None showers=22 nPF=28
+     nu: no in-beam/tagged row
+     PF: ['reco nu  1380.3 MeV   numu 0.000   nue 0.000', 'nu 0 (gid 11, cluster 4)', 'neutron  0 MeV', 'mu-  0 MeV', 'pi+  117 MeV', 'gamma  33 MeV', 'e-  33 MeV', 'proton  117 MeV', '0  0 MeV', 'e-  64 MeV', 'e-  5 MeV', 'e-  0 MeV', 'e-  17 MeV', 'e-  0 MeV', 'pi+  34 MeV', 'pi+  42 MeV', 'e-  9 MeV', 'e-  15 MeV']
+     tags: {'satellite': 4, 'orphan': 6}
+===== 171572 (mcp2k)
+  pr150s0    Enu=None showers=10 nPF=12
+     nu: no in-beam/tagged row
+     PF: ['reco nu  780.8 MeV   numu 0.000   nue 0.000', 'nu 0 (gid 1000003, cluster 83)', 'gamma  17 MeV', 'e-  17 MeV', 'proton  220 MeV', 'gamma  7 MeV', 'e-  7 MeV', 'neutron  0 MeV', 'pi+  0 MeV', 'proton  108 MeV', 'neutron  301 MeV', 'mu-  301 MeV']
+     tags: {'pf-orphan-guard-freed': 2, 'orphan': 8, 'pr130 pass4_prox_guard: decline seg=': 4}
+     [pass4_prox_guard: decline seg=] ['[21:57:48.558] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=10008 pdg=13 len=123.3cm', '[21:57:48.558] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=10008 pdg=13 len=123.3cm', '[21:57:48.558] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=10008 pdg=13 len=123.3cm', '[21:57:48.558] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=10008 pdg=13 len=123.3cm']
+  d123lgoppr Enu=None showers=12 nPF=12
+     nu: no in-beam/tagged row
+     PF: ['reco nu  697.1 MeV   numu 0.000   nue 0.000', 'nu 0 (gid 1000008, cluster 82)', 'gamma  11 MeV', 'e-  11 MeV', 'neutron  325 MeV', 'mu-  325 MeV', 'neutron  5 MeV', 'proton  5 MeV', 'proton  220 MeV', 'neutron  0 MeV', 'pi+  0 MeV', 'proton  109 MeV']
+     tags: {'orphan': 6, 'pr130 pass4_prox_guard: decline seg=': 2}
+     [pass4_prox_guard: decline seg=] ['[09:42:33.836] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=10004 pdg=13 len=126.6cm', '[09:42:33.836] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=10004 pdg=13 len=126.6cm']
+===== 315167 (mcp1k)
+  pr150s0    Enu=None showers=11 nPF=16
+     nu: no in-beam/tagged row
+     PF: ['reco nu  1729.8 MeV   numu 0.000   nue 0.000', 'nu 0 (gid 1000000, cluster 8)', 'e-  329 MeV', 'pi+  227 MeV', 'pi+  66 MeV', 'gamma  5 MeV', 'e-  5 MeV', 'neutron  1 MeV', 'mu-  1 MeV', 'mu-  157 MeV', 'gamma  5 MeV', 'e-  5 MeV', 'neutron  1 MeV', 'mu-  1 MeV', 'proton  50 MeV', 'proton  613 MeV']
+     tags: {'satellite': 4, 'orphan': 6}
+  d123lgoppr Enu=None showers=15 nPF=15
+     nu: no in-beam/tagged row
+     PF: ['reco nu  1042.3 MeV   numu 0.000   nue 0.000', 'nu 0 (gid 1000008, cluster 10)', 'e-  76 MeV', 'e-  25 MeV', 'e-  75 MeV', 'mu-  121 MeV', 'e-  67 MeV', 'neutron  2 MeV', 'mu-  2 MeV', 'pi+  168 MeV', 'gamma  5 MeV', 'e-  5 MeV', 'neutron  1 MeV', 'mu-  1 MeV', 'mu-  362 MeV']
+     tags: {'satellite': 4, 'orphan': 6}
+===== 72786 (mcp2k)
+  pr150s0    Enu=None showers=13 nPF=20
+     nu: no in-beam/tagged row
+     PF: ['reco nu  692.2 MeV   numu 0.000   nue 0.000', 'nu 0 (gid 0, cluster 17)', 'gamma  87 MeV', 'e-  87 MeV', 'gamma  112 MeV', 'e-  112 MeV', 'neutron  3 MeV', 'proton  3 MeV', 'neutron  0 MeV', 'mu-  0 MeV', 'pi+  244 MeV', 'proton  86 MeV', 'neutron  334 MeV', 'mu-  334 MeV', 'neutron  288 MeV', 'pi+  288 MeV', 'neutron  170 MeV', 'mu-  170 MeV']
+     tags: {'satellite': 4, 'pf-orphan-guard-freed': 8, 'orphan': 14, 'pr130 pass4_prox_guard: decline seg=': 24}
+     [pass4_prox_guard: decline seg=] ['[21:32:49.731] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=9003 pdg=13 len=138.9cm', '[21:32:49.731] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=9006 pdg=211 len=111.5cm', '[21:32:49.731] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=9008 pdg=13 len=62.0cm', '[21:32:49.731] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=45038 pdg=13 len=107.7cm']
+  d123lgoppr Enu=None showers=13 nPF=18
+     nu: no in-beam/tagged row
+     PF: ['reco nu  890.5 MeV   numu 0.000   nue 0.000', 'nu 0 (gid 8, cluster 21)', 'neutron  62 MeV', 'mu-  62 MeV', 'gamma  109 MeV', 'e-  109 MeV', 'neutron  7 MeV', 'proton  7 MeV', 'neutron  264 MeV', 'mu-  264 MeV', 'proton  86 MeV', 'neutron  2 MeV', 'mu-  2 MeV', 'mu-  234 MeV', 'neutron  188 MeV', 'mu-  188 MeV', 'neutron  218 MeV', 'mu-  218 MeV']
+     tags: {'satellite': 4, 'pf-orphan-guard-freed': 4, 'orphan': 10, 'pr130 pass4_prox_guard: decline seg=': 22, 'long_muon_range': 2}
+     [pass4_prox_guard: decline seg=] ['[09:37:01.088] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=14004 pdg=13 len=70.5cm', '[09:37:01.088] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=14005 pdg=13 len=84.3cm', '[09:37:01.088] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=46039 pdg=13 len=106.3cm', '[09:37:01.088] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=14004 pdg=13 len=70.5cm']
+     [long_muon_range] ['[09:37:01.248] D [  clus  ] <TaggerCheckNeutrino:pr> long_muon_range_empty_chain_fallback: recomputed kinematics for 1 retyped muon shower(s) ../clus/', '[09:37:01.248] D [  clus  ] <TaggerCheckNeutrino:pr> long_muon_range_empty_chain_fallback: recomputed kinematics for 1 retyped muon shower(s) ../clus/']
+===== 393505 (mcp2k)
+  pr150s0    Enu=None showers=5 nPF=15
+     nu: no in-beam/tagged row
+     PF: ['reco nu  574.8 MeV   numu 0.000   nue 0.000', 'nu 0 (gid 1000006, cluster 21)', 'gamma  81 MeV', 'e-  81 MeV', 'gamma  8 MeV', 'e-  8 MeV', 'gamma  5 MeV', 'e-  5 MeV', 'mu-  371 MeV', 'neutron  316 MeV', 'mu-  316 MeV', 'neutron  267 MeV', 'mu-  267 MeV', 'neutron  177 MeV', 'mu-  177 MeV']
+     tags: {'satellite': 4, 'pf-orphan-guard-freed': 6, 'orphan': 12, 'pr130 pass4_prox_guard: decline seg=': 12}
+     [pass4_prox_guard: decline seg=] ['[22:33:27.951] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=15005 pdg=13 len=130.8cm', '[22:33:27.951] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=15011 pdg=13 len=107.6cm', '[22:33:27.951] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=15014 pdg=13 len=65.5cm', '[22:33:27.951] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=15005 pdg=13 len=130.8cm']
+  d123lgoppr Enu=None showers=5 nPF=15
+     nu: no in-beam/tagged row
+     PF: ['reco nu  546.3 MeV   numu 0.000   nue 0.000', 'nu 0 (gid 1000009, cluster 23)', 'gamma  54 MeV', 'e-  54 MeV', 'gamma  8 MeV', 'e-  8 MeV', 'gamma  5 MeV', 'e-  5 MeV', 'mu-  367 MeV', 'neutron  303 MeV', 'mu-  303 MeV', 'neutron  262 MeV', 'mu-  262 MeV', 'neutron  187 MeV', 'mu-  187 MeV']
+     tags: {'satellite': 4, 'pf-orphan-guard-freed': 6, 'orphan': 12, 'pr130 pass4_prox_guard: decline seg=': 12}
+     [pass4_prox_guard: decline seg=] ['[09:49:57.578] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=19002 pdg=13 len=124.6cm', '[09:49:57.578] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=19004 pdg=13 len=105.0cm', '[09:49:57.578] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=19005 pdg=13 len=69.8cm', '[09:49:57.578] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=19002 pdg=13 len=124.6cm']
+===== 497311 (mcp2k)
+  pr150s0    Enu=None showers=5 nPF=3
+     nu: no in-beam/tagged row
+     PF: ['reco nu  581.7 MeV   numu 0.000   nue 0.000', 'nu 0 (gid 3, cluster 18)', 'mu-  476 MeV']
+     tags: {'orphan': 6, 'pr130 pass4_prox_guard: decline seg=': 2, 'long_muon_range': 2}
+     [pass4_prox_guard: decline seg=] ['[22:51:46.499] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=19007 pdg=13 len=170.1cm', '[22:51:46.499] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=19007 pdg=13 len=170.1cm']
+     [long_muon_range] ['[22:51:46.588] D [  clus  ] <TaggerCheckNeutrino:pr> long_muon_range_empty_chain_fallback: recomputed kinematics for 1 retyped muon shower(s) ../clus/', '[22:51:46.588] D [  clus  ] <TaggerCheckNeutrino:pr> long_muon_range_empty_chain_fallback: recomputed kinematics for 1 retyped muon shower(s) ../clus/']
+  d123lgoppr Enu=None showers=6 nPF=8
+     nu: no in-beam/tagged row
+     PF: ['reco nu  1881.6 MeV   numu 0.000   nue 0.000', 'nu 0 (gid 6, cluster 15)', 'neutron  459 MeV', 'mu-  459 MeV', 'mu-  749 MeV', 'mu-  36 MeV', 'neutron  386 MeV', 'pi+  386 MeV']
+     tags: {'pf-orphan-guard-freed': 2, 'orphan': 8, 'pr130 pass4_prox_guard: decline seg=': 4}
+     [pass4_prox_guard: decline seg=] ['[09:53:43.963] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=19006 pdg=211 len=157.5cm', '[09:53:43.964] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=19006 pdg=211 len=157.5cm', '[09:53:43.963] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=19006 pdg=211 len=157.5cm', '[09:53:43.964] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=19006 pdg=211 len=157.5cm']
+===== 292643 (mcp1k)
+  pr150s0    Enu=None showers=14 nPF=15
+     nu: no in-beam/tagged row
+     PF: ['reco nu  1024.0 MeV   numu 0.000   nue 0.000', 'nu 0 (gid 1000006, cluster 18)', 'gamma  61 MeV', 'e-  61 MeV', 'neutron  17 MeV', '0  17 MeV', 'mu-  440 MeV', 'pi+  91 MeV', 'mu-  58 MeV', 'gamma  77 MeV', 'e-  77 MeV', 'gamma  8 MeV', 'e-  8 MeV', 'gamma  38 MeV', 'e-  38 MeV']
+     tags: {'orphan': 10, 'stem_backfill_back_dvtx': 4, 'suppress decline seg=': 4}
+     [suppress decline seg=] ['[21:05:26.711] D [clus.NeutrinoPattern] pr130 stem_backfill_back_dvtx: suppress decline seg=18008 dvtx_start=46.2cm > 45.0cm', '[21:05:26.711] D [clus.NeutrinoPattern] pr130 stem_backfill_back_dvtx: suppress decline seg=18010 dvtx_start=46.2cm > 45.0cm', '[21:05:26.711] D [clus.NeutrinoPattern] pr130 stem_backfill_back_dvtx: suppress decline seg=18008 dvtx_start=46.2cm > 45.0cm', '[21:05:26.711] D [clus.NeutrinoPattern] pr130 stem_backfill_back_dvtx: suppress decline seg=18010 dvtx_start=46.2cm > 45.0cm']
+  d123lgoppr Enu=None showers=14 nPF=17
+     nu: no in-beam/tagged row
+     PF: ['reco nu  874.9 MeV   numu 0.000   nue 0.000', 'nu 0 (gid 1000011, cluster 20)', 'mu-  539 MeV', 'gamma  80 MeV', 'e-  80 MeV', 'gamma  59 MeV', 'e-  59 MeV', 'gamma  8 MeV', 'e-  8 MeV', 'gamma  33 MeV', 'e-  33 MeV', 'gamma  8 MeV', 'e-  8 MeV', 'gamma  24 MeV', 'e-  24 MeV', 'neutron  2 MeV', 'mu-  2 MeV']
+     tags: {'orphan': 6, 'long_muon_range': 2}
+     [long_muon_range] ['[05:38:57.902] D [  clus  ] <TaggerCheckNeutrino:pr> long_muon_range_empty_chain_fallback: recomputed kinematics for 1 retyped muon shower(s) ../clus/', '[05:38:57.902] D [  clus  ] <TaggerCheckNeutrino:pr> long_muon_range_empty_chain_fallback: recomputed kinematics for 1 retyped muon shower(s) ../clus/']
+===== 179369 (mcp2k)
+  pr150s0    Enu=None showers=25 nPF=47
+     nu: no in-beam/tagged row
+     PF: ['reco nu  1457.0 MeV   numu 0.000   nue 0.000', 'nu 0 (gid 1000000, cluster 17)', 'e-  39 MeV', 'gamma  32 MeV', 'e-  32 MeV', 'gamma  20 MeV', 'e-  20 MeV', 'gamma  5 MeV', 'e-  5 MeV', 'neutron  3 MeV', 'proton  3 MeV', 'gamma  10 MeV', 'e-  10 MeV', 'mu-  1042 MeV', 'pi+  10 MeV', 'gamma  10 MeV', 'e-  10 MeV', 'nu 1 (gid 0, cluster 12)']
+     tags: {'satellite': 8, 'orphan': 12, 'pr130 pass4_prox_guard: decline seg=': 36, 'stem_backfill_back_dvtx': 2, 'suppress decline seg=': 2}
+     [suppress decline seg=] ['[22:08:22.199] D [clus.NeutrinoPattern] pr130 stem_backfill_back_dvtx: suppress decline seg=17002 dvtx_start=88.6cm > 45.0cm', '[22:08:22.199] D [clus.NeutrinoPattern] pr130 stem_backfill_back_dvtx: suppress decline seg=17002 dvtx_start=88.6cm > 45.0cm']
+     [pass4_prox_guard: decline seg=] ['[22:08:27.625] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=12000 pdg=13 len=90.4cm', '[22:08:27.625] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=99051 pdg=13 len=104.5cm', '[22:08:27.625] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=12000 pdg=13 len=90.4cm', '[22:08:27.625] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=99051 pdg=13 len=104.5cm']
+  d123lgoppr Enu=None showers=18 nPF=39
+     nu: no in-beam/tagged row
+     PF: ['reco nu  1676.0 MeV   numu 0.000   nue 0.000', 'nu 0 (gid 1000006, cluster 16)', 'e-  1437 MeV', 'gamma  22 MeV', 'e-  22 MeV', 'gamma  25 MeV', 'e-  25 MeV', 'gamma  13 MeV', 'e-  13 MeV', 'neutron  2 MeV', 'mu-  2 MeV', 'gamma  10 MeV', 'e-  10 MeV', 'gamma  5 MeV', 'e-  5 MeV', 'proton  127 MeV', 'neutron  3 MeV', 'proton  3 MeV']
+     tags: {'satellite': 8, 'pf-orphan-guard-freed': 2, 'orphan': 14, 'pr130 pass4_prox_guard: decline seg=': 20, 'long_muon_range': 2}
+     [pass4_prox_guard: decline seg=] ['[09:44:57.299] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=12000 pdg=13 len=112.3cm', '[09:44:57.299] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=102048 pdg=13 len=50.1cm', '[09:44:57.300] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=12000 pdg=13 len=112.3cm', '[09:44:57.300] D [clus.NeutrinoPattern] pr130 pass4_prox_guard: decline seg=102048 pdg=13 len=50.1cm']
+     [long_muon_range] ['[09:44:57.573] D [  clus  ] <TaggerCheckNeutrino:pr> long_muon_range_empty_chain_fallback: recomputed kinematics for 2 retyped muon shower(s) ../clus/', '[09:44:57.573] D [  clus  ] <TaggerCheckNeutrino:pr> long_muon_range_empty_chain_fallback: recomputed kinematics for 2 retyped muon shower(s) ../clus/']

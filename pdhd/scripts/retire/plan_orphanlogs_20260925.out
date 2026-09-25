@@ -1,0 +1,30 @@
+
+==============================================================================
+== pdvd   (/home/xqian/toolkit-dev/wcp-porting-img/pdvd/work)
+==============================================================================
+  universe 2280 logs
+  RELEASE  0 logs = 0.00 GiB
+  held: 2280 event dir alive | 0 arm kept | 0 PROTECTED | 0 written <1 h | 0 malformed name | 0 not a regular file
+  --- RELEASE ---                logs      GiB
+  PASS  GATE O5: no release log's event dir exists (clear)
+  PASS  GATE O6: every target resolves inside work/ (clear)
+  PASS  GATE O7: malformed names excluded, not guessed at (0)
+  PASS  GATE O8: keep list loaded: 65 kept arm tags
+  list: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/files_orphanlogs_pdvd_20260925.txt  (0 lines, 0.00 GiB)
+
+==============================================================================
+== pdhd   (/home/xqian/toolkit-dev/wcp-porting-img/pdhd/work)
+==============================================================================
+  universe 1102 logs
+  RELEASE  0 logs = 0.00 GiB
+  held: 1102 event dir alive | 0 arm kept | 0 PROTECTED | 0 written <1 h | 0 malformed name | 0 not a regular file
+  --- RELEASE ---                logs      GiB
+  PASS  GATE O5: no release log's event dir exists (clear)
+  PASS  GATE O6: every target resolves inside work/ (clear)
+  PASS  GATE O7: malformed names excluded, not guessed at (0)
+  PASS  GATE O8: keep list loaded: 39 kept arm tags
+  list: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/files_orphanlogs_pdhd_20260925.txt  (0 lines, 0.00 GiB)
+
+==============================================================================
+GRAND TOTAL orphan logs 0.00 GiB
+This script retired nothing.  Review the lists, then run the driver (CONFIRM=yes).

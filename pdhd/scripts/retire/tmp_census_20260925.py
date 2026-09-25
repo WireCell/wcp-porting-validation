@@ -74,7 +74,8 @@ PERMANENT = {
 # writing ~/tmp/d119* (d119inst, d119wt, d119wcp, d119s_install.log) today.  RNUM would map
 # d117/d118/d119 to the CLOSED sbnd docs 117-119 and release them.  wcfm-* (the live FM
 # campaign, fm-campaign-workspace-chain) is safe from RNUM only by accident -- named here.
-LIVE_TOP = ("d117", "d118", "d119", "wcfm")
+LIVE_TOP = ("d117", "d118", "d119", "wcfm",
+            "d125flip")   # round K 2nd pass: the light-gate FLIP record cited by doc 123 sec 19 (flip_gate views, libs md5, prodgate_*)
 THIS     = "1f8ae14b-6c84-4993-a21c-bf0790729598"
 LIVE_SESSIONS = {THIS: "this session",
                  }
@@ -90,7 +91,8 @@ EXTRA_ROUNDS = {"xtrack": "doc pdvd/47 (transverse smearing in simulation), comm
  # it"), exactly as the mg10 precedent (doc 105 sec 13) requires.
  "mg18": "the undocumented 2026-09-18 master-merge validation round (toolkit b93673ef/d2646110), released BY NAME by the owner on 2026-09-21; 17.5 GiB, of which 17.4 is four CMake build trees (9 CMakeCache.txt)"}
 # never round scratch, whatever the name says
-NOT_ROUNDS = {"claude-25225", "cleanup-20260925"}
+NOT_ROUNDS = {"claude-25225", "cleanup-20260925",
+              "pin-archive-20260925"}   # round K 2nd pass: the cold-pin archive (doc 125 sec 9.1) -- never a unit
 SCANFACING = re.compile(r"^(scan|own|shots|prep)")
 
 ARM  = re.compile(r"\b(?:pr|p|d|h|q)\d{1,3}[a-z][a-z0-9]{0,14}\b")
@@ -328,6 +330,10 @@ def main():
         children = [tp] if not os.path.isdir(tp) else [f"{tp}/{c}" for c in sorted(os.listdir(tp))]
         for c in children:
             leaf = os.path.basename(c)
+            if leaf.endswith(".ARCHIVED"):
+                # round K 2nd pass: the stub a cold pin left when it moved into ~/tmp/pin-archive-20260925
+                # (doc 125 sec 9.1) -- it is the pointer to the restore command, never scratch.
+                units.append(("round", c, "KEEP", "cold-pin archive stub")); continue
             if os.path.islink(c):
                 # measured on the first run: d145flipproof/fhicl is a symlink to a dir; the
                 # unit guard refuses symlinked dirs, so a link is never a unit.
@@ -346,7 +352,10 @@ def main():
             # and scan-source provenance) stay with it.
             # [-_.]: measured on the second run, ~/tmp/d102m-A-mcp1k.log (sbnd PRODUCTION's own run
             # log) split on [_.] alone gives "d102m-A-mcp1k" and was released as doc-102 scratch.
-            hit = sorted(t for t in re.split(r"[-_.]", leaf) if t in alive)
+            # ROUND K (second pass, 2026-09-25): the arm token can sit in the TOP dir's name, not the
+            # child's -- ~/tmp/d123-stageB-work-r3cv-d123lgop/f000.log is PRODUCTION's own driver log
+            # and was released as doc-123 scratch.  Split the path relative to ~/tmp, not the leaf.
+            hit = sorted(t for t in re.split(r"[-_./]", os.path.relpath(c, T)) if t in alive)
             if hit:
                 units.append(("round", c, "KEEP", f"logs/products of surviving arm {hit[0]}")); continue
             if any(q == c or q.startswith(c + "/") or c.startswith(q + "/") for q in prot):

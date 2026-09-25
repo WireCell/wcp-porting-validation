@@ -1,0 +1,13 @@
+== work release done: every tier1 dir of sbnd/pdvd/pdhd is gone
+== INTERLOCK A: re-census unchanged (554 units)
+   guards: 554 units, none written in the last hour, no process cwd inside
+   554 units | permanent pins intact: /home/xqian/tmp/d102/libpin_d102 /home/xqian/tmp/pdhdstm_libpin /home/xqian/tmp/d123-libpin-r6 /home/xqian/tmp/p35/libpin_prod
+   record gate: 554/554 units have a manifest written by this freeze in /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/archive/records/cleanup-20260925/tmp
+   REMOVING...
+   done, rc=0
+
+POST-STATE: ~/tmp 103G | free 496G
+   /home/xqian/tmp/d102/libpin_d102: intact
+   /home/xqian/tmp/pdhdstm_libpin: intact
+   /home/xqian/tmp/d123-libpin-r6: intact
+   /home/xqian/tmp/p35/libpin_prod: intact

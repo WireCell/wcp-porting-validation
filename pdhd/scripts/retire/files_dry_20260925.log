@@ -1,0 +1,5 @@
+== sbnd-icluster-split: 56408 files, 67.65 GiB + 24068 links, frozen 1:1 in sbnd-icluster-split.manifest.tsv / sbnd-icluster-split.links.tsv
+   DRY RUN -- nothing removed.  e.g. sbnd/sbnd_xin/work-mcp1k-d123base/evt166650/icluster-apa0-active.npz
+== sbnd-base-qlevt: 48510 files, 23.24 GiB + 32340 links, frozen 1:1 in sbnd-base-qlevt.manifest.tsv / sbnd-base-qlevt.links.tsv
+   DRY RUN -- nothing removed.  e.g. sbnd/sbnd_xin/work-mcp1k-d123base/ql_evt166650/mabc-all-apa.zip
+done (CONFIRM=no) rc=0

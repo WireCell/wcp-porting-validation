@@ -1,0 +1,1648 @@
+alive families after round D: 136 (work dirs released by the plan: 3562)
+
+== pin: KEEP 69  FREE 4
+  KEEP  d08_libpin/new                                               named by 1 file(s); survivors d08cap10 d08goff d08pv30off d08pv30on; non-.so 0 MiB
+  KEEP  d08_libpin/new2                                              named by 2 file(s); survivors d08cap10 d08goff d08pv30off d08pv30on; non-.so 0 MiB
+  KEEP  d08_libpin/ref                                               named by 1 file(s); survivors d08cap10 d08goff d08pv30off d08pv30on; non-.so 0 MiB
+  KEEP  d09_libpin/pin                                               named by 7 file(s); survivors d09ctl d09ctl2; non-.so 1 MiB
+  KEEP  d101/libpin                                                  named by 4 file(s); survivors d101hkf d101hnew d101vkf d101vnew d146sv25 p82bhoff; non-.so 6 MiB
+  KEEP  d101/libpin_k                                                named by 8 file(s); survivors d101hkf d101hnew d101vkf d101vnew d146sv25 p82bhoff; non-.so 0 MiB
+  KEEP  d101/libpin_new                                              named by 3 file(s); survivors d101hkf d101hnew d101vkf d101vnew d146sv25 p82bhoff; non-.so 0 MiB
+  KEEP  d102/libpin_d102                                             the pin of BOTH production PR arms: PDHD d108hflip (doc pdvd/108 sec 3) and PDVD d103vflip (doc pdvd/103 sec 10.5)
+  KEEP  d102m-libsnap                                                named by 8 file(s); survivors d113snew d123flip d123flipoff d123flippr pr130r1; non-.so 0 MiB
+  KEEP  d109-libsnap/base                                            named by 4 file(s); survivors d113snew d123flip d123flipoff d123flippr d146sv25 pr130r1; non-.so 0 MiB
+  KEEP  d109-libsnap/new2                                            named by 6 file(s); survivors d146sv25; non-.so 0 MiB
+  KEEP  d109r3-libsnap/base                                          named by 1 file(s); survivors d146sv25; non-.so 0 MiB
+  KEEP  d109r3-libsnap/new                                           named by 1 file(s); survivors d146sv25; non-.so 0 MiB
+  KEEP  d109r3-libsnap/new2                                          named by 2 file(s); survivors d146sv25; non-.so 0 MiB
+  KEEP  d109r4-libsnap/head                                          named by 2 file(s); survivors d146sv25; non-.so 240 MiB
+  KEEP  d109r4-libsnap/new3                                          named by 5 file(s); survivors d146sv25; non-.so 240 MiB
+  KEEP  d110-libsnap/new                                             named by 8 file(s); survivors d113snew d123flip d123flipoff d123flippr pr130r1; non-.so 240 MiB
+  KEEP  d111/libpin_d111                                             named by 2 file(s); survivors d101hkf d101hnew d102hocs d103v0 d111ssnew; non-.so 6 MiB
+  KEEP  d111/libpin_d111b                                            named by 2 file(s); survivors d101hkf d101hnew d102hocs d103v0 d111ssnew; non-.so 6 MiB
+  KEEP  d111/libpin_d111s                                            named by 2 file(s); survivors d101hkf d101hnew d102hocs d103v0 d111ssnew; non-.so 6 MiB
+  KEEP  d111/libpin_d111s2                                           named by 1 file(s); survivors d101hkf d101hnew d102hocs d103v0 d111ssnew; non-.so 6 MiB
+  KEEP  d113/libpin_d113                                             named by 4 file(s); survivors d101hnew d103v0 d103v1 d111ssnew d113snew; non-.so 6 MiB
+  FREE  d114/libpin_d114                                             named by 1 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d114/libpin_d114h0                                           named by 1 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d114/libpin_d114k                                            named by 3 file(s), no surviving arm; non-.so 0 MiB
+  KEEP  d115-libsnap                                                 named by 13 file(s); survivors d115pr; non-.so 0 MiB
+  KEEP  d115/libpin_d115                                             named by 8 file(s); survivors d115hoff d115hp3bwp05 d115vbwp05 d115voff d115vp3bwp05 d116vr2; non-.so 0 MiB
+  KEEP  d117/libpin                                                  live/held prefix d117
+  KEEP  d119-libpin                                                  live/held prefix d119-libpin
+  KEEP  d119inst/A/lib                                               live/held prefix d119inst
+  KEEP  d119inst/A2/lib                                              live/held prefix d119inst
+  KEEP  d119inst/A3/lib                                              live/held prefix d119inst
+  KEEP  d119inst/A_ref/lib                                           live/held prefix d119inst
+  KEEP  d119inst/B2/lib                                              live/held prefix d119inst
+  KEEP  d119inst/B3/lib                                              live/held prefix d119inst
+  KEEP  d119inst/live/lib                                            live/held prefix d119inst
+  KEEP  d119r3-libpin                                                live/held prefix d119r3-libpin
+  KEEP  d119wt/build/clus                                            live/held prefix d119wt
+  KEEP  d123-libpin                                                  named by 864 file(s); survivors d113snew d123base d123flip d123flipoff d123flippr d123lgflip; non-.so 240 MiB
+  FREE  d123-libpin-pre                                              named by 0 file(s), no surviving arm; non-.so 240 MiB
+  KEEP  d123-libpin-r6                                               ROUND K: THE SBND PRODUCTION PIN -- the only binary that reproduces d123lgop/lgoppr (local/lib Clus/Util/Aux moved 2026-09-25); sbnd PROTECTED
+  KEEP  d146_libpin                                                  named by 1 file(s); survivors d146sv25; non-.so 0 MiB
+  KEEP  d146_libpin2                                                 named by 1 file(s); survivors d146sv25; non-.so 0 MiB
+  KEEP  d146_libpin_pre                                              named by 1 file(s); survivors d146sv25; non-.so 0 MiB
+  KEEP  d41_libpin/new6                                              named by 1 file(s); survivors d41prov; non-.so 0 MiB
+  KEEP  d53/libpin                                                   named by 1 file(s); survivors d53h d53v; non-.so 0 MiB
+  KEEP  d61/libpin_item1_before                                      named by 1 file(s); survivors d53h d67v; non-.so 240 MiB
+  KEEP  d64/libpin                                                   named by 1 file(s); survivors d53h d53v; non-.so 240 MiB
+  KEEP  d66/libpin                                                   named by 6 file(s); survivors d53h d53v d67v d68a3 d68d4; non-.so 240 MiB
+  KEEP  d71/libpin_base                                              named by 2 file(s); survivors d68a3; non-.so 240 MiB
+  KEEP  d71/libpin_p1                                                named by 4 file(s); survivors d68a3; non-.so 240 MiB
+  KEEP  d97b-libsnap                                                 named by 7 file(s); survivors d113snew d123flip d123flipoff d123flippr pr130r1; non-.so 240 MiB
+  KEEP  h28/libpin_h28                                               named by 9 file(s); survivors p96vprod; non-.so 240 MiB
+  KEEP  p100/libpin_p100b                                            named by 10 file(s); survivors p100bx p100bxp p100c p100flip p101q p96vprod; non-.so 240 MiB
+  KEEP  p32/libpin_q32                                               named by 2 file(s); survivors q31ctl; non-.so 240 MiB
+  KEEP  p33/libpin_q33                                               named by 3 file(s); survivors q31ctl; non-.so 240 MiB
+  KEEP  p33/libpin_q33b                                              named by 3 file(s); survivors q31ctl; non-.so 240 MiB
+  KEEP  p34/libpin_q34                                               named by 3 file(s); survivors q31ctl q34tk1; non-.so 240 MiB
+  KEEP  p35/libpin_prod                                              ROUND K: THE PDVD PRODUCTION PIN -- q35flip ran on it (doc qlmatch/35 line 497); pdvd PROTECTED
+  KEEP  p4/libpin_p4                                                 named by 5 file(s); survivors d68a3; non-.so 240 MiB
+  KEEP  p65/libpin_p65                                               named by 5 file(s); survivors h23conf p82bhoff; non-.so 240 MiB
+  KEEP  p72/libpin_p72                                               named by 4 file(s); survivors d68a3; non-.so 240 MiB
+  KEEP  p82/libpin_p82                                               named by 13 file(s); survivors d53h h18b h18s p82bhoff p82hoff; non-.so 0 MiB
+  KEEP  p83/libpin_p83                                               named by 2 file(s); survivors p82bhoff; non-.so 0 MiB
+  KEEP  p84/libpin_p84                                               named by 2 file(s); survivors d67v d68a3 d68d4; non-.so 0 MiB
+  KEEP  p85/libpin_p85                                               named by 4 file(s); survivors p85vprod p85vwh; non-.so 0 MiB
+  KEEP  p87/libpin_p87                                               named by 2 file(s); survivors p85vprod; non-.so 0 MiB
+  KEEP  p88/libpin_p88                                               named by 7 file(s); survivors p85vprod p88v5fr p88vprod p90vprod; non-.so 0 MiB
+  KEEP  p92/libpin_p92                                               named by 4 file(s); survivors p90vprod; non-.so 0 MiB
+  KEEP  p96/libpin_p96                                               named by 23 file(s); survivors h23conf h25base h25k h25kr h25r h25va; non-.so 240 MiB
+  KEEP  pdhdstm_libpin                                               pdhd PROTECTED line 37 (stm-tagger-chain line 901, backs the stm0/stmw scan)
+  KEEP  pr150/libpin                                                 named by 5 file(s); survivors d113snew d123flip d123flipoff d123flippr pr130r1 pr150csp3bw; non-.so 240 MiB
+  KEEP  prod0923-libpin                                              named by 4 file(s); survivors d113snew d123flip d123flipoff d123flippr pr130r1; non-.so 0 MiB
+
+== prep: KEEP 22  FREE 0
+  KEEP  d101/prep_d101vkf                                            arm d101vkf survives round D
+  KEEP  d101/prep_d101vnew                                           arm d101vnew survives round D
+  KEEP  d102/prep_d102vcsall                                         arm d102vcsall survives round D
+  KEEP  d102/prep_d102vocs                                           arm d102vocs survives round D
+  KEEP  d67/prep_d67v                                                named by a scan record (served to the scanners)
+  KEEP  d68/prep_d68a3                                               named by a scan record (served to the scanners)
+  KEEP  d68/prep_d68d4                                               named by a scan record (served to the scanners)
+  KEEP  h18/prep_h18b                                                arm h18b survives round D
+  KEEP  h18/prep_h18s                                                arm h18s survives round D
+  KEEP  h18/prep_p82bhoff                                            arm p82bhoff survives round D
+  KEEP  p100/prep_p100bx                                             arm p100bx survives round D
+  KEEP  p100/prep_p100bxp                                            arm p100bxp survives round D
+  KEEP  p100/prep_p100c                                              arm p100c survives round D
+  KEEP  p100/prep_p99wflip                                           arm p99wflip survives round D
+  KEEP  p85/prep_p85vwh                                              named by a scan record (served to the scanners)
+  KEEP  p87/prep_p85vprod                                            named by a scan record (served to the scanners)
+  KEEP  p88/prep_p88v5fr                                             arm p88v5fr survives round D
+  KEEP  p89/prep_p88vprod                                            named by a scan record (served to the scanners)
+  KEEP  p90/prep_p90vprod                                            named by a scan record (served to the scanners)
+  KEEP  p93/prep_p90vprod                                            arm p90vprod survives round D
+  KEEP  p99scan/prep_p96vprod                                        arm p96vprod survives round D
+  KEEP  p99scan/prep_p98vonq                                         arm p98vonq survives round D
+  FREE by top dir: 
+
+== session: KEEP 7  FREE 23
+  KEEP  claude-25225/-home-xqian-toolkit-dev-toolkit/1f8ae14b-6c84-4993-a21c-bf0790729598 this session
+  KEEP  claude-25225/-home-xqian-toolkit-dev-toolkit/1fce3b9b-3cb7-4171-9cbd-f3e5eedce907 named by /home/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/scan/smx19/cmp_review.txt
+  KEEP  claude-25225/-home-xqian-toolkit-dev-toolkit/7660c590-696d-4b4f-be7d-5619d62a5fa3 transcript written in the last 12 h
+  KEEP  claude-25225/-home-xqian-toolkit-dev-toolkit/7e189a30-1fcf-4013-9daf-d9ccc393c591 transcript written in the last 12 h
+  KEEP  claude-25225/-home-xqian-toolkit-dev-toolkit/87207d1f-0daa-41d0-98a0-e87d9c780495 named by /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/119_figs/119_prof_pdhd_029107_12.txt
+  KEEP  claude-25225/-home-xqian-toolkit-dev-toolkit/d9d688aa-85d3-4ebf-900f-e2f746766f40 named by /home/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/69_stm-campaign-determinism-audit.md
+  KEEP  claude-25225/-home-xqian-toolkit-dev-toolkit/f9a6c36c-e1da-45dc-b0d5-7475aa1631dc transcript written in the last 12 h
+  FREE by top dir: claude-25225:23
+
+== scratch: KEEP 5  FREE 1
+  KEEP  claude-25225/pr33                                            named by /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/33_em-shower-clustering-port-audit.md
+  KEEP  claude-25225/pr34                                            named by /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/34_particle-flow-port-audit.md
+  KEEP  claude-25225/pr35                                            named by /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/35_energy-reconstruction-port-audit.md
+  KEEP  claude-25225/pr36                                            named by /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/36_taggers-port-audit.md
+  KEEP  claude-25225/pr36f                                           named by /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/36_taggers-port-audit.md
+  FREE by top dir: claude-25225:1
+
+== round: KEEP 985  FREE 537
+  KEEP  d08/d08cap10.log                                             logs/products of surviving arm d08cap10
+  KEEP  d08/scan2_driver.log                                         scan-facing (served to a scanner)
+  KEEP  d08/scan_driver.log                                          scan-facing (served to a scanner)
+  KEEP  d08_libpin/new                                               is/contains a pin (judged in the pin class)
+  KEEP  d08_libpin/new2                                              is/contains a pin (judged in the pin class)
+  KEEP  d08_libpin/ref                                               is/contains a pin (judged in the pin class)
+  KEEP  d08cap10_regen.log                                           logs/products of surviving arm d08cap10
+  KEEP  d09/exits_stm0_rows.json                                     logs/products of surviving arm stm0
+  KEEP  d09/instr_stm0.json                                          logs/products of surviving arm stm0
+  KEEP  d09/off_stm0_miss.json                                       logs/products of surviving arm stm0
+  KEEP  d09/q_stm0_profiles.jsonnet                                  logs/products of surviving arm stm0
+  KEEP  d09/q_stm0_table.json                                        logs/products of surviving arm stm0
+  KEEP  d09/ql_29107_d09ctl.json                                     logs/products of surviving arm d09ctl
+  KEEP  d09/ql_29107_d09ctl2.json                                    logs/products of surviving arm d09ctl2
+  KEEP  d09/s_d09ctl.txt                                             logs/products of surviving arm d09ctl
+  KEEP  d09/s_d09ctl2.txt                                            logs/products of surviving arm d09ctl2
+  KEEP  d09_libpin/pin                                               is/contains a pin (judged in the pin class)
+  KEEP  d101/arm_d101hkf                                             logs/products of surviving arm d101hkf
+  KEEP  d101/arm_d101hkf.log                                         logs/products of surviving arm d101hkf
+  KEEP  d101/arm_d101hnew                                            logs/products of surviving arm d101hnew
+  KEEP  d101/arm_d101hnew.log                                        logs/products of surviving arm d101hnew
+  KEEP  d101/arm_d101vkf                                             logs/products of surviving arm d101vkf
+  KEEP  d101/arm_d101vkf.log                                         logs/products of surviving arm d101vkf
+  KEEP  d101/arm_d101vnew                                            logs/products of surviving arm d101vnew
+  KEEP  d101/arm_d101vnew.log                                        logs/products of surviving arm d101vnew
+  KEEP  d101/libpin                                                  is/contains a pin (judged in the pin class)
+  KEEP  d101/libpin_k                                                is/contains a pin (judged in the pin class)
+  KEEP  d101/libpin_new                                              is/contains a pin (judged in the pin class)
+  KEEP  d101/prep_d101vkf                                            is/contains a prep (judged in the prep class)
+  KEEP  d101/prep_d101vkf.log                                        is/contains a prep (judged in the prep class)
+  KEEP  d101/prep_d101vnew                                           is/contains a prep (judged in the prep class)
+  KEEP  d101/prep_d101vnew.log                                       is/contains a prep (judged in the prep class)
+  KEEP  d101/scan2_f20_n800                                          scan-facing (served to a scanner)
+  KEEP  d101/scan2_f20_n800.log                                      scan-facing (served to a scanner)
+  KEEP  d101/scan3_f20_n800                                          scan-facing (served to a scanner)
+  KEEP  d101/scan3_f20_n800.log                                      scan-facing (served to a scanner)
+  KEEP  d101/scan_f20_n800                                           scan-facing (served to a scanner)
+  KEEP  d101/scan_f20_n800.log                                       scan-facing (served to a scanner)
+  KEEP  d101/score_d101vkf.json                                      logs/products of surviving arm d101vkf
+  KEEP  d101/score_d101vkf.log                                       logs/products of surviving arm d101vkf
+  KEEP  d101/score_d101vnew.json                                     logs/products of surviving arm d101vnew
+  KEEP  d101/score_d101vnew.log                                      logs/products of surviving arm d101vnew
+  KEEP  d101/sheet_d101vkf                                           logs/products of surviving arm d101vkf
+  KEEP  d101/sheet_d101vnew                                          logs/products of surviving arm d101vnew
+  KEEP  d102/arm_d102hcs                                             logs/products of surviving arm d102hcs
+  KEEP  d102/arm_d102hcs.log                                         logs/products of surviving arm d102hcs
+  KEEP  d102/arm_d102hocs                                            logs/products of surviving arm d102hocs
+  KEEP  d102/arm_d102hocs.log                                        logs/products of surviving arm d102hocs
+  KEEP  d102/arm_d102vcsall                                          logs/products of surviving arm d102vcsall
+  KEEP  d102/arm_d102vcsall.log                                      logs/products of surviving arm d102vcsall
+  KEEP  d102/arm_d102vocs                                            logs/products of surviving arm d102vocs
+  KEEP  d102/arm_d102vocs.log                                        logs/products of surviving arm d102vocs
+  KEEP  d102/cfg                                                     named in a PROTECTED.txt
+  KEEP  d102/libpin_d102                                             is/contains a pin (judged in the pin class)
+  KEEP  d102/prep_d102vcsall                                         is/contains a prep (judged in the prep class)
+  KEEP  d102/prep_d102vcsall.log                                     is/contains a prep (judged in the prep class)
+  KEEP  d102/prep_d102vcsall2.log                                    is/contains a prep (judged in the prep class)
+  KEEP  d102/prep_d102vocs                                           is/contains a prep (judged in the prep class)
+  KEEP  d102/prep_d102vocs.log                                       is/contains a prep (judged in the prep class)
+  KEEP  d102/sheet_d102vcsall                                        logs/products of surviving arm d102vcsall
+  KEEP  d102/sheet_d102vocs                                          logs/products of surviving arm d102vocs
+  FREE  d102m-A-mcp1k.log                                            round d102 -> committed doc number 102
+  FREE  d102m-A-mcp2k-part1.log                                      round d102 -> committed doc number 102
+  FREE  d102m-A-mcp2k-part2.log                                      round d102 -> committed doc number 102
+  FREE  d102m-A-ncpi0.log                                            round d102 -> committed doc number 102
+  FREE  d102m-A-nuecc48.log                                          round d102 -> committed doc number 102
+  FREE  d102m-B-mcp1k.log                                            round d102 -> committed doc number 102
+  FREE  d102m-B-mcp2k.log                                            round d102 -> committed doc number 102
+  FREE  d102m-B-ncpi0.log                                            round d102 -> committed doc number 102
+  FREE  d102m-B-nuecc48.log                                          round d102 -> committed doc number 102
+  FREE  d102m-census-d144on.log                                      round d102 -> committed doc number 102
+  FREE  d102m-census-prod0902.log                                    round d102 -> committed doc number 102
+  FREE  d102m-commit-msg.txt                                         round d102 -> committed doc number 102
+  FREE  d102m-d92plots.log                                           round d102 -> committed doc number 102
+  FREE  d102m-datapath-mcp1k.log                                     round d102 -> committed doc number 102
+  FREE  d102m-datapath-mcp2k.log                                     round d102 -> committed doc number 102
+  FREE  d102m-doctest-aux.log                                        round d102 -> committed doc number 102
+  FREE  d102m-doctest-clus.log                                       round d102 -> committed doc number 102
+  FREE  d102m-doctest-iface.log                                      round d102 -> committed doc number 102
+  FREE  d102m-doctest-img.log                                        round d102 -> committed doc number 102
+  FREE  d102m-doctest-match.log                                      round d102 -> committed doc number 102
+  FREE  d102m-doctest-root.log                                       round d102 -> committed doc number 102
+  FREE  d102m-doctest-sio.log                                        round d102 -> committed doc number 102
+  FREE  d102m-doctest-util.log                                       round d102 -> committed doc number 102
+  FREE  d102m-perf-mcp1k.log                                         round d102 -> committed doc number 102
+  FREE  d102m-perf-nuecc48.log                                       round d102 -> committed doc number 102
+  FREE  d102m-scores-mcp1k.log                                       round d102 -> committed doc number 102
+  FREE  d102m-scores-mcp2k.log                                       round d102 -> committed doc number 102
+  FREE  d102m-scores-ncpi0.log                                       round d102 -> committed doc number 102
+  FREE  d102m-scores-nuecc48.log                                     round d102 -> committed doc number 102
+  FREE  d102m-stageAgate-mcp1k-full.log                              round d102 -> committed doc number 102
+  FREE  d102m-stageAgate-mcp1k.log                                   round d102 -> committed doc number 102
+  FREE  d102m-stageAgate-mcp2k.log                                   round d102 -> committed doc number 102
+  FREE  d102m-stageAgate-ncpi0.log                                   round d102 -> committed doc number 102
+  FREE  d102m-stageAgate-nuecc48.log                                 round d102 -> committed doc number 102
+  KEEP  d103/eval_d101hkf.err                                        logs/products of surviving arm d101hkf
+  KEEP  d103/eval_d101vkf.err                                        logs/products of surviving arm d101vkf
+  KEEP  d103/eval_d102hcs.err                                        logs/products of surviving arm d102hcs
+  KEEP  d103/eval_d102hocs.err                                       logs/products of surviving arm d102hocs
+  KEEP  d103/eval_d102vcsall.err                                     logs/products of surviving arm d102vcsall
+  KEEP  d103/eval_d102vocs.err                                       logs/products of surviving arm d102vocs
+  KEEP  d103/own                                                     scan-facing (served to a scanner)
+  KEEP  d103/sep_d101hkf.err                                         logs/products of surviving arm d101hkf
+  KEEP  d103/sep_d101vkf.err                                         logs/products of surviving arm d101vkf
+  KEEP  d103/sep_d102hcs.err                                         logs/products of surviving arm d102hcs
+  KEEP  d103/sep_d102hocs.err                                        logs/products of surviving arm d102hocs
+  KEEP  d103/sep_d102vcsall.err                                      logs/products of surviving arm d102vcsall
+  KEEP  d103/sep_d102vocs.err                                        logs/products of surviving arm d102vocs
+  KEEP  d104/own                                                     scan-facing (served to a scanner)
+  KEEP  d104/own103h2_score.txt                                      scan-facing (served to a scanner)
+  KEEP  d109/arm_d109hstm                                            logs/products of surviving arm d109hstm
+  KEEP  d109-libsnap/base                                            is/contains a pin (judged in the pin class)
+  KEEP  d109-libsnap/new2                                            is/contains a pin (judged in the pin class)
+  KEEP  d109r3-libsnap/base                                          is/contains a pin (judged in the pin class)
+  KEEP  d109r3-libsnap/new                                           is/contains a pin (judged in the pin class)
+  KEEP  d109r3-libsnap/new2                                          is/contains a pin (judged in the pin class)
+  KEEP  d109r4-libsnap/head                                          is/contains a pin (judged in the pin class)
+  KEEP  d109r4-libsnap/new3                                          is/contains a pin (judged in the pin class)
+  KEEP  d110-libsnap/new                                             is/contains a pin (judged in the pin class)
+  FREE  d111/arm_d111hst                                             round d111 -> committed doc number 111
+  FREE  d111/arm_d111hst.out                                         round d111 -> committed doc number 111
+  FREE  d111/arm_d111vst                                             round d111 -> committed doc number 111
+  FREE  d111/arm_d111vst.out                                         round d111 -> committed doc number 111
+  KEEP  d111/gate_hoff5_vs_d109hstm.txt                              logs/products of surviving arm d109hstm
+  KEEP  d111/libpin_d111                                             is/contains a pin (judged in the pin class)
+  KEEP  d111/libpin_d111b                                            is/contains a pin (judged in the pin class)
+  KEEP  d111/libpin_d111s                                            is/contains a pin (judged in the pin class)
+  KEEP  d111/libpin_d111s2                                           is/contains a pin (judged in the pin class)
+  KEEP  d111/sbnd_d111ssnew.log                                      logs/products of surviving arm d111ssnew
+  FREE  d113/arm_d113hbase                                           round d113 -> committed doc number 113
+  FREE  d113/arm_d113hbase.out                                       round d113 -> committed doc number 113
+  FREE  d113/arm_d113hnone                                           round d113 -> committed doc number 113
+  FREE  d113/arm_d113hnone.out                                       round d113 -> committed doc number 113
+  FREE  d113/arm_d113vbase                                           round d113 -> committed doc number 113
+  FREE  d113/arm_d113vbase.out                                       round d113 -> committed doc number 113
+  FREE  d113/arm_d113vnone                                           round d113 -> committed doc number 113
+  FREE  d113/arm_d113vnone.out                                       round d113 -> committed doc number 113
+  FREE  d113/census_d113hbase.log                                    round d113 -> committed doc number 113
+  FREE  d113/census_d113hnone.log                                    round d113 -> committed doc number 113
+  FREE  d113/census_d113vbase.log                                    round d113 -> committed doc number 113
+  FREE  d113/census_d113vnone.log                                    round d113 -> committed doc number 113
+  FREE  d113/check_steiner_d111hst.json                              round d113 -> committed doc number 113
+  FREE  d113/check_steiner_d111hst.log                               round d113 -> committed doc number 113
+  FREE  d113/check_steiner_d111hst.txt                               round d113 -> committed doc number 113
+  FREE  d113/check_steiner_d111vst.json                              round d113 -> committed doc number 113
+  FREE  d113/check_steiner_d111vst.log                               round d113 -> committed doc number 113
+  FREE  d113/check_steiner_d111vst.txt                               round d113 -> committed doc number 113
+  KEEP  d113/libpin_d113                                             is/contains a pin (judged in the pin class)
+  KEEP  d113/sbnd_d113snew.log                                       logs/products of surviving arm d113snew
+  KEEP  d113/scan_score_a.txt                                        scan-facing (served to a scanner)
+  KEEP  d113/scanscore3.log                                          scan-facing (served to a scanner)
+  FREE  d113/steiner_d113hbase.json                                  round d113 -> committed doc number 113
+  FREE  d113/steiner_d113hbase.txt                                   round d113 -> committed doc number 113
+  FREE  d113/steiner_d113vbase.json                                  round d113 -> committed doc number 113
+  FREE  d113/steiner_d113vbase.txt                                   round d113 -> committed doc number 113
+  KEEP  d114/libpin_d114                                             is/contains a pin (judged in the pin class)
+  KEEP  d114/libpin_d114h0                                           is/contains a pin (judged in the pin class)
+  KEEP  d114/libpin_d114k                                            is/contains a pin (judged in the pin class)
+  KEEP  d115/.d115hoff.out.seen                                      logs/products of surviving arm d115hoff
+  KEEP  d115/.d115voff.out.seen                                      logs/products of surviving arm d115voff
+  KEEP  d115/arm_d115hoff                                            logs/products of surviving arm d115hoff
+  KEEP  d115/arm_d115hp3bwp05                                        logs/products of surviving arm d115hp3bwp05
+  KEEP  d115/arm_d115hp3bwp05.out                                    logs/products of surviving arm d115hp3bwp05
+  KEEP  d115/arm_d115vbwp05                                          logs/products of surviving arm d115vbwp05
+  KEEP  d115/arm_d115vbwp05.out                                      logs/products of surviving arm d115vbwp05
+  KEEP  d115/arm_d115voff                                            logs/products of surviving arm d115voff
+  KEEP  d115/arm_d115vp3bwp05                                        logs/products of surviving arm d115vp3bwp05
+  KEEP  d115/arm_d115vp3bwp05.out                                    logs/products of surviving arm d115vp3bwp05
+  KEEP  d115/d115hoff.out                                            logs/products of surviving arm d115hoff
+  KEEP  d115/d115voff.out                                            logs/products of surviving arm d115voff
+  KEEP  d115/libpin_d115                                             is/contains a pin (judged in the pin class)
+  KEEP  d116/arm_d116hflip                                           logs/products of surviving arm d116hflip
+  KEEP  d116/arm_d116hr2                                             logs/products of surviving arm d116hr2
+  KEEP  d116/arm_d116hr2.out                                         logs/products of surviving arm d116hr2
+  KEEP  d116/arm_d116vflip                                           logs/products of surviving arm d116vflip
+  KEEP  d116/arm_d116vr2                                             logs/products of surviving arm d116vr2
+  KEEP  d116/arm_d116vr2.out                                         logs/products of surviving arm d116vr2
+  KEEP  d116/own                                                     scan-facing (served to a scanner)
+  KEEP  d117                                                         live/held prefix (round d117 -> committed doc number 117)
+  KEEP  d118_bee                                                     live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118_crash                                                   live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118_ctrl_039349.log                                         live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118_files.txt                                               live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118_k2001_compile.log                                       live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118_k2001_np_compile.log                                    live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118_overlay                                                 live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118_ref_events.txt                                          live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118_trace.log                                               live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118_wcsB_cmd.sh                                             live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118_wcs_cmd.sh                                              live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118cfgA_after.json                                          live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118cfgA_after.log                                           live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118cfgA_before.json                                         live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118cfgA_before.log                                          live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118cfgB_after.json                                          live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118cfgB_after.log                                           live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118cfgB_before.json                                         live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118cfgB_before.log                                          live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118cfgB_head.json                                           live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118cfgB_trace.log                                           live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118cfgC_head.json                                           live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118cfgC_new.json                                            live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d118cfgC_trace.log                                           live/held prefix (round d118 -> committed doc number 118)
+  KEEP  d119-doctest.log                                             live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-drift.txt                                               live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-libpin                                                  live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-refresh.txt                                             live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-run_pr_chain_batch.sh.bak                               live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-sbnd_tf.bak                                             live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-cv-ctl                                           live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-cv-ctl2                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-cv-flip                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-cv-pad                                           live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-cv-r3                                            live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-cv-r3b                                           live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-cv-tcm                                           live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-nuecc-ctl                                        live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-nuecc-ctl2                                       live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-nuecc-flip                                       live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-nuecc-pad                                        live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-nuecc-r3                                         live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-nuecc-r3b                                        live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-nuecc-tcm                                        live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-off-ctl                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-off-ctl2                                         live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-off-flip                                         live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-off-pad                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-off-r3                                           live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-off-r3b                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-off-tcm                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-r5-cv-jdef                                       live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-r5-cv-jem                                        live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-r5-cv-tcm                                        live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-r5-nuecc-jdef                                    live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-r5-nuecc-jem                                     live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-r5-nuecc-tcm                                     live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-r5-off-jdef                                      live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-r5-off-jem                                       live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-r5-off-tcm                                       live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-r5-tail-glb                                      live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-r5-tail-jem                                      live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-r5-tail-rel                                      live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-r5-tail-tcm                                      live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119-stageB-tail                                             live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_A2off_vs_B2off.txt                                      live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_beam_arms.log                                           live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_bee                                                     live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_bee3_push.log                                           live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_buildA.log                                              live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_buildA.sh                                               live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_buildAB.log                                             live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_buildAB.sh                                              live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_buildB.log                                              live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_buildB.sh                                               live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_buildB2.log                                             live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_buildB2.sh                                              live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_confA.log                                               live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_doctest_bee.log                                         live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_doctest_clus.log                                        live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_doctest_util.log                                        live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_gates                                                   live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_gates.sh                                                live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_gates2.sh                                               live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_install.log                                             live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_install.sh                                              live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_kaon_labels.txt                                         live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_kaon_scratch.log                                        live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_lightoff_19409.log                                      live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_lightoff_19709.log                                      live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_onoff_039349.txt                                        live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_op_check.mjs                                            live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_op_test.mjs                                             live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_patch_all.diff                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_prod_clus.log                                           live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_prod_light.log                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_pw                                                      live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_served_bee.js                                           live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_served_disp.js                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_served_op.js                                            live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_testlink.log                                            live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_testlink_cmd.txt                                        live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_testlink_manual.log                                     live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_testsB.log                                              live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_tk_push.log                                             live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_toolkit.patch                                           live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_wcp_push.log                                            live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119_wcp_push2.log                                           live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119cfg                                                      live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119inst                                                     live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-arms.log                                              live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-build.log                                             live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-build2.log                                            live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-build3.log                                            live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-doctest.log                                           live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-doctest2.log                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-gate-nuecc.txt                                        live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-gate-pdhd.txt                                         live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-gate-pdvd.txt                                         live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-hr3.tsv                                               live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-libpin                                                live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-pdhd.log                                              live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-pdvd.log                                              live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-pp-flip.txt                                           live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-pp-r3.txt                                             live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-prof                                                  live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-prof-flip.log                                         live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-prof-r3.log                                           live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-r3-cv.log                                             live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-r3-nuecc.log                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-r3-off.log                                            live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-r3b-cv.log                                            live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-r3b-nuecc.log                                         live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-r3b-off.log                                           live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-run.sh                                                live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-vr3.tsv                                               live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-xdet-cost.txt                                         live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-xdet.log                                              live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r3-xdet.sh                                               live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r4                                                       live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r4-allocproof.log                                        live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r4-heap-11239.log                                        live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r4-heap-7582.log                                         live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r4-heap-pdvd.log                                         live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r4-rank-11239.txt                                        live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r4-rank-7582.txt                                         live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r4-rank-pdvd.txt                                         live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r4-smoke.log                                             live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r4-tail.log                                              live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r4-tailprod.log                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r5                                                       live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r6-alias-3743340                                         live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119r6-aliasdir.txt                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_bee3_push.log                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_build.log                                              live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_build.sh                                               live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_cfg                                                    live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_doctest_clus.log                                       live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_doctest_util.log                                       live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_doctest_util_all.log                                   live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_gates                                                  live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_gates.sh                                               live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_install.log                                            live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_install.sh                                             live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_remote_doc.md                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_served_bee.js                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_tk_push.log                                            live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_toolkit.patch                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_tu.log                                                 live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_tu_link.sh                                             live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_wcp_push.log                                           live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_wcp_push2.log                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_wcp_push3.log                                          live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119s_wcpwt                                                  live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119wcp                                                      live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119wt                                                       live/held prefix (round d119 -> committed doc number 119)
+  KEEP  d119wt.log                                                   live/held prefix (round d119 -> committed doc number 119)
+  FREE  d123/after_mcp1k.out                                         round d123 -> committed doc number 123
+  FREE  d123/after_mcp1k.sh                                          round d123 -> committed doc number 123
+  FREE  d123/base_mcp1k.out                                          round d123 -> committed doc number 123
+  FREE  d123/base_mcp1k.sh                                           round d123 -> committed doc number 123
+  FREE  d123/base_ncpi0.out                                          round d123 -> committed doc number 123
+  FREE  d123/base_ncpi0.sh                                           round d123 -> committed doc number 123
+  FREE  d123/base_nuecc48.out                                        round d123 -> committed doc number 123
+  FREE  d123/base_nuecc48.sh                                         round d123 -> committed doc number 123
+  FREE  d123/bee                                                     round d123 -> committed doc number 123
+  FREE  d123/build-doctest.log                                       round d123 -> committed doc number 123
+  FREE  d123/build1.log                                              round d123 -> committed doc number 123
+  FREE  d123/chain_cvhits.out                                        round d123 -> committed doc number 123
+  FREE  d123/chain_cvhits.sh                                         round d123 -> committed doc number 123
+  FREE  d123/chain_mc.out                                            round d123 -> committed doc number 123
+  FREE  d123/chain_mc.sh                                             round d123 -> committed doc number 123
+  FREE  d123/chain_mc2.out                                           round d123 -> committed doc number 123
+  FREE  d123/chain_mc2.sh                                            round d123 -> committed doc number 123
+  FREE  d123/chain_mc3.out                                           round d123 -> committed doc number 123
+  FREE  d123/chain_mc3.sh                                            round d123 -> committed doc number 123
+  FREE  d123/chain_mcp.out                                           round d123 -> committed doc number 123
+  FREE  d123/chain_mcp.sh                                            round d123 -> committed doc number 123
+  FREE  d123/chain_nue2.out                                          round d123 -> committed doc number 123
+  FREE  d123/chain_nue2.sh                                           round d123 -> committed doc number 123
+  FREE  d123/chain_nue_analysis.out                                  round d123 -> committed doc number 123
+  FREE  d123/chain_nue_analysis.sh                                   round d123 -> committed doc number 123
+  FREE  d123/chain_nue_fix.out                                       round d123 -> committed doc number 123
+  FREE  d123/chain_nue_fix.sh                                        round d123 -> committed doc number 123
+  FREE  d123/chain_nue_fix2.out                                      round d123 -> committed doc number 123
+  FREE  d123/chain_nue_fix2.sh                                       round d123 -> committed doc number 123
+  FREE  d123/chain_off_pr.out                                        round d123 -> committed doc number 123
+  FREE  d123/chain_off_pr.sh                                         round d123 -> committed doc number 123
+  FREE  d123/chain_r4.out                                            round d123 -> committed doc number 123
+  FREE  d123/chain_r4.sh                                             round d123 -> committed doc number 123
+  FREE  d123/doctest-flash.log                                       round d123 -> committed doc number 123
+  FREE  d123/fetch.log                                               round d123 -> committed doc number 123
+  FREE  d123/flip                                                    round d123 -> committed doc number 123
+  FREE  d123/gate_b                                                  round d123 -> committed doc number 123
+  FREE  d123/gate_c                                                  round d123 -> committed doc number 123
+  FREE  d123/gate_e                                                  round d123 -> committed doc number 123
+  FREE  d123/hits_mcp1k.out                                          round d123 -> committed doc number 123
+  FREE  d123/hits_mcp2k.out                                          round d123 -> committed doc number 123
+  FREE  d123/hits_ncpi0.out                                          round d123 -> committed doc number 123
+  FREE  d123/hits_nuecc48.out                                        round d123 -> committed doc number 123
+  FREE  d123/hits_r3nue_f061.out                                     round d123 -> committed doc number 123
+  FREE  d123/hits_r3nue_f062.out                                     round d123 -> committed doc number 123
+  FREE  d123/hitsnr_mcp1k.out                                        round d123 -> committed doc number 123
+  FREE  d123/hitsnr_ncpi0.out                                        round d123 -> committed doc number 123
+  FREE  d123/hitsnr_nuecc48.out                                      round d123 -> committed doc number 123
+  FREE  d123/hitsnu_mcp1k.out                                        round d123 -> committed doc number 123
+  FREE  d123/intime_nuecc48_base.tsv                                 round d123 -> committed doc number 123
+  FREE  d123/intime_nuecc48_hits.tsv                                 round d123 -> committed doc number 123
+  FREE  d123/intime_nuecc48_nosplit.tsv                              round d123 -> committed doc number 123
+  FREE  d123/libs.now.md5                                            round d123 -> committed doc number 123
+  FREE  d123/libs.post.md5                                           round d123 -> committed doc number 123
+  FREE  d123/libs.pre.md5                                            round d123 -> committed doc number 123
+  FREE  d123/mc_base_cv.out                                          round d123 -> committed doc number 123
+  FREE  d123/mc_base_nuecc.out                                       round d123 -> committed doc number 123
+  FREE  d123/mc_base_off.out                                         round d123 -> committed doc number 123
+  FREE  d123/mc_hits_cv.out                                          round d123 -> committed doc number 123
+  FREE  d123/mc_hits_cv2.out                                         round d123 -> committed doc number 123
+  FREE  d123/mc_hits_nuecc.out                                       round d123 -> committed doc number 123
+  FREE  d123/mc_hits_nuecc2.out                                      round d123 -> committed doc number 123
+  FREE  d123/mc_hits_off.out                                         round d123 -> committed doc number 123
+  FREE  d123/nosplit_mcp1k.out                                       round d123 -> committed doc number 123
+  FREE  d123/nosplit_ncpi0.out                                       round d123 -> committed doc number 123
+  FREE  d123/nosplit_nuecc48.out                                     round d123 -> committed doc number 123
+  FREE  d123/prB_small.out                                           round d123 -> committed doc number 123
+  FREE  d123/prB_small.sh                                            round d123 -> committed doc number 123
+  FREE  d123/pr_tables_r3nue_base.out                                round d123 -> committed doc number 123
+  FREE  d123/pr_tables_r3nue_hits.out                                round d123 -> committed doc number 123
+  FREE  d123/push-reco1.log                                          round d123 -> committed doc number 123
+  FREE  d123/push-toolkit.log                                        round d123 -> committed doc number 123
+  FREE  d123/push-wcp.log                                            round d123 -> committed doc number 123
+  FREE  d123/push-wcp10.log                                          round d123 -> committed doc number 123
+  FREE  d123/push-wcp11.log                                          round d123 -> committed doc number 123
+  FREE  d123/push-wcp12.log                                          round d123 -> committed doc number 123
+  FREE  d123/push-wcp13.log                                          round d123 -> committed doc number 123
+  FREE  d123/push-wcp14.log                                          round d123 -> committed doc number 123
+  FREE  d123/push-wcp15.log                                          round d123 -> committed doc number 123
+  FREE  d123/push-wcp16.log                                          round d123 -> committed doc number 123
+  FREE  d123/push-wcp2.log                                           round d123 -> committed doc number 123
+  FREE  d123/push-wcp3.log                                           round d123 -> committed doc number 123
+  FREE  d123/push-wcp4.log                                           round d123 -> committed doc number 123
+  FREE  d123/push-wcp5.log                                           round d123 -> committed doc number 123
+  FREE  d123/push-wcp6.log                                           round d123 -> committed doc number 123
+  FREE  d123/push-wcp7.log                                           round d123 -> committed doc number 123
+  FREE  d123/push-wcp8.log                                           round d123 -> committed doc number 123
+  FREE  d123/push-wcp9.log                                           round d123 -> committed doc number 123
+  FREE  d123/r1                                                      round d123 -> committed doc number 123
+  FREE  d123/r1_ncpi0.json                                           round d123 -> committed doc number 123
+  FREE  d123/r1_nuecc48.json                                         round d123 -> committed doc number 123
+  FREE  d123/r1_nuecc48.tsv                                          round d123 -> committed doc number 123
+  FREE  d123/r3                                                      round d123 -> committed doc number 123
+  FREE  d123/r6                                                      round d123 -> committed doc number 123
+  FREE  d123/rebase.log                                              round d123 -> committed doc number 123
+  FREE  d123/reco1-build.log                                         round d123 -> committed doc number 123
+  FREE  d123/reco1-install.log                                       round d123 -> committed doc number 123
+  FREE  d123/reco1-oldlib                                            round d123 -> committed doc number 123
+  FREE  d123/regen                                                   round d123 -> committed doc number 123
+  FREE  d123/sec16_r5_draft.md                                       round d123 -> committed doc number 123
+  FREE  d123/sel                                                     round d123 -> committed doc number 123
+  FREE  d123/stageB_mcp1k_now.out                                    round d123 -> committed doc number 123
+  FREE  d123/stageB_mcp1k_now.sh                                     round d123 -> committed doc number 123
+  FREE  d123/stageB_r3cv-base.out                                    round d123 -> committed doc number 123
+  FREE  d123/stageB_r3cv-hits.out                                    round d123 -> committed doc number 123
+  FREE  d123/stageB_r3cv-hits2.out                                   round d123 -> committed doc number 123
+  FREE  d123/stageB_r3nue-base.out                                   round d123 -> committed doc number 123
+  FREE  d123/stageB_r3nue-hits-fix.out                               round d123 -> committed doc number 123
+  FREE  d123/stageB_r3nue-hits-fix2.out                              round d123 -> committed doc number 123
+  FREE  d123/stageB_r3nue-hits.out                                   round d123 -> committed doc number 123
+  FREE  d123/stageB_r3off-base.out                                   round d123 -> committed doc number 123
+  FREE  d123/stageB_r3off-hits.out                                   round d123 -> committed doc number 123
+  KEEP  d123/stageB_range_work-r3nue-d123base.out                    logs/products of surviving arm d123base
+  FREE  d123/stageB_range_work-r3nue-d123hits.out                    round d123 -> committed doc number 123
+  KEEP  d123/stageB_work-mcp1k-d123base.out                          logs/products of surviving arm d123base
+  FREE  d123/stageB_work-mcp1k-d123hits.out                          round d123 -> committed doc number 123
+  FREE  d123/stageB_work-mcp1k-d123hitsnr.out                        round d123 -> committed doc number 123
+  FREE  d123/stageB_work-mcp1k-d123hitsnu.out                        round d123 -> committed doc number 123
+  FREE  d123/stageB_work-mcp1k-d123nosplit.out                       round d123 -> committed doc number 123
+  KEEP  d123/stageB_work-mcp2k-d123base.out                          logs/products of surviving arm d123base
+  FREE  d123/stageB_work-mcp2k-d123hits.out                          round d123 -> committed doc number 123
+  FREE  d123/stageB_work-ncpi0-d123hitsnr.out                        round d123 -> committed doc number 123
+  FREE  d123/stageB_work-nuecc48-d123hitsnr.out                      round d123 -> committed doc number 123
+  FREE  d123/wt.log                                                  round d123 -> committed doc number 123
+  FREE  d124/anat                                                    round d124 -> committed doc number 124
+  FREE  d124/beam_dt.txt                                             round d124 -> committed doc number 124
+  FREE  d124/census                                                  round d124 -> committed doc number 124
+  FREE  d124/chain_lgop_mcp2k.nohup                                  round d124 -> committed doc number 124
+  FREE  d124/chain_lgop_mcp2k.sh                                     round d124 -> committed doc number 124
+  FREE  d124/chain_nudge.nohup                                       round d124 -> committed doc number 124
+  FREE  d124/chain_nudge.sh                                          round d124 -> committed doc number 124
+  FREE  d124/chain_nudge2.nohup                                      round d124 -> committed doc number 124
+  FREE  d124/chain_nudge2.sh                                         round d124 -> committed doc number 124
+  FREE  d124/chain_null.nohup                                        round d124 -> committed doc number 124
+  FREE  d124/chain_null.sh                                           round d124 -> committed doc number 124
+  FREE  d124/doc_table.md                                            round d124 -> committed doc number 124
+  FREE  d124/ev_mcp1k.txt                                            round d124 -> committed doc number 124
+  FREE  d124/ev_mcp2k.txt                                            round d124 -> committed doc number 124
+  FREE  d124/ev_one.txt                                              round d124 -> committed doc number 124
+  FREE  d124/figs_mcp1k.log                                          round d124 -> committed doc number 124
+  FREE  d124/figs_mcp2k.log                                          round d124 -> committed doc number 124
+  FREE  d124/figs_test                                               round d124 -> committed doc number 124
+  FREE  d124/lgop_mcp2k.out                                          round d124 -> committed doc number 124
+  FREE  d124/lgopfig                                                 round d124 -> committed doc number 124
+  FREE  d124/mc_render.sh                                            round d124 -> committed doc number 124
+  FREE  d124/nudge                                                   round d124 -> committed doc number 124
+  FREE  d124/nudge_ev_mcp1k.txt                                      round d124 -> committed doc number 124
+  FREE  d124/nudge_ev_mcp2k.txt                                      round d124 -> committed doc number 124
+  FREE  d124/null                                                    round d124 -> committed doc number 124
+  FREE  d124/pct                                                     round d124 -> committed doc number 124
+  FREE  d124/pr_mcp2k_hits_lgop.json                                 round d124 -> committed doc number 124
+  FREE  d124/pr_mcp2k_hits_lgop.tsv                                  round d124 -> committed doc number 124
+  KEEP  d124/scan                                                    scan-facing (served to a scanner)
+  KEEP  d124/scanmc                                                  scan-facing (served to a scanner)
+  FREE  d124/stageB_mcp2k_lgop.out                                   round d124 -> committed doc number 124
+  FREE  d124/stale_blind_map_mc_badshuffle.tsv                       round d124 -> committed doc number 124
+  FREE  d124/status                                                  round d124 -> committed doc number 124
+  FREE  d124/tables_mcp2k_lgop.out                                   round d124 -> committed doc number 124
+  KEEP  d125flip/README_prod-2026-09-25b.md                          written in the last 2 h
+  KEEP  d125flip/cfg_runner_proof.txt                                written in the last 2 h
+  KEEP  d125flip/chain_gate.nohup                                    written in the last 2 h
+  KEEP  d125flip/chain_gate.sh                                       written in the last 2 h
+  KEEP  d125flip/chain_small.nohup                                   written in the last 2 h
+  KEEP  d125flip/chain_small.sh                                      written in the last 2 h
+  KEEP  d125flip/flip.log                                            written in the last 2 h
+  KEEP  d125flip/flip_bare.json                                      written in the last 2 h
+  KEEP  d125flip/flip_bare.json.err                                  written in the last 2 h
+  KEEP  d125flip/flip_off.json                                       written in the last 2 h
+  KEEP  d125flip/flip_off.json.err                                   written in the last 2 h
+  KEEP  d125flip/flip_on1.json                                       written in the last 2 h
+  KEEP  d125flip/flip_on1.json.err                                   written in the last 2 h
+  KEEP  d125flip/flipmc.log                                          written in the last 2 h
+  KEEP  d125flip/flipoff.log                                         written in the last 2 h
+  KEEP  d125flip/flippr.log                                          written in the last 2 h
+  KEEP  d125flip/gate_flip.txt                                       written in the last 2 h
+  KEEP  d125flip/gate_flipoff.txt                                    written in the last 2 h
+  KEEP  d125flip/gate_mc.txt                                         written in the last 2 h
+  KEEP  d125flip/libs.end.md5                                        written in the last 2 h
+  KEEP  d125flip/libs.start.md5                                      written in the last 2 h
+  KEEP  d125flip/ncpi0.log                                           written in the last 2 h
+  KEEP  d125flip/ncpi0_pr.log                                        written in the last 2 h
+  KEEP  d125flip/ncpi0_tables.log                                    written in the last 2 h
+  KEEP  d125flip/nuecc48.log                                         written in the last 2 h
+  KEEP  d125flip/nuecc48_pr.log                                      written in the last 2 h
+  KEEP  d125flip/nuecc48_tables.log                                  written in the last 2 h
+  KEEP  d125flip/pr_ncpi0.json                                       written in the last 2 h
+  KEEP  d125flip/pr_ncpi0.tsv                                        written in the last 2 h
+  KEEP  d125flip/pr_nuecc48.json                                     written in the last 2 h
+  KEEP  d125flip/pr_nuecc48.tsv                                      written in the last 2 h
+  FREE  d125flip/pre                                                 round d125 -> committed doc number 125
+  KEEP  d125flip/pre_bare.json                                       written in the last 2 h
+  KEEP  d125flip/pre_bare.json.err                                   written in the last 2 h
+  KEEP  d125flip/pre_lgop.json                                       written in the last 2 h
+  KEEP  d125flip/pre_lgop.json.err                                   written in the last 2 h
+  KEEP  d125flip/prodgate_final.txt                                  written in the last 2 h
+  KEEP  d125flip/prodgate_post.txt                                   written in the last 2 h
+  KEEP  d125flip/prodgate_pre.txt                                    written in the last 2 h
+  KEEP  d125flip/prodgate_refresh.txt                                written in the last 2 h
+  KEEP  d125flip/status                                              written in the last 2 h
+  KEEP  d125flip/status_small                                        written in the last 2 h
+  KEEP  d125flip/view                                                written in the last 2 h
+  KEEP  d13/prep_h.log                                               is/contains a prep (judged in the prep class)
+  KEEP  d13/prep_v.log                                               is/contains a prep (judged in the prep class)
+  KEEP  d14/prep2_pdhd.log                                           is/contains a prep (judged in the prep class)
+  KEEP  d14/prep2_pdvd.log                                           is/contains a prep (judged in the prep class)
+  KEEP  d14/prep_pdhd.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d14/prep_pdvd.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d144/prepr143.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d144/s144pos_mcp1k.log                                       logs/products of surviving arm s144pos
+  KEEP  d144/s144pos_mcp2k.log                                       logs/products of surviving arm s144pos
+  KEEP  d144/s144pos_nuecc48.log                                     logs/products of surviving arm s144pos
+  KEEP  d144/s144posleg_mcp1k.log                                    logs/products of surviving arm s144posleg
+  KEEP  d144/s144posleg_mcp2k.log                                    logs/products of surviving arm s144posleg
+  KEEP  d144/s144posleg_nuecc48.log                                  logs/products of surviving arm s144posleg
+  KEEP  d145flipproof/cathode_fiducial.jsonnet                       a symlink, never a unit
+  KEEP  d145flipproof/chndb-base.jsonnet                             a symlink, never a unit
+  KEEP  d145flipproof/chndb-perfect.jsonnet                          a symlink, never a unit
+  KEEP  d145flipproof/chndb-rel-gain.jsonnet                         a symlink, never a unit
+  KEEP  d145flipproof/chndb-resp.jsonnet                             a symlink, never a unit
+  KEEP  d145flipproof/chndb.jsonnet                                  a symlink, never a unit
+  KEEP  d145flipproof/clus.jsonnet                                   a symlink, never a unit
+  KEEP  d145flipproof/dead_regions.jsonnet                           a symlink, never a unit
+  KEEP  d145flipproof/fhicl                                          a symlink, never a unit
+  KEEP  d145flipproof/funcs.jsonnet                                  a symlink, never a unit
+  KEEP  d145flipproof/img.jsonnet                                    a symlink, never a unit
+  KEEP  d145flipproof/magnify-sinks.jsonnet                          a symlink, never a unit
+  KEEP  d145flipproof/nf.jsonnet                                     a symlink, never a unit
+  KEEP  d145flipproof/params.jsonnet                                 a symlink, never a unit
+  KEEP  d145flipproof/particle_dataset.jsonnet                       a symlink, never a unit
+  KEEP  d145flipproof/pmt_nonlinearity_params.jsonnet                a symlink, never a unit
+  KEEP  d145flipproof/qlmatching.jsonnet                             a symlink, never a unit
+  KEEP  d145flipproof/sbnd_track_fitting.json                        a symlink, never a unit
+  KEEP  d145flipproof/sim.jsonnet                                    a symlink, never a unit
+  KEEP  d145flipproof/simparams.jsonnet                              a symlink, never a unit
+  KEEP  d145flipproof/sp-filters.jsonnet                             a symlink, never a unit
+  KEEP  d145flipproof/sp.jsonnet                                     a symlink, never a unit
+  KEEP  d145flipproof/wcls-img-clus.jsonnet                          a symlink, never a unit
+  KEEP  d145flipproof/wcls-nf-sp.jsonnet                             a symlink, never a unit
+  KEEP  d145flipproof/wcls-sim-drift-depoflux-nf-sp.jsonnet          a symlink, never a unit
+  KEEP  d145flipproof/wcls-sim-drift-simchannel-deposetsimchannelsink.jsonnet a symlink, never a unit
+  KEEP  d145flipproof/wcls-sim-drift-simchannel-nf-sp.jsonnet        a symlink, never a unit
+  KEEP  d145flipproof/wcls-sim-drift-simchannel-simchannelsink.jsonnet a symlink, never a unit
+  KEEP  d145flipproof/wcls-sim-drift-simchannel.jsonnet              a symlink, never a unit
+  KEEP  d145flipproof/wct-clus-matching-perevt.jsonnet               a symlink, never a unit
+  KEEP  d145flipproof/wct-clustering.jsonnet                         a symlink, never a unit
+  KEEP  d145flipproof/wct-img-all.jsonnet                            a symlink, never a unit
+  KEEP  d145flipproof/wct-sim-check.jsonnet                          a symlink, never a unit
+  KEEP  d15_oldprep/prep-pdhd                                        is/contains a prep (judged in the prep class)
+  KEEP  d15_oldprep/prep-pdhd2                                       is/contains a prep (judged in the prep class)
+  KEEP  d15_oldprep/prep-pdvd                                        is/contains a prep (judged in the prep class)
+  KEEP  d15_oldprep/prep-pdvd2                                       is/contains a prep (judged in the prep class)
+  KEEP  d15pin/prep-pdhd                                             is/contains a prep (judged in the prep class)
+  KEEP  d15pin/prep-pdvd                                             is/contains a prep (judged in the prep class)
+  KEEP  d15pin/prep_pdhd.log                                         is/contains a prep (judged in the prep class)
+  KEEP  d15pin/prep_pdvd.log                                         is/contains a prep (judged in the prep class)
+  KEEP  d16/prep_pdhd.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d16/prep_pdhd2.log                                           is/contains a prep (judged in the prep class)
+  KEEP  d16/prep_pdvd.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d16/prep_pdvd2.log                                           is/contains a prep (judged in the prep class)
+  KEEP  d30r3/scan.log                                               scan-facing (served to a scanner)
+  KEEP  d30r3/scan.sh                                                scan-facing (served to a scanner)
+  KEEP  d30r3/scan_d30r3off_028084_2.log                             scan-facing (served to a scanner)
+  KEEP  d30r3/scan_d30r3off_029107_18.log                            scan-facing (served to a scanner)
+  KEEP  d30r3/scan_d30r3p0_028084_2.log                              scan-facing (served to a scanner)
+  KEEP  d30r3/scan_d30r3p0_029107_18.log                             scan-facing (served to a scanner)
+  KEEP  d30r3/scan_d30r3p1_028084_2.log                              scan-facing (served to a scanner)
+  KEEP  d30r3/scan_d30r3p1_029107_18.log                             scan-facing (served to a scanner)
+  KEEP  d30r3/scan_d30r3p2_028084_2.log                              scan-facing (served to a scanner)
+  KEEP  d30r3/scan_d30r3p2_029107_18.log                             scan-facing (served to a scanner)
+  KEEP  d30r3/scan_d30r3p3_028084_2.log                              scan-facing (served to a scanner)
+  KEEP  d30r3/scan_d30r3p3_029107_18.log                             scan-facing (served to a scanner)
+  KEEP  d30r3/scan_d30r3p5_028084_2.log                              scan-facing (served to a scanner)
+  KEEP  d30r3/scan_d30r3p5_029107_18.log                             scan-facing (served to a scanner)
+  KEEP  d30r3/scan_pdvd.log                                          scan-facing (served to a scanner)
+  KEEP  d30r3/scan_pdvd.sh                                           scan-facing (served to a scanner)
+  KEEP  d41_libpin/new6                                              is/contains a pin (judged in the pin class)
+  KEEP  d42_arms/magnify                                             logs/products of surviving arm magnify
+  KEEP  d44/magnify                                                  logs/products of surviving arm magnify
+  KEEP  d51/prep-pdvd-scratch                                        is/contains a prep (judged in the prep class)
+  KEEP  d51/prep_pdhd.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d51/prep_pdvd.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d51/prep_scratch.log                                         is/contains a prep (judged in the prep class)
+  KEEP  d53/arm_d53h                                                 logs/products of surviving arm d53h
+  KEEP  d53/arm_d53v                                                 logs/products of surviving arm d53v
+  KEEP  d53/libpin                                                   is/contains a pin (judged in the pin class)
+  KEEP  d53/prep_pdhd.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d53/prep_pdhd2.log                                           is/contains a prep (judged in the prep class)
+  KEEP  d53/prep_pdvd.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d53/prep_pdvd2.log                                           is/contains a prep (judged in the prep class)
+  KEEP  d53/prep_scratch.log                                         is/contains a prep (judged in the prep class)
+  KEEP  d53/prepscratch                                              is/contains a prep (judged in the prep class)
+  KEEP  d56/prep_rerun.log                                           is/contains a prep (judged in the prep class)
+  KEEP  d56/sheet_d53v_rerun                                         logs/products of surviving arm d53v
+  KEEP  d57/d53v_baseline.json                                       logs/products of surviving arm d53v
+  KEEP  d57/prep_d57v.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d57/score_d53v_full.txt                                      logs/products of surviving arm d53v
+  KEEP  d61/libpin_item1_before                                      is/contains a pin (judged in the pin class)
+  KEEP  d62/prep_d62ab.log                                           is/contains a prep (judged in the prep class)
+  KEEP  d62/prep_d62b.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d62/prep_d62bc.log                                           is/contains a prep (judged in the prep class)
+  KEEP  d62/prep_d62c.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d62/prep_d62c3.log                                           is/contains a prep (judged in the prep class)
+  KEEP  d62/prep_d62v.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d63/prep_d63a.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d64/libpin                                                   is/contains a pin (judged in the pin class)
+  KEEP  d64/prep_d63a_fix.log                                        is/contains a prep (judged in the prep class)
+  KEEP  d64/prep_d64v.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d64/prep_d64vleg.log                                         is/contains a prep (judged in the prep class)
+  KEEP  d65/prep_d65d4.log                                           is/contains a prep (judged in the prep class)
+  KEEP  d65/prep_d65d9.log                                           is/contains a prep (judged in the prep class)
+  KEEP  d65/prep_d65s08.log                                          is/contains a prep (judged in the prep class)
+  KEEP  d65/prep_d65s16.log                                          is/contains a prep (judged in the prep class)
+  KEEP  d65/prep_d65v.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d65/prep_d65v3.log                                           is/contains a prep (judged in the prep class)
+  KEEP  d65/prep_d65vleg.log                                         is/contains a prep (judged in the prep class)
+  KEEP  d66/libpin                                                   is/contains a pin (judged in the pin class)
+  KEEP  d66/prep_d66v.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d66/prep_d66vleg.log                                         is/contains a prep (judged in the prep class)
+  KEEP  d66/prep_stm_michel_scan.py.t8                               is/contains a prep (judged in the prep class)
+  KEEP  d67/arm_d67v                                                 logs/products of surviving arm d67v
+  KEEP  d67/byname_d67v.txt                                          logs/products of surviving arm d67v
+  KEEP  d67/d67v.json                                                logs/products of surviving arm d67v
+  KEEP  d67/prep_d67cr45.log                                         is/contains a prep (judged in the prep class)
+  KEEP  d67/prep_d67cr60.log                                         is/contains a prep (judged in the prep class)
+  KEEP  d67/prep_d67ks.log                                           is/contains a prep (judged in the prep class)
+  KEEP  d67/prep_d67v                                                is/contains a prep (judged in the prep class)
+  KEEP  d67/prep_d67v.log                                            is/contains a prep (judged in the prep class)
+  KEEP  d67/run_d67v.log                                             logs/products of surviving arm d67v
+  KEEP  d67/score_d67v.txt                                           logs/products of surviving arm d67v
+  KEEP  d67/sheet_d67v                                               logs/products of surviving arm d67v
+  KEEP  d67/wait_d67v.log                                            logs/products of surviving arm d67v
+  KEEP  d67/wait_d67v.sh                                             logs/products of surviving arm d67v
+  KEEP  d68/arm_d68a3                                                logs/products of surviving arm d68a3
+  KEEP  d68/arm_d68d4                                                logs/products of surviving arm d68d4
+  KEEP  d68/byname_d68a3.txt                                         logs/products of surviving arm d68a3
+  KEEP  d68/byname_d68d4.txt                                         logs/products of surviving arm d68d4
+  KEEP  d68/merged_d67v.json                                         logs/products of surviving arm d67v
+  KEEP  d68/merged_d68a3.json                                        logs/products of surviving arm d68a3
+  KEEP  d68/prep_d68a3                                               is/contains a prep (judged in the prep class)
+  KEEP  d68/prep_d68a3.log                                           is/contains a prep (judged in the prep class)
+  KEEP  d68/prep_d68ad.log                                           is/contains a prep (judged in the prep class)
+  KEEP  d68/prep_d68d4                                               is/contains a prep (judged in the prep class)
+  KEEP  d68/prep_d68d4.log                                           is/contains a prep (judged in the prep class)
+  KEEP  d68/run_d68a3.log                                            logs/products of surviving arm d68a3
+  KEEP  d68/run_d68d4.log                                            logs/products of surviving arm d68d4
+  KEEP  d68/score_merged_d67v.txt                                    logs/products of surviving arm d67v
+  KEEP  d68/score_merged_d68a3.txt                                   logs/products of surviving arm d68a3
+  KEEP  d68/sheet_d68a3                                              logs/products of surviving arm d68a3
+  KEEP  d68/sheet_d68d4                                              logs/products of surviving arm d68d4
+  KEEP  d70/score_merged4_d68a3.txt                                  logs/products of surviving arm d68a3
+  KEEP  d70/score_merged4_d68a3_v1.txt                               logs/products of surviving arm d68a3
+  KEEP  d71/libpin_base                                              is/contains a pin (judged in the pin class)
+  KEEP  d71/libpin_p1                                                is/contains a pin (judged in the pin class)
+  KEEP  d71/prep_d71vleg.log                                         is/contains a prep (judged in the prep class)
+  KEEP  d71/prep_d71voff.log                                         is/contains a prep (judged in the prep class)
+  KEEP  d71/prep_d71vp1.log                                          is/contains a prep (judged in the prep class)
+  KEEP  d71/prep_d71vsp.log                                          is/contains a prep (judged in the prep class)
+  KEEP  doc94/scan64475.log                                          scan-facing (served to a scanner)
+  KEEP  doc94/scan64475.png                                          scan-facing (served to a scanner)
+  KEEP  doc94/scan64475_zoom.png                                     scan-facing (served to a scanner)
+  KEEP  doc94/scan64475off.log                                       scan-facing (served to a scanner)
+  KEEP  doc94r2/scan3d.py                                            scan-facing (served to a scanner)
+  KEEP  doc94r2/scan_arms.out                                        scan-facing (served to a scanner)
+  KEEP  doc94r2/scanprof.png                                         scan-facing (served to a scanner)
+  KEEP  doc94r2/scanprof.py                                          scan-facing (served to a scanner)
+  KEEP  doc94r2/scanzoom.py                                          scan-facing (served to a scanner)
+  KEEP  h18/arm_h18b                                                 logs/products of surviving arm h18b
+  KEEP  h18/arm_h18b.log                                             logs/products of surviving arm h18b
+  KEEP  h18/arm_h18s                                                 logs/products of surviving arm h18s
+  KEEP  h18/arm_h18s.log                                             logs/products of surviving arm h18s
+  KEEP  h18/prep_h18b                                                is/contains a prep (judged in the prep class)
+  KEEP  h18/prep_h18s                                                is/contains a prep (judged in the prep class)
+  KEEP  h18/prep_p82bhoff                                            is/contains a prep (judged in the prep class)
+  KEEP  h18/sheet_h18b                                               logs/products of surviving arm h18b
+  KEEP  h18/sheet_h18s                                               logs/products of surviving arm h18s
+  KEEP  h18/sheet_p82bhoff                                           logs/products of surviving arm p82bhoff
+  KEEP  h18/shots                                                    scan-facing (served to a scanner)
+  KEEP  h18/shots_p0                                                 scan-facing (served to a scanner)
+  KEEP  h18/shots_p1                                                 scan-facing (served to a scanner)
+  KEEP  h18/shots_p2                                                 scan-facing (served to a scanner)
+  KEEP  h18/shots_p3                                                 scan-facing (served to a scanner)
+  KEEP  h19/prep_ctx.DONE                                            is/contains a prep (judged in the prep class)
+  KEEP  h19/prep_ctx.log                                             is/contains a prep (judged in the prep class)
+  KEEP  h19/prep_off.DONE                                            is/contains a prep (judged in the prep class)
+  KEEP  h19/prep_off.log                                             is/contains a prep (judged in the prep class)
+  KEEP  h19/shots                                                    scan-facing (served to a scanner)
+  KEEP  h19/shots_p0                                                 scan-facing (served to a scanner)
+  KEEP  h19/shots_p1                                                 scan-facing (served to a scanner)
+  KEEP  h19/shots_p2                                                 scan-facing (served to a scanner)
+  KEEP  h20/shots                                                    scan-facing (served to a scanner)
+  KEEP  h21/own19_sheet.tsv                                          scan-facing (served to a scanner)
+  KEEP  h21/shots                                                    scan-facing (served to a scanner)
+  KEEP  h21/shots_p0                                                 scan-facing (served to a scanner)
+  KEEP  h21/shots_p1                                                 scan-facing (served to a scanner)
+  KEEP  h22/arm_h23conf                                              logs/products of surviving arm h23conf
+  KEEP  h22/h23conf.log                                              logs/products of surviving arm h23conf
+  KEEP  h22/shots_base                                               scan-facing (served to a scanner)
+  KEEP  h22/shots_base.log                                           scan-facing (served to a scanner)
+  KEEP  h22/shots_off                                                scan-facing (served to a scanner)
+  KEEP  h22/shots_off.log                                            scan-facing (served to a scanner)
+  KEEP  h22/shots_off2                                               scan-facing (served to a scanner)
+  KEEP  h22/shots_off2.log                                           scan-facing (served to a scanner)
+  KEEP  h22/shots_on                                                 scan-facing (served to a scanner)
+  KEEP  h22/shots_on.log                                             scan-facing (served to a scanner)
+  KEEP  h22/shots_on2                                                scan-facing (served to a scanner)
+  KEEP  h22/shots_on2.log                                            scan-facing (served to a scanner)
+  KEEP  h23scan/own23_sheet.tsv                                      scan-facing (served to a scanner)
+  KEEP  h23scan/prep.log                                             is/contains a prep (judged in the prep class)
+  KEEP  h23scan/prep2.log                                            is/contains a prep (judged in the prep class)
+  KEEP  h25/DONE_h25base                                             logs/products of surviving arm h25base
+  KEEP  h25/DONE_h25k                                                logs/products of surviving arm h25k
+  KEEP  h25/DONE_h25kr                                               logs/products of surviving arm h25kr
+  KEEP  h25/DONE_h25r                                                logs/products of surviving arm h25r
+  KEEP  h25/DONE_h25va                                               logs/products of surviving arm h25va
+  KEEP  h25/DONE_h25vb                                               logs/products of surviving arm h25vb
+  KEEP  h25/arm_h25base                                              logs/products of surviving arm h25base
+  KEEP  h25/arm_h25base.log                                          logs/products of surviving arm h25base
+  KEEP  h25/arm_h25k                                                 logs/products of surviving arm h25k
+  KEEP  h25/arm_h25k.log                                             logs/products of surviving arm h25k
+  KEEP  h25/arm_h25kr                                                logs/products of surviving arm h25kr
+  KEEP  h25/arm_h25kr.log                                            logs/products of surviving arm h25kr
+  KEEP  h25/arm_h25r                                                 logs/products of surviving arm h25r
+  KEEP  h25/arm_h25r.log                                             logs/products of surviving arm h25r
+  KEEP  h25/arm_h25va                                                logs/products of surviving arm h25va
+  KEEP  h25/arm_h25va.log                                            logs/products of surviving arm h25va
+  KEEP  h25/arm_h25vb                                                logs/products of surviving arm h25vb
+  KEEP  h25/arm_h25vb.log                                            logs/products of surviving arm h25vb
+  KEEP  h25/g_h25base.log                                            logs/products of surviving arm h25base
+  KEEP  h25/g_h25va.log                                              logs/products of surviving arm h25va
+  KEEP  h25/g_h25vb.log                                              logs/products of surviving arm h25vb
+  KEEP  h25/nohup_h25base.out                                        logs/products of surviving arm h25base
+  KEEP  h25/q2_h25va.txt                                             logs/products of surviving arm h25va
+  KEEP  h25r/g_h25k.log                                              logs/products of surviving arm h25k
+  KEEP  h25r/g_h25kr.log                                             logs/products of surviving arm h25kr
+  KEEP  h25r/g_h25r.log                                              logs/products of surviving arm h25r
+  KEEP  h25r/launch_h25k.out                                         logs/products of surviving arm h25k
+  KEEP  h25r/launch_h25kr.out                                        logs/products of surviving arm h25kr
+  KEEP  h25r/launch_h25r.out                                         logs/products of surviving arm h25r
+  KEEP  h25r/misses_on_h25r.txt                                      logs/products of surviving arm h25r
+  KEEP  h25r/own25                                                   scan-facing (served to a scanner)
+  KEEP  h25r/own26                                                   scan-facing (served to a scanner)
+  KEEP  h25r/prep_h25base.log                                        is/contains a prep (judged in the prep class)
+  KEEP  h25r/shots                                                   scan-facing (served to a scanner)
+  KEEP  h25r/shots_p0                                                scan-facing (served to a scanner)
+  KEEP  h25r/shots_p1                                                scan-facing (served to a scanner)
+  KEEP  h25r/twin_h25k.txt                                           logs/products of surviving arm h25k
+  KEEP  h25r/twin_h25r.txt                                           logs/products of surviving arm h25r
+  KEEP  h27/readout_p96vprod.json                                    logs/products of surviving arm p96vprod
+  KEEP  h27/readout_p96vprod.txt                                     logs/products of surviving arm p96vprod
+  KEEP  h27/tail_p96vprod.txt                                        logs/products of surviving arm p96vprod
+  KEEP  h28/libpin_h28                                               is/contains a pin (judged in the pin class)
+  KEEP  p100/arm_p100bx                                              logs/products of surviving arm p100bx
+  KEEP  p100/arm_p100bx.nohup                                        logs/products of surviving arm p100bx
+  KEEP  p100/arm_p100bxp                                             logs/products of surviving arm p100bxp
+  KEEP  p100/arm_p100bxp.nohup                                       logs/products of surviving arm p100bxp
+  KEEP  p100/arm_p100c                                               logs/products of surviving arm p100c
+  KEEP  p100/arm_p100c.nohup                                         logs/products of surviving arm p100c
+  KEEP  p100/arm_p100flip                                            logs/products of surviving arm p100flip
+  KEEP  p100/arm_p100flip.nohup                                      logs/products of surviving arm p100flip
+  KEEP  p100/census_p100c.txt                                        logs/products of surviving arm p100c
+  KEEP  p100/exempt_p100bx.txt                                       logs/products of surviving arm p100bx
+  KEEP  p100/exempt_unjudged_p100bx.tsv                              logs/products of surviving arm p100bx
+  KEEP  p100/exempt_unjudged_p100bxp.tsv                             logs/products of surviving arm p100bxp
+  KEEP  p100/grade_p100c.txt                                         logs/products of surviving arm p100c
+  KEEP  p100/libpin_p100b                                            is/contains a pin (judged in the pin class)
+  KEEP  p100/own100m_counts.txt                                      scan-facing (served to a scanner)
+  KEEP  p100/prep_p100bx                                             is/contains a prep (judged in the prep class)
+  KEEP  p100/prep_p100bx.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p100/prep_p100bxp                                            is/contains a prep (judged in the prep class)
+  KEEP  p100/prep_p100bxp.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p100/prep_p100c                                              is/contains a prep (judged in the prep class)
+  KEEP  p100/prep_p100c.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p100/prep_p99wflip                                           is/contains a prep (judged in the prep class)
+  KEEP  p100/prep_p99wflip.log                                       is/contains a prep (judged in the prep class)
+  KEEP  p100/pvdimg_sha256.txt                                       logs/products of surviving arm pvdimg
+  KEEP  p100/scan                                                    scan-facing (served to a scanner)
+  KEEP  p100/scan_set.log                                            scan-facing (served to a scanner)
+  KEEP  p100/sheet_p100bx                                            logs/products of surviving arm p100bx
+  KEEP  p100/sheet_p100bxp                                           logs/products of surviving arm p100bxp
+  KEEP  p100/sheet_p100c                                             logs/products of surviving arm p100c
+  KEEP  p100/sheet_p99wflip                                          logs/products of surviving arm p99wflip
+  KEEP  p100/twin_p100c.json                                         logs/products of surviving arm p100c
+  KEEP  p100/x2_identity_p100boff_p100c.txt                          logs/products of surviving arm p100c
+  KEEP  p101/arm_p101q                                               logs/products of surviving arm p101q
+  KEEP  p101/arm_p101q.nohup                                         logs/products of surviving arm p101q
+  KEEP  p101/qtol_crossers_p100flip.txt                              logs/products of surviving arm p100flip
+  KEEP  p101/score_p100flip.log                                      logs/products of surviving arm p100flip
+  KEEP  p101/score_p101q.log                                         logs/products of surviving arm p101q
+  KEEP  p101/score_p99wflip.log                                      logs/products of surviving arm p99wflip
+  KEEP  p101/score_trial_keep.log                                    logs/products of surviving arm keep
+  KEEP  p101/score_trial_p100flip.log                                logs/products of surviving arm p100flip
+  KEEP  p101/score_trial_p99wflip.log                                logs/products of surviving arm p99wflip
+  KEEP  p101/score_trial_tmap_p100flip.log                           logs/products of surviving arm p100flip
+  KEEP  p104/scan_arms.json                                          scan-facing (served to a scanner)
+  KEEP  p31/arm_q31ctl                                               logs/products of surviving arm q31ctl
+  FREE  p31/arm_q31tot                                               round p31 -> committed doc number 31
+  FREE  p31/arm_q31tot2                                              round p31 -> committed doc number 31
+  FREE  p31/arm_q32ctlp                                              round p31 -> committed doc number 31
+  FREE  p31/arm_q32ti                                                round p31 -> committed doc number 31
+  FREE  p31/arm_q32tis                                               round p31 -> committed doc number 31
+  FREE  p31/arm_q33bctlp                                             round p31 -> committed doc number 31
+  FREE  p31/arm_q33cm                                                round p31 -> committed doc number 31
+  FREE  p31/arm_q33cs                                                round p31 -> committed doc number 31
+  FREE  p31/arm_q33ctlp                                              round p31 -> committed doc number 31
+  FREE  p31/arm_q33cu                                                round p31 -> committed doc number 31
+  FREE  p31/arm_q33tm                                                round p31 -> committed doc number 31
+  FREE  p31/arm_q33ts                                                round p31 -> committed doc number 31
+  FREE  p31/arm_q33tu                                                round p31 -> committed doc number 31
+  FREE  p31/arm_q34ck1                                               round p31 -> committed doc number 31
+  FREE  p31/arm_q34ck2                                               round p31 -> committed doc number 31
+  FREE  p31/arm_q34ck3                                               round p31 -> committed doc number 31
+  FREE  p31/arm_q34ctlp                                              round p31 -> committed doc number 31
+  KEEP  p31/arm_q34tk1                                               logs/products of surviving arm q34tk1
+  FREE  p31/arm_q34tk2                                               round p31 -> committed doc number 31
+  FREE  p31/arm_q34tk3                                               round p31 -> committed doc number 31
+  FREE  p31/build1.log                                               round p31 -> committed doc number 31
+  FREE  p31/build_t.log                                              round p31 -> committed doc number 31
+  FREE  p31/cfg                                                      round p31 -> committed doc number 31
+  FREE  p31/compile_light.sh                                         round p31 -> committed doc number 31
+  FREE  p31/d32_closure_test.py                                      round p31 -> committed doc number 31
+  FREE  p31/doctest.log                                              round p31 -> committed doc number 31
+  FREE  p31/f31tot.log                                               round p31 -> committed doc number 31
+  FREE  p31/f31ts.log                                                round p31 -> committed doc number 31
+  FREE  p31/f31ts18.log                                              round p31 -> committed doc number 31
+  FREE  p31/frames_cmp.py                                            round p31 -> committed doc number 31
+  FREE  p31/gate                                                     round p31 -> committed doc number 31
+  FREE  p31/hit_cmp.py                                               round p31 -> committed doc number 31
+  FREE  p31/idx_wcp                                                  round p31 -> committed doc number 31
+  FREE  p31/idx_wcp2                                                 round p31 -> committed doc number 31
+  FREE  p31/install1.log                                             round p31 -> committed doc number 31
+  FREE  p31/libpin_flash_old                                         round p31 -> committed doc number 31
+  FREE  p31/light_chain.log                                          round p31 -> committed doc number 31
+  FREE  p31/light_f31tot18                                           round p31 -> committed doc number 31
+  FREE  p31/light_f31ts18                                            round p31 -> committed doc number 31
+  FREE  p31/light_g31off                                             round p31 -> committed doc number 31
+  FREE  p31/light_g31offb                                            round p31 -> committed doc number 31
+  FREE  p31/light_g31old                                             round p31 -> committed doc number 31
+  FREE  p31/light_q31tot                                             round p31 -> committed doc number 31
+  FREE  p31/light_q31tot2                                            round p31 -> committed doc number 31
+  FREE  p31/light_tot2.log                                           round p31 -> committed doc number 31
+  FREE  p31/pdvd-tot-shapes-v2.singlestart.json                      round p31 -> committed doc number 31
+  FREE  p31/pintot.log                                               round p31 -> committed doc number 31
+  FREE  p31/push_tk.log                                              round p31 -> committed doc number 31
+  FREE  p31/push_wcp.log                                             round p31 -> committed doc number 31
+  FREE  p31/push_wcp2.log                                            round p31 -> committed doc number 31
+  FREE  p31/ql_ctl.log                                               round p31 -> committed doc number 31
+  FREE  p31/ql_tot.log                                               round p31 -> committed doc number 31
+  FREE  p31/ql_tot2.log                                              round p31 -> committed doc number 31
+  KEEP  p31/qtol_q31ctl.txt                                          logs/products of surviving arm q31ctl
+  FREE  p31/qtol_q31tot.txt                                          round p31 -> committed doc number 31
+  FREE  p31/roi_cmp.py                                               round p31 -> committed doc number 31
+  KEEP  p31/score_q31ctl.log                                         logs/products of surviving arm q31ctl
+  FREE  p31/score_q31tot.log                                         round p31 -> committed doc number 31
+  FREE  p31/score_q31tot2.log                                        round p31 -> committed doc number 31
+  FREE  p31/score_q31tot2m.log                                       round p31 -> committed doc number 31
+  FREE  p31/score_q31totm.log                                        round p31 -> committed doc number 31
+  FREE  p31/score_tot_tm.log                                         round p31 -> committed doc number 31
+  FREE  p31/score_tot_tm2.log                                        round p31 -> committed doc number 31
+  FREE  p31/scores_tm                                                round p31 -> committed doc number 31
+  FREE  p31/scores_tm2                                               round p31 -> committed doc number 31
+  FREE  p31/shape_v2_singlestart.npz                                 round p31 -> committed doc number 31
+  FREE  p31/shape_v2_singlestart.txt                                 round p31 -> committed doc number 31
+  FREE  p31/st1.txt                                                  round p31 -> committed doc number 31
+  FREE  p31/st2.txt                                                  round p31 -> committed doc number 31
+  FREE  p31/totref.py                                                round p31 -> committed doc number 31
+  FREE  p31/v2_all.log                                               round p31 -> committed doc number 31
+  FREE  p31/v2ms_all.log                                             round p31 -> committed doc number 31
+  FREE  p31/wroot                                                    round p31 -> committed doc number 31
+  FREE  p32/bt.log                                                   round p32 -> committed doc number 32
+  FREE  p32/btm.log                                                  round p32 -> committed doc number 32
+  FREE  p32/build1.log                                               round p32 -> committed doc number 32
+  FREE  p32/build2.log                                               round p32 -> committed doc number 32
+  FREE  p32/build3.log                                               round p32 -> committed doc number 32
+  FREE  p32/build4.log                                               round p32 -> committed doc number 32
+  FREE  p32/cfg                                                      round p32 -> committed doc number 32
+  FREE  p32/chainA.log                                               round p32 -> committed doc number 32
+  FREE  p32/chainB.log                                               round p32 -> committed doc number 32
+  FREE  p32/doctest.log                                              round p32 -> committed doc number 32
+  FREE  p32/doctest_match.log                                        round p32 -> committed doc number 32
+  FREE  p32/edit_items.py                                            round p32 -> committed doc number 32
+  FREE  p32/edit_sheet.py                                            round p32 -> committed doc number 32
+  FREE  p32/headcfg                                                  round p32 -> committed doc number 32
+  FREE  p32/headcfg2                                                 round p32 -> committed doc number 32
+  FREE  p32/inst1.log                                                round p32 -> committed doc number 32
+  FREE  p32/inst2.log                                                round p32 -> committed doc number 32
+  FREE  p32/inst3.log                                                round p32 -> committed doc number 32
+  FREE  p32/inst4.log                                                round p32 -> committed doc number 32
+  FREE  p32/libpin_flash_d31                                         round p32 -> committed doc number 32
+  KEEP  p32/libpin_q32                                               is/contains a pin (judged in the pin class)
+  FREE  p32/light_f32si18                                            round p32 -> committed doc number 32
+  FREE  p32/light_f32ti18                                            round p32 -> committed doc number 32
+  FREE  p32/light_g32off                                             round p32 -> committed doc number 32
+  FREE  p32/light_g32offb                                            round p32 -> committed doc number 32
+  FREE  p32/light_q32ti                                              round p32 -> committed doc number 32
+  FREE  p32/light_q35esc                                             round p32 -> committed doc number 32
+  FREE  p32/light_tot                                                round p32 -> committed doc number 32
+  FREE  p32/push_tk.log                                              round p32 -> committed doc number 32
+  FREE  p32/push_wcp.log                                             round p32 -> committed doc number 32
+  FREE  p32/ql_agree_score.orig.py                                   round p32 -> committed doc number 32
+  FREE  p32/ql_q32ctlp.log                                           round p32 -> committed doc number 32
+  FREE  p32/ql_q32ti.log                                             round p32 -> committed doc number 32
+  FREE  p32/ql_q32tis.log                                            round p32 -> committed doc number 32
+  FREE  p32/render_r1.log                                            round p32 -> committed doc number 32
+  FREE  p32/render_r1p.log                                           round p32 -> committed doc number 32
+  FREE  p32/render_r1q.log                                           round p32 -> committed doc number 32
+  FREE  p32/sc_check.log                                             round p32 -> committed doc number 32
+  KEEP  p32/scan                                                     scan-facing (served to a scanner)
+  KEEP  p32/scan_key                                                 scan-facing (served to a scanner)
+  KEEP  p32/scan_key_r1q                                             scan-facing (served to a scanner)
+  FREE  p32/score_q32ti.log                                          round p32 -> committed doc number 32
+  FREE  p32/score_q32tim.log                                         round p32 -> committed doc number 32
+  FREE  p32/score_q32tis.log                                         round p32 -> committed doc number 32
+  FREE  p32/score_q32tism.log                                        round p32 -> committed doc number 32
+  FREE  p32/scores_check                                             round p32 -> committed doc number 32
+  FREE  p32/scores_r1                                                round p32 -> committed doc number 32
+  KEEP  p32/scores_r1.q31ctl.log                                     logs/products of surviving arm q31ctl
+  FREE  p32/scores_r1.q32ti.log                                      round p32 -> committed doc number 32
+  FREE  p32/scores_r1.q32tis.log                                     round p32 -> committed doc number 32
+  FREE  p32/test_sheet.png                                           round p32 -> committed doc number 32
+  FREE  p32/test_sheet2.png                                          round p32 -> committed doc number 32
+  FREE  p32/wcp_index                                                round p32 -> committed doc number 32
+  FREE  p33/agents.txt                                               round p33 -> committed doc number 33
+  FREE  p33/cfg                                                      round p33 -> committed doc number 33
+  FREE  p33/headcfg                                                  round p33 -> committed doc number 33
+  FREE  p33/launch1.done                                             round p33 -> committed doc number 33
+  FREE  p33/launch1.log                                              round p33 -> committed doc number 33
+  FREE  p33/launch1.sh                                               round p33 -> committed doc number 33
+  FREE  p33/launch2.done                                             round p33 -> committed doc number 33
+  FREE  p33/launch2.log                                              round p33 -> committed doc number 33
+  FREE  p33/launch2.sh                                               round p33 -> committed doc number 33
+  FREE  p33/launch_q33bctlp.log                                      round p33 -> committed doc number 33
+  FREE  p33/launch_q33cm.log                                         round p33 -> committed doc number 33
+  FREE  p33/launch_q33cs.log                                         round p33 -> committed doc number 33
+  FREE  p33/launch_q33ctlp.log                                       round p33 -> committed doc number 33
+  FREE  p33/launch_q33cu.log                                         round p33 -> committed doc number 33
+  FREE  p33/launch_q33tm.log                                         round p33 -> committed doc number 33
+  FREE  p33/launch_q33ts.log                                         round p33 -> committed doc number 33
+  FREE  p33/launch_q33tu.log                                         round p33 -> committed doc number 33
+  KEEP  p33/libpin_q33                                               is/contains a pin (judged in the pin class)
+  KEEP  p33/libpin_q33b                                              is/contains a pin (judged in the pin class)
+  FREE  p33/mcount.py                                                round p33 -> committed doc number 33
+  FREE  p33/prereg_sha_before_render.txt                             round p33 -> committed doc number 33
+  FREE  p33/push_tk.log                                              round p33 -> committed doc number 33
+  FREE  p33/push_wcp.log                                             round p33 -> committed doc number 33
+  FREE  p33/render.log                                               round p33 -> committed doc number 33
+  FREE  p33/render_b.log                                             round p33 -> committed doc number 33
+  FREE  p33/render_c.log                                             round p33 -> committed doc number 33
+  FREE  p33/render_d.log                                             round p33 -> committed doc number 33
+  KEEP  p33/sc_q31ctl.log                                            logs/products of surviving arm q31ctl
+  FREE  p33/sc_q32ti.log                                             round p33 -> committed doc number 33
+  FREE  p33/sc_q33cm.log                                             round p33 -> committed doc number 33
+  FREE  p33/sc_q33cs.log                                             round p33 -> committed doc number 33
+  FREE  p33/sc_q33cu.log                                             round p33 -> committed doc number 33
+  FREE  p33/sc_q33tm.log                                             round p33 -> committed doc number 33
+  FREE  p33/sc_q33ts.log                                             round p33 -> committed doc number 33
+  FREE  p33/sc_q33tu.log                                             round p33 -> committed doc number 33
+  KEEP  p33/scan                                                     scan-facing (served to a scanner)
+  KEEP  p33/scan_key_r2                                              scan-facing (served to a scanner)
+  KEEP  p33/scan_key_r2b                                             scan-facing (served to a scanner)
+  KEEP  p33/scan_key_r2c                                             scan-facing (served to a scanner)
+  KEEP  p33/scan_key_r2d                                             scan-facing (served to a scanner)
+  FREE  p33/scores_owner                                             round p33 -> committed doc number 33
+  FREE  p33/scores_target                                            round p33 -> committed doc number 33
+  KEEP  p33/sct_q31ctl.log                                           logs/products of surviving arm q31ctl
+  FREE  p33/sct_q32ti.log                                            round p33 -> committed doc number 33
+  FREE  p33/sct_q33cm.log                                            round p33 -> committed doc number 33
+  FREE  p33/sct_q33cs.log                                            round p33 -> committed doc number 33
+  FREE  p33/sct_q33cu.log                                            round p33 -> committed doc number 33
+  FREE  p33/sct_q33tm.log                                            round p33 -> committed doc number 33
+  FREE  p33/sct_q33ts.log                                            round p33 -> committed doc number 33
+  FREE  p33/sct_q33tu.log                                            round p33 -> committed doc number 33
+  FREE  p33/test_sheet.png                                           round p33 -> committed doc number 33
+  FREE  p33/trace_draft.txt                                          round p33 -> committed doc number 33
+  FREE  p33/wcp_commit.txt                                           round p33 -> committed doc number 33
+  FREE  p33/wcp_index                                                round p33 -> committed doc number 33
+  FREE  p33_build.log                                                round p33 -> committed doc number 33
+  FREE  p33_build2.log                                               round p33 -> committed doc number 33
+  FREE  p33_dt.log                                                   round p33 -> committed doc number 33
+  FREE  p33_install.log                                              round p33 -> committed doc number 33
+  FREE  p33_install2.log                                             round p33 -> committed doc number 33
+  FREE  p33_test.log                                                 round p33 -> committed doc number 33
+  FREE  p33_test2.log                                                round p33 -> committed doc number 33
+  FREE  p34/agents.txt                                               round p34 -> committed doc number 34
+  FREE  p34/audit.txt                                                round p34 -> committed doc number 34
+  FREE  p34/build.log                                                round p34 -> committed doc number 34
+  FREE  p34/build2.log                                               round p34 -> committed doc number 34
+  FREE  p34/cfg                                                      round p34 -> committed doc number 34
+  FREE  p34/dt.log                                                   round p34 -> committed doc number 34
+  FREE  p34/dt_run.log                                               round p34 -> committed doc number 34
+  FREE  p34/gates2.log                                               round p34 -> committed doc number 34
+  FREE  p34/gates3.log                                               round p34 -> committed doc number 34
+  FREE  p34/headcfg                                                  round p34 -> committed doc number 34
+  FREE  p34/install.log                                              round p34 -> committed doc number 34
+  FREE  p34/install2.log                                             round p34 -> committed doc number 34
+  FREE  p34/laneA.log                                                round p34 -> committed doc number 34
+  FREE  p34/laneB.log                                                round p34 -> committed doc number 34
+  KEEP  p34/libpin_q34                                               is/contains a pin (judged in the pin class)
+  FREE  p34/pdhd_d34b_027305_0.log                                   round p34 -> committed doc number 34
+  FREE  p34/pdhd_d34b_027409_0.log                                   round p34 -> committed doc number 34
+  FREE  p34/pdhd_d34b_027980_3.log                                   round p34 -> committed doc number 34
+  FREE  p34/pdhd_d34b_028084_18.log                                  round p34 -> committed doc number 34
+  FREE  p34/pdhd_d34n_027305_0.log                                   round p34 -> committed doc number 34
+  FREE  p34/pdhd_d34n_027409_0.log                                   round p34 -> committed doc number 34
+  FREE  p34/pdhd_d34n_027980_3.log                                   round p34 -> committed doc number 34
+  FREE  p34/pdhd_d34n_028084_18.log                                  round p34 -> committed doc number 34
+  FREE  p34/pdhd_d34qb_029107_10.log                                 round p34 -> committed doc number 34
+  FREE  p34/pdhd_d34qb_029107_11.log                                 round p34 -> committed doc number 34
+  FREE  p34/pdhd_d34qb_029107_12.log                                 round p34 -> committed doc number 34
+  FREE  p34/pdhd_d34qb_029107_13.log                                 round p34 -> committed doc number 34
+  FREE  p34/pdhd_d34qn_029107_10.log                                 round p34 -> committed doc number 34
+  FREE  p34/pdhd_d34qn_029107_11.log                                 round p34 -> committed doc number 34
+  FREE  p34/pdhd_d34qn_029107_12.log                                 round p34 -> committed doc number 34
+  FREE  p34/pdhd_d34qn_029107_13.log                                 round p34 -> committed doc number 34
+  FREE  p34/push_tk.log                                              round p34 -> committed doc number 34
+  FREE  p34/push_wcp.log                                             round p34 -> committed doc number 34
+  FREE  p34/r3.log                                                   round p34 -> committed doc number 34
+  FREE  p34/render.log                                               round p34 -> committed doc number 34
+  FREE  p34/run_gates2.sh                                            round p34 -> committed doc number 34
+  FREE  p34/run_gates3.sh                                            round p34 -> committed doc number 34
+  FREE  p34/run_r3.out                                               round p34 -> committed doc number 34
+  FREE  p34/run_r3.sh                                                round p34 -> committed doc number 34
+  FREE  p34/sbnd_d34b.log                                            round p34 -> committed doc number 34
+  FREE  p34/sbnd_d34n.log                                            round p34 -> committed doc number 34
+  KEEP  p34/scan                                                     scan-facing (served to a scanner)
+  KEEP  p34/scan_key_r3                                              scan-facing (served to a scanner)
+  FREE  p34/scores_owner                                             round p34 -> committed doc number 34
+  FREE  p34/scores_target_r2truth                                    round p34 -> committed doc number 34
+  FREE  p34/scores_target_union                                      round p34 -> committed doc number 34
+  KEEP  p34/so_q31ctl.log                                            logs/products of surviving arm q31ctl
+  FREE  p34/so_q33tu.log                                             round p34 -> committed doc number 34
+  FREE  p34/so_q34ck1.log                                            round p34 -> committed doc number 34
+  FREE  p34/so_q34ck2.log                                            round p34 -> committed doc number 34
+  FREE  p34/so_q34ck3.log                                            round p34 -> committed doc number 34
+  KEEP  p34/so_q34tk1.log                                            logs/products of surviving arm q34tk1
+  FREE  p34/so_q34tk2.log                                            round p34 -> committed doc number 34
+  FREE  p34/so_q34tk3.log                                            round p34 -> committed doc number 34
+  KEEP  p34/st_r2truth_q31ctl.log                                    logs/products of surviving arm q31ctl
+  FREE  p34/st_r2truth_q33tu.log                                     round p34 -> committed doc number 34
+  FREE  p34/st_r2truth_q34ck1.log                                    round p34 -> committed doc number 34
+  FREE  p34/st_r2truth_q34ck2.log                                    round p34 -> committed doc number 34
+  FREE  p34/st_r2truth_q34ck3.log                                    round p34 -> committed doc number 34
+  KEEP  p34/st_r2truth_q34tk1.log                                    logs/products of surviving arm q34tk1
+  FREE  p34/st_r2truth_q34tk2.log                                    round p34 -> committed doc number 34
+  FREE  p34/st_r2truth_q34tk3.log                                    round p34 -> committed doc number 34
+  KEEP  p34/st_union_q31ctl.log                                      logs/products of surviving arm q31ctl
+  FREE  p34/st_union_q33tu.log                                       round p34 -> committed doc number 34
+  FREE  p34/st_union_q34ck1.log                                      round p34 -> committed doc number 34
+  FREE  p34/st_union_q34ck2.log                                      round p34 -> committed doc number 34
+  FREE  p34/st_union_q34ck3.log                                      round p34 -> committed doc number 34
+  KEEP  p34/st_union_q34tk1.log                                      logs/products of surviving arm q34tk1
+  FREE  p34/st_union_q34tk2.log                                      round p34 -> committed doc number 34
+  FREE  p34/st_union_q34tk3.log                                      round p34 -> committed doc number 34
+  FREE  p34/tkmsg.txt                                                round p34 -> committed doc number 34
+  FREE  p34/ub_abcheck.txt                                           round p34 -> committed doc number 34
+  FREE  p34/ub_base.log                                              round p34 -> committed doc number 34
+  FREE  p34/ub_new.log                                               round p34 -> committed doc number 34
+  FREE  p34/ubbase                                                   round p34 -> committed doc number 34
+  FREE  p34/union                                                    round p34 -> committed doc number 34
+  FREE  p34/wcp_commit.txt                                           round p34 -> committed doc number 34
+  FREE  p34/wcp_index                                                round p34 -> committed doc number 34
+  FREE  p34/wcp_msg.txt                                              round p34 -> committed doc number 34
+  KEEP  p35/arm_q35ctl                                               logs/products of surviving arm q35ctl
+  KEEP  p35/arm_q35tk                                                logs/products of surviving arm q35tk
+  FREE  p35/c1.txt                                                   round p35 -> committed doc number 35
+  FREE  p35/c2.err                                                   round p35 -> committed doc number 35
+  FREE  p35/c4.err                                                   round p35 -> committed doc number 35
+  FREE  p35/c4_movers_P.tsv                                          round p35 -> committed doc number 35
+  FREE  p35/c4_movers_T.tsv                                          round p35 -> committed doc number 35
+  FREE  p35/c4_regrade.txt                                           round p35 -> committed doc number 35
+  FREE  p35/c4k_self.txt                                             round p35 -> committed doc number 35
+  FREE  p35/cfg                                                      round p35 -> committed doc number 35
+  FREE  p35/d35_stm_grade.v1.py                                      round p35 -> committed doc number 35
+  FREE  p35/flip                                                     round p35 -> committed doc number 35
+  FREE  p35/keyid.py                                                 round p35 -> committed doc number 35
+  KEEP  p35/libpin_prod                                              is/contains a pin (judged in the pin class)
+  FREE  p35/libpin_prod.md5                                          round p35 -> committed doc number 35
+  FREE  p35/light_esc.out                                            round p35 -> committed doc number 35
+  FREE  p35/light_tot.out                                            round p35 -> committed doc number 35
+  FREE  p35/merged_images.py                                         round p35 -> committed doc number 35
+  FREE  p35/msg.txt                                                  round p35 -> committed doc number 35
+  FREE  p35/msg2.txt                                                 round p35 -> committed doc number 35
+  FREE  p35/msg3.txt                                                 round p35 -> committed doc number 35
+  FREE  p35/msg4.txt                                                 round p35 -> committed doc number 35
+  FREE  p35/msg5.txt                                                 round p35 -> committed doc number 35
+  FREE  p35/msg6.txt                                                 round p35 -> committed doc number 35
+  FREE  p35/posthoc_agree.py                                         round p35 -> committed doc number 35
+  FREE  p35/push.log                                                 round p35 -> committed doc number 35
+  FREE  p35/push2.log                                                round p35 -> committed doc number 35
+  FREE  p35/push3.log                                                round p35 -> committed doc number 35
+  FREE  p35/push4.log                                                round p35 -> committed doc number 35
+  FREE  p35/push5.log                                                round p35 -> committed doc number 35
+  FREE  p35/push6.log                                                round p35 -> committed doc number 35
+  KEEP  p35/q35ctl.out                                               logs/products of surviving arm q35ctl
+  KEEP  p35/q35flip.out                                              logs/products of surviving arm q35flip
+  KEEP  p35/q35tk.out                                                logs/products of surviving arm q35tk
+  FREE  p35/wcp.index                                                round p35 -> committed doc number 35
+  FREE  p35scan/audit2_w1_a0.txt                                     round p35 -> committed doc number 35
+  FREE  p35scan/audit2_w1_a1.txt                                     round p35 -> committed doc number 35
+  FREE  p35scan/audit2_w1_a2.txt                                     round p35 -> committed doc number 35
+  FREE  p35scan/audit2_w1_a3.txt                                     round p35 -> committed doc number 35
+  FREE  p35scan/audit_w1_a0.txt                                      round p35 -> committed doc number 35
+  FREE  p35scan/audit_w1_a1.txt                                      round p35 -> committed doc number 35
+  FREE  p35scan/audit_w1_a2.txt                                      round p35 -> committed doc number 35
+  FREE  p35scan/audit_w1_a3.txt                                      round p35 -> committed doc number 35
+  FREE  p35scan/audit_w1_a4.txt                                      round p35 -> committed doc number 35
+  FREE  p35scan/items                                                round p35 -> committed doc number 35
+  KEEP  p35scan/prep_q35ctl.log                                      is/contains a prep (judged in the prep class)
+  KEEP  p35scan/prep_q35tk.log                                       is/contains a prep (judged in the prep class)
+  FREE  p35scan/round                                                round p35 -> committed doc number 35
+  FREE  p35scan/round_pdvd                                           round p35 -> committed doc number 35
+  FREE  p35scan/round_pdvd2                                          round p35 -> committed doc number 35
+  FREE  p35scan/shoot.out                                            round p35 -> committed doc number 35
+  FREE  p35scan/shoot2.out                                           round p35 -> committed doc number 35
+  KEEP  p4/libpin_p4                                                 is/contains a pin (judged in the pin class)
+  KEEP  p4/prep_p4v35.log                                            is/contains a prep (judged in the prep class)
+  KEEP  p4/prep_p4v50.log                                            is/contains a prep (judged in the prep class)
+  KEEP  p4/prep_p4v60.log                                            is/contains a prep (judged in the prep class)
+  KEEP  p4/prep_p4vleg.log                                           is/contains a prep (judged in the prep class)
+  KEEP  p4/prep_p4voff.log                                           is/contains a prep (judged in the prep class)
+  KEEP  p65/libpin_p65                                               is/contains a pin (judged in the pin class)
+  KEEP  p72/libpin_p72                                               is/contains a pin (judged in the pin class)
+  KEEP  p72/prep_p72v2a.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p72/prep_p72v2ab.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p72/prep_p72v2b.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p72/prep_p72v2c.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p72/prep_p72vb60.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p72/prep_p72vb90.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p72/prep_p72vleg.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p72/prep_p72voff.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p72/prep_p72vprod.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p74/prep_p74vcs.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p74/prep_p74vleg.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p74/prep_p74voff.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p74/prep_p74vprod2.log                                       is/contains a prep (judged in the prep class)
+  KEEP  p74/prep_p74vtl.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p74/prep_p74vts.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p75/prep_p75vfb.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p75/prep_p75vfb0.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p75/prep_p75vleg.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p75/prep_p75voff.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p75/prep_p75vprod.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p76/prep_p76vdx4.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p76/prep_p76vsame.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p79/prep_p79vcap.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p79/prep_p79vprod.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p79/prep_v2.log                                              is/contains a prep (judged in the prep class)
+  KEEP  p80/prep.staged.py                                           is/contains a prep (judged in the prep class)
+  KEEP  p80/prep_p80bcen.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p81/prep_p81voff2.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p81/prep_p81voff3.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p81/prep_p81vq2d2.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p81/prep_p81vq2d3.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p82/arm_p82bhoff                                             logs/products of surviving arm p82bhoff
+  KEEP  p82/arm_p82bhoff.log                                         logs/products of surviving arm p82bhoff
+  KEEP  p82/arm_p82hoff                                              logs/products of surviving arm p82hoff
+  KEEP  p82/arm_p82hoff.log                                          logs/products of surviving arm p82hoff
+  KEEP  p82/g_p82bhoff.txt                                           logs/products of surviving arm p82bhoff
+  KEEP  p82/g_p82hoff.txt                                            logs/products of surviving arm p82hoff
+  KEEP  p82/libpin_p82                                               is/contains a pin (judged in the pin class)
+  KEEP  p82/prep_p79vprod.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p82/prep_p82bcs.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p82/prep_p82bk10.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p82/prep_p82btp.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p82/prep_p82btp0.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p82/prep_p82vcs.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p82/prep_p82vk10.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p82/prep_p82vtp.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p82/prep_p82vtp0.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p83/libpin_p83                                               is/contains a pin (judged in the pin class)
+  KEEP  p83/prep_p82vprod.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p83/prep_p83v10.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p83/prep_p83v5.log                                           is/contains a prep (judged in the prep class)
+  KEEP  p83/prep_p83v7.log                                           is/contains a prep (judged in the prep class)
+  KEEP  p84/libpin_p84                                               is/contains a pin (judged in the pin class)
+  KEEP  p84/prep_p83vprod.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p84/prep_p84vk59.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p84/prep_p84vr5.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p84/prep_p84vr65.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p84/prep_p84vr8.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p85/arm_p85vprod                                             logs/products of surviving arm p85vprod
+  KEEP  p85/arm_p85vprod.log                                         logs/products of surviving arm p85vprod
+  KEEP  p85/arm_p85vwh                                               logs/products of surviving arm p85vwh
+  KEEP  p85/arm_p85vwh.log                                           logs/products of surviving arm p85vwh
+  KEEP  p85/census_p85vwh.txt                                        logs/products of surviving arm p85vwh
+  KEEP  p85/g_p85vwh.txt                                             logs/products of surviving arm p85vwh
+  KEEP  p85/libpin_p85                                               is/contains a pin (judged in the pin class)
+  KEEP  p85/prep_p84vprod.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p85/prep_p85voff.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p85/prep_p85vsg50.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p85/prep_p85vwh                                              is/contains a prep (judged in the prep class)
+  KEEP  p85/prep_p85vwh.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p85/score_merged_p85vwh.json                                 logs/products of surviving arm p85vwh
+  KEEP  p85/score_p85vwh.json                                        logs/products of surviving arm p85vwh
+  KEEP  p85/sheet_p85vwh                                             logs/products of surviving arm p85vwh
+  KEEP  p86/probe62_p85vwh.txt                                       logs/products of surviving arm p85vwh
+  KEEP  p87/keep_p87v20.txt                                          logs/products of surviving arm keep
+  KEEP  p87/keep_p87v20f.txt                                         logs/products of surviving arm keep
+  KEEP  p87/keep_p87v5.txt                                           logs/products of surviving arm keep
+  KEEP  p87/keep_p87v5f.txt                                          logs/products of surviving arm keep
+  KEEP  p87/libpin_p87                                               is/contains a pin (judged in the pin class)
+  KEEP  p87/prep_p85vprod                                            is/contains a prep (judged in the prep class)
+  KEEP  p87/prep_p85vprod.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p87/prep_p87v20.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p87/prep_p87v20f.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p87/prep_p87v5.log                                           is/contains a prep (judged in the prep class)
+  KEEP  p87/prep_p87v5f.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p87/prep_p87voff.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p87/score_merged_p85vprod.json                               logs/products of surviving arm p85vprod
+  KEEP  p87/score_p85vprod.json                                      logs/products of surviving arm p85vprod
+  KEEP  p87/sheet_p85vprod                                           logs/products of surviving arm p85vprod
+  KEEP  p88/arm_p88v5fr                                              logs/products of surviving arm p88v5fr
+  KEEP  p88/arm_p88v5fr.log                                          logs/products of surviving arm p88v5fr
+  KEEP  p88/arm_p88vprod                                             logs/products of surviving arm p88vprod
+  KEEP  p88/arm_p88vprod.log                                         logs/products of surviving arm p88vprod
+  KEEP  p88/g_p88v5fr.txt                                            logs/products of surviving arm p88v5fr
+  KEEP  p88/g_p88v5fr_vs_p87v5f.txt                                  logs/products of surviving arm p88v5fr
+  KEEP  p88/keep_p88v20fr.txt                                        logs/products of surviving arm keep
+  KEEP  p88/keep_p88v20fr_vs_p87v20f.txt                             logs/products of surviving arm keep
+  KEEP  p88/keep_p88v5fr.txt                                         logs/products of surviving arm keep
+  KEEP  p88/keep_p88v5fr_vs_p87v5f.txt                               logs/products of surviving arm keep
+  KEEP  p88/keep_p88v5r.txt                                          logs/products of surviving arm keep
+  KEEP  p88/keep_p88v5r_vs_p87v5.txt                                 logs/products of surviving arm keep
+  KEEP  p88/keep_p88vr.txt                                           logs/products of surviving arm keep
+  KEEP  p88/libpin_p88                                               is/contains a pin (judged in the pin class)
+  KEEP  p88/prep_p85vprod                                            a symlink, never a unit
+  KEEP  p88/prep_p88v20fr.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p88/prep_p88v5fr                                             is/contains a prep (judged in the prep class)
+  KEEP  p88/prep_p88v5fr.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p88/prep_p88v5r.log                                          is/contains a prep (judged in the prep class)
+  KEEP  p88/prep_p88voff.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p88/prep_p88vr.log                                           is/contains a prep (judged in the prep class)
+  KEEP  p88/score_merged_p85vprod.json                               logs/products of surviving arm p85vprod
+  KEEP  p88/score_merged_p88v5fr.json                                logs/products of surviving arm p88v5fr
+  KEEP  p88/score_p85vprod.json                                      logs/products of surviving arm p85vprod
+  KEEP  p88/score_p88v5fr.json                                       logs/products of surviving arm p88v5fr
+  KEEP  p88/score_smx6rec_p85vprod.json                              logs/products of surviving arm p85vprod
+  KEEP  p88/score_smx6rec_p88v5fr.json                               logs/products of surviving arm p88v5fr
+  KEEP  p88/sheet_p88v5fr                                            logs/products of surviving arm p88v5fr
+  KEEP  p89/prep_p88vprod                                            is/contains a prep (judged in the prep class)
+  KEEP  p89/prep_p88vprod.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p89/sheet_p88vprod                                           logs/products of surviving arm p88vprod
+  KEEP  p90/arm_p90vprod                                             logs/products of surviving arm p90vprod
+  KEEP  p90/arm_p90vprod.log                                         logs/products of surviving arm p90vprod
+  KEEP  p90/census_p90vprod.json                                     logs/products of surviving arm p90vprod
+  KEEP  p90/census_p90vprod.txt                                      logs/products of surviving arm p90vprod
+  KEEP  p90/g_p90vprod.txt                                           logs/products of surviving arm p90vprod
+  KEEP  p90/prep_p90vb.log                                           is/contains a prep (judged in the prep class)
+  KEEP  p90/prep_p90vk.log                                           is/contains a prep (judged in the prep class)
+  KEEP  p90/prep_p90vp.log                                           is/contains a prep (judged in the prep class)
+  KEEP  p90/prep_p90vprod                                            is/contains a prep (judged in the prep class)
+  KEEP  p90/prep_p90vprod.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p90/score_merged_p90vprod.json                               logs/products of surviving arm p90vprod
+  KEEP  p90/sheet_p90vprod                                           logs/products of surviving arm p90vprod
+  KEEP  p92/libpin_p92                                               is/contains a pin (judged in the pin class)
+  KEEP  p93/prep_p90vprod                                            is/contains a prep (judged in the prep class)
+  KEEP  p93/prep_p90vprod.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p93/prep_p93vprod.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p93/score_p90vprod.json                                      logs/products of surviving arm p90vprod
+  KEEP  p93/sheet_p90vprod                                           logs/products of surviving arm p90vprod
+  KEEP  p95/prep_p95voffb.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p95/prep_p95vq2db.log                                        is/contains a prep (judged in the prep class)
+  KEEP  p96/arm_p96vprod                                             logs/products of surviving arm p96vprod
+  KEEP  p96/arm_p96vprod.log                                         logs/products of surviving arm p96vprod
+  KEEP  p96/libpin_p96                                               is/contains a pin (judged in the pin class)
+  KEEP  p96/prep_p96voff.log                                         is/contains a prep (judged in the prep class)
+  KEEP  p96/prep_p96vscope.log                                       is/contains a prep (judged in the prep class)
+  KEEP  p98/chain_p98von                                             logs/products of surviving arm p98von
+  KEEP  p98/chain_p98vonq                                            logs/products of surviving arm p98vonq
+  KEEP  p98/sp_p98von                                                logs/products of surviving arm p98von
+  KEEP  p99/frames_keep_vs_off6.json                                 logs/products of surviving arm keep
+  KEEP  p99/frames_keep_vs_off6.txt                                  logs/products of surviving arm keep
+  KEEP  p99/frames_keep_vs_on120.json                                logs/products of surviving arm keep
+  KEEP  p99/frames_keep_vs_on120.txt                                 logs/products of surviving arm keep
+  KEEP  p99/h_keep_0.txt                                             logs/products of surviving arm keep
+  KEEP  p99/h_keep_2.txt                                             logs/products of surviving arm keep
+  KEEP  p99/h_keep_4.txt                                             logs/products of surviving arm keep
+  KEEP  p99/h_keep_6.txt                                             logs/products of surviving arm keep
+  KEEP  p99/ident_keep_off6.json                                     logs/products of surviving arm keep
+  KEEP  p99/ident_keep_off6.txt                                      logs/products of surviving arm keep
+  KEEP  p99/ident_keep_on120_bottom.json                             logs/products of surviving arm keep
+  KEEP  p99/ident_keep_on120_bottom.txt                              logs/products of surviving arm keep
+  KEEP  p99/ident_keep_vs_p99w5_039252_0.txt                         logs/products of surviving arm keep
+  KEEP  p99/ident_keep_vs_p99w6_039252_0.txt                         logs/products of surviving arm keep
+  KEEP  p99rw/arm_p99rwon                                            logs/products of surviving arm p99rwon
+  KEEP  p99rw/arm_p99wflip                                           logs/products of surviving arm p99wflip
+  KEEP  p99rw/frame_nticks_p98von.txt                                logs/products of surviving arm p98von
+  KEEP  p99scan/prep_p96vprod                                        is/contains a prep (judged in the prep class)
+  KEEP  p99scan/prep_p96vprod.log                                    is/contains a prep (judged in the prep class)
+  KEEP  p99scan/prep_p98vonq                                         is/contains a prep (judged in the prep class)
+  KEEP  p99scan/prep_p98vonq.log                                     is/contains a prep (judged in the prep class)
+  KEEP  p99scan/sheet_p96vprod                                       logs/products of surviving arm p96vprod
+  KEEP  p99scan/sheet_p98vonq                                        logs/products of surviving arm p98vonq
+  KEEP  p99scan/shoot_p96vprod                                       logs/products of surviving arm p96vprod
+  KEEP  p99scan/shoot_p96vprod.log                                   logs/products of surviving arm p96vprod
+  KEEP  p99scan/shoot_p98vonq                                        logs/products of surviving arm p98vonq
+  KEEP  p99scan/shoot_p98vonq.log                                    logs/products of surviving arm p98vonq
+  KEEP  p99scan/shots                                                scan-facing (served to a scanner)
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt10550                  a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt111412                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt116962                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt122660                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt131357                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt137238                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt138009                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt163543                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt168596                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt172230                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt174637                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt196649                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt214469                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt219295                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt234638                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt235435                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt239794                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt246579                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt256587                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt267597                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt268067                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt268784                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt269774                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt271851                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt30504                  a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt342199                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt350186                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt360535                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt388                    a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt38856                  a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt389538                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt400474                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt42280                  a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt422851                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt423981                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt433451                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt437699                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt444187                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt447477                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt46363                  a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt469665                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt489330                 a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt52672                  a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt54095                  a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt69314                  a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt74544                  a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt81597                  a symlink, never a unit
+  KEEP  pr123_flipchk_stitch_1787974725/pr_evt90055                  a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt10550                                a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt111412                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt116962                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt122660                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt131357                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt137238                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt138009                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt163543                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt168596                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt172230                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt174637                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt196649                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt214469                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt219295                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt234638                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt235435                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt239794                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt246579                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt256587                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt267597                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt268067                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt268784                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt269774                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt271851                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt30504                                a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt342199                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt350186                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt360535                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt388                                  a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt38856                                a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt389538                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt400474                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt42280                                a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt422851                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt423981                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt433451                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt437699                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt444187                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt447477                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt46363                                a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt469665                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt489330                               a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt52672                                a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt54095                                a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt69314                                a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt74544                                a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt81597                                a symlink, never a unit
+  KEEP  pr123_flipstitch2/pr_evt90055                                a symlink, never a unit
+  KEEP  pr124/prep-off.log                                           is/contains a prep (judged in the prep class)
+  KEEP  pr124/prep-off98.log                                         is/contains a prep (judged in the prep class)
+  KEEP  pr124/prep-on.log                                            is/contains a prep (judged in the prep class)
+  KEEP  pr124/prep-onA98.log                                         is/contains a prep (judged in the prep class)
+  KEEP  pr124/prep-onC.log                                           is/contains a prep (judged in the prep class)
+  KEEP  pr125/prep1.log                                              is/contains a prep (judged in the prep class)
+  KEEP  pr125/prep2.log                                              is/contains a prep (judged in the prep class)
+  KEEP  pr125/prep3.log                                              is/contains a prep (judged in the prep class)
+  KEEP  pr125/prep4.log                                              is/contains a prep (judged in the prep class)
+  KEEP  pr125/prep5.log                                              is/contains a prep (judged in the prep class)
+  KEEP  pr125/prep6.log                                              is/contains a prep (judged in the prep class)
+  KEEP  pr125/prep7.log                                              is/contains a prep (judged in the prep class)
+  KEEP  pr125/prep8.log                                              is/contains a prep (judged in the prep class)
+  KEEP  pr150/libpin                                                 is/contains a pin (judged in the pin class)
+  KEEP  pr150/scores-pr150csp3bw-mcp1k.tsv                           logs/products of surviving arm pr150csp3bw
+  KEEP  pr150/scores-pr150csp3bw-mcp2k.tsv                           logs/products of surviving arm pr150csp3bw
+  KEEP  pr150/scores-pr150csp3bw-ncpi0.tsv                           logs/products of surviving arm pr150csp3bw
+  KEEP  pr150/scores-pr150csp3bw-nuecc48.tsv                         logs/products of surviving arm pr150csp3bw
+  KEEP  pr150/scores-pr150s0-mcp1k.tsv                               logs/products of surviving arm pr150s0
+  KEEP  pr150/scores-pr150s0-mcp2k.tsv                               logs/products of surviving arm pr150s0
+  KEEP  pr150/scores-pr150s0-ncpi0.tsv                               logs/products of surviving arm pr150s0
+  KEEP  pr150/scores-pr150s0-nuecc48.tsv                             logs/products of surviving arm pr150s0
+  KEEP  pr63_render/scan300.args                                     scan-facing (served to a scanner)
+  KEEP  pr88/prep-rest.log                                           is/contains a prep (judged in the prep class)
+  KEEP  pr88/prep-rest.sh                                            is/contains a prep (judged in the prep class)
+  KEEP  pr88/prep-wave0.log                                          is/contains a prep (judged in the prep class)
+  KEEP  pr88/prep-wave1.log                                          is/contains a prep (judged in the prep class)
+  KEEP  pr88/prep-wave2.log                                          is/contains a prep (judged in the prep class)
+  KEEP  pr88/prep-wave3.log                                          is/contains a prep (judged in the prep class)
+  KEEP  pr88/prep-wave4.log                                          is/contains a prep (judged in the prep class)
+  KEEP  pr88/prep-wave5.log                                          is/contains a prep (judged in the prep class)
+  KEEP  pr88/prep-wave6.log                                          is/contains a prep (judged in the prep class)
+  KEEP  pr88/prep-wave7.log                                          is/contains a prep (judged in the prep class)
+  KEEP  pr88/prep.log                                                is/contains a prep (judged in the prep class)
+  FREE  d123-mc-cv-base                                              round d123 -> committed doc number 123 (whole dir, 154 entries)
+  FREE  d123-mc-cv-hits                                              round d123 -> committed doc number 123 (whole dir, 154 entries)
+  FREE  d123-mc-cv-lg                                                round d123 -> committed doc number 123 (whole dir, 154 entries)
+  FREE  d123-mc-cv-lgop                                              round d123 -> committed doc number 123 (whole dir, 154 entries)
+  FREE  d123-mc-cv-nr                                                round d123 -> committed doc number 123 (whole dir, 154 entries)
+  FREE  d123-mc-nuecc-base                                           round d123 -> committed doc number 123 (whole dir, 225 entries)
+  FREE  d123-mc-nuecc-hits                                           round d123 -> committed doc number 123 (whole dir, 225 entries)
+  FREE  d123-mc-off-base                                             round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-mc-off-hits                                             round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-mc-off-lg                                               round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-mc-off-lgop                                             round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-stageB-work-mcp1k-d123base                              round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-stageB-work-mcp1k-d123hits                              round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-stageB-work-mcp1k-d123hitsnr                            round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-stageB-work-mcp1k-d123hitsnu                            round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-stageB-work-mcp1k-d123lg                                round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-stageB-work-mcp1k-d123lgop                              round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-stageB-work-mcp1k-d123nosplit                           round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-stageB-work-mcp2k-d123base                              round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-stageB-work-mcp2k-d123hits                              round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-stageB-work-mcp2k-d123lgop                              round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-stageB-work-ncpi0-d123hitsnr                            round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-stageB-work-nuecc48-d123hitsnr                          round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-stageB-work-r3cv-d123base                               round d123 -> committed doc number 123 (whole dir, 155 entries)
+  FREE  d123-stageB-work-r3cv-d123hits                               round d123 -> committed doc number 123 (whole dir, 155 entries)
+  FREE  d123-stageB-work-r3cv-d123lg                                 round d123 -> committed doc number 123 (whole dir, 155 entries)
+  FREE  d123-stageB-work-r3cv-d123lgop                               round d123 -> committed doc number 123 (whole dir, 155 entries)
+  FREE  d123-stageB-work-r3cv-d123nr                                 round d123 -> committed doc number 123 (whole dir, 155 entries)
+  FREE  d123-stageB-work-r3nue-d123base                              round d123 -> committed doc number 123 (whole dir, 141 entries)
+  FREE  d123-stageB-work-r3nue-d123base-range                        round d123 -> committed doc number 123 (whole dir, 85 entries)
+  FREE  d123-stageB-work-r3nue-d123hits                              round d123 -> committed doc number 123 (whole dir, 141 entries)
+  FREE  d123-stageB-work-r3nue-d123hits-range                        round d123 -> committed doc number 123 (whole dir, 85 entries)
+  FREE  d123-stageB-work-r3off-d123base                              round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-stageB-work-r3off-d123hits                              round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-stageB-work-r3off-d123lg                                round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d123-stageB-work-r3off-d123lgop                              round d123 -> committed doc number 123 (whole dir, 1 entries)
+  FREE  d30                                                          round d30 -> committed doc number 30 (whole dir, 2 entries)
+  FREE  p29                                                          round p29 -> committed doc number 29 (whole dir, 4 entries)
+  FREE  pr149                                                        round pr149 -> committed doc number 149 (whole dir, 4 entries)
+
+registered worktrees for `git worktree remove` (not in the rm tier): 0
+
+release units 565 | nominal 17.58 GiB | FREED (every link inside the set) 15.42 GiB | shared with a kept file, frees nothing 0.72 GiB
+tier file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tmp_tier_20260925.txt (565 lines).  This script removed nothing.

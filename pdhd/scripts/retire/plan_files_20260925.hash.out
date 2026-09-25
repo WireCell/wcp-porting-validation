@@ -19,5 +19,8 @@ TOTAL 104918 files, 90.89 GiB; 56408 links
   list: files_sbnd-icluster-split.links_20260925.txt  (24068 lines)
   list: files_sbnd-base-qlevt_20260925.txt  (48510 lines)
   list: files_sbnd-base-qlevt.links_20260925.txt  (32340 lines)
+  froze 56408 files -> sbnd-icluster-split.manifest.tsv, 24068 links -> sbnd-icluster-split.links.tsv
+  froze 48510 files -> sbnd-base-qlevt.manifest.tsv, 32340 links -> sbnd-base-qlevt.links.tsv
 
 This script retired nothing.  Review the lists, then run the driver (CONFIRM=yes).
+rc=0

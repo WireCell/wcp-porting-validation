@@ -1,0 +1,9 @@
+arms 86 | targets 41983 files, 10.49 GiB | held {'sentinel log': 18508, 'hardlinked': 0, 'link target': 0, 'open': 0, 'recent': 0}
+     4.78 GiB  .wct-cfg-evtN.json
+     1.27 GiB  ql.stdout
+     1.25 GiB  wct_ql.log
+     1.19 GiB  stdout.log
+     1.10 GiB  wct_pr_evtN.log
+     0.46 GiB  img.stdout
+     0.46 GiB  wct_img.log
+DRY RUN -- nothing compressed.  list: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/files_logs_zst_20260925.txt
