@@ -1,0 +1,11 @@
+runner-precompiled Q/L config (.wct-cfg-ql.json), paths normalized:
+  work-mcp1k-d123lgflip        g0   vs work-mcp1k-d123lgop       : 0 keys []
+  work-mcp1k-d123lgflip        g25  vs work-mcp1k-d123lgop       : 0 keys []
+  work-mcp1k-d123lgflip        g50  vs work-mcp1k-d123lgop       : 0 keys []
+  work-mcp1k-d123lgflipoff     g0   vs work-mcp1k-d123hits       : 0 keys []
+  work-mcp1k-d123lgflipoff     g25  vs work-mcp1k-d123hits       : 0 keys []
+  work-mcp1k-d123lgflipoff     g50  vs work-mcp1k-d123hits       : 0 keys []
+  work-mcp1k-d123lgflip        g0   vs work-mcp1k-d123hits       : 2 keys [('[72]/data/xtpc_sc1_light_gate', True, None), ('[72]/data/xtpc_sc1_overpred_max', 2.9, None)]
+  work-mcp1k-d123lgflip        g25  vs work-mcp1k-d123hits       : 2 keys [('[72]/data/xtpc_sc1_light_gate', True, None), ('[72]/data/xtpc_sc1_overpred_max', 2.9, None)]
+  work-mcp1k-d123lgflip        g50  vs work-mcp1k-d123hits       : 2 keys [('[72]/data/xtpc_sc1_light_gate', True, None), ('[72]/data/xtpc_sc1_overpred_max', 2.9, None)]
+  work-r3cv-d123lgflip/f000    g0   vs work-r3cv-d123lgop/f000   : 0 keys []

@@ -5,7 +5,8 @@
 **Status (2026-09-25): FLIPPED.** `flash_source=hits` is the standalone chain's production default
 (§17, `ref/prod-2026-09-25`), the cathode rescue stays ON. §0–§9 are the 09-24 design as written;
 §10–§16 the campaign that demonstrated it; §17 the flip and the follow-ups it leaves; §18 (round 6) the
-`QLXTPC coincident` cull understood and fixed behind two default-OFF knobs, and the rescue ruled on MC.
+`QLXTPC coincident` cull understood and fixed behind two knobs, and the rescue ruled on MC; §19 the second
+flip: the light gate + ceiling are production (`ref/prod-2026-09-25b`), rescue still ON.
 
 **Question.** SBND Q/L matching uses the reco1 `recob::OpFlash`. That flash merges or drops
 flashes that are a few µs apart. Can we rebuild the flashes from the reco1 `recob::OpHit`,
@@ -1442,3 +1443,92 @@ knobs the new set would show them as in the old.
 (9 recovered neutrinos, 3 cosmic candidates removed, 1 cosmic added, 4 real losses of which the light gate
 recovers 59003 and 169824), 29 are a tie-sensitivity of the PR stage to inputs that should not matter (far specks
 in the bundle, a 10 ns flash-time shift, cluster numbering) that is symmetric on MC truth.
+
+## 19. The second flip — the QLXTPC scenario-1 light gate + ceiling ON in production (2026-09-25)
+
+> "Flip the light gate on for production" — the owner, 2026-09-25
+
+### Repro
+
+```bash
+SX=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin; cd $SX
+# proofs on the tripwire's Q/L TLA list: pre = git archive HEAD cfg (toolkit, before the flip)
+T=(-A input=/x/clusters-apa.tar.gz -S "anode_indices=[0,1]" -A output_dir=/x -S run=18255 -S subrun=1 -S event=287517)
+WIRECELL_PATH=<pre>/cfg:$DATA  wcsonnet "${T[@]}" -S xtpc_sc1_light_gate=true -S xtpc_sc1_overpred_max=2.9 -o preA.json wct-clus-matching-perevt.jsonnet
+WIRECELL_PATH=$TK/cfg:$DATA    wcsonnet "${T[@]}" -o flip.json wct-clus-matching-perevt.jsonnet                     # A: diff preA flip = 0
+WIRECELL_PATH=<pre>/cfg:$DATA  wcsonnet "${T[@]}" -o pre.json wct-clus-matching-perevt.jsonnet
+WIRECELL_PATH=$TK/cfg:$DATA    wcsonnet "${T[@]}" -S xtpc_sc1_light_gate=null -S xtpc_sc1_overpred_max=null -o off.json wct-clus-matching-perevt.jsonnet   # B: diff pre off = 0
+python3 scripts/cfg/prod_cfg_gate.py                                      # PASS 28/28 vs prod-2026-09-25b
+# output gate: the flipped runner on the PRODUCTION libs (no pin), mcp1k groups 0, 25 (59003), 50 (169824), and one MC file
+SBND_QL_KEEP_ICLUSTER=1 SBND_MAX_JOBS=3 ./run_chain_group.sh input_files_reco1/data_MCP2025C_reco1_frameshift_first1000ev.root work-mcp1k-d123lgflip data --size 16 --layout perevt --groups 0,25,50
+SBND_XTPC_SC1_GATE=0 SBND_QL_KEEP_ICLUSTER=1 SBND_MAX_JOBS=3 ./run_chain_group.sh <same> work-mcp1k-d123lgflipoff data --size 16 --layout perevt --groups 0,25,50
+SBND_QL_KEEP_ICLUSTER=1 SBND_MAX_JOBS=1 ./run_chain_group.sh $(awk -F'\t' 'NR==1{print $2}' products/d115/cv/files.lst) work-r3cv-d123lgflip/f000 sim --mc --size 1000 --layout perevt
+PR_EXTRA_STAGES=pr_display PR_JOBS=12 ./run_pr_chain_batch.sh work-mcp1k-d123lgflip work-mcp1k-d123lgflippr data
+python3 scripts/d123/flip_gate.py work-mcp1k-d123lgflip    ~/tmp/d125flip/view/mcp1k_lgop            # views = symlinks of g0/g25/g50 + their events
+python3 scripts/d123/flip_gate.py work-mcp1k-d123lgflipoff ~/tmp/d125flip/view/mcp1k_hits --no-pr
+python3 scripts/d123/flip_gate.py work-r3cv-d123lgflip/f000 work-r3cv-d123lgop/f000 --no-pr
+# the samples never run with the gate: nueCC-48 and NCpi0 through the flipped production runner (~/tmp/d125flip/chain_small.sh)
+python3 scripts/d123/r3_pr_compare.py products/d123/<s>_hits products/d123/<s>_lgflip --label hits,lgflip
+```
+
+### 19.1 What changed
+
+| repo / file | change |
+|---|---|
+| toolkit `cfg/pgrapher/experiment/sbnd/wct-clus-matching-perevt.jsonnet` | TLA defaults `xtpc_sc1_light_gate` null → **true**, `xtpc_sc1_overpred_max` null → **2.9**. The KS/χ² thresholds stay null (the C++ 0.3 / 50 that §18 measured). The comment states the flip, the date and the escape. |
+| wcp `run_chain_group.sh` | env `SBND_XTPC_SC1_GATE=0\|1`. Unset ⇒ no TLA (the jsonnet default, ON). `=0` passes `null` for both, so the keys are omitted and the pre-flip Q/L graph compiles byte for byte. `=1` passes the production values. `QL_EXTRA_TLA` still comes last and wins. |
+| wcp `run_ql_evt.sh` | the same escape for the per-event driver (next to `SBND_CATHODE_RESCUE`). Syntax-checked; not exercised by a run in this round. |
+| wcp `ref/prod-2026-09-25b/` | new tripwire generation. `prod-2026-09-25` is kept. |
+
+The C++ defaults (`QLMatching`: gate false, ceiling 0) are unchanged, so PDVD and PDHD, which share the class,
+are not touched. The production library is `libWireCellMatch.so` md5 d57af13f, the same file as the
+measured pin `~/tmp/d123-libpin-r6` and `toolkit/build`, so no rebuild was needed. Not changed: the reco1 dump,
+the PR job, every rescue knob (still ON, §18.6), and the LArSoft 1-step chain. That chain builds its Q/L node
+from `qlmatching.jsonnet` directly; its tripwire artifact `sbnd_larsoft_1step.json` did not move.
+
+### 19.2 Proofs on the compiled config
+
+| proof | compared | result |
+|---|---|---|
+| **A** | pre-flip tree + the two knobs vs flipped tree bare (tripwire TLA list) | **0 lines** |
+| **B** | pre-flip tree bare vs flipped tree + the escape (`null`, `null`) | **0 lines** |
+| explicit `=1` | flipped + `true` / `2.9` vs flipped bare | 0 lines |
+| flipped vs pre-flip bare | | exactly `"xtpc_sc1_light_gate": true` and `"xtpc_sc1_overpred_max": 2.9` on the QLMatching node |
+| runner-precompiled `.wct-cfg-ql.json` (paths normalised) | flipped vs `work-mcp1k-d123lgop` (g0, g25, g50); MC f000 vs `work-r3cv-d123lgop/f000`; escape vs `work-mcp1k-d123hits` | **0 keys** each; flipped vs `hits` = the two knob keys |
+| `prod_cfg_gate.py` vs `prod-2026-09-25` | 28 artifacts | **DRIFT: `sbnd_ql.json` only**; after `--refresh --ref ref/prod-2026-09-25b`: **PASS 28/28** (the manifests differ in that one line) |
+
+### 19.3 Output gate — the flipped runner on the production libraries
+
+Libraries (`local/lib` + `toolkit/build`) are md5-identical at start and end (`~/tmp/d125flip/libs.{start,end}.md5`).
+The views `~/tmp/d125flip/view/mcp1k_{lgop,hits}{,pr}` are symlinks to the measured arms' groups g0, g25, g50
+and their 48 events.
+
+| arm (production libs, no pin) | against | stage A: opflash ×2, frames, icluster ×4 per group; pctree + 3 Bee zips per event | stage B: pctree-pr, mabc-pr, calib-pr, nusel per event | verdict |
+|---|---|---|---|---|
+| `work-mcp1k-d123lgflip`, the runner bare after the flip | `work-mcp1k-d123lgop` (the §18 measured arm, pin r6) | 3/3 groups, **48/48** events identical | pctree-pr, mabc-pr, nusel **48/48**; calib-pr **33/33** present identical, 15 absent in **both** (no-candidate events write none; `flip_gate.py` counts a both-absent file as "missing", so its verdict line reads DIFFER) | **IDENTICAL** |
+| `work-mcp1k-d123lgflipoff`, `SBND_XTPC_SC1_GATE=0` | `work-mcp1k-d123hits` (the §17 production before this flip) | 3/3 groups, **48/48** identical | — | **IDENTICAL**: the off path is the previous production |
+| `work-r3cv-d123lgflip/f000`, one MC file, `--mc` | `work-r3cv-d123lgop/f000` | 1/1 group, **18/18** identical | — | **IDENTICAL** |
+
+The effect is visible where the knob acts: 59003 (g25) has no candidate with hit flashes and **νμ 3.65, 819 MeV**
+after the flip, and 169824 (g50) has none and then **νμ 5.88, 1059 MeV**, as in §18.3.
+
+### 19.4 The samples not run with the gate before: nueCC-48 and NCpi0
+
+The flipped production runner, stage A + B, was set against the hit-flash arms of §13
+(`work-{nuecc48,ncpi0}-d123hits{,pr}`, same imaging stage by construction). Files:
+`docs/123_flash/123_r7_pr_{nuecc48,ncpi0}_hits_lgflip.json`.
+
+| sample | Q/L: events with a changed match | beam-window matches lost / gained | selection, hits → flipped |
+|---|---|---|---|
+| nueCC-48 (48 events) | 9 | 0 / 0 | νμ > 0.9 5 → 5; **νe > 7: 37 → 38** (+350186: νe −5.9 → 9.5, vertex moved 31 cm), nothing lost |
+| NCpi0 (19 events) | 7 | 0 / 0 | unchanged (νμ 2 → 2, νe 1 → 1); one candidate vertex moved (180801, same scores) |
+
+The gate touches a handful of cluster matches per sample, none in the beam window, and changes no selected
+event for the worse.
+
+### 19.5 What the flip does not cover
+
+- **The LArSoft 1-step chain** (`wcls-img-clus-matching-xin.jsonnet`) still runs reco1 flashes and no light gate (§16, §17.4).
+- **The rescue** stays ON. Its retirement is the follow-up of §18.6: one arm with the gate and `rescue_off.txt` as its gate.
+- **The PR stage's tie-sensitivity** (doc 124 §3, §7) is untouched by any flash change. It is the source of the
+  symmetric ~1 % churn on the selected count.

@@ -3215,3 +3215,11 @@ Production hit flashes, the d123 lib pin, each arm on its baseline's imaging thr
 ## doc sbnd_xin/124 -- anatomy of the 46 numu flips on 3000 data events (2026-09-25)
 - `work-mcp2k-d123lgop` -- the doc 123 sec 18 light gate + ceiling (`scripts/d123/tla/xtpc_lgop.txt`) on mcp2k via `hits_arm.sh`, pin `~/tmp/d123-libpin-r6` (`.libs.md5.start == .end`, Match d57af13f); compiled Q/L cfg vs `work-mcp2k-d123hits` differs only by the two knob keys, `rse.json` identical. `work-mcp2k-d123lgoppr` = stage B; products `products/d123/mcp2k_lgop`. KEEP with the d123 arms.
 - Scratch (deletable once doc 124 is read): `~/tmp/d124/null/` (the stage-B rerun null of the 46 flip events, 4 roots), `~/tmp/d124/nudge/` (the t0-nudge and repack-null Q/L + PR roots), `~/tmp/d124/census/` (r1_census of the MC hits arm per file).
+
+## doc sbnd_xin/123 sec 19 -- the second flip: the light gate + ceiling ON in production (2026-09-25)
+Owner: "Flip the light gate on for production". `ref/prod-2026-09-25b` (28 artifacts; only `sbnd_ql.json` moved, by the two keys). Gate arms on the PRODUCTION libs, no pin (`~/tmp/d125flip/libs.{start,end}.md5`, Match d57af13f).
+- `work-mcp1k-d123lgflip{,pr}` -- `run_chain_group.sh` bare after the flip, mcp1k groups 0, 25, 50 (48 events incl. 59003, 169824) vs `work-mcp1k-d123lgop{,pr}` (via symlink views `~/tmp/d125flip/view/`): stage A 48/48, stage B identical.
+- `work-mcp1k-d123lgflipoff` -- `SBND_XTPC_SC1_GATE=0`, the off path, vs `work-mcp1k-d123hits`: 48/48 identical.
+- `work-r3cv-d123lgflip/f000` -- one MC file `--mc` vs `work-r3cv-d123lgop/f000`: 18/18.
+- `work-{nuecc48,ncpi0}-d123lgflip{,pr}` + `products/d123/{nuecc48,ncpi0}_lgflip` -- the flipped runner on the two samples never run with the gate (effect: nueCC-48 nue>7 37 -> 38, NCpi0 unchanged).
+- KEEP as the flip's record (small).

@@ -91,6 +91,13 @@
 #      downstream (imaging, Q/L, PR) is untouched either way; the hit-flash path
 #      needs the WireCellFlash plugin (toolkit flash/) and the OpHit reader in
 #      the WireCellSBNDReco1 plugin, both in the standard install.
+#      SBND_XTPC_SC1_GATE=0|1 (doc sbnd_xin/123 sec 19, 2026-09-25): the Q/L job's
+#      QLXTPC scenario-1 light gate + over-prediction ceiling.  Unset/empty => NO
+#      TLA, the jsonnet default applies, which is ON (xtpc_sc1_light_gate=true,
+#      xtpc_sc1_overpred_max=2.9) since the flip of 2026-09-25.  =0 passes null for
+#      both => the keys are omitted => the pre-flip Q/L graph byte for byte (the
+#      control arm).  =1 passes the production values explicitly.  QL_EXTRA_TLA
+#      entries come later and win.
 set -u
 
 SX=$(cd "$(dirname "$0")" && pwd -P)
@@ -384,6 +391,13 @@ print(v[0], v[1])' "$GDIR/rse.json")
                    --tla-code "rse_map=$(cat "$GDIR/rse.json")"
                    --tla-str  "save_tensors=$QL_TENSORS"
                    "${QL_BEE_TLA[@]}")
+    # doc sbnd_xin/123 sec 19: SBND_XTPC_SC1_GATE=0 escapes the light-gate flip (null => keys omitted, pre-flip graph).
+    case "${SBND_XTPC_SC1_GATE:-}" in
+        0) _TLA+=(--tla-code "xtpc_sc1_light_gate=null" --tla-code "xtpc_sc1_overpred_max=null") ;;
+        1) _TLA+=(--tla-code "xtpc_sc1_light_gate=true" --tla-code "xtpc_sc1_overpred_max=2.9") ;;
+        '') ;;
+        *) echo "[g$K] ERROR: SBND_XTPC_SC1_GATE must be 0 or 1, got '$SBND_XTPC_SC1_GATE'" >&2; return 1 ;;
+    esac
     # doc sbnd_xin/113: QL_EXTRA_TLA=<file> appends one --tla-code per non-comment line to the Q/L job (the
     # LAST block; unset/empty => byte-identical compiled config).  Mirrors IMG_EXTRA_TLA above.
     if [ -n "${QL_EXTRA_TLA:-}" ]; then

@@ -1,0 +1,20 @@
+{
+ "events_with_candidate_hits": 19,
+ "events_with_candidate_lgflip": 19,
+ "candidate_only_hits": 0,
+ "candidate_only_lgflip": 0,
+ "both": 19,
+ "vertex_moved_gt_5cm": 1,
+ "pass_numu>0.9_hits": 2,
+ "pass_numu>0.9_lgflip": 2,
+ "flip_numu>0.9_hits_only": 0,
+ "flip_numu>0.9_lgflip_only": 0,
+ "pass_nue>7_hits": 1,
+ "pass_nue>7_lgflip": 1,
+ "flip_nue>7_hits_only": 0,
+ "flip_nue>7_lgflip_only": 0,
+ "pass_nue>4_hits": 1,
+ "pass_nue>4_lgflip": 1,
+ "flip_nue>4_hits_only": 0,
+ "flip_nue>4_lgflip_only": 0
+}

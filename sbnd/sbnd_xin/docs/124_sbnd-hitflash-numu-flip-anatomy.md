@@ -423,7 +423,7 @@ or 5 churn events classed QL-main in the first pass, when the nudge list was dra
 
 ## 7. Follow-ups (not done here)
 
-1. **Adopt the light gate** (doc 123 §18.6): it removes the two clearest real losses and loses nothing on 3000 data events (§5.4: 661 → 664). The flip is the owner's decision.
+1. **Adopt the light gate** (doc 123 §18.6): it removes the two clearest real losses and loses nothing on 3000 data events (§5.4: 661 → 664). **Done:** flipped into production on the owner's word, 2026-09-25 (doc 123 §19, `ref/prod-2026-09-25b`).
 2. **An invariance audit of the PR stage.** Its verdict depends on things that should not matter: 1–3 specks
    several metres away in the bundle, the cluster numbering, and a 10 ns flash-time shift. The test is a
    relabel/permutation null (renumber the clusters of one pctree, re-run) and a speck-removal null. A PR that

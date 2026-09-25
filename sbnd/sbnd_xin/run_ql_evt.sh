@@ -449,6 +449,14 @@ process_event() {
         1) CRESCUE_TLA+=(--tla-code "cathode_rescue_unmatched=true") ;;
         0) CRESCUE_TLA+=(--tla-code "cathode_rescue_unmatched=false") ;;
     esac
+    # QLXTPC scenario-1 light gate + over-prediction ceiling (doc sbnd_xin/123
+    # sec 19): SBND production default ON since 2026-09-25; unset inherits it.
+    # SBND_XTPC_SC1_GATE=0 passes null for both (keys omitted => the pre-flip
+    # graph byte for byte), =1 passes the production values explicitly.
+    case "${SBND_XTPC_SC1_GATE:-}" in
+        1) CRESCUE_TLA+=(--tla-code "xtpc_sc1_light_gate=true" --tla-code "xtpc_sc1_overpred_max=2.9") ;;
+        0) CRESCUE_TLA+=(--tla-code "xtpc_sc1_light_gate=null" --tla-code "xtpc_sc1_overpred_max=null") ;;
+    esac
     # Cathode bundle rescue ROUND 2 (docs/73): four independent openings of a
     # measured blocker behind the 10 in-beam events doc 72 §A found still cut at
     # the cathode.  ALL FOUR are SBND config default FALSE -- unset inherits
