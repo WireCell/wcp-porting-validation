@@ -62,7 +62,7 @@ def load_cluster(path):
 
 
 def build_graph(args):
-    evt, anode, sub, fm, outdir = args
+    evt, anode, sub, fm, outdir, legacy_sub = args
     base = f'{RUN:06d}_{evt}'
     out = os.path.join(outdir, f'graph-{base}-anode{anode}.npz')
     if os.path.exists(out):
@@ -71,7 +71,7 @@ def build_graph(args):
     bt, wt, bbe = load_cluster(os.path.join(WCFM_DIR, 'work', base + sub, f'clusters-tru0-anode{anode}-ms-active.tar.gz'))
     if bt is None:
         return f'{base} anode {anode}: no blobs, skipped'
-    ba, _, _ = load_cluster(os.path.join(WCFM_DIR, 'work', base + sub, f'clusters-apa-anode{anode}-ms-active.tar.gz'))
+    ba, _, _ = load_cluster(os.path.join(WCFM_DIR, 'work', base + legacy_sub, f'clusters-apa-anode{anode}-ms-active.tar.gz'))
     if ba is None:
         ba = np.zeros((0, bt.shape[1]))
     per, md = read_sidecar(os.path.join(WCFM_DIR, 'work', base + fm, f'fm-features-anode{anode}.tar.gz'))
@@ -82,6 +82,15 @@ def build_graph(args):
 
     # solver decision by geometric key (idents are shared across the tiers, the key is the safer join)
     solver = {tuple(int(v) for v in r[KEYCOLS]): float(r[COLS['val']]) for r in ba}
+    # doc 08 truth-only tier: the apa archive comes from another (uncut) tier, so a sub-blob's legacy
+    # verdict is that of the uncut blob CONTAINING it (same face and slice, all three wire ranges).
+    # Grouped by (face, slice): ranges as an int array + solver value per uncut blob.
+    contain = {}
+    if legacy_sub != sub:
+        for r in ba:
+            contain.setdefault((int(r[COLS['faceid']]), int(r[COLS['sliceid']])), []).append(
+                [int(v) for v in r[KEYCOLS[2:]]] + [float(r[COLS['val']])])
+        contain = {k: np.array(v) for k, v in contain.items()}
 
     nb = len(bt)
     b_charge = np.zeros((nb, 15), np.float32)
@@ -99,8 +108,16 @@ def build_graph(args):
         b_face[i] = face; b_slice[i] = s; b_ident[i] = int(r[COLS['ident']])
         b_qtrue[i] = r[COLS['val']]; b_y[i] = int(r[COLS['val']] == 0)
         key = tuple(int(v) for v in r[KEYCOLS])
-        if key in solver:
-            b_present[i] = 1; b_kept[i] = int(solver[key] > 0)
+        if legacy_sub == sub:
+            if key in solver:
+                b_present[i] = 1; b_kept[i] = int(solver[key] > 0)
+        else:
+            cc = contain.get((fid, s))
+            if cc is not None:
+                k = np.array(key[2:])
+                inside = (cc[:, 0] <= k[0]) & (k[1] <= cc[:, 1]) & (cc[:, 2] <= k[2]) & (k[3] <= cc[:, 3]) & (cc[:, 4] <= k[4]) & (k[5] <= cc[:, 5])
+                if inside.any():
+                    b_present[i] = 1; b_kept[i] = int((cc[inside, 6] > 0).any())
         sums = []
         for p, (lo, hi) in enumerate(((8, 9), (10, 11), (12, 13))):
             pid = (a << 4) | (face << 3) | LAYER[p]
@@ -149,6 +166,10 @@ def main():
     ap.add_argument('events', help='e.g. 1-100 or 1,2,5')
     ap.add_argument('--sub', default='_sub4', help='work suffix of the sub-blob tier')
     ap.add_argument('--fm', default='_fm', help='work suffix of the FM sidecars')
+    ap.add_argument('--legacy-sub', default=None,
+                    help="work suffix holding the apa (legacy chain) archive; default = --sub.  For a truth-only "
+                         "tier (run_img_evt.sh -U, doc 08) give the uncut tier ('' = work/<base>/): a sub-blob is then "
+                         "'kept' when an uncut apa blob of the same face/slice containing it survived the solver")
     ap.add_argument('--out', required=True)
     ap.add_argument('--jobs', type=int, default=8)
     a = ap.parse_args()
@@ -166,7 +187,7 @@ def main():
             if not (os.path.exists(tf) and 'rc=0' in open(tf).read()):
                 print(f'[dataset] {base} anode {an}: imaging not finished ({tf}), skipped', flush=True)
                 continue
-            jobs.append((evt, an, a.sub, a.fm, a.out))
+            jobs.append((evt, an, a.sub, a.fm, a.out, a.sub if a.legacy_sub is None else a.legacy_sub))
     with Pool(a.jobs) as pool:
         for line in pool.imap_unordered(build_graph, jobs):
             print('[dataset]', line, flush=True)

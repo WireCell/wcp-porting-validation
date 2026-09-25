@@ -1,8 +1,10 @@
 #!/bin/bash
 # Run imaging (+ BlobDepoFill truth tiers) for one workspace event, one wire-cell process per anode.
-# Usage: ./run_img_evt.sh [-a anode] [-T] [-t time_offset_us] [-C [-L wires]] [-O suffix] <run> <evt|all>
+# Usage: ./run_img_evt.sh [-a anode] [-T] [-U] [-t time_offset_us] [-C [-L wires]] [-O suffix] <run> <evt|all>
 #   -a N   only this anode ident (default: every anode with a sim-frames file)
 #   -T     no truth tiers (plain PDHD-style imaging)
+#   -U     truth-only tier (doc 08): stop after the tru0 catcher -- no deghosting/solving, no
+#          apa/tru archives; needs the depos (incompatible with -T).  ~5 % of the full cost on showers.
 #   -t US  BlobDepoFill time_offset in microseconds (default: wcfm_params depofill_time_offset)
 #   -C     sub-blob generator: BlobCutting ahead of BlobClustering (doc 03; default off)
 #   -L N   BlobCutting length_threshold in wires (default 20; only with -C)
@@ -24,12 +26,13 @@ WC_PRELOAD=""
 SETARCH=""
 [ "${WCFM_SETARCH:-0}" = "1" ] && SETARCH="setarch x86_64 -R"
 
-ANODE=""; TRUTH=1; TOFF_US=""; SUFFIX=""; CUT=0; CUT_LEN=""
+ANODE=""; TRUTH=1; TRUTH_ONLY=0; TOFF_US=""; SUFFIX=""; CUT=0; CUT_LEN=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -a) ANODE="$2"; shift 2 ;;
         -T) TRUTH=0; shift ;;
+        -U) TRUTH_ONLY=1; shift ;;
         -t) TOFF_US="$2"; shift 2 ;;
         -O) SUFFIX="$2"; shift 2 ;;
         -C) CUT=1; shift ;;
@@ -38,7 +41,8 @@ while [ $# -gt 0 ]; do
     esac
 done
 set -- "${_args[@]}"
-[ $# -lt 2 ] && { echo "Usage: $0 [-a anode] [-T] [-t time_offset_us] [-C [-L wires]] [-O suffix] <run> <evt|all>" >&2; exit 1; }
+[ $# -lt 2 ] && { echo "Usage: $0 [-a anode] [-T] [-U] [-t time_offset_us] [-C [-L wires]] [-O suffix] <run> <evt|all>" >&2; exit 1; }
+[ "$TRUTH_ONLY" = 1 ] && [ "$TRUTH" = 0 ] && { echo "-U (truth-only) needs the truth tiers; drop -T" >&2; exit 1; }
 RUN=$1; EVT=$2
 RUN_STRIPPED=$(echo "$RUN" | sed 's/^0*//'); [ -z "$RUN_STRIPPED" ] && RUN_STRIPPED=0
 RUN_PADDED=$(printf '%06d' "$RUN_STRIPPED")
@@ -61,9 +65,10 @@ process_event() {
     local TOFF_ARG=()
     [ -n "$TOFF_US" ] && TOFF_ARG=(-S "time_offset=${TOFF_US}*1000")
     local CUT_ARG=()
-    [ "$CUT" = 1 ] && CUT_ARG=(-S "blob_cutting=true")
+    [ "$TRUTH_ONLY" = 1 ] && CUT_ARG=(-S "truth_only=true")
+    [ "$CUT" = 1 ] && CUT_ARG+=(-S "blob_cutting=true")
     [ "$CUT" = 1 ] && [ -n "$CUT_LEN" ] && CUT_ARG+=(-S "cut_length=$CUT_LEN")
-    echo "event $RUN/$EVT: anodes ${ANODES[*]} truth=$TRUTH time_offset_us=${TOFF_US:-default} blob_cutting=$CUT${CUT_LEN:+/$CUT_LEN} -> $WORKDIR"
+    echo "event $RUN/$EVT: anodes ${ANODES[*]} truth=$TRUTH truth_only=$TRUTH_ONLY time_offset_us=${TOFF_US:-default} blob_cutting=$CUT${CUT_LEN:+/$CUT_LEN} -> $WORKDIR"
     cd "$WCFM_DIR"
     local ai CFG rc=0
     for ai in "${ANODES[@]}"; do
@@ -77,6 +82,7 @@ process_event() {
         echo "wcp=$(git -C $WCT_BASE/wcp-porting-img rev-parse --short HEAD)"
         echo "wires=$(python3 -c 'import json,sys; c=json.load(open(sys.argv[1])); print(sorted({n["data"]["filename"] for n in c if n.get("type")=="WireSchemaFile"})[0])' "$WORKDIR/.wct-img-a${ANODES[0]}.json")"
         echo "truth=$TRUTH"
+        echo "truth_only=$(python3 -c 'import json,sys; c=json.load(open(sys.argv[1])); print(str(any(n.get("type")=="BlobDepoFill" for n in c) and not any(n.get("type")=="ChargeSolving" for n in c)).lower())' "$WORKDIR/.wct-img-a${ANODES[0]}.json")"
         echo "blob_cutting=$(python3 -c 'import json,sys; c=json.load(open(sys.argv[1])); print(sorted({n["data"]["length_threshold"] for n in c if n.get("type")=="BlobCutting"} or {"off"})[0])' "$WORKDIR/.wct-img-a${ANODES[0]}.json")"
         echo "time_offset=$(python3 -c 'import json,sys; c=json.load(open(sys.argv[1])); print(sorted({n["data"]["time_offset"] for n in c if n.get("type")=="BlobDepoFill"} or {"none"})[0])' "$WORKDIR/.wct-img-a${ANODES[0]}.json")"
         echo "imaged=$(date -Is)"

@@ -35,6 +35,12 @@ local config = {
     blob_cutting: false,
     cut_length: 20,
     cut_max_depth: 10,
+    // wcfm doc 08: truth-only tier.  true (needs depos != '') => the active fork ends at the
+    // "tru0" catcher: bc -> [cutter] -> BlobDepoFill -> tru0 sink.  No ProjectionDeghosting,
+    // solving or InSliceDeghosting, no apa / tru archives -- the tru0 archive is byte-identical
+    // to the full chain's (same nodes, same names).  false => nothing changes in the compiled
+    // JSON (doc 08 sec 5, gate by wcsonnet diff).
+    truth_only: false,
 } + cfg;
 
 local wc = import "wirecell.jsonnet";
@@ -355,9 +361,35 @@ local img = {
                 name="uboone-solving-truth-"+aname),
         }.ret,
 
+        // wcfm doc 08: truth-only variant.  Everything the GNN dataset and the E1/E2 probes read
+        // is the tru0 tier (+ the sim frames); on a shower anode the rest of the chain is 95 % of
+        // the wall time and all of the memory peak (doc 08 sec 3).  The catcher's fan is not
+        // needed: the cluster goes straight into BlobDepoFill port 0.
+        local truth_only_chain = {
+            local c0 = img.catcher(aname, "tru0", output_dir),
+            local depo_src = g.pnode({
+                type: 'DepoFileSource',
+                name: 'deposrc-' + aname,
+                data: { inname: config.depos, scale: 1.0 },
+            }, nin=0, nout=1),
+            ret: g.intern(
+                innodes=[bc],
+                outnodes=[],
+                centernodes=[c0.fill, c0.sink, depo_src],
+                edges=[
+                    g.edge(bc, c0.fill, 0, 0),
+                    g.edge(depo_src, c0.fill, 0, 1),
+                    g.edge(c0.fill, c0.sink, 0, 0),
+                ],
+                iports=bc.iports,
+                oports=[],
+                name="truth-only-"+aname),
+        }.ret,
+
         local core =
         if solving_type == "full"
         then (if config.depos == '' then g.pipeline([bc, gd1, cs1, ld1, gd2, cs2, ld2, cs3, ld3, gc],"uboone-solving")
+              else if config.truth_only then truth_only_chain
               else full_with_truth)
         else g.pipeline([bc, cs1, ld1, gc],"simple-solving"),
 
@@ -393,11 +425,13 @@ local img = {
 
     local imgpipe(anode, multi_slicing, output_dir='') =
     local aname = aname_of(anode);
+    // doc 08 truth_only: the solving subgraph ends in the tru0 sink (no output port), so no apa dump.
+    local active_dump = if config.truth_only && config.depos != '' then []
+                        else [img.dump(anode, aname+"-ms-active", params.lar.drift_speed, output_dir)];
     if multi_slicing == "active"
     then g.pipeline([
             img.multi_active_slicing_tiling(anode, aname+"-ms-active", 4),
-            img.solving(anode, aname+"-ms-active", "full", output_dir),
-            img.dump(anode, aname+"-ms-active", params.lar.drift_speed, output_dir)])
+            img.solving(anode, aname+"-ms-active", "full", output_dir)] + active_dump)
     else if multi_slicing == "masked"
     then g.pipeline([
             img.multi_masked_2view_slicing_tiling(anode, aname+"-ms-masked", 1500),
@@ -406,9 +440,7 @@ local img = {
     else {
         local active_fork = g.pipeline([
             img.multi_active_slicing_tiling(anode, aname+"-ms-active", 4),
-            img.solving(anode, aname+"-ms-active", "full", output_dir),
-            img.dump(anode, aname+"-ms-active", params.lar.drift_speed, output_dir),
-        ]),
+            img.solving(anode, aname+"-ms-active", "full", output_dir)] + active_dump),
         local masked_fork = g.pipeline([
             img.multi_masked_2view_slicing_tiling(anode, aname+"-ms-masked", 1500), // was 500; masked fork carries geometry only (no charge solving), coarse span cuts masked blob count/memory ~3x
             img.clustering(anode, aname+"-ms-masked"),

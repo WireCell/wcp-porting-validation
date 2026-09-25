@@ -12,6 +12,7 @@
 // Output: <output_dir>/clusters-apa-anode<N>-ms-{active,masked}.tar.gz and, with depos,
 //         <output_dir>/clusters-{tru0,tru}-anode<N>-ms-active.tar.gz
 // --tla-code blob_cutting=true [--tla-code cut_length=20] inserts the sub-blob generator (doc 03).
+// --tla-code truth_only=true (with depos) stops the active fork at the tru0 catcher (doc 08).
 
 local g = import 'pgraph.jsonnet';
 local wc = import 'wirecell.jsonnet';
@@ -36,6 +37,9 @@ function(
   blob_cutting = false,
   cut_length = 20,
   cut_max_depth = 10,
+  // wcfm doc 08: truth-only tier (needs depos): the active fork stops at the tru0 catcher
+  // (no deghosting / solving, no apa or tru archive).  false = the full chain, byte-identical.
+  truth_only = false,
 )
 
   local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -51,6 +55,7 @@ function(
       blob_cutting: blob_cutting,
       cut_length: cut_length,
       cut_max_depth: cut_max_depth,
+      truth_only: truth_only,
   });
 
   local per_anode_graph(anode) =
