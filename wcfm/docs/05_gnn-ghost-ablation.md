@@ -6,7 +6,13 @@ step 1) and trains one GNN twice, with and without the FM inputs (step 2). No to
 production output changes; everything here is scripts, runs and a doc in `wcfm/`. **Round 1 (§8, same
 day): the label, a second fold split and the doc 02 physics metrics — the charge-GNN result holds and gets
 stronger on a clean label; the FM verdict stays NO-GO; the `tru0` "real" cells are 94 % diffusion-tail /
-wrapped-wire artefacts holding 4.5 % of the charge.***
+wrapped-wire artefacts holding 4.5 % of the charge. §9 (same day): they are a `BlobDepoFill` bug — an inverted
+integration interval that `gbounds()` silently swaps — fixed with a failing-first doctest; the tail cells
+collapse 30 ×, the production archives are hash-identical. **§9.5: on the fixed truth the headline of §4–§8 does
+not survive** — the leak had labelled the projective ghosts on a track's W wires as "real", which is what the
+GNN was learning. On honest labels the charge GNN keeps 0.81 of the true charge (legacy 0.18): ≥ 0.95 for
+tracks tilted ≥ 2° and cosmics, 0.85–0.91 at 0.5–1°, but **0.25 for exactly isochronous tracks** — the
+isochronous ambiguity is solved by nobody here, and the FM does not change that.***
 
 ## 0. Repro
 
@@ -123,6 +129,11 @@ these features.
 
 ## 4. Results
 
+> **Superseded by §9.5 (2026-09-25).** Every number in §4, §5 and §8 was measured on truth tiers carrying the
+> `BlobDepoFill` leak of §9.1: the projective ghosts sharing a track's W wires had 10–100 e of "true" charge
+> and were labelled *real* (`tru0`) or *ignored* (`qmin:…:ig`), so the GNNs were never asked the isochronous
+> question. The sections are kept as the record of how the defect was found; the conclusions to use are §9.5.
+
 ### 4.1 The sample and the legacy chain at the crossing scale (`05_tables/dataset.md`)
 
 | sample | events | anode-events | sub-blobs | ghost fraction | legacy kept | legacy precision | legacy recall | hard cells (FP + FN) | ghost fraction in hard |
@@ -218,11 +229,10 @@ among survivors) re-measured with it.
 
 - **Label definition** — resolved in §8.1: `tru0` is not a usable target for the toolkit stage; train on
   `qmin:<Q>:ig` (track cells vs pure ghosts, tail band ignored) or on a charge regression.
-- **The tail cells and `BlobDepoFill`** (§8.1): 2.9 M cells with 0 < q_true < 1000 e, most of them > 10 cm
-  from any track cell, in W-wire columns and wrapped-wire images of the track. Whether the fill rule leaks
-  through the U/V wrap (same wire index, other segment) or the tiled blob geometry does is not settled here;
-  it decides what "true charge in a cell" means on FD-HD and needs a look before `tru0`/`tru` are used as a
-  per-cell regression target. Doc 02's "relative threshold" caveat was this.
+- **The tail cells and `BlobDepoFill`** — resolved in §9: a fill-rule bug (inverted interval swapped by
+  `gbounds()`), not the wrap. Fixed in the toolkit with a failing-first doctest; the 100-event `_sub4f`
+  truth tiers are being regenerated with it, after which the dataset and the charge arm are re-run on the
+  clean `tru0` label (§9.4).
 - **Fold sensitivity** — checked in §8.3: the `tru0` verdict moves with the split (one charge seed
   collapses on fold seed 1), the `qmin` verdict does not.
 - **Legacy solver memory at the 4-wire cut.** 19.4 GB and 460 s on a 147 k-cell anode; the `_sub4`
@@ -243,12 +253,19 @@ wcp (`4df84a67`): `wcfm/gen_iso_tracks.py` (`--extend N`, `random_spec`), `wcfm/
 `docs/05_tables/{dataset.md, dataset_summary.txt, ablation_summary.md, ablation_result.json, operating_points.md}`,
 `docs/README.md`. Round 1 (this commit): `scripts/gnn_train.py` (`--label`, `--fold-seed`, ignore mask),
 `scripts/gnn_physics.py`, `docs/05_tables/{physics_tru0.md, physics_q1k.md, physics_f1.md, ablation_summary_q1k.md,
-ablation_result_q1k.json, ablation_summary_f1.md, ablation_result_f1.json, ap_real_q1k.md, view-*.png}`. Work products (not committed): `work/000001_{11..100}/` (sim), `work/000001_*_sub4/`
+ablation_result_q1k.json, ablation_summary_f1.md, ablation_result_f1.json, ap_real_q1k.md, view-*.png}`.
+Toolkit `1e6b2905` (§9): `img/src/BlobDepoFill.cxx` (the `w1 >= w2` guard), `img/test/doctest_blobdepofill_bounds.cxx`;
+work products `work/000001_*_sub4f/` (fixed truth tiers; events 1, 6, 8 and 2–100 made with the private
+build, identical code to `1e6b2905`). Work products (not committed): `work/000001_{11..100}/` (sim), `work/000001_*_sub4/`
 (imaging + truth tiers, 4-wire cut), `work/000001_{11..100}_fm/` (sidecars); scratch
 `/home/xqian/tmp/wcfm-gnn/` (graphs 2.1 GB, `abl_charge/`, `abl_fm/`, `ablation/`, logs). Toolkit: no
 change (`c58501b8`).
 
 ## 8. Round 1 — the label, a second split, and the physics metrics
+
+> **Superseded by §9.5** — same caveat as §4: the `qmin:1000:ig` label *ignored* the leaked cells, which were
+> exactly the projective ghosts on the track's wires; the "AUC 0.999" of §8.3 separated track cells from
+> cells on noise wires only.
 
 Owner's step 1 of 2026-09-25: harden the charge-GNN result before any C++. Three checks; all runs 3 seeds,
 same folds and epochs as §3; 6–7.5 min per seed.
@@ -337,3 +354,137 @@ than four charge numbers per view. That is consistent with §5 reading 2 and doe
   the production stage — the charge solver's answer is "drop them" (they get ~0 solved charge), and the
   `qmin` charge GNN drops 62 % of them unasked. Deciding it in the truth tier (`BlobDepoFill` fill rule,
   §6) is cleaner than deciding it in the loss.
+
+## 9. The tail cells are a `BlobDepoFill` bug (item 1 of the 2026-09-25 plan)
+
+### 9.1 Root cause
+
+`BlobDepoFill` (`img/src/BlobDepoFill.cxx`) integrates each depo's transverse Gaussian along the primary
+(W) wire between the blob's bounds `[wlo, whi]` (from its U/V strips) clipped to the depo's ± nσ window
+`[depo_min, depo_max]`: `w1 = max(wlo, depo_min)`, `w2 = min(whi, depo_max)`, weight `gbounds(w1, w2, …)`.
+When the blob lies *elsewhere on the same W wire* the clipped interval is inverted (`w1 > w2`), and
+`gbounds()` — by design symmetric in its arguments, `util/test/doctest_binning.cxx` asserts it — returns
+the Gaussian mass of the **gap** between the window edge and the blob, `0.5·erfc(nσ/√2) = 1.35e-3` at
+nσ = 3, times the slice and pitch weights and the depo charge. Every blob in the slice that contains the
+depo's W wire therefore received ~10⁻³ of that depo per (depo, wire): tens of electrons, accumulated over
+the depos of a track, in **W-wire columns** across the whole slab — the orange columns of §8.1's views —
+and, where a W column crosses another track's U/V image, the "wrapped-wire images". No wrap is involved.
+
+The `−x face` fix of doc 02 sits in the same function; this one is the second `BlobDepoFill` defect the
+FD-HD workspace exposed. Doc 02's "the ghost label must be a relative threshold" and doc 03 §6's `tru0`
+ghost-fraction sensitivity were both this leak.
+
+### 9.2 Fix and test (toolkit, this round)
+
+`if (w1 >= w2) continue;` before the `gbounds` call, with the comment. Regression test
+`img/test/doctest_blobdepofill_bounds.cxx`, written to fail first: one FD-HD slice tiled with three
+separated U/V activity groups over a wide W range (blobs at several places along the same W wires), one
+depo of 10⁵ e at the centroid of blob 0, and every blob > 50 cm away on blob 0's W wires must receive
+exactly 0. Against the installed library the far blobs receive **134.989 e** (= 1.35e-3 × 10⁵, the
+predicted leak); against the fixed one, 0; all 6 `wcdoctest-img` cases pass (207 assertions).
+
+Built privately (a colleague's wire-cell jobs were live all day, so no `wcbuild`): the fixed object linked
+with the canonical `build/img/src/*.o` and RUNPATH into `/home/xqian/tmp/wcfm-gnn/pbuild/lib/libWireCellImg.so`,
+pinned first on `LD_LIBRARY_PATH`; `/proc/<pid>/maps` of the three imaging processes shows the private
+library. Canonical build done once the box was quiet (2026-09-25 08:30: `wcb build/install` ×2 rc=0,
+`local/lib/libWireCellImg.so` 08:30 > source 06:21, `./build/img/wcdoctest-img` 6 cases / 207 assertions);
+**toolkit commit `1e6b2905`** on `apply-pointcloud`.
+
+### 9.3 Effect on the truth tiers (events 1, 6, 8, `_sub4` → `_sub4f`)
+
+| event / anode | cells | q_true > 0 before → after | tail (0 < q < 1000 e) before → after | track (q ≥ 1000 e) before → after | Σ q_true before → after |
+|---|---|---|---|---|---|
+| 1 / 10 (the doc 02 slab) | 42 625 | 2 967 → 207 | 2 786 → 26 | 181 → 181 | 9.30e6 → 8.98e6 |
+| 1 / 8 | 8 237 | 2 529 → 201 | 2 367 → 40 | 162 → 161 | 3.58e6 → 3.39e6 |
+| 6 / 2 (the y = −600 images) | 32 348 | 3 754 → 188 | 3 588 → 22 | 166 → 166 | 1.20e7 → 1.15e7 |
+| 6 / 3 | 29 496 | 13 758 → 427 | 13 466 → 136 | 292 → 291 | 9.23e6 → 8.34e6 |
+| 8 / 11 (four tracks) | 70 798 | 32 052 → 3 159 | 30 425 → 1 623 | 1 627 → 1 536 | 3.23e7 → 2.87e7 |
+| 8 / 9 | 54 362 | 31 071 → 1 976 | 29 914 → 873 | 1 157 → 1 103 | 2.28e7 → 2.05e7 |
+| all 8 anode-events | | | **86 658 → 2 855** | 3 839 → 3 681 | ratio **0.912** |
+
+After the fix every remaining tail cell is within 10 cm of a track cell (max 6.4 / 9.5 / 4.7 cm on the
+three viewed anodes; median 11–25 e): the genuine diffusion edge of the track. The leak had also inflated
+Σ q_true by 8.8 % and promoted 158 cells (4 %) to "track" status by accumulation. The blob sets, idents
+and strips are identical before and after.
+
+**Gate.** `abtest/hash_archive.py` on the 32 archives of the three events: the 16 `clusters-apa-*`
+(active and masked, the production path) are **identical**; the 8 `tru0` and 8 `tru` archives differ,
+as intended. `BlobDepoFill` is not on any data-detector gate manifest (no depos), so the production
+gates are unaffected by construction.
+
+### 9.4 The confirmation run (fixed tiers, all 100 events)
+
+`gnn_dataset.py --sub _sub4f` (261 graphs, same blob sets) and both arms on the honest `tru0` label,
+3 seeds, same folds (`05_tables/{dataset_fixed,ablation_summary_fixed,physics_fixed,angle_fixed}.md`).
+
+| sample | cells | real (q_true > 0) | track (≥ 1000 e) | diffusion edge (0 < q < 1000 e) | legacy precision | legacy recall | hard cells |
+|---|---|---|---|---|---|---|---|
+| all | 5 196 639 | 367 443 (7.1 %) | 176 224 | 191 219 | 0.307 | 0.231 | 474 085 |
+| iso | 4 701 895 | 276 066 (5.9 %) | 129 415 | 146 651 | 0.211 | 0.152 | 391 270 |
+| cosmic | 494 744 | 91 377 (18.5 %) | 46 809 | 44 568 | 0.556 | 0.468 | 82 815 |
+
+The leak had made 3.09 M cells "real"; the honest count is 367 k, and the legacy chain's precision on them
+is 0.31, not 0.68 — two thirds of what it keeps at the 4-wire cut are ghosts.
+
+| population | charge arm AP (ghost) ± sd | AUC | fm arm AP ± sd | AUC |
+|---|---|---|---|---|
+| all cells (ghost frac 0.929) | 0.9987 ± 0.0001 | 0.984 | 0.9987 ± 0.0001 | 0.983 |
+| **hard** (legacy wrong, 474 k, ghost frac 0.404) | **0.9472 ± 0.0038** | 0.955 | **0.9501 ± 0.0007** | 0.955 |
+| iso, hard | 0.9556 ± 0.0038 | 0.963 | 0.9583 ± 0.0010 | 0.962 |
+| cosmic, hard | 0.9252 ± 0.0050 | 0.937 | 0.9273 ± 0.0026 | 0.937 |
+
+Gate: gap **+0.003**, margin +0.02 → **NO-GO** (unchanged, now on honest labels).
+
+### 9.5 What the GNN actually does (the corrected headline)
+
+Keep set at P(real) ≥ 0.5, 3-seed mean logit, all events held out (`physics_fixed.md`, `angle_fixed.md`):
+
+| event class | events | legacy charge recall | charge GNN charge recall / ghost frac of kept | fm GNN | charge GNN AP(real) | fm GNN AP(real) |
+|---|---|---|---|---|---|---|
+| iso single **0°** | 7 | 0.064 | **0.248** / 0.630 | 0.224 / 0.749 | 0.174 | 0.150 |
+| iso single 0.5° | 3 | 0.064 | 0.846 / 0.348 | 0.842 / 0.392 | 0.714 | 0.638 |
+| iso single 1° | 5 | 0.049 | 0.914 / 0.296 | 0.802 / 0.225 | 0.767 | 0.758 |
+| iso single 2° | 7 | 0.190 | 0.992 / 0.194 | 0.985 / 0.221 | 0.882 | 0.857 |
+| iso single 3–10° | 12 | 0.24–0.45 | 0.95–1.00 / 0.07–0.13 | 0.95–0.99 | 0.94–0.97 | 0.95–0.96 |
+| iso overlay with a 0° track (2–4 tracks) | 17 | 0.05–0.06 | 0.54–0.61 / 0.24–0.31 | 0.58–0.67 | 0.68–0.78 | 0.66–0.75 |
+| iso overlay, min 0.5–1° | 14 | 0.04–0.15 | 0.83–0.98 / 0.14–0.25 | 0.85–0.97 | 0.84–0.92 | 0.84–0.91 |
+| iso overlay, min 2–5° | 11 | 0.12–0.25 | 0.98–1.00 / 0.12–0.21 | 0.95–0.99 | 0.89–0.94 | 0.88–0.94 |
+| cosmic ×1 | 10 | 0.450 | 0.998 / 0.069 | 0.998 / 0.068 | 0.965 | 0.967 |
+| cosmic ×2 | 14 | 0.427 | 0.927 / 0.131 | 0.900 / 0.113 | 0.936 | 0.939 |
+| **all** | 100 | **0.180** | **0.815** / 0.176 | 0.811 / 0.176 | | |
+
+Views (`view-fixed-000001_{1-anode10,6-anode2,8-anode11}.png`): on the four-track event 8 the charge GNN
+keeps the three tilted tracks nearly whole (1 343 of 1 536 track cells, 728 ghosts vs the legacy 228 and
+2 518) and loses the 0° track entirely; on the doc 02 slab it keeps 23 of 181 track cells and 167 ghosts.
+
+Readings:
+
+1. **Where the drift-time structure exists, the charge GNN solves the sub-blob problem.** For every track
+   tilted ≥ 2° and every cosmic it keeps 0.95–1.00 of the true charge with 7–20 % ghost cells among the
+   kept, where the legacy chain keeps 0.05–0.45. At 0.5–1° it keeps 0.85–0.91. This is the blob–blob
+   (adjacent-slice) edge doing its work: a real cell has neighbours in the slices before and after; a
+   projective ghost's neighbours are other ghosts of the same crossing pattern, and three rounds of
+   message passing tell them apart. That is the result to build the toolkit stage on.
+2. **The exactly isochronous case is unsolved by everything tested.** At 0° all cells of a track sit in the
+   same 7 slices, the bb edges carry nothing, and within the slice every crossing of an active U, V and W
+   wire looks like every other to per-wire charge conservation with a local message passer: charge recall
+   0.25, AP(real) 0.17, against the legacy chain's 0.06. A 0° track inside an overlay drags the event to
+   0.54–0.61. This is the doc 01 premise restated with numbers: the isochronous ambiguity needs information
+   that is not in per-wire charge, and §4–§8's "AUC 0.999" was the leak, not a solution.
+3. **The FM does not supply that information.** On the 0° class the fm arm is *worse* (0.22 / 0.15); on
+   every other class it is within seed noise of the charge arm; hard-population gap +0.003. Same NO-GO as
+   before, now for the right reason: the per-plane descriptors do not encode which crossing of three
+   active wires is the real one, which is a three-view question the model was never trained to answer.
+
+What follows (replaces the §5 consequence and the §9.4 plan of the morning):
+
+- **Build the toolkit stage on charge, for the non-isochronous regime**, trained on the fixed `tru0`
+  tiers; its acceptance metric is the per-angle table above, and the doc 02 iso baseline re-measured with
+  it. The 0.07–0.20 ghost fraction among kept cells is the number to bring down with a threshold scan and
+  the bb-edge weighting, before any cross-slice regulariser.
+- **Treat the 0° slab as a separate problem**, gated by the doc 02 triggers (`T_wires 30 / T_cells 100`):
+  a global solver on the slice (the L1 charge solve on the sub-blob tiling, which the legacy chain applies
+  and then discards by deghosting) or a cross-view model. A per-cell classifier will not do it; the
+  candidates in doc 01 §7 (the TriCross-style three-view objective) are the ones to test, and this
+  dataset — with the honest labels — is the one to test them on.
+- Toolkit fix committed and pushed (`1e6b2905`, §9.2).
