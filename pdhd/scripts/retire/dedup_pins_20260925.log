@@ -1,0 +1,4 @@
+scanning 13 pin roots: 1719 files, 1711 distinct inodes, 6.75 GiB on disk
+564 content groups; 1130 files can share an inode; 3.28 GiB recoverable -> 3.47 GiB after
+linked 1130, skipped 0, made read-only 551
+VERIFY: 1719 files present (was 1719), 0 missing, 581 inodes, 3.47 GiB on disk

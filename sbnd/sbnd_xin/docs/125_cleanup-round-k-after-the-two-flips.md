@@ -1,14 +1,18 @@
 # 125 — cleanup round K (2026-09-25): retire the doc 123/124 ladders and the ToT campaign after two production flips
 
-**Status (2026-09-25 11:40): the DIRECTORY release is EXECUTED.** It removed 3562 dirs, 369.97 GiB,
-rc=0 in all three trees. Free space on `/home/xqian` went **120 G → 488 G**, and every tree ended
-with **0 broken symlinks**, against a recorded pre-count of 0.
-
-**Not yet run: the file level (sec 4), the orphan logs, the `~/tmp` sweep, the pin dedup and the
-after-gates.** Right after the release the permission classifier refused this session's next
-command, a read-only spot check of the production arms, as "irreversible deletion". Per the
-standing rule (`feedback_classifier_refuses_bulk_delete`) the session did not retry. It handed the
-rest to the owner as the sec 6 block, and sec 7 records only what is proven to have run.
+**Status (2026-09-25 14:10): round K is COMPLETE — `/home/xqian` went 120 G → 637 G free.**
+- **Pass 1 (11:40), the directory release:** 3562 dirs, 369.97 GiB, rc=0 in all three trees,
+  120 G → 488 G free, 0 broken symlinks against a recorded pre-count of 0. The permission
+  classifier then refused a read-only spot check, so the session stopped and handed the rest over
+  as the sec 6 block.
+- **Pass 2 (12:10–14:10, sec 9):** the owner asked "can we reduce them further?" and then chose
+  "You run it now", so this session ran the sec 6 block itself. The owner also added three
+  levers: archive the cold pins, compress the kept-arm logs, and re-baseline the sentinels so
+  `pr150s0` can go. Pass 2 took free space from 481 G to **637 G** (peers had written 7 G since
+  pass 1); `sbnd_xin` went 257 → 147 G and `~/tmp` 118 → 71 G. Every deletion in pass 2 went through a gated
+  release the owner ruled on: the sec 1 rulings, plus the `pr150s0` ruling in sec 9.3. The pins
+  and the logs were not deleted but archived or compressed; every file is sha256-verified, and
+  each has a restore script.
 
 Owner instruction, verbatim (2026-09-25):
 
@@ -190,6 +194,8 @@ The driver `retire_files_20260925.sh` does five things:
 
 ## 6. The command block — the rest of the round (owner runs this from bash mode: type `!` first, then paste)
 
+**Pass 2 (sec 9): this session ran this block on the owner's go, with the measured results in sec 9.1.**
+
 Each step has its forecast; a disagreement means stop and read the log.
 
 ```bash
@@ -251,12 +257,15 @@ That takes `/home/xqian` from 488 G to **roughly 600 G free**.
 | directory release | INTERLOCK A re-plan **unchanged** in all three trees; record gate 115/115, 3123/3123, 324/324; **sbnd 311.99, pdvd 53.19, pdhd 4.79 GiB** removed, rc=0; broken symlinks **0 / 0 / 0** |
 | production links | the post-state **0 broken symlinks over all of sbnd_xin** already implies every `lgop` link into `d123base/g*/` resolves; the refused spot check (sec 6 step 0) re-checks it per arm |
 | free space | **120 G → 488 G** (+368 G, against a set-relative forecast of 369.6 GiB) |
-| file level, sweep, orphan logs, dedup, after-gates | **not run by this session**: the classifier refused the next command. Sec 6 is the block. |
+| file level, sweep, orphan logs, dedup, after-gates | not run in pass 1, because the classifier refused the next command. **Pass 2 ran all of them (sec 9.1).** |
 
 ## 8. Carried forward to round L
 
-1. **Re-baseline the sentinel suite on the d123 production arms** (`work-*-d123lgoppr` +
-   `d123lgflippr`). Then `pr150s0` (10.5 GiB) can go.
+1. ~~Re-baseline the sentinel suite on d123~~: **done in pass 2 (sec 9.3), and `pr150s0` is released.**
+   **Round L's before/after sentinel gate is therefore**
+   `python3 $SX/scripts/analysis/d125/sentinels_prod.py --arms 'work-*-d123lgoppr' 'work-*-d123lgflippr'`,
+   expected **13 PASS / 0 FAIL / 10 OPEN / 7 INERT / 0 SKIP**. The old `--arms 'work-*-pr150s0'` line now SKIPs
+   silently with exit 0. `work-sent150-*` holds the pre-flip record.
 2. **PDVD light dirs** (`<run>_light<evt>_<arm>`): ~12 GiB, of which ~4.8 are ToT-ladder light (`f3x18`, `g3x`, `q31/q32`). They need a grammar with an allow-list, because q35flip's `_tot`, the release builder's `_keep`/`_wf` and the flip evidence `_q32ti/_q35esc/_g31off` are read through config paths that a symlink closure cannot see.
 3. The hit-flash `opflash_apa*.tar.gz` in the production arms (doc 123 sec 17.4 item 6; ~3 GiB per big lgop arm).
 4. Round J's items that are still open:
@@ -264,3 +273,173 @@ That takes `/home/xqian` from 488 G to **roughly 600 G free**.
    - the bee/mabc zips and `.wct-*.json`;
    - `restore_compress`'s sbnd family filter.
 5. `pdvd/work/*_d117sp/gpu_mem_*.csv` is still being written today by a leftover monitor. It is inside a held arm.
+
+## 9. Pass 2 (2026-09-25 12:10–14:10): the sec 6 block, and three more levers
+
+The owner, 2026-09-25: *"it looks like the sbnd_xin directory is still very big, and the same to
+~/tmp. I wonder if we can reduce them further?"* The session started by measuring. None of sec 6
+had run: `sbnd_xin` was 257 G, `~/tmp` 118 G and free space 481 G. Pass 1 had left 488 G free; the
+7 G since then are peer writes (wcfm-gnn/e1, pdvd/119), not a regression. The owner was asked
+with the sizes on the table and answered:
+- "You run it now (Recommended)";
+- "Archive cold pins (~26 GiB)";
+- "Compress kept-arm logs (~11 GiB)";
+- "Re-baseline sentinels, drop pr150s0 (~10.5 GiB)";
+- then, once the 8 FAILs had been traced: "OPEN as doc 118 cost, release".
+
+### 9.0 Repro
+
+```bash
+IMG=/home/xqian/toolkit-dev/wcp-porting-img; D=$IMG/pdhd/scripts/retire; SX=$IMG/sbnd/sbnd_xin; cd $D
+python3 tmp_census_20260925.py; ./sweep_tmp_20260925.sh; CONFIRM=yes ./sweep_tmp_20260925.sh      # 554 units
+git -C $IMG worktree remove /home/xqian/tmp/wt-d123
+python3 plan_files_20260925.py; python3 plan_files_20260925.py --hash
+./retire_files_20260925.sh; CONFIRM=yes ./retire_files_20260925.sh                                # 90.89 GiB
+python3 plan_orphanlogs_20260925.py                                                               # 0 logs
+python3 archive_pins_20260925.py; CONFIRM=yes python3 archive_pins_20260925.py                    # 53 cold pins
+RESTORE_TO=<scratch> ./restore_pins_20260925.sh p82/libpin_p82                                    # test restore
+python3 compress_logs_20260925.py; CONFIRM=yes python3 compress_logs_20260925.py                  # 41983 files
+python3 $SX/scripts/retire/witness_sentinels_20260925.py                                          # work-sent150-*
+python3 $SX/scripts/analysis/d125/sentinels_prod.py --arms 'work-*-d123lgoppr' 'work-*-d123lgflippr'   # 13/0/10/7/0
+python3 toks_20260925b.py; python3 cit_20260916d.py toks_20260925b.txt cit_20260925b.json
+python3 scan_arms_20260916d.py --json=scan_arms_20260925b.json
+export LIVE_REF=cdeceb5f562f709931b81008721ffc0c64ddda93     # the pushed head carrying sentinels_prod.py
+python3 plan_20260925b.py sbnd; python3 archive_records_20260925b.py 1
+./retire_20260925b.sh 1 sbnd; CONFIRM=yes ./retire_20260925b.sh 1 sbnd                            # pr150s0
+python3 dedup_pins_20260925.py; CONFIRM=yes python3 dedup_pins_20260925.py                        # 13 roots
+```
+
+### 9.1 As executed
+
+| step | result |
+|---|---|
+| sec 6 step 0, spot checks | `lgop` broken links 0/0/0/0; `q35flip` 120, `_tot` light 120; 18 kept production/reference arms |
+| `~/tmp` sweep | **554 units, 15.41 GiB** set-relative; INTERLOCK A re-census unchanged; record gate 554/554; rc=0; `~/tmp` 118 → 103 G |
+| `wt-d123` | clean, and its HEAD e396d5b8 is the main tree's HEAD; `git worktree remove`, rc=0 |
+| file level | F1–F9 **PASS** at plan and at confirm (F2 now passes, since the sweep released the d124 nudge links). **104918 files, 90.89 GiB + 56408 links**; 22187 emptied per-event dirs rmdir'ed; broken symlinks 0 → 0 in all three trees; 488 → 588 G |
+| orphan logs | **0**: every driver log's event dir is still alive |
+| cold pins (9.2) | **53 pins, 33.04 GiB freed** into one 6.57 GiB archive; 941467 manifest rows, re-checked on a full extract; test restore 572/572 |
+| log compression (9.4) | **41983 files, 10.49 → 1.22 GiB**; each .zst decompressed to its frozen sha256 before the original went; broken symlinks 0 → 0 |
+| after-gates | `prod_cfg_gate` **PASS 28**; sentinels on `pr150s0` **21/0/2/7/0** (== before); the four permanent pins md5-intact (`pins_before_20260925.md5`) |
+| sentinel re-baseline (9.3) | witness `work-sent150-*` 21/0/2/7/0, verdict-for-verdict == `pr150s0`; production **13 PASS / 0 FAIL / 10 OPEN / 7 INERT / 0 SKIP** |
+| `pr150s0` release (stamp `20260925b`) | tier = exactly the 4 `pr150s0` arms, **9.78 GiB**; every interlock PASS; record gate 4/4 (`archive/records/cleanup-20260925b`); INTERLOCK A unchanged; rc=0; broken 0/0/0 |
+| pin dedup | 13 roots (the live ones held), 1130 files linked, **3.28 GiB**; pins still md5-intact after |
+| end state | **637 G free**; `sbnd_xin` 147 G; `~/tmp` 71 G |
+
+### 9.2 Cold pins: archived, not deleted
+
+A pin is kept because an arm that survives *ran* on it. Rerunning that arm needs the pin;
+reading the arm does not. `archive_pins_20260925.py` puts every pin the census KEEPs into
+`~/tmp/pin-archive-20260925/cold-pins-20260925.tar.zst` (`zstd --long=31`), except:
+- the four PERMANENT production pins;
+- `d123-libpin`, the pin of the SBND substrate `d123base`;
+- every live prefix (`d117 d118 d119 wcfm d125flip claude-`);
+- anything mapped by a process, with a process cwd inside it, or written in the last 2 h.
+
+That leaves 53 pins: 285435 files, 656032 symlinks, 272620 inodes. Before any unlink, the script:
+1. froze every file's sha256 into `archive/records/cleanup-20260925/pins-cold/cold-pins.manifest.tsv`;
+2. ran `zstd -t` on the archive;
+3. extracted the archive in full and compared all 941467 rows.
+
+Freed bytes are set-relative, and 2.29 GiB of these inodes are shared with hot pins, so they stay on disk under the hot pins' names. Each pin leaves a
+`<pin>.ARCHIVED` stub naming the restore command. The census now keeps those stubs and never
+treats `pin-archive-20260925` as a unit.
+
+**Restore.** Run `./restore_pins_20260925.sh [pin ...]`. It extracts the whole archive to staging
+(~35 GiB, because pins share hardlinks), verifies the requested pins against the manifest, moves
+them into place and removes the staging copy. It was tested on `p82/libpin_p82`: 572/572 rows identical.
+
+The archive was chosen *instead of* dedup for these roots, because both acting on the same root
+would double-count. Dedup then ran on the 13 roots that stay on disk.
+
+### 9.3 The sentinel suite re-baselined on production, and `pr150s0` released
+
+On `work-*-d123lgoppr` + `d123lgflippr` the unchanged suite reads **13 PASS / 8 FAIL**:
+
+| event | sentinel | the assertion that fails |
+|---|---|---|
+| 69314 | pr/125 K5 | 22 calib showers, window [14, 20] |
+| 171572 | pr/123 r2 | `pf-orphan-guard-freed` does not fire; the muon is nevertheless a PF root |
+| 315167 | pr/93 r4 | the 150.7 cm proton (613 MeV on pr150s0) is not a PF node |
+| 72786 | pr/128 A control | cosmics are still out; `pass4_prox_guard` declines 3, where ≥ 4 is required |
+| 393505 | pr/129 | Eν 546.3 is in its window; the 267 MeV muon reads 262 |
+| 497311 | doc 84 r1 | the unbroken muon is split (459 + 749 MeV); the range fallback is not reached |
+| 292643 | pr/130 B | the outcome holds (no π⁰, e⁻ < 200 MeV); the dvtx suppress line does not fire |
+| 179369 | pr/130 B | no 112 MeV π⁰; the dvtx suppress line does not fire; `mu- 1042` becomes `e- 1437` |
+
+**Attribution.** These 8 are exactly the recorded FAILs of pr/150's `tfull` cell, the trajectory
+that doc 118 flipped into SBND production, minus 66366, which production now passes.
+`docs/pr/150_figs/150_s3_sentinels_tfull.txt` was measured before the flip, and doc 116 line 454
+warned that the flip "re-opens every downstream sentinel". The same trajectory family on the old
+flash source, `pr150csp3bw`, fails 7 of the same set. So the d123 hit flashes and the light gate
+add none. Evidence: `125_figs/125_sentinel_evidence_pr150s0_vs_d123.txt`, made by
+`125_figs/125_sentinel_evidence.py`, plus the five suite outputs in `125_figs/`.
+
+**Owner's ruling: "OPEN as doc 118 cost, release".**
+- `scripts/analysis/d125/sentinels_prod.py` is now the production suite. It runs `pr127_sentinels.py`
+  unchanged (M10), with the pr/149 PF tolerance, and adds the 8 events to its KNOWN_OPEN registry
+  with the reasons in the table above.
+- Result: **13 PASS / 0 FAIL / 10 OPEN / 7 INERT / 0 SKIP**. A NEW FAIL still fails the run.
+- The 8 stay OPEN, not green, until the vertex-choice retune that pr/150 sec 1 names re-closes them.
+
+**The pre-flip record.** `witness_sentinels_20260925.py` copied pr150s0's 27 sentinel events into
+`work-sent150-{mcp1k,mcp2k,ncpi0,nuecc48}` (164 MB, PROTECTED, disk-only like sent97). On the
+witness alone the suite reads 21/0/2/7/0, verdict-for-verdict identical to pr150s0.
+
+**The release.**
+- `pr150s0`'s PROTECTED line was retired, and it left `production` in `plan_20260925b.py`. That is a one-line fork at
+  a new stamp, so pass 1's committed tier/keep records were never re-written.
+- **INTERLOCK 16 held it on the first pass-2 plan**, because the new, still-unpushed `sentinels_prod.py` names pr150s0.
+- The fix was the planner's own: push the record first (cdeceb5f), then plan with
+  `LIVE_REF=` that head. There was no exception.
+- The tier was then exactly the 4 arms, 9.78 GiB. They were frozen and released, rc=0.
+
+### 9.4 Kept-arm logs and per-event configs: compressed, not deleted
+
+`compress_logs_20260925.py` zstd's (`-6`) the following in kept sbnd arms: `stdout.log`,
+`wct_pr_evt<N>.log`, `ql.stdout`, `wct_ql.log`, `img.stdout`, `wct_img.log` and
+`.wct-cfg-evt<N>.json`. mtime is kept.
+
+**Held, never compressed:**
+- calib dumps (M13);
+- the live pdvd/119 SBND gates;
+- the logs of every sentinel arm (`pr150s0`, `d123lgoppr`, `d123lgflippr`, `sent97`, `sent150`),
+  because `pr127_sentinels.py` greps `pr_evt<N>/*.log`;
+- any file that is hardlinked, is a symlink's target, is open, or was written in the last 2 h.
+
+**The confirm-time list gate caught one real move.** The witness arms were created after the plan,
+so their logs appeared at confirm. The run refused (`compress_logs_20260925.refused.log`); the
+witness logs were added to the sentinel hold and the plan re-run.
+
+**Readers that must decompress first**, with `zstdcat` or `./uncompress_logs_20260925.sh ['work-*-<arm>']`,
+which checks each restored file against the frozen sha256:
+- `scripts/d123/{r3_evidence,r3_ql_compare,r6_rescue_ruling}.py`;
+- `scripts/d124/pr_null_cmp.py`;
+- the closed pr/8x–14x census scripts.
+
+**A defect this lever would have created, fixed in the same change.** `archive_records_*`
+treats every `*.zst` as heavy, meaning hashed but not carried. That rule dates from round G's
+compressed calib dumps. So a later round retiring one of these arms would have silently lost its
+logs from the record. `archive_records_20260925.py`, which the next round forks, now carries
+`*.log.zst`, `*.stdout.zst` and `.wct-*.json.zst` as record layer; compressed configs follow ONEPER.
+The rule is inert for pass 1's freeze, because no such file existed then.
+
+### 9.5 What is left, and why
+
+- **`sbnd_xin` 147 G:**
+  - `d123base` is 51.5 G. It is the substrate: the only SP frames on disk (10.3 G) plus the group
+    imaging `g*/icluster` (40.7 G) that lgop's Q/L links resolve into.
+  - `d123lgop` is 26.6 G, `d123lgoppr` 18.0 G, the record layer `archive/` 14.8 G,
+    `pr150csp3bw` 9.5 G (blind vertex scan B arm), `d115pr` 5.7 G (owner keep) and
+    `input_files_reco1` 4.5 G.
+- **`~/tmp` 71 G:**
+  - about 30 G is held for the live peers: `d119inst` 10.6, `wcfm-gnn` 9.7, `d119wt` 7.0,
+    `d117` 2.5;
+  - the pin archive is 6.6 G, and the hot pins 3.5 G after dedup;
+  - `d115/arm_*` and `d116/arm_*`, 1–1.2 G each, are the run products of surviving pdvd/pdhd scan-source arms.
+- **Round L options, not taken:**
+  - regenerate `d123base`'s `g*/icluster` on demand from its frames (≈ 40 G, but lgop's links and a
+    re-imaging cost stand in the way);
+  - `pr150csp3bw` once pr/150's blind scan is closed (9.5 G);
+  - `torchinductor_xqian` (1.3 G) once no torch peer is live;
+  - the peers' ~30 G when their rounds close.

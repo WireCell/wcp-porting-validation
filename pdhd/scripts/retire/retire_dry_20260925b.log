@@ -1,0 +1,16 @@
+==================================================================
+== sbnd   tier 1   file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_sbnd_20260925b.txt
+   lines 4 | present 4 | already gone 0 | 9.79 GiB
+   DRY RUN -- first 3 targets:
+      /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-pr150s0
+      /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-pr150s0
+      /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-ncpi0-pr150s0
+
+POST-STATE CHECK.  interlock 4 recorded the PRE-existing broken-symlink
+count per tree (prebroken_<tree>_20260925b.txt); this number only means
+something compared against that.
+   pdhd: 0 broken symlinks
+   pdvd: 0 broken symlinks
+   sbnd/sbnd_xin: 0 broken symlinks
+
+DRY RUN.  Re-run with CONFIRM=yes to execute.

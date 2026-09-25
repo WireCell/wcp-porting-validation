@@ -1,0 +1,7 @@
+      1/4  work-mcp1k-pr150s0                       files  11467 (kept 6006, dropped 5461) links     0  4.99 MiB
+      2/4  work-mcp2k-pr150s0                       files  22911 (kept 12006, dropped 10905) links     0  9.97 MiB
+      3/4  work-ncpi0-pr150s0                       files    233 (kept 120, dropped 113) links     0  0.40 MiB
+      4/4  work-nuecc48-pr150s0                     files    581 (kept 294, dropped 287) links     0  1.05 MiB
+
+archived 4/4 arms into /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/archive/records/cleanup-20260925b
+integrity: every released dir has a .manifest.tsv with a SHA-256 per file, a .links.txt, and a .tar.zst of the non-heavy record layer.
