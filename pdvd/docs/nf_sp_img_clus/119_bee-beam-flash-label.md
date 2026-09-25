@@ -556,6 +556,15 @@ where anything drawn in the bottom is visibly wrong, is what exposed it.
   art 19409 into the fresh tag `d119sprod` (`flags=q1,calib1,op1`). It is identical to the gated arm B3 `d119sB3` on
   **28/28 archives**, `op_cluster_anodes` included (`kaon/d119s_arm_check.py 039349 d119sprod d119sB3 0`).
   PDVD production now writes `op_cluster_anodes`.
+- **Bee redeployed and the fixed set uploaded (2026-09-25, on the owner's ask).**
+  - The served `dist/bee.js` contains `op_cluster_anodes` and `layerInDetectorFrame`.
+  - `d119-kaon10-side.zip` is uploaded as `https://www.phy.bnl.gov/twister/bee/set/0f1fb8b8-3688-4c94-aaf0-80e8d4e7fdbc/event/list/`.
+  - Checked on the live page, no local override (`SET=… kaon/bee_side_check.py 0 1 2 3 7`): after `/` both layers draw
+    the beam-matched clusters at the same place, in the top volume. For all matched clusters the img layer equals
+    `x_t0cor` to ≤ 0.0015 cm, with 0 in the bottom volume (event 1, cluster 33: 9.4 … 131.4 cm). Event 3's beam
+    flash has no matched cluster, as before.
+  - On the old set (`a6a48e04`), the redeployed Bee now places `clustering-global` right (9.4 … 131.4). Its
+    `img-global` is still in the bottom, because that zip has no `op_cluster_anodes`: use the new set.
 
 ## Status flags
 
