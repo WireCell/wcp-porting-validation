@@ -63,15 +63,23 @@
 function(input, output_dir='.', entry='-1', entry_begin='0', entry_count='-1', caf_offset_mode='none', caf_offset_override='0',
          wire_product='', badmask_product='', summary_product='', flash_process='Reco1',
          frameshift_product='',
-         flash_source='reco1', hit_time='rise', hit_product='', ff={}, reco1_reference='false',
+         flash_source='hits', hit_time='rise', hit_product='', ff={}, reco1_reference='false',
          with_frames='true')
-// flash_source (doc sbnd_xin/123 round 0, 2026-09-24): 'reco1' (default) takes
-// SBND's recob::OpFlash as this job always has; 'hits' rebuilds the flashes
-// from the reco1 PMT OpHits, per TPC, with SBNDReco1OpHitSource ->
-// SBNDOpFlashFinder (toolkit flash/, code by xning) and writes them to the SAME
-// opflash_apa<N>.tar.gz through the same TensorFileSink, so the Q/L and PR jobs
-// downstream are untouched.  Default 'reco1' => not one node, key or plugin
-// changes and the compiled JSON is byte-identical (gate: doc 123 sec 10).
+// flash_source (doc sbnd_xin/123): 'reco1' takes SBND's recob::OpFlash as
+// this job did until 2026-09-25; 'hits' rebuilds the flashes from the reco1 PMT
+// OpHits, per TPC, with SBNDReco1OpHitSource -> SBNDOpFlashFinder (toolkit
+// flash/, code by xning) and writes them to the SAME opflash_apa<N>.tar.gz
+// through the same TensorFileSink, so the Q/L and PR jobs downstream are
+// untouched.
+//   DEFAULT 'hits' SINCE 2026-09-25 -- the owner's production flip, doc 123
+//   sec 17, on the campaign of sec 10-16 (data 3.1k events, MC 4k + beam-off):
+//   numuCC efficiency 70.0 -> 71.8 % at unchanged purity, the cathode rescue
+//   left ON.  The bare compile is byte-identical to what the measured arms
+//   passed explicitly (`flash_source=hits`, sec 17 proof A).
+//   'reco1' (run_chain_group.sh: SBND_FLASH_SOURCE=reco1) reproduces the
+//   pre-flip production graph byte for byte (sec 17 proof B): not one node,
+//   key or plugin of the reco1 path was touched by the round-0 bring-in
+//   (gate: sec 10.3).
 //   hit_time         'rise' (StartTime+RiseTime, as SBNDFlashFinder) | 'peak' | 'start'
 //   hit_product      '' => the C++ default recob::OpHits_ophitpmt__Reco1.
 //   ff               (--tla-code) object merged over the SBNDOpFlashFinder config,

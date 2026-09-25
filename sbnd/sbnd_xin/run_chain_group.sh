@@ -82,6 +82,15 @@
 #
 # Env: SBND_MAX_JOBS (concurrent GROUPS, default 4 -- each wire-cell process is
 #      itself multi-threaded, CLAUDE.md M5), SBND_RECO1 (plugin install dir).
+#      SBND_FLASH_SOURCE=reco1|hits (doc sbnd_xin/123 sec 17, 2026-09-25): which
+#      flashes the dump stage writes to opflash_apa<N>.tar.gz.  Unset/empty =>
+#      NO TLA is passed and wct-reco1-dump.jsonnet's own default applies, which
+#      is 'hits' (the reco1 OpHits -> SBNDOpFlashFinder path) since the flip of
+#      2026-09-25.  SBND_FLASH_SOURCE=reco1 is the pre-flip production graph
+#      (SBND's own recob::OpFlash), byte for byte -- the control arm.  Everything
+#      downstream (imaging, Q/L, PR) is untouched either way; the hit-flash path
+#      needs the WireCellFlash plugin (toolkit flash/) and the OpHit reader in
+#      the WireCellSBNDReco1 plugin, both in the standard install.
 set -u
 
 SX=$(cd "$(dirname "$0")" && pwd -P)
@@ -257,6 +266,10 @@ run_group() {
                     --tla-str "badmask_product=ints_simtpc2d_badmasks_DetSim."
                     --tla-str "summary_product=doubles_simtpc2d_wienersummary_DetSim.")
         fi
+        # doc sbnd_xin/123 sec 17: the flash source is the jsonnet's default unless
+        # SBND_FLASH_SOURCE names one (see the header); empty => no TLA at all.
+        local -a FLASH_TLA=()
+        [ -n "${SBND_FLASH_SOURCE:-}" ] && FLASH_TLA=(--tla-str "flash_source=$SBND_FLASH_SOURCE")
         local -a _TLA=(--tla-str "input=$INPUT"
                        --tla-str "output_dir=$GDIR"
                        --tla-str "caf_offset_mode=$CAF_MODE"
@@ -265,7 +278,8 @@ run_group() {
                        "${MC_TLA[@]}"
                        --tla-str "entry=-1"
                        --tla-str "entry_begin=$BEG"
-                       --tla-str "entry_count=$GSIZE")
+                       --tla-str "entry_count=$GSIZE"
+                       "${FLASH_TLA[@]}")
         local -a _CFG=()
         precompile_cfg "g$K" "$SX/wct-reco1-dump.jsonnet" "$GDIR/.wct-cfg-dump.json"
         wire-cell -l stderr -l "$GDIR/wct_dump.log:info" -L info \

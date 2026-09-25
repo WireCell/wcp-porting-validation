@@ -6,6 +6,9 @@
 #
 # For every g<K> of <base_root> (a run_chain_group.sh --layout perevt arm that KEPT its
 # icluster npz):
+#   (Since the flip of 2026-09-25, doc 123 sec 17, flash_source=hits IS the jsonnet default and
+#   run_chain_group.sh writes hit flashes on its own; this script stays the way to put a flash-only
+#   arm -- other finder settings via --ff, or a control -- on an existing root's imaging.)
 #   1. re-run ONLY the flash part of the reco1 dump with flash_source=hits (wct-reco1-dump.jsonnet,
 #      same file / entry range / caf offset mode / frameshift product as the baseline, read from
 #      its compiled .wct-cfg-dump.json) into an EMPTY <hits_root>/g<K>  ->  opflash_apa{0,1}.tar.gz

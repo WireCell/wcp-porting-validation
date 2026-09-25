@@ -2,8 +2,9 @@
 
 2026-09-24.
 
-**Status: design only.** No toolkit, sbndcode, or colleague code is changed. The only new
-things are two read-only probe scripts and their output tables, listed in §9.
+**Status (2026-09-25): FLIPPED.** `flash_source=hits` is the standalone chain's production default
+(§17, `ref/prod-2026-09-25`), the cathode rescue stays ON. §0–§9 are the 09-24 design as written;
+§10–§16 the campaign that demonstrated it; §17 the flip and the follow-ups it leaves.
 
 **Question.** SBND Q/L matching uses the reco1 `recob::OpFlash`. That flash merges or drops
 flashes that are a few µs apart. Can we rebuild the flashes from the reco1 `recob::OpHit`,
@@ -1070,3 +1071,104 @@ bring to SBND, but (a) is the path that keeps the decision inside this chain.
 **Cost**: (a) is one afternoon of larwirecell work plus an sbndcode fcl change and a release; the physics
 evidence (§13–§15) does not wait on it. Until it exists, the standalone chain is the only place the hit
 flashes run, i.e. option (c) is the de-facto state.
+
+## 17. The flip — `flash_source=hits` is SBND standalone production (2026-09-25)
+
+> "Let's flip this hits on for SBND production, and keep the cathode rescue on." — the owner, 2026-09-25
+
+### Repro
+
+```bash
+SX=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin; cd $SX
+# proofs A/B on the compiled dump config (pre = git show 519e48ec:sbnd/sbnd_xin/wct-reco1-dump.jsonnet)
+wcsonnet <runner TLAs> -A flash_source=hits  pre.jsonnet | diff - <(wcsonnet <runner TLAs> wct-reco1-dump.jsonnet)          # A: 0 lines
+wcsonnet <runner TLAs>                       pre.jsonnet | diff - <(wcsonnet <runner TLAs> -A flash_source=reco1 wct-reco1-dump.jsonnet)  # B: 0 lines
+# the production tripwire, now 28 artifacts
+python3 scripts/cfg/prod_cfg_gate.py                       # PASS -- matches prod-2026-09-25
+# output gate: the flipped runner on the PRODUCTION libs (no pin), then member-by-member against the campaign arms
+SBND_QL_KEEP_ICLUSTER=1 SBND_MAX_JOBS=3 ./run_chain_group.sh input_files_reco1/data_filtered_decoded_reco1-fe6033f3-*_frameshift.root work-nuecc48-d123flip    data --size 16 --layout perevt
+SBND_FLASH_SOURCE=reco1 SBND_QL_KEEP_ICLUSTER=1 SBND_MAX_JOBS=3 ./run_chain_group.sh <same file>                                        work-nuecc48-d123flipoff data --size 16 --layout perevt
+SBND_MAX_JOBS=1 ./run_chain_group.sh $(awk -F'\t' 'NR==1{print $2}' products/d115/cv/files.lst) work-r3cv-d123flip/f000 sim --mc --size 1000 --layout perevt
+PR_EXTRA_STAGES=pr_display PR_JOBS=8 ./run_pr_chain_batch.sh work-nuecc48-d123flip work-nuecc48-d123flippr data
+python3 scripts/d123/flip_gate.py work-nuecc48-d123flip    work-nuecc48-d123hits            # stage A + B
+python3 scripts/d123/flip_gate.py work-nuecc48-d123flipoff work-nuecc48-d123base  --no-pr   # the off path
+python3 scripts/d123/flip_gate.py work-r3cv-d123flip/f000  work-r3cv-d123hits/f000 --no-pr  # MC, one file (sub-root vs sub-root)
+```
+
+### 17.1 What changed (wcp-porting-validation, this commit)
+
+| file | change |
+|---|---|
+| `wct-reco1-dump.jsonnet` | `flash_source` default `'reco1'` → `'hits'`; the knob comment now states the flip, its date and the two proofs. Nothing else in the file moved (proof B: the reco1 path compiles byte-identically). |
+| `run_chain_group.sh` | env `SBND_FLASH_SOURCE=reco1\|hits` appended to the dump TLAs when set; **unset ⇒ no TLA at all**, the jsonnet default. `SBND_FLASH_SOURCE=reco1` is the pre-flip graph — the off path is a real path, not an orphaned flag. |
+| `run_reco1_dump.sh` | the same env passthrough for the per-event driver. |
+| `scripts/cfg/compile_consumers.sh` | step **(i)**: the dump job compiled with the runner's exact data and `--mc` TLA lists → `sbnd_dump_data.json`, `sbnd_dump_mc.json`. The flash source was in **none** of the 26 artifacts — the (f)/(g)/(h) shape of hole: a production operating point the tripwire could not see. |
+| `scripts/cfg/prod_cfg_gate.py` | the two dump artifacts join `KEEP_FULL` (4 KB each), so a flash-source or finder-setting drift is named by key. |
+| `ref/prod-2026-09-25/` | the new generation: 28 artifacts, **0 of the previous 26 moved**, README states the flip and what it does not change. |
+| `scripts/d123/flip_gate.py` | the output gate: two stage-A roots (and their `pr` roots) member by member — opflash, frames, icluster (npz arrays through numpy), pctree, Bee zips, PR pctree/Bee/calib/nusel. `tracking-pr.root` is not compared (UUID + timestamps in the header). |
+| `scripts/d123/hits_arm.sh` | header note only; it stays the way to put a flash-only arm (other `--ff` settings, or a control) on an existing root's imaging. |
+
+What did **not** change: the Q/L job, the PR job, every rescue knob (`cathode_rescue`,
+`cathode_rescue_unmatched`, the round-2/3 extensions — all ON, as before), the fit JSONs, the
+allocator block, the toolkit and reco1 plugin code (still `c2b578fe` / `d114880` from round 0), and
+the LArSoft 1-step chain (§17.4).
+
+### 17.2 Proofs on the compiled config
+
+| proof | what is compared | data TLA list | `--fsproduct` list | `--mc` list |
+|---|---|---|---|---|
+| **A** (the flip runs what was measured) | pre-flip file + `flash_source=hits` vs flipped file bare | **0 lines** | **0 lines** | **0 lines** |
+| **A′** (the measured arm exactly) | pre-flip file + the `hits_arm.sh` TLA (`flash_source=hits with_frames=false reco1_reference=true`) vs flipped file + that TLA minus `flash_source` | 0 lines | 0 lines | 0 lines |
+| **B** (the off path is the old graph) | pre-flip file bare vs flipped file + `flash_source=reco1` | **0 lines** | **0 lines** | **0 lines** |
+| flipped bare compile | 2 × `SBNDReco1OpHitSource` (60 channels each), 2 × `SBNDOpFlashFinder`, plugin `WireCellFlash`, **no** `SBNDReco1OpFlashSource` | ✓ | ✓ | ✓ |
+
+`prod_cfg_gate.py` against `prod-2026-09-21d` before the refresh: **26/26 unchanged**, 2 NEW
+(`sbnd_dump_data.json`, `sbnd_dump_mc.json`); after `--refresh --ref ref/prod-2026-09-25`: **PASS
+28/28**. The flip therefore moved exactly the artifacts that did not exist before it, which is the
+statement that it touched nothing the previous generation gated.
+
+### 17.3 Output gate — the flipped runner on the production libraries
+
+The campaign arms ran on the pin `~/tmp/d123-libpin` (toolkit 69515f37 + the finder); production
+runs whatever the tree installs. Between the two, `libWireCellImg.so` (BlobCutting, `25be2a7e`, new
+files only, gated byte-identical by its own round) and `libWireCellPytorch.so` (FMFeatureExtract)
+changed; Flash, Clus, Match, Sio, Aux and the reco1 plugin are md5-identical to the pin. The gate
+below runs the flipped runner **without the pin** — `toolkit/build/*` + `local/lib` as the direnv
+environment loads them (md5-identical to each other, `~/tmp/d123/flip/libs.{start,end}.md5`) — so it
+covers the config flip and the library drift in one go.
+
+| arm (production libs, no pin) | against | stage A: opflash ×2, frames, icluster ×4 (per group) + pctree, 3 Bee zips (per event) | stage B: pctree-pr, mabc-pr, calib-pr, nusel (per event) | verdict |
+|---|---|---|---|---|
+| `work-nuecc48-d123flip` — the runner bare after the flip | `work-nuecc48-d123hits` (the campaign's measured arm, pin) | 3/3 groups, **48/48** events identical | **48/48** identical (`calib-pr` after dropping the one wall-clock key `vertex_scoreboard.dual_chain.off_ms`, the only key of 151 221 that differed) | **IDENTICAL** |
+| `work-nuecc48-d123flipoff` — `SBND_FLASH_SOURCE=reco1` | `work-nuecc48-d123base` (reco1 flashes, pin) | 3/3 groups, **48/48** identical | — | **IDENTICAL** — the off path is the old production |
+| `work-r3cv-d123flip/f000` — one MC file, `--mc` | `work-r3cv-d123hits/f000` | 1/1 group, **18/18** identical | — | **IDENTICAL** |
+
+So the flipped runner reproduces, product for product, the arms every number of §13–§14 came from:
+the flip changes nothing but the default, and the two library changes since the pin (Img, Pytorch)
+are inert on this chain. Timings: stage A 48 events ≈ 5 min at 3 groups (the hit-flash dump is not
+measurably slower than the reco1 one), stage B ≈ 3 min at `PR_JOBS=8`. Logs and md5 lists in
+`~/tmp/d123/flip/` (`gate_*.txt`, `libs.{start,end}.md5`, `prodcfg_{pre,post}/`).
+
+### 17.4 What the flip does not cover, and the follow-ups
+
+1. **The LArSoft 1-step chain still matches to `recob::OpFlash`.** `wcls-img-clus-matching-xin.jsonnet`
+   reads flashes through `wclsOpFlashSource`; there is no `wclsOpHitSource` in larwirecell (§16 is its
+   design, one afternoon of larwirecell work + an sbndcode fcl change + a release). Until it exists the
+   two chains run **different light** on purpose; `two_chain_gate.py` compares PR components and is
+   blind to it by construction. This is the first follow-up and the only one that gates anything.
+2. **The cathode rescue is ON and inert** (4 firings / 1000 events, 3 events change if it is switched off,
+   no selection count moves — §15). Retire it, and the round-2/3 extensions with it, only after the two
+   fit-vs-geometry events (169824, 59003) have a ruling on MC — not before; a later round, with the
+   `hitsnr` arm pattern of §15 as its gate.
+3. **`QLXTPC coincident` culls a coincident half** (59003, §13.2): with both TPCs' flashes now present in
+   the same 80 ns group, the coincident-flash rule can drop the half the charge belongs to. Small
+   (1 event in 1000) but it is a bug in a production component, not a tuning; own round.
+4. **SPE-only early flashes** (§11.3, ~1 per event, 1–3 µs before a bright flash): none matched in
+   §13–§14, so no cut was added; a `min_fired_pe`-type threshold in the finder if a later census shows
+   one adopted by a bundle.
+5. **Beam-off fakes 0.9 → 1.3 % per gate** (§14.1) from the fit re-balancing under more flashes: the
+   cost side of the flip, to watch in the next beam-off round rather than tune now.
+6. **Housekeeping.** `work-*-d123*` stay KEEP until the owner has read §17; the hit-flash
+   `opflash_apa*.tar.gz` (every hit with its flash id, 60× the reco1 ones) are the first to drop.
+   `work-nuecc48-d123flip{,off,pr}` and `work-r3cv-d123flip` are the flip gate's record. The `nosplit`
+   arms (§12) are closed.

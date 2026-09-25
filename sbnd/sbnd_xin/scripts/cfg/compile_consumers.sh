@@ -111,3 +111,24 @@ echo "bare_prjob rc=$?"
     done
 } > "$OUT/runner_alloc.txt" 2> "$OUT/runner_alloc.err"
 echo "runner_alloc rc=$?"
+
+# (i) The SBND standalone chain's reco1 DUMP job, as run_chain_group.sh compiles it for a data
+# file and for an MC file (its exact TLA lists, doc 76 / doc 115 --mc).  doc sbnd_xin/123 sec 17:
+# this job decides which FLASHES the whole standalone chain matches to -- since 2026-09-25 the
+# ones rebuilt from the reco1 OpHits by SBNDOpFlashFinder (flash_source=hits), before that
+# SBND's own recob::OpFlash -- and none of (a)-(h) compiles it, so the flash source was a
+# production operating point the tripwire could not see, the (f)/(g) shape of hole again.  The
+# jsonnet lives in the working repo (sbnd_xin/wct-reco1-dump.jsonnet), like the runners in (h);
+# the PMT channel map and the opdet geometry it imports come from $CFG.  input/output_dir are
+# fixed literals here, the entry window is the runner's first group.
+export WIRECELL_PATH=$CFG:$DATA:$DATA/sbnd/photodet
+$W -A input=in.root -A output_dir=out -A caf_offset_mode=product -A caf_offset_override=0 \
+   -A entry=-1 -A entry_begin=0 -A entry_count=16 \
+   "$SX/wct-reco1-dump.jsonnet" > "$OUT/sbnd_dump_data.json" 2> "$OUT/sbnd_dump_data.err"
+echo "sbnd_dump_data rc=$?"
+$W -A input=in.root -A output_dir=out -A caf_offset_mode=none -A caf_offset_override=0 \
+   -A wire_product=recob::Wires_simtpc2d_dnnsp_DetSim. -A badmask_product=ints_simtpc2d_badmasks_DetSim. \
+   -A summary_product=doubles_simtpc2d_wienersummary_DetSim. \
+   -A entry=-1 -A entry_begin=0 -A entry_count=1000 \
+   "$SX/wct-reco1-dump.jsonnet" > "$OUT/sbnd_dump_mc.json" 2> "$OUT/sbnd_dump_mc.err"
+echo "sbnd_dump_mc rc=$?"

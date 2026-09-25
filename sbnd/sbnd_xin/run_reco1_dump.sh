@@ -15,6 +15,9 @@
 #               (the default).  See docs/67_round2-patrec-10evt.md.
 #   -t          output tag; sample dir becomes input_files_reco1/extracted-<tag>/
 #               (default: input file basename up to the first '-')
+#   env SBND_FLASH_SOURCE=reco1|hits  which flashes go to opflash_apa<N>.tar.gz;
+#               unset => the jsonnet default, 'hits' since the 2026-09-25 flip
+#               (doc sbnd_xin/123 sec 17); reco1 = the pre-flip graph.
 #   -fsproduct  art InputTag of the FrameShiftInfo product, for -caf product on
 #               a file where it was written under a non-default process
 #               instance (default: the 2025fall data literal
@@ -137,6 +140,7 @@ wire-cell \
     --tla-str "badmask_product=${BADMASK_PRODUCT}" \
     --tla-str "summary_product=${SUMMARY_PRODUCT}" \
     --tla-str "frameshift_product=${FRAMESHIFT_PRODUCT}" \
+    ${SBND_FLASH_SOURCE:+--tla-str "flash_source=${SBND_FLASH_SOURCE}"} \
     -c wct-reco1-dump.jsonnet
 
 echo

@@ -92,7 +92,10 @@ def produced(outdir):
 # Artifacts kept in FULL inside the reference dir, so a drift can be named and not merely
 # detected.  prod_prjob.json since doc 77; runner_alloc.txt since round 5 -- an allocator change
 # is a one-line diff and printing it is the whole value of catching it.
-KEEP_FULL = ("prod_prjob.json", "runner_alloc.txt")
+# sbnd_dump_{data,mc}.json since doc 123 sec 17 (2026-09-25): the standalone chain's reco1 dump
+# job, 4 KB each, whose flash_source is what that flip moved -- kept in full so a drift of the
+# flash source (or of the finder's settings) is named by key, not merely detected.
+KEEP_FULL = ("prod_prjob.json", "runner_alloc.txt", "sbnd_dump_data.json", "sbnd_dump_mc.json")
 
 
 def name_the_text_drift(ref_txt, new_txt):

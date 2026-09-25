@@ -3196,3 +3196,10 @@ Lib pin `~/tmp/d123-libpin` (toolkit 69515f37 + the flash finder commit, reco1 8
 - `work-<s>-d123{base,hits,nosplit}pr` -- stage B on the above (doc 123 sec 13/14).
 - Samples: nuecc48 (48), ncpi0 (19), mcp1k (1000), mcp2k (2000, `--gbase 63`), round-3 `r3cv` / `r3nue` / `r3off` per-file roots (doc 115 layout).
 - KEEP while doc 123 is open; the hit-flash `opflash_apa*.tar.gz` are 60x the reco1 ones (they carry every hit with its flash id) -- the first thing to drop when the campaign closes.
+
+## doc sbnd_xin/123 sec 17 -- the FLIP: flash_source=hits is standalone production (2026-09-25)
+Owner: "Let's flip this hits on for SBND production, and keep the cathode rescue on." `ref/prod-2026-09-25` (28 artifacts, 0 of the previous 26 moved). Gate arms run on the PRODUCTION libs, no pin (`~/tmp/d123/flip/libs.{start,end}.md5`).
+- `work-nuecc48-d123flip` -- `run_chain_group.sh` bare after the flip (= hit flashes). Stage A + B (`work-nuecc48-d123flippr`) compared member by member to `work-nuecc48-d123hits{,pr}` with `scripts/d123/flip_gate.py`.
+- `work-nuecc48-d123flipoff` -- `SBND_FLASH_SOURCE=reco1`, the off path, vs `work-nuecc48-d123base`.
+- `work-r3cv-d123flip/f000` -- one MC file with `--mc`, vs `work-r3cv-d123hits/f000`.
+- KEEP as the flip's record (small: 48 + 48 + 18 events).

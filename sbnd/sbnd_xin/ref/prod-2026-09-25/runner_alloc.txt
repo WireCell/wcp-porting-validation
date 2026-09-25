@@ -1,0 +1,28 @@
+## run_pr_chain_batch.sh
+SBND_PR_TCMALLOC_DEFAULT=0
+SBND_PR_TCMALLOC_DEFAULT=1
+PYLIB=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")/libpython3.11.so.1.0
+SBND_PR_ALLOC_LIB=${SBND_PR_ALLOC_LIB:-${SBND_TCMALLOC_LIB:-/usr/lib/x86_64-linux-gnu/libjemalloc.so.2}}
+SBND_TCMALLOC_LIB=$SBND_PR_ALLOC_LIB      # kept in step, so the two preload sites read one value
+if [ "${SBND_PR_TCMALLOC:-$SBND_PR_TCMALLOC_DEFAULT}" = 1 ] && [ -e "$SBND_TCMALLOC_LIB" ]; then
+export LD_PRELOAD="$PYLIB:$SBND_TCMALLOC_LIB"
+if [ "${SBND_PR_TCMALLOC:-$SBND_PR_TCMALLOC_DEFAULT}" = 1 ]; then
+echo "WARNING: [evt $EVT_ID] allocator preload requested but missing: $SBND_TCMALLOC_LIB -- running on glibc malloc" >&2
+export LD_PRELOAD="$PYLIB"
+echo "[evt $EVT_ID] alloc: LD_PRELOAD=$LD_PRELOAD"
+if [ "${SBND_PR_TCMALLOC:-$SBND_PR_TCMALLOC_DEFAULT}" = 1 ] && [ -e "$SBND_TCMALLOC_LIB" ]; then
+export LD_PRELOAD="$PYLIB:$SBND_TCMALLOC_LIB"
+if [ "${SBND_PR_TCMALLOC:-$SBND_PR_TCMALLOC_DEFAULT}" = 1 ]; then
+echo "WARNING: [group $GIDX] allocator preload requested but missing: $SBND_TCMALLOC_LIB -- running on glibc malloc" >&2
+export LD_PRELOAD="$PYLIB"
+echo "[group $GIDX] alloc: LD_PRELOAD=$LD_PRELOAD"
+## run_pr_evt.sh
+PYLIB=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")/libpython3.11.so.1.0
+export LD_PRELOAD="$PYLIB"
+unset LD_PRELOAD
+## run_clus_evt.sh
+TCMALLOC_SO=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+WC_PRELOAD=""
+if [ "${WCT_TCMALLOC:-on}" = "on" ] && [ -f "$TCMALLOC_SO" ]; then
+WC_PRELOAD="LD_PRELOAD=$TCMALLOC_SO"
+env $WC_PRELOAD GOGC=off wire-cell \
