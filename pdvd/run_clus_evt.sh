@@ -31,6 +31,9 @@
 #                                1.586 cathode-pinned convention; the toolkit
 #                                default stays the legacy 1.568).
 #                                Set to 'null' for the legacy value.
+#   PDVD_BEAM_LABEL=0  do NOT label the in-beam flash (Bee op_beam; doc pdvd/119;
+#                      default ON since 2026-09-25; the label needs a light
+#                      archive made with the same knob, else a warning)
 #   PDVD_CLUS_TLA="-S key=val ..."   extra wcsonnet args (knob overrides),
 #                                the counterpart of PDVD_PR_TLA in run_pr_evt.sh
 #   PDVD_TRIGGER_OFFSET_US=<us>  override the light<->charge time-base offset
@@ -206,11 +209,12 @@ process_event() {
     TRIGGER_OFFSET_TOP_US=0
     READOUT_NTICKS=10000
     if [ "$QLMATCH_EVT" = 1 ]; then
-        local META_LINE META_BOT META_TOP OPFLASH_EVENT
+        local META_LINE META_BOT META_TOP OPFLASH_EVENT META_TRIG_US META_TC_TYPE
         META_LINE=$(python3 - "$OPFLASH_TAR" <<'PY' || echo "0 0"
 import sys, json, tarfile
 bot = top = 0.0
 evt = ""
+trig, tct = "none", "none"
 with tarfile.open(sys.argv[1]) as tf:
     for m in tf.getmembers():
         if m.name.endswith("_metadata.json"):
@@ -222,13 +226,18 @@ with tarfile.open(sys.argv[1]) as tf:
                 bot = top = float(md["offset_us"])
             if "event" in md:
                 evt = int(md["event"])
+            # doc pdvd/119: present only in archives made with PDVD_BEAM_LABEL=1.
+            if "trigger_us" in md and "tc_type" in md:
+                trig, tct = float(md["trigger_us"]), int(md["tc_type"])
             break
-print(bot, top, evt)
+print(bot, top, trig, tct, evt)   # evt last: it may be empty
 PY
 )
         META_BOT=$(echo "$META_LINE" | awk '{print $1}')
         META_TOP=$(echo "$META_LINE" | awk '{print $2}')
-        OPFLASH_EVENT=$(echo "$META_LINE" | awk '{print $3}')
+        META_TRIG_US=$(echo "$META_LINE" | awk '{print $3}')
+        META_TC_TYPE=$(echo "$META_LINE" | awk '{print $4}')
+        OPFLASH_EVENT=$(echo "$META_LINE" | awk '{print $5}')
         if [ -n "$OPFLASH_EVENT" ] && [ "$OPFLASH_EVENT" != "$EVENT_NO" ]; then
             echo "ERROR: charge/light event mismatch: charge art_event=$EVENT_NO but opflash event=$OPFLASH_EVENT ($OPFLASH_TAR)." >&2
             return 1
@@ -898,6 +907,21 @@ PY
             echo "qlmatch=${QLMATCH_EVT}"
         } > "${WORKDIR}/pctree-evt${EVENT_NO}.tlas"
     fi
+    # doc pdvd/119: PDVD_BEAM_LABEL labels the in-beam flash (op_beam in the
+    # Bee "op" file) from the light archive's trigger_us/tc_type metadata
+    # (run_light_evt.sh, same knob).  The window arithmetic lives in the jsonnet
+    # (one copy of the op_t offset).  PRODUCTION DEFAULT ON since 2026-09-25
+    # (owner, doc 119 sec 7): display-only, the Bee op json gains op_beam and
+    # nothing else changes.  PDVD_BEAM_LABEL=0 => no TLA => pre-flip config.
+    local BEAM_ARG=()
+    if [ "${PDVD_BEAM_LABEL:-1}" = 1 ] && [ "$QLMATCH_EVT" = 1 ]; then
+        if [ -n "${META_TRIG_US:-}" ] && [ "${META_TRIG_US}" != none ]; then
+            BEAM_ARG=(-S "beam_trigger_us=${META_TRIG_US}" -S "beam_tc_type=${META_TC_TYPE}")
+            echo "Beam label: trigger ${META_TRIG_US} us on the flash axis, tc_type ${META_TC_TYPE}"
+        else
+            echo "WARNING: PDVD_BEAM_LABEL=1 but $OPFLASH_TAR has no trigger_us/tc_type metadata (re-run run_light_evt.sh with PDVD_BEAM_LABEL=1); no beam label" >&2
+        fi
+    fi
     wcsonnet \
         -A "input=${CLUS_INPUT}" \
         -S "anode_indices=${ANODE_CODE}" \
@@ -933,6 +957,7 @@ PY
         "${CC_TIPTOUCH_ARG[@]}" \
         "${CC_DIST_ARG[@]}" \
         "${ASSOC_ARG[@]}" \
+        "${BEAM_ARG[@]}" \
         ${PDVD_CLUS_TLA:-} \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then

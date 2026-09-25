@@ -105,11 +105,21 @@ if not -2.0 < d_tree <= 0.0:
              % (t0_us, to["light_t0_us"][i], d_tree))
 bot = wrap(t0_us - float(to["charge_bde_us"][i]))
 top = wrap(t0_us - float(to["charge_tde_us"][i]))
-print("%.6f %.6f %.3f" % (bot, top, d_tree))
+# doc pdvd/119: the trigger on the raw flash axis (tc_us - chain t0, us) and
+# its trigger-candidate type, for the in-beam flash label (PDVD_BEAM_LABEL, default 1).
+# Tolerant: a rawwf without these branches prints "none" and the label is
+# simply not made (run_light_evt.sh warns only under PDVD_BEAM_LABEL=1).
+if "tc_us" in to and "tc_type" in to:
+    trig = "%.6f" % (float(to["tc_us"][i]) - t0_us)
+    tct = "%d" % int(to["tc_type"][i])
+else:
+    trig = tct = "none"
+print("%.6f %.6f %.3f %s %s" % (bot, top, d_tree, trig, tct))
 PY
 )
-read -r OFFSET_BOT_US OFFSET_TOP_US T0_VS_TREE <<< "$OFFSETS"
+read -r OFFSET_BOT_US OFFSET_TOP_US T0_VS_TREE TRIGGER_US TC_TYPE <<< "$OFFSETS"
 echo "   offsets (us, add to flash time): bot=$OFFSET_BOT_US top=$OFFSET_TOP_US (chain t0 - tree light_t0 = $T0_VS_TREE us)"
+echo "   trigger on the flash axis: $TRIGGER_US us, tc_type $TC_TYPE"
 
 # DAPHNE-rail (saturation) handling.  PRODUCTION DEFAULT since 2026-07-14 is
 # the keep-and-mark chain of docs/qlmatch/pdvd-saturation-recovery.md:
@@ -235,6 +245,19 @@ if [ "${PDVD_FLASH_TAIL_MERGE:-1}" = 1 ]; then
     [ -n "${PDVD_TAIL_WINDOW_US:-}" ]    && VETO_SAT_ARG+=(-S "tail_window_us=${PDVD_TAIL_WINDOW_US}")
     [ -n "${PDVD_TAIL_MIN_WIDTH_US:-}" ] && VETO_SAT_ARG+=(-S "tail_min_width_us=${PDVD_TAIL_MIN_WIDTH_US}")
     [ -n "${PDVD_TAIL_PE_FRAC:-}" ]      && VETO_SAT_ARG+=(-S "tail_pe_frac=${PDVD_TAIL_PE_FRAC}")
+fi
+
+# PDVD_BEAM_LABEL (doc pdvd/119): stamp trigger_us/tc_type into the archive
+# metadata so run_clus_evt.sh (same knob) can label the in-beam flash for the
+# Bee "/" key.  PRODUCTION DEFAULT ON since 2026-09-25 (owner, doc 119 sec 7):
+# the archive gains only these two metadata keys (flashes identical).  Set
+# PDVD_BEAM_LABEL=0 for the pre-flip archive (keys omitted, byte-identical).
+if [ "${PDVD_BEAM_LABEL:-1}" = 1 ]; then
+    if [ "${TRIGGER_US:-none}" != none ]; then
+        VETO_SAT_ARG+=(-S "trigger_us=${TRIGGER_US}" -S "tc_type=${TC_TYPE}")
+    else
+        echo "WARNING: PDVD_BEAM_LABEL=1 but $RAW_FILE has no trigoff tc_us/tc_type; no beam label" >&2
+    fi
 fi
 
 # PDVD_LIGHT_FRAMES=1: also dump the raw/decon optical frames (see header).

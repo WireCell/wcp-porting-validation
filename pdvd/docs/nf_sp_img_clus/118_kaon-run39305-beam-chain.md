@@ -445,6 +445,27 @@ From `beam_geometry.py` part C:
 3. **Hand-scan the 10 events** in Bee: `work/039305_<evt>/mabc-all-apa.zip` and `mabc-pr.zip`. Upload is
    owner-gated.
 
+### 5.6 Addendum (2026-09-25, doc 119): why there is no bottom drift, and a beam-flash label for Bee
+
+- **The bottom drift was never read out in run 39305, so nothing can be reprocessed.**
+  - All 10 raw HDF5 files (478 trigger records) hold 96 `TDEEth` (top), 6 PDS, 2 HSI and 1 TC fragments, and
+    **0 `WIBEth`** (bottom).
+  - The file's source-ID map has no `kVD_BottomTPC` entry. The TriggerRecordHeader requests no bottom source ID
+    (400-547), and every error bit is 0.
+  - The same check on 39252/39253/39349 finds 96 + 96. jjo's decoder (`CrateList [-1]`, both sub-detector strings,
+    `keep *`) would have decoded the bottom had it been present.
+  - Why the bottom was left out of the readout is not recorded on this host (needs the NP02 e-log / run DB).
+  - Details: [doc 119 section 1](119_bee-beam-flash-label.md#1-q1-why-run-39305-has-no-bottom-drift).
+- **"039349's beam triggers" is literal.** `tc_type` 15 is `kCTBBeamChkvHL` and 22 is `kCTBBeamChkvHxLx`
+  (trgdataformats), so 039349 is a beam run with both drifts read out.
+- **Correction to `kaon/out/beam_flash.tsv`.** Its `beam_flash_dt` column (−0.41..−1.33 µs) was built from
+  `light_events.tsv`'s `trig_us`, which that file writes to 4 significant figures, so it carries a ±0.5 µs rounding
+  error.
+  - The flash **identities** are unaffected.
+  - The residual at full precision is −0.83..−0.95 µs, as the section 5.1 table already shows.
+- **Bee `/` key.** The chain can now label the in-beam flash itself (`op_beam`, default OFF). A patched Bee prefers
+  that label over its fixed op_t window. See doc 119.
+
 ## 6. Open items
 
 - [ ] QLMatching defects 1 and 2 (3.3). Needs the owner's go, and coordination with the uncommitted `QLMatching.cxx`
