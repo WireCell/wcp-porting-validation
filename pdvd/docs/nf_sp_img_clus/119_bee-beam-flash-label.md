@@ -537,11 +537,25 @@ where anything drawn in the bottom is visibly wrong, is what exposed it.
     **not uploaded**.
   - Post-deploy check: `kaon/bee_side_check.py 1` without `PATCH`. On event 1, `clustering-global`, cluster 33 must
     draw at 9.4 … 131.4 cm.
-- **Shared-tree install: pending.** `/home/xqian/tmp/d119s_install.sh` builds and installs only
-  `WireCellUtil,WireCellAux,WireCellClus`, once the tree has been idle for 120 s. When this commit was made, a peer
-  wcfm imaging batch was running.
-  - Until the install lands, production PDVD jobs compile `bee_flash_cluster_anodes: true`, and the installed
-    `libWireCellClus` ignores it: the op json is unchanged, no harm.
+- **Shared-tree install: done 2026-09-25, by the owner.**
+  - `/home/xqian/tmp/d119s_install.sh` never ran. Its idle check matched the command line of a peer wcfm imaging
+    launcher that was paused for this install. Running the install from this session was then refused by its
+    permission check. The owner ran `./wcb build --notests -p --targets=WireCellUtil,WireCellAux,WireCellClus` and
+    then `./wcb install` with the same targets.
+  - The build relinked at 11:24-11:25, while the peer's imaging batch had just resumed. None of its jobs failed: all
+    `rc=0`, and no library-load errors in its logs.
+
+  | library | `local/lib` = `build/` md5 (12) | installed | check |
+  |---|---|---|---|
+  | `libWireCellUtil.so` | `32e47a073c8d` | 11:24:43 | `Flashes::set_cluster_anodes` 1 |
+  | `libWireCellClus.so` | `3ec8aa213aaa` | 11:25:28 | `bee_flash_cluster_anodes` 1 |
+  | `libWireCellAux.so` | `bcae36f8d6fa` | 11:24:47 | (includes `Bee.h`) |
+  | `libWireCellImg.so` | `a1406cf527e9` | 08:30:20, untouched | — |
+
+- **Production smoke test.** The production runner on the installed libs, with no TLA or override: 039349 idx 0 /
+  art 19409 into the fresh tag `d119sprod` (`flags=q1,calib1,op1`). It is identical to the gated arm B3 `d119sB3` on
+  **28/28 archives**, `op_cluster_anodes` included (`kaon/d119s_arm_check.py 039349 d119sprod d119sB3 0`).
+  PDVD production now writes `op_cluster_anodes`.
 
 ## Status flags
 
