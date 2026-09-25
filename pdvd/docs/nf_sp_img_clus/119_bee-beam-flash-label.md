@@ -19,6 +19,12 @@ things:
 **Flipped 2026-09-25 (owner): `PDVD_BEAM_LABEL` is ON by default in the PDVD runners, with no PE floor**
 (section 7). Bee's patched `/` needs a bee3 deploy before a labelled upload behaves differently on the BNL server.
 
+**Round 2 (2026-09-25, section 8): the Bee side panel drew top-drift clusters in the bottom volume.** There were two
+bee3 defects: the volume was guessed from uncorrected x, and the already-corrected clustering layer was corrected a
+second time. Fixed with a producer-side per-cluster anode (`op_cluster_anodes`, toolkit knob, ON for PDVD) plus bee3.
+The corrected placement reproduces the toolkit's `x_t0cor` on every checked cluster: 268/268 on 39305, 297/297 on
+the two-sided runs.
+
 ## Repro
 
 ```bash
@@ -375,6 +381,168 @@ The owner said: commit and push, make the label the PDVD default, and use no min
   d119beam 5`). The log reads "Beam label: trigger 2772.144 us on the flash axis, tc_type 15".
 - **Still open:** the bee3 deploy on the BNL Bee server (owner), and a browser check of `/` on a labelled set.
 
+## 8. Bee side panel put top-drift clusters in the bottom volume (2026-09-25, round 2)
+
+The owner, on the 10-event set (`bee/set/a6a48e04-…`, event 1 = 317673): "in the side panel the matched charge
+cluster is placed at the bottom detector; these data have only the top detector."
+
+### Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd
+# 0. private A/B build: arm A3 = clean toolkit 1e6b2905, arm B3 = + this change (kaon/d119s_build.sh, run in the
+#    /home/xqian/tmp/d119wt worktree with the change as a patch; the change is toolkit 9de7fcae)
+# 1. the defect, replayed offline on the uploaded zip (old rule) and on the fixed zip
+python3 kaon/d119s_side_replay.py /home/xqian/tmp/d119_bee/d119-kaon10-chain.zip   # uploaded: 25 of 268 in the bottom
+python3 kaon/d119s_side_replay.py /home/xqian/tmp/d119_bee/d119-kaon10-side.zip    # fixed: 0 of 268, dx <= 0.002 cm
+# 2. gates + knob-ON arms (kaon/d119s_gates.sh runs all of these plus the harness/SBND/uBooNE gates)
+PREFIX=/home/xqian/tmp/d119inst/A3 TAG=d119sA3    CLUS_TLA="-S bee_cluster_anodes=false" kaon/run_d119s_side_arms.sh 0 1 3 5 9 15 22
+PREFIX=/home/xqian/tmp/d119inst/B3 TAG=d119sB3off CLUS_TLA="-S bee_cluster_anodes=false" kaon/run_d119s_side_arms.sh 0 1 3 5 9 15 22
+PREFIX=/home/xqian/tmp/d119inst/B3 TAG=d119sB3    kaon/run_d119s_side_arms.sh 0 1 3 5 9 15 22
+PREFIX=/home/xqian/tmp/d119inst/B3 TAG=d119sB3 RUN=039252 LIGHT_SUFFIX=_tot BEAM=0 kaon/run_d119s_side_arms.sh 0
+PREFIX=/home/xqian/tmp/d119inst/B3 kaon/run_d119s_kaon_side_scratch.sh              # 39305 x10 -> *_d119sidescratch
+python3 kaon/d119s_arm_check.py 039349 d119sA3 d119sB3off 0 1 3 5 9 15 22                          # knob off
+python3 kaon/d119s_arm_check.py --key op_cluster_anodes 039349 d119sB3 d119sB3off 0 1 3 5 9 15 22  # knob on
+python3 kaon/make_d119_bee_zip.py d119sidescratch /home/xqian/tmp/d119_bee/d119-kaon10-side.zip
+# 3. browser: the live Bee page with the local bee3 methods swapped in and the fixed zip served locally
+#    (Playwright + Xvfb; screenshots go to /home/xqian/tmp/d119_pw/)
+PATCH=1 ZIP=/home/xqian/tmp/d119_bee/d119-kaon10-side.zip \
+    xvfb-run -a -s "-screen 0 1600x1000x24" python3 kaon/bee_side_check.py 0 1 2 7
+```
+
+### 8.1 Symptom
+
+Reproduced in the browser on event 1 after `/` (beam flash #102, 414.897 µs, matched cluster 33):
+
+| layer | side-panel x of cluster 33 (cm) | where it belongs (the toolkit's `x_t0cor`) |
+|---|---|---|
+| `img-global` (raw) | −113.5 … 8.5: **bottom volume** | 9.4 … 131.4, top |
+| `clustering-global` (Bee's default layer) | 70.8 … 192.9: top, but **61.4 cm too far from the cathode** | 9.4 … 131.4 |
+
+### 8.2 Root cause: two defects, both in bee3's detector-frame (side-panel) code
+
+1. **The volume of a raw cluster was guessed from its x, and near the cathode x cannot tell.**
+   - bee3 `934d031` (July 17) tries both drift directions and keeps the one whose T0-corrected charge lands in a
+     box. A cluster within v·t of the cathode lands in a box either way: a tie.
+   - A tie was broken by the sign of the cluster's mean raw x. That is not a side signal: a top cluster within v·t of
+     the cathode has negative raw x (raw = true − v·t), so it went to the bottom. Mirror-image for bottom clusters.
+   - The per-flash `apa` cannot replace it: one PDVD flash matches clusters in both volumes, and even on top-only
+     39305 one matched flash has `apa=0`.
+   - On the uploaded 10 events, 61 of 268 matched clusters are ties and **25 went to the bottom**, among them the
+     beam-matched clusters of 317673 (33), 245576 (28) and 191916 (37).
+2. **The side panel T0-corrected a layer that is already corrected.**
+   - Since toolkit `9ded936c2` (2026-07-09, the Q/L wiring, which also added the `op` dump), PDVD writes
+     `clustering-global` in `x_t0cor`.
+   - The side panel treated every layer as raw and shifted it again by v·t. On this layer the geometric test then
+     sent 78 of 268 matched clusters to the bottom: 77 by a clear majority of points, 1 by the tie-break.
+
+**Why it hid.** `934d031` was validated on two-sided 039252 evt 298567 against `x_t0cor` and left its 9 ties
+unresolved. Most tied clusters on a two-sided run are drawn in *a* volume, just the wrong one. A top-only run,
+where anything drawn in the bottom is visibly wrong, is what exposed it.
+
+### 8.3 Fix
+
+- **Toolkit (producer): each matched cluster's anode.**
+  - New knob `MultiAlgBlobClustering.bee_flash_cluster_anodes` (C++ default false). When on, `fill_bee_flashes`
+    writes `op_cluster_anodes`: one list per op row, parallel to `op_cluster_ids`, holding each cluster's anode ident
+    (the anode holding most of its blobs).
+  - At that pre-pipeline point a cluster lives on one drift side, so this is exact, not a guess.
+  - `util` `Bee::Flashes::set_cluster_anodes`; PDVD `clus.jsonnet` `bee_flash_cluster_anodes` (key-suppressed).
+  - `wct-clustering.jsonnet` TLA `bee_cluster_anodes`, **default true for PDVD Q/L jobs** (owner's ask to fix it);
+    `-S bee_cluster_anodes=false` restores the previous compiled config.
+- **bee3.**
+  - `ProtoDUNEVD.detectorFrameCorrection` takes a cluster's volume from `op_cluster_anodes` when present (top for
+    anodes 4-7, with that volume's own clock). The geometric test stays only as the fallback for older dumps.
+  - New `Experiment.layerInDetectorFrame(sst)`, base false. PDVD returns true for `clustering-global`, and the side
+    panel then draws that layer unshifted.
+  - `docs/overview.md` documents `op_cluster_anodes`.
+  - The clustering-layer half needs only the bee3 deploy and works on the already-uploaded set. The img-layer half
+    also needs a zip made with the new toolkit.
+
+### 8.4 Verification
+
+- **Doctests (arm B3).**
+  - `wcdoctest-util` passes everything, including the new `bee flashes op_cluster_anodes` case (4 bee cases, 23
+    assertions). It was linked by hand with the in-tree util first (section 5.2).
+  - `wcdoctest-clus` 446/446.
+- **Freshness.** B3 carries `Flashes::set_cluster_anodes` and the `bee_flash_cluster_anodes` string; A3 carries
+  neither.
+- **Compiled config (039349 idx 0, the runner's captured `wcsonnet` line, HEAD cfg `git archive 1e6b2905` vs new).**
+  - HEAD gives md5 `b2e0c8a5…`, the same as section 5.1.
+  - The new cfg adds exactly one line, `"bee_flash_cluster_anodes": true` in `clus_all_tpc`.
+  - The new cfg with `bee_cluster_anodes=false` is identical to HEAD, and so is `do_qlmatch=false`.
+  - The HEAD cfg rejects the TLA ("no parameter bee_cluster_anodes").
+
+| gate | labels | result |
+|---|---|---|
+| PDVD Q/L + op path, knob off (A3 vs B3, both `bee_cluster_anodes=false`) | `039349_{0,1,3,5,9,15,22}_d119s{A3,B3off}` | **PASS 196/196 archives** identical |
+| PDVD knob on vs off (B3) | `_d119sB3` vs `_d119sB3off` | **PASS 7/7**: only `op.json` differs, only by `op_cluster_anodes`; row-aligned, parallel to the ids; anodes 0-7 all present |
+| PDHD + PDVD harness (`flags=q0`), A3 vs B3 | `<det>/work/<run>_<evt>_d119sg{A,B}`; `/home/xqian/tmp/d119s_gates/pd/` | **PASS, 120/120 archives** |
+| SBND Q/L + Bee, nuecc48 g0, A3 vs B3 | `work-nuecc48-d119sg{A,B}`; `/home/xqian/tmp/d119s_gates/sbnd_hashes_{A,B}.txt` | **PASS**, 416/416 hash lines identical |
+| uBooNE mabc, 35 events, A3 vs B3 | `qlport/scripts/sweep/d119sub{A,B}` | Bee zips **35/35** content-identical; tagger identical 34, **differs 1 (idx 22, ev 6805)**. The difference is run-to-run instability that exists without this change, shown by a null pair below |
+
+**uBooNE ev 6805 is unstable run to run, on both arms.** The only differing quantities are
+`kine_pio_theta_2/phi_2/dis_2/angle` (the second π⁰ photon).
+- Rerunning `run_one.sh 22` under `setarch -R` with `dl_weights` empty gives two tagger outcomes on each arm (the
+  tagger-compare log md5 is `fd7837ac` or `ce1b2205`). This includes two consecutive runs on the same B3 binary.
+  - clean arm A3, 7 runs: 4 × `fd78`, 3 × `ce1b`;
+  - B3, 5 runs: 2 × `fd78`, 3 × `ce1b`.
+- The gate simply drew `fd78` on A3 and `ce1b` on B3.
+- This is the M4 class: pattern recognition that depends on pointer order. Nothing in this change runs on uBooNE
+  (`bee_flash_cluster_anodes` is off there).
+- It is **pre-existing on 1e6b2905** and was not seen in round 1: `d119ub{A,B}` on e2ae041d were both `fd78`, from
+  one draw each. Reported, not fixed. Labels: `qlport/scripts/sweep/d119sub{A,B}_n{1..6}`.
+
+**Is the placement right? Checked against the toolkit's own `x_t0cor`.**
+- **Top-only 39305.** On the 10 events (`*_d119sidescratch`) the img and clustering layers are point-aligned, so the
+  img-layer side-panel x of every matched cluster can be compared point by point with `clustering-global`.
+
+  | zip | matched clusters | drawn in the bottom | disagree with `x_t0cor` |
+  |---|---|---|---|
+  | uploaded (old rule) | 268 | 25 | 25 (up to 466 cm) |
+  | `d119-kaon10-side.zip` (new rule) | 268 | **0** | **0** (max 0.0017 cm, float rounding) |
+
+  - The new zip differs from the uploaded one only by `op_cluster_anodes`: 10 of 40 members, anodes {4,5,6,7} only.
+- **Two-sided 039349 x7 + 039252 evt 298567.** The layers are not point-aligned there (the clustering layer drops
+  and re-enumerates). So img points were matched to clustering points by (y, z, q), and each cluster was graded by
+  whether its side-panel x reproduces `x_t0cor`. **New rule 297/297 right; old rule 267/297.**
+  - The 30 old errors go both ways (top→bottom and bottom→top). Each is fixed by its anode.
+  - 5 of the 30 are on 298567, the event `934d031` was validated on.
+- **Browser.** The live Bee page was checked with the local bee3 methods swapped in and the fixed zip served locally
+  (`bee_side_check.py`). After `/`, events 0, 1, 2, 7 draw the beam-matched clusters at the same place on both
+  layers, all in the top, and for all matched clusters the img layer equals `x_t0cor` to ≤ 0.0015 cm. Event 1,
+  cluster 33: 9.4 … 131.4 cm.
+  - Without the fix the same page gives −113.5 … 8.5 (img) and 70.8 … 192.9 (clustering).
+
+### 8.5 Not fixed, reported
+
+- **Main (reco-frame) panel on `clustering-global`.** Found from the code, not checked in a browser.
+  - `op.js buildGroup` shifts the boxes by v·t·driftDir, which is correct for raw charge. The clustering layer is
+    already corrected, so there a matched cluster sits v·t away from its shifted box: 61.4 cm for cluster 33.
+  - The fix would be the same `layerInDetectorFrame` test (no box shift for that layer). It is left for the owner's
+    call because it changes what the main panel shows.
+- **PDHD and SBND also write `clustering-global` in `x_t0cor`** (pdhd/sbnd `clus.jsonnet`). Their side panels may
+  double-correct the same way. `layerInDetectorFrame` is PDVD-only here, and the other two are unchecked.
+- `run_d119s_kaon_side_scratch.sh` inherits doc 118's scratch settings: the two QLMatching single-side defects are
+  still open.
+
+### 8.6 Commits, deploy and install status
+
+- **Pushed:** toolkit `9de7fcae` on `apply-pointcloud`, a fast-forward on top of a peer's `7312f2b3`, which was
+  already on the remote; bee3 `9cdccfe` on `main`.
+- **Bee deploy (owner / colleague).** The BNL server loads the parcel bundle `static/js/bee/dist/bee.js`, so `main`
+  must be rebuilt and redeployed before the fix is visible.
+  - After that, `clustering-global` is placed right on the already-uploaded set.
+  - `img-global` also needs a zip carrying `op_cluster_anodes`: `/home/xqian/tmp/d119_bee/d119-kaon10-side.zip`,
+    **not uploaded**.
+  - Post-deploy check: `kaon/bee_side_check.py 1` without `PATCH`. On event 1, `clustering-global`, cluster 33 must
+    draw at 9.4 … 131.4 cm.
+- **Shared-tree install: pending.** `/home/xqian/tmp/d119s_install.sh` builds and installs only
+  `WireCellUtil,WireCellAux,WireCellClus`, once the tree has been idle for 120 s. When this commit was made, a peer
+  wcfm imaging batch was running.
+  - Until the install lands, production PDVD jobs compile `bee_flash_cluster_anodes: true`, and the installed
+    `libWireCellClus` ignores it: the op json is unchanged, no harm.
+
 ## Status flags
 
 - Toolkit C++ (`util` Bee, `clus` MultiAlgBlobClustering) and PDVD jsonnet: **byte-identical when off**. Gates are in
@@ -383,3 +551,8 @@ The owner said: commit and push, make the label the PDVD default, and use no min
 - **PDVD production behaviour changed on purpose** (the flip, section 7): the Bee `op` json gains `op_beam`, and the
   light metadata gains 2 keys. Nothing else changes. The gated binaries are `/home/xqian/tmp/d119inst/{A2,B2}`.
 - Bee: display-only change, legacy path untouched when `op_beam` is absent.
+- **Round 2 (section 8), `op_cluster_anodes`:** the C++ is **byte-identical when off** (196/196 on the PDVD op path,
+  120/120 PDHD+PDVD harness, SBND 416/416, uBooNE zips 35/35; section 8.4, where uBooNE ev 6805's tagger instability
+  is shown to be pre-existing). PDVD Q/L jobs turn it on by default, and their only output change is
+  the added `op_cluster_anodes` in the Bee `op` json. bee3's side panel changes for PDVD only. Gated binaries:
+  `/home/xqian/tmp/d119inst/{A3,B3}`.
