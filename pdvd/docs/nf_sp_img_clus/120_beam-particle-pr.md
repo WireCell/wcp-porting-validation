@@ -2,9 +2,9 @@
 
 **Status (2026-09-25):** implemented, gated, run on the 6 doc-118 kaon events. New component `CheckBeamParticle`
 (clus) + `run_pr_evt.sh -beam`. Byte-identical for every existing pipeline (new component, null-default TLAs; the
-`-stm` / `-nu` / `-nu-legacy` compiled configs are unchanged; hash gate d120a/d120b PASS). **Open for the owner:**
-the beam entry's drift coordinate — the GDML beam-plug axis and the data disagree by ~100 cm (sec 1.3); the
-defaults follow the data. **Installed in the shared tree 2026-09-25 14:25 (owner's go)** and smoke-tested: the
+`-stm` / `-nu` / `-nu-legacy` compiled configs are unchanged; hash gate d120a/d120b PASS). **Owner ruling
+2026-09-25: use the DATA-derived entry point (110, 159, 0.6) cm — not the GDML axis x — and KEEP the 10 cm
+main-cluster length floor.** Both are the shipped defaults (sec 1.3, sec 5.2); nothing moves. **Installed in the shared tree 2026-09-25 14:25 (owner's go)** and smoke-tested: the
 bare runner reproduces arm B on all six events (sec 8). **Bee set uploaded (owner's go):
 <https://www.phy.bnl.gov/twister/bee/set/68caddae-7c7a-45b6-9312-54ddfdd5fe6d/event/list/>** (sec 6). Toolkit
 `57f99628`, wcp `59e42b14` (+ this record).
@@ -92,6 +92,9 @@ generator's `NP02XDrift`/`NP02Rotation` code ships only as a `.so`; the doc 118 
 - with the GDML x the same radius would select nothing on today's data (nearest track 100 cm away);
 - both are TLAs (`beam_entry_point_cm`, `beam_dir`, `beam_entry_max_dist_cm`), so the owner's ruling is a one-line
   change and no code moves.
+
+**Owner ruling (2026-09-25): the data-derived entry point stands.** The defaults above are production; the GDML
+value is kept here as the record of the discrepancy, not as an alternative operating point.
 
 ## 2. Design
 
@@ -257,8 +260,8 @@ stub with four zero-energy showers. The full member list (log, `member cluster` 
 "Closest to the entry" alone cannot separate a fragment near the face from the track; a length floor can, and
 the C++ knob `min_main_length_cm` exists for it. The PDVD job default is now `beam_pr_knobs =
 {min_main_length_cm: 10}`; 157312 and 245576 are unchanged by it (their mains are 94 / 169 cm and were already the
-nearest). This is a selection operating point for a new stage, not a physics retune — flagged here for the
-owner's veto; `-S 'beam_pr_knobs={}'` restores the bare rule (Bee set `d120-beam6-nofloor.zip`).
+nearest). This is a selection operating point for a new stage, not a physics retune; `-S 'beam_pr_knobs={}'`
+restores the bare rule (Bee set `d120-beam6-nofloor.zip`). **Owner ruling (2026-09-25): keep the 10 cm floor.**
 
 ## 6. Bee
 
@@ -281,15 +284,18 @@ no-floor control `d120-beam6-nofloor.zip`. Offline check on 157312: the `vertice
 
 ## 7. Open items
 
-1. **Entry x: GDML 210.6 vs data ≈110 cm** (sec 1.3). Owner's ruling; both values are TLAs.
+1. ~~Entry x: GDML 210.6 vs data ≈110 cm~~ — RULED 2026-09-25: the data-derived entry (sec 1.3). Why the GDML
+   plug axis sits 100 cm higher in the drift coordinate is still an open question for the detector group, not for
+   this chain.
 2. `improve_vertex` on a boundary entry is off (`improve_entry_vertex`); on, it would re-fit the entry position
    from the segments — measure before turning on.
 3. `T_tagger` rows carry only `match_isFC`; every BDT feature is at its `init_tagger_info` default (cosmic_flag
    1, scores 0). Readers must not interpret them.
 4. 245576's bundle holds three sizeable clusters; the two 175 / 178 MeV muon-typed pieces are companions in the
    flow, not separate candidates. A per-cluster mode ("run each as its own candidate") was discussed and not built.
-5. The length floor (sec 5.2) is a selection operating point chosen on one event; the owner may prefer a
-   distance-to-axis metric instead. The candidate table is in the log of every run.
+5. ~~The length floor (sec 5.2) is a selection operating point chosen on one event~~ — RULED 2026-09-25: keep
+   the 10 cm floor. The candidate table is in the log of every run should a distance-to-axis metric ever be
+   wanted.
 6. The doc-118 light dirs without the `_d119beam` suffix have no trigger metadata; a production run needs
    `run_light_evt.sh` with `PDVD_BEAM_LABEL=1` (the default since doc 119), after which `-beam` needs no suffix.
 7. Timing: the stage takes 0.8–1.8 s per event on these top-only pctrees (steiner runs on the beam bundle only).
