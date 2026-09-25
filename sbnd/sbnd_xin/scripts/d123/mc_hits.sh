@@ -3,6 +3,7 @@
 # (mc_base.sh), through scripts/d123/hits_arm.sh.  beam-off is one root of groups.
 #
 # Usage: [JOBS=n] scripts/d123/mc_hits.sh <cv|nuecc|off> <hits|nosplit> [extra hits_arm.sh args]
+# Resumable: a per-file sub-root whose ql_evt count equals the baseline's is skipped.
 set -u
 cd -P "$(dirname "$0")/../.." || exit 1
 SX=$PWD
@@ -26,7 +27,7 @@ t0=$(date +%s)
 if [ "$PERFILE" = 1 ]; then
     mkdir -p "$O"; touch "$O/.d123_hits_arm"
     ls -d "$B"/f[0-9]* | xargs -n1 basename | xargs -P "$J" -I{} bash -c \
-        'JOBS=1 "$0/scripts/d123/hits_arm.sh" "$1/{}" "$2/{}" "$3" "${@:5}" > "$4/{}.log" 2>&1; echo "[{}] rc=$? ql_evt=$(ls -d "$2/{}"/ql_evt* 2>/dev/null | wc -l)"' \
+        'nb=$(ls -d "$1/{}"/ql_evt* 2>/dev/null | wc -l); no=$(ls -d "$2/{}"/ql_evt* 2>/dev/null | wc -l); if [ "$nb" -gt 0 ] && [ "$no" -eq "$nb" ]; then echo "[{}] complete -- skipped"; exit 0; fi; JOBS=1 "$0/scripts/d123/hits_arm.sh" "$1/{}" "$2/{}" "$3" "${@:5}" > "$4/{}.log" 2>&1; echo "[{}] rc=$? ql_evt=$(ls -d "$2/{}"/ql_evt* 2>/dev/null | wc -l)"' \
         "$SX" "$B" "$O" "$REALITY" "$LOGD" "${EXTRA[@]}" "$@"
 else
     JOBS=$J "$SX/scripts/d123/hits_arm.sh" "$B" "$O" "$REALITY" "${EXTRA[@]}" "$@" > "$LOGD/all.log" 2>&1
