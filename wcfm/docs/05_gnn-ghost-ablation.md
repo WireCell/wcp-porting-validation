@@ -3,7 +3,10 @@
 *2026-09-25. Follows doc 04 §5 (F5 NO-GO) and its consequence: re-pose the question at the ambiguity
 scale, against the right baseline, on ≥ 100 events. This doc builds the sub-blob graph dataset (owner's
 step 1) and trains one GNN twice, with and without the FM inputs (step 2). No toolkit code changes; no
-production output changes; everything here is scripts, runs and a doc in `wcfm/`.*
+production output changes; everything here is scripts, runs and a doc in `wcfm/`. **Round 1 (§8, same
+day): the label, a second fold split and the doc 02 physics metrics — the charge-GNN result holds and gets
+stronger on a clean label; the FM verdict stays NO-GO; the `tru0` "real" cells are 94 % diffusion-tail /
+wrapped-wire artefacts holding 4.5 % of the charge.***
 
 ## 0. Repro
 
@@ -19,6 +22,17 @@ PY=/home/xqian/toolkit-dev/WC_FM_DINO/.venv-dino/bin/python   # torch 2.10 + skl
 $PY scripts/gnn_train.py --graphs /home/xqian/tmp/wcfm-gnn/graphs --out /home/xqian/tmp/wcfm-gnn/abl_charge --arms charge --seeds 0,1,2 --device cuda:0
 $PY scripts/gnn_train.py --graphs /home/xqian/tmp/wcfm-gnn/graphs --out /home/xqian/tmp/wcfm-gnn/abl_fm     --arms fm     --seeds 0,1,2 --device cuda:1
 $PY scripts/gnn_train.py --graphs x --out /home/xqian/tmp/wcfm-gnn/ablation --merge /home/xqian/tmp/wcfm-gnn/abl_charge /home/xqian/tmp/wcfm-gnn/abl_fm
+# round 1 (sec 8): track-cell label, second fold split, physics metrics + views
+G=/home/xqian/tmp/wcfm-gnn
+$PY scripts/gnn_train.py --graphs $G/graphs --out $G/abl_charge_q1k --arms charge --seeds 0,1,2 --label qmin:1000:ig --device cuda:0
+$PY scripts/gnn_train.py --graphs $G/graphs --out $G/abl_fm_q1k     --arms fm     --seeds 0,1,2 --label qmin:1000:ig --device cuda:1
+$PY scripts/gnn_train.py --graphs x --out $G/ablation_q1k --merge $G/abl_charge_q1k $G/abl_fm_q1k
+$PY scripts/gnn_train.py --graphs $G/graphs --out $G/abl_charge_f1  --arms charge --seeds 0,1,2 --fold-seed 1 --device cuda:0
+$PY scripts/gnn_train.py --graphs $G/graphs --out $G/abl_fm_f1      --arms fm     --seeds 0,1,2 --fold-seed 1 --device cuda:1
+$PY scripts/gnn_train.py --graphs x --out $G/ablation_f1 --merge $G/abl_charge_f1 $G/abl_fm_f1
+python3 scripts/gnn_physics.py --graphs $G/graphs --out $G/physics     --run charge=$G/abl_charge     --run fm=$G/abl_fm     --plot 1:10,6:all,8:all,9:9
+python3 scripts/gnn_physics.py --graphs $G/graphs --out $G/physics_q1k --run charge=$G/abl_charge_q1k --run fm=$G/abl_fm_q1k --plot 1:10,6:2,8:11
+python3 scripts/gnn_physics.py --graphs $G/graphs --out $G/physics_f1  --run charge=$G/abl_charge_f1  --run fm=$G/abl_fm_f1
 ```
 
 The batch caps were 6 (sim), 5 (imaging, `-P` over events, one process per anode inside) and 4 (FM).
@@ -202,11 +216,15 @@ among survivors) re-measured with it.
 
 ## 6. Open items
 
-- **Label definition.** `tru0` marks a 4-wire cell real if any true charge fell in it; a track passing
-  the cell's corner counts as real with a tiny charge. A charge-weighted target (or `tru` with the doc 02
-  tolerance) would move the hard population and should be checked before the toolkit stage is built.
-- **Fold sensitivity.** One fixed fold assignment (`FOLD_SEED 0`); the seed sd (0.011–0.014 on the hard
-  population) is larger than the fm–charge gap, but a second fold assignment would tighten the verdict.
+- **Label definition** — resolved in §8.1: `tru0` is not a usable target for the toolkit stage; train on
+  `qmin:<Q>:ig` (track cells vs pure ghosts, tail band ignored) or on a charge regression.
+- **The tail cells and `BlobDepoFill`** (§8.1): 2.9 M cells with 0 < q_true < 1000 e, most of them > 10 cm
+  from any track cell, in W-wire columns and wrapped-wire images of the track. Whether the fill rule leaks
+  through the U/V wrap (same wire index, other segment) or the tiled blob geometry does is not settled here;
+  it decides what "true charge in a cell" means on FD-HD and needs a look before `tru0`/`tru` are used as a
+  per-cell regression target. Doc 02's "relative threshold" caveat was this.
+- **Fold sensitivity** — checked in §8.3: the `tru0` verdict moves with the split (one charge seed
+  collapses on fold seed 1), the `qmin` verdict does not.
 - **Legacy solver memory at the 4-wire cut.** 19.4 GB and 460 s on a 147 k-cell anode; the `_sub4`
   tier is a research tier, not a production knob, until that is addressed (the GNN stage would replace
   the solver on those cells, not run after it).
@@ -220,10 +238,102 @@ among survivors) re-measured with it.
 
 ## 7. Files
 
-wcp (this commit): `wcfm/gen_iso_tracks.py` (`--extend N`, `random_spec`), `wcfm/events/000001_{11..100}.json`,
+wcp (`4df84a67`): `wcfm/gen_iso_tracks.py` (`--extend N`, `random_spec`), `wcfm/events/000001_{11..100}.json`,
 `wcfm/gnn_events.txt`, `wcfm/scripts/gnn_dataset.py`, `wcfm/scripts/gnn_train.py`, `docs/05_*.md`,
 `docs/05_tables/{dataset.md, dataset_summary.txt, ablation_summary.md, ablation_result.json, operating_points.md}`,
-`docs/README.md`. Work products (not committed): `work/000001_{11..100}/` (sim), `work/000001_*_sub4/`
+`docs/README.md`. Round 1 (this commit): `scripts/gnn_train.py` (`--label`, `--fold-seed`, ignore mask),
+`scripts/gnn_physics.py`, `docs/05_tables/{physics_tru0.md, physics_q1k.md, physics_f1.md, ablation_summary_q1k.md,
+ablation_result_q1k.json, ablation_summary_f1.md, ablation_result_f1.json, ap_real_q1k.md, view-*.png}`. Work products (not committed): `work/000001_{11..100}/` (sim), `work/000001_*_sub4/`
 (imaging + truth tiers, 4-wire cut), `work/000001_{11..100}_fm/` (sidecars); scratch
 `/home/xqian/tmp/wcfm-gnn/` (graphs 2.1 GB, `abl_charge/`, `abl_fm/`, `ablation/`, logs). Toolkit: no
 change (`c58501b8`).
+
+## 8. Round 1 — the label, a second split, and the physics metrics
+
+Owner's step 1 of 2026-09-25: harden the charge-GNN result before any C++. Three checks; all runs 3 seeds,
+same folds and epochs as §3; 6–7.5 min per seed.
+
+### 8.1 What `tru0` calls "real"
+
+The true charge of the 3.09 M `tru0`-real cells (`BlobDepoFill` `val`, electrons):
+
+| q_true | share of "real" cells | share of true charge | legacy chain keeps |
+|---|---|---|---|
+| (0, 1) | 20.3 % | 0.0 % | 5.5 % |
+| [1, 10) | 20.1 % | 0.1 % | 4.6 % |
+| [10, 100) | 42.1 % | 1.7 % | 4.4 % |
+| [100, 1000) | 11.2 % | 2.7 % | 7.1 % |
+| [1000, 10 000) | 3.3 % | 13.0 % | 24 % |
+| [10 000, 100 000) | 3.0 % | 73.4 % | 22 % |
+| ≥ 100 000 | 0.1 % | 9.0 % | 3.6 % |
+
+**93.7 % of the `tru0`-real cells hold < 1000 e and together 4.5 % of the charge.** They are not the
+cells of a track: in the views (`05_tables/view-000001_{1-anode10,6-anode2,8-anode11}.png`, orange) they
+form W-wire columns spanning the whole slab and straight-line / triangular *images* of the track hundreds
+of cm away — event 6 anode 2 has them at y ≈ −600 cm while both tracks of the event lie at y ∈ [−127, 41]
+(the second track is on anode 3, y > 0): wrapped-wire images. Quantified with the cell centres: on event 1
+anode 10, 87 % of the tail cells (88 % of their charge) are > 10 cm from any track cell; event 6 anode 2
+89 %; event 3 anode 4 66 %; event 8 anode 11 42 %; the cosmic event 9: 0 %. Median tail charge 15–85 e
+against ~10⁵ e for a full 4-wire crossing.
+
+Consequences: (i) the §4 hard population (97 % "dropped real cells") was 90 % these cells, so the
+pre-registered §4.2 number measured how well each arm recovers diffusion-tail / wrap-image cells, which is
+not the owner's question; (ii) the sensible label is **track cell (q_true ≥ 1000 e) vs pure ghost
+(q_true = 0), tail band ignored** — `gnn_train.py --label qmin:1000:ig` (2.30 M labelled cells, 194 353
+track cells, 8.5 % real); (iii) how `BlobDepoFill` puts 15–85 e into a cell 500 cm from the track is an
+open item (§6) — doc 02's "the ghost label must be a relative threshold" was this effect seen from the
+other side.
+
+### 8.2 The doc 02 physics metrics of the keep sets (`scripts/gnn_physics.py`, `05_tables/physics_*.md`)
+
+Charge recall = Σ q_true(kept) / Σ q_true; track-cell recall = fraction of q ≥ 1000 e cells kept; ghost
+fraction = kept cells with q_true = 0; keep ⇔ P(real) ≥ 0.5 (3-seed mean logit), all 100 events held out.
+
+| rule (training label) | cells kept | charge recall | track-cell recall | ghost fraction of kept | ghost share of kept measured charge | tail cells kept |
+|---|---|---|---|---|---|---|
+| legacy chain | 5.3 % | **0.175** (iso 0.110, cosmic 0.429) | 0.229 | 0.316 | 0.029 | 0.05 |
+| charge GNN (`tru0`) | 62.8 % | 0.9992 | 0.999 | 0.080 | 0.028 | 0.97 |
+| fm GNN (`tru0`) | 60.1 % | 0.9987 | 0.999 | 0.046 | 0.022 | 0.96 |
+| **charge GNN (`qmin:1000:ig`)** | **25.2 %** | **0.982** | **0.989** | **0.008** | 0.008 | 0.38 |
+| fm GNN (`qmin:1000:ig`) | 40.2 % | 0.993 | 0.990 | 0.003 | 0.005 | 0.65 |
+
+Per event (doc 02 events; `physics_q1k.md`): the legacy chain's charge recall is 0.02–0.34 on the eight
+iso events and 0.74–0.89 on the two cosmics; the `qmin` charge GNN is ≥ 0.977 on every event except the
+three-track overlay event 7 (0.953; fm 0.985), with ghost fraction 0.000–0.015 except the two-track
+overlay event 6 (0.146; fm 0.058). Views: on the doc 02 slab (event 1 anode 10, 42 625 cells, 181 track
+cells) the legacy chain keeps 4 track cells and 586 ghosts; both `qmin` GNNs keep all 181 and **0**
+ghosts. On the four-track event 8 anode 11 the charge GNN keeps 1 619 / 1 627 track cells and 0 of the
+38 746 ghosts (fm: 1 620 and 36) — and 13 044 of the 30 425 tail cells, versus 22 354 for the fm arm: the
+tail band, which neither label constrains, is where the two arms differ most.
+
+### 8.3 The gate on the clean label, and the second split
+
+| run | label | fold seed | charge arm hard AP | fm arm hard AP | gap | verdict |
+|---|---|---|---|---|---|---|
+| §4 | `tru0` | 0 | 0.8412 ± 0.0112 | 0.8412 ± 0.0138 | +0.0001 | NO-GO |
+| round 1 | `tru0` | 1 | 0.7956 ± 0.0582 (seeds 0.837 / **0.713** / 0.836) | 0.8542 ± 0.0106 | +0.059 | NO-GO (gap < 2 × sd 0.058) |
+| round 1 | **`qmin:1000:ig`** | 0 | **0.9980 ± 0.0007** | **0.9991 ± 0.0001** | +0.0011 | NO-GO |
+
+On the clean label the hard population is 237 k cells (87 k pure ghosts the chain kept + 150 k track cells
+it dropped; the chain's own precision/recall there 0.338 / 0.229) and both arms separate it almost
+perfectly. With the track cell as the positive class (`ap_real_q1k.md`): AP 0.9935 ± 0.0012 (charge) vs
+0.9956 ± 0.0008 (fm), AUC 0.9992 vs 0.9996; on the hard cells 0.9994 vs 0.9996. The fm gain is outside the
+seed spread and one-tenth of the margin.
+
+The `tru0` verdict is split-sensitive (one charge seed collapses on fold seed 1 while the fm arm is stable,
+sd 0.011 vs 0.058) — on a target that is mostly tail cells, the FM's per-pixel texture is a steadier cue
+than four charge numbers per view. That is consistent with §5 reading 2 and does not change the verdict.
+
+### 8.4 What round 1 changes in §5
+
+- Reading 1 is **confirmed and stronger**: on track cells vs pure ghosts the charge-only GNN reaches
+  AUC 0.999, charge recall 0.98 with 0.8 % ghosts among the kept cells, against the legacy chain's 0.175
+  with 32 % ghosts. This is the number to build the toolkit stage on, trained with `qmin:<Q>:ig` (or a
+  charge regression), not `tru0`.
+- Reading 2 stands: the FM adds a small, consistent, sub-margin gain (fewer ghosts at fixed threshold,
+  +0.01 charge recall on the overlay events 6/7, AP(real) +0.002) and keeps more of the tail band. F4 stays
+  on hold; the FM remains an optional input for the stage.
+- New: the tail band (2.9 M cells, 4.5 % of q_true, spatially artefacts) needs a decision before training
+  the production stage — the charge solver's answer is "drop them" (they get ~0 solved charge), and the
+  `qmin` charge GNN drops 62 % of them unasked. Deciding it in the truth tier (`BlobDepoFill` fill rule,
+  §6) is cleaner than deciding it in the loss.

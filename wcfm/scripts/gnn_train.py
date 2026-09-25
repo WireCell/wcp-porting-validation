@@ -46,36 +46,56 @@ MARGIN_AP = 0.02
 FOLD_SEED = 0
 
 
-def load_graphs(gdir, need_fm):
+def labels_of(qtrue, spec):
+    """ghost label (1) / real (0) / -1 = ignored, from the BlobDepoFill true charge.
+    tru0        : real <=> q_true > 0 (doc 05 sec 3; 94 % of those cells hold < 1000 e of diffusion tail)
+    qmin:<Q>    : real <=> q_true >= Q, ghost <=> q_true < Q
+    qmin:<Q>:ig : real <=> q_true >= Q, ghost <=> q_true == 0, cells with 0 < q_true < Q ignored in loss and metrics"""
+    if spec == 'tru0':
+        return (qtrue <= 0).astype(np.int8)
+    parts = spec.split(':')
+    if parts[0] != 'qmin':
+        raise SystemExit(f'unknown label spec {spec}')
+    Q = float(parts[1]); y = (qtrue < Q).astype(np.int8)
+    if len(parts) > 2 and parts[2] == 'ig':
+        y[(qtrue > 0) & (qtrue < Q)] = -1
+    return y
+
+
+def load_graphs(gdir, need_fm, label='tru0'):
     """raw arrays stay on the CPU (FM blocks in float16); each step standardises one graph on the GPU."""
     graphs = []
     for fn in sorted(glob.glob(os.path.join(gdir, 'graph-*.npz'))):
         z = np.load(fn)
         if len(z['b_y']) < 2 or len(z['bw_src']) == 0:
             continue
+        lab = labels_of(z['b_qtrue'].astype(np.float64), label)
+        if label == 'tru0':
+            assert (lab == z['b_y']).all()
         onehot = np.eye(3, dtype=np.float32)[z['w_plane']]
         bb = z['bb'].astype(np.int64)
         bb2 = np.concatenate([bb, bb[:, ::-1]]) if len(bb) else np.zeros((0, 2), np.int64)
         g = dict(name=os.path.basename(fn)[6:-4], event=int(z['event']), anode=int(z['anode']),
                  kind=str(z['kind']), ntracks=int(z['ntracks']),
                  b_charge=z['b_charge'].astype(np.float32), b_fm=z['b_fm'] if need_fm else None,
-                 y=z['b_y'].astype(np.float32), kept=z['b_kept'].astype(np.int8), present=z['b_present'].astype(np.int8),
+                 y=np.clip(lab, 0, 1).astype(np.float32), mask=lab >= 0, qtrue=z['b_qtrue'].astype(np.float64),
+                 kept=z['b_kept'].astype(np.int8), present=z['b_present'].astype(np.int8),
                  w_plane=torch.from_numpy(z['w_plane'].astype(np.int64)),
                  w_base=np.concatenate([np.log1p(z['w_q'].astype(np.float32))[:, None], onehot], axis=1),
                  w_fm=z['w_fm'] if need_fm else None,
                  bw_src=torch.from_numpy(z['bw_src'].astype(np.int64)), bw_dst=torch.from_numpy(z['bw_dst'].astype(np.int64)),
                  bb_src=torch.from_numpy(np.ascontiguousarray(bb2[:, 0])), bb_dst=torch.from_numpy(np.ascontiguousarray(bb2[:, 1])),
-                 y_t=torch.from_numpy(z['b_y'].astype(np.float32)))
+                 y_t=torch.from_numpy(np.clip(lab, 0, 1).astype(np.float32)), mask_t=torch.from_numpy(lab >= 0))
         graphs.append(g)
     return graphs
 
 
-def make_folds(graphs, nfold):
+def make_folds(graphs, nfold, fold_seed=FOLD_SEED):
     """event -> fold, stratified by kind+ntracks, fixed seed."""
     by_class = defaultdict(list)
     for g in graphs:
         by_class[(g['kind'], g['ntracks'])].append(g['event'])
-    rng = np.random.RandomState(FOLD_SEED)
+    rng = np.random.RandomState(fold_seed)
     fold = {}
     k = 0
     for cls in sorted(by_class):
@@ -168,7 +188,8 @@ class Standardiser:
         return dict(xb=(xb - self.mb) / self.sb, xw=(xw - self.mw) / self.sw,
                     bw_src=g['bw_src'].to(dev, non_blocking=True), bw_dst=g['bw_dst'].to(dev, non_blocking=True),
                     bb_src=g['bb_src'].to(dev, non_blocking=True), bb_dst=g['bb_dst'].to(dev, non_blocking=True),
-                    w_plane=g['w_plane'].to(dev, non_blocking=True), y=g['y_t'].to(dev, non_blocking=True))
+                    w_plane=g['w_plane'].to(dev, non_blocking=True), y=g['y_t'].to(dev, non_blocking=True),
+                    mask=g['mask_t'].to(dev, non_blocking=True))
 
 
 def ap_auc(y, s):
@@ -179,7 +200,7 @@ def ap_auc(y, s):
 
 
 def hard_mask(g):
-    return ((g['kept'] == 1) & (g['y'] == 1)) | ((g['kept'] == 0) & (g['y'] == 0))
+    return (((g['kept'] == 1) & (g['y'] == 1)) | ((g['kept'] == 0) & (g['y'] == 0))) & g['mask']
 
 
 @torch.no_grad()
@@ -191,7 +212,7 @@ def predict(model, tg):
 def pooled_ap(graphs, std, model, hard=True):
     ys, ss = [], []
     for g in graphs:
-        s = predict(model, std.to_torch(g)); m = hard_mask(g) if hard else np.ones(len(s), bool)
+        s = predict(model, std.to_torch(g)); m = hard_mask(g) if hard else g['mask']
         ys.append(g['y'][m]); ss.append(s[m])
     return ap_auc(np.concatenate(ys), np.concatenate(ss))[0]
 
@@ -212,7 +233,7 @@ def train_fold(graphs, fold, k, arm, seed, a, dev, log):
         for i in order:
             tg = std.to_torch(train[i])
             logit = model(tg['xb'], tg['xw'], tg['bw_src'], tg['bw_dst'], tg['bb_src'], tg['bb_dst'], tg['w_plane'])
-            loss = F.binary_cross_entropy_with_logits(logit, tg['y'])
+            loss = F.binary_cross_entropy_with_logits(logit[tg['mask']], tg['y'][tg['mask']])
             opt.zero_grad(); loss.backward(); opt.step(); tot += float(loss)
             del tg, logit, loss
         vap = pooled_ap(val, std, model, hard=True)
@@ -234,7 +255,7 @@ def summarise(graphs, scores):
         ys, ss = [], []
         for g in graphs:
             if not sel(g): continue
-            s = scores[g['name']]; m = hard_mask(g) if hard else np.ones(len(s), bool)
+            s = scores[g['name']]; m = hard_mask(g) if hard else g['mask']
             ys.append(g['y'][m]); ss.append(s[m])
         if not ys:
             return dict(n=0, ghost_fraction=float('nan'), ap=float('nan'), auc=float('nan'))
@@ -244,14 +265,14 @@ def summarise(graphs, scores):
         res[label] = pool(sel, False); res[label + '_hard'] = pool(sel, True)
     per_ev = defaultdict(lambda: ([], []))
     for g in graphs:
-        per_ev[g['event']][0].append(g['y']); per_ev[g['event']][1].append(scores[g['name']])
+        per_ev[g['event']][0].append(g['y'][g['mask']]); per_ev[g['event']][1].append(scores[g['name']][g['mask']])
     aps = [ap_auc(np.concatenate(a), np.concatenate(b))[0] for a, b in per_ev.values()]
     res['per_event_ap_median'] = float(np.nanmedian(aps)); res['per_event_ap_p10'] = float(np.nanpercentile(aps, 10))
     return res
 
 
 def solver_reference(graphs):
-    y = np.concatenate([g['y'] for g in graphs]); kept = np.concatenate([g['kept'] for g in graphs])
+    y = np.concatenate([g['y'][g['mask']] for g in graphs]); kept = np.concatenate([g['kept'][g['mask']] for g in graphs])
     real = y == 0
     tp = int((kept == 1)[real].sum()); fp = int((kept == 1)[~real].sum()); fn = int((kept == 0)[real].sum())
     return dict(n=int(len(y)), real=int(real.sum()), kept=int(kept.sum()), tp=tp, fp=fp, fn=fn,
@@ -266,6 +287,8 @@ def main():
     ap.add_argument('--hidden', type=int, default=64); ap.add_argument('--layers', type=int, default=3)
     ap.add_argument('--lr', type=float, default=1e-3); ap.add_argument('--device', default='cuda:0')
     ap.add_argument('--merge', nargs='+', metavar='DIR', help='combine the arms of these run dirs into --out and stop')
+    ap.add_argument('--label', default='tru0', help='tru0 | qmin:<Q> | qmin:<Q>:ig (see labels_of)')
+    ap.add_argument('--fold-seed', type=int, default=FOLD_SEED)
     a = ap.parse_args()
     if a.merge:
         return merge(a.merge, a.out)
@@ -274,11 +297,12 @@ def main():
     def log(s):
         print(s, flush=True); logf.write(s + '\n'); logf.flush()
     dev = torch.device(a.device)
-    graphs = load_graphs(a.graphs, need_fm='fm' in a.arms.split(','))
-    fold = make_folds(graphs, a.folds)
+    graphs = load_graphs(a.graphs, need_fm='fm' in a.arms.split(','), label=a.label)
+    fold = make_folds(graphs, a.folds, a.fold_seed)
     ev = sorted(set(g['event'] for g in graphs))
-    log(f'[gnn] {len(graphs)} graphs, {len(ev)} events, blobs {sum(len(g["y"]) for g in graphs)}, '
-        f'ghost fraction {np.concatenate([g["y"] for g in graphs]).mean():.3f}, folds {[sum(1 for e in ev if fold[e] == k) for k in range(a.folds)]}')
+    log(f'[gnn] {len(graphs)} graphs, {len(ev)} events, blobs {sum(len(g["y"]) for g in graphs)}, label {a.label}: '
+        f'labelled {sum(int(g["mask"].sum()) for g in graphs)}, ghost fraction {np.concatenate([g["y"][g["mask"]] for g in graphs]).mean():.3f}, '
+        f'fold seed {a.fold_seed}, folds {[sum(1 for e in ev if fold[e] == k) for k in range(a.folds)]}')
     ref = solver_reference(graphs)
     log(f'[gnn] legacy chain reference: {ref}')
     result = dict(args=vars(a), margin_ap=MARGIN_AP, solver=ref, fold={int(e): int(f) for e, f in fold.items()},
