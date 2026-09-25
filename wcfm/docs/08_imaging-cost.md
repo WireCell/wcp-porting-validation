@@ -320,9 +320,9 @@ anode with the truth catchers now costing ~1 s instead of 8–30 s.
 
 - `wcfm/img.jsonnet`, `wcfm/wct-img-all.jsonnet` (`truth_only`), `wcfm/run_img_evt.sh` (`-U`),
   `wcfm/scripts/gnn_dataset.py` (`--legacy-sub`).
-- toolkit (uncommitted at the time of writing, one commit each intended): `img/src/BlobDepoFill.cxx` +
-  `img/test/doctest_blobdepofill_bounds.cxx` (B1), `aux/src/BlobShadow.cxx` (B2), `util/src/LassoModel.cxx` +
-  `util/test/doctest_lassomodel_gram.cxx` (B3).
+- toolkit `apply-pointcloud`, one commit each on top of 259abd28: 41fe5196 `img/src/BlobDepoFill.cxx` +
+  `img/test/doctest_blobdepofill_bounds.cxx` (B1), 63e74946 `aux/src/BlobShadow.cxx` (B2), 45dfc10d `util/src/LassoModel.cxx` +
+  `util/test/doctest_lassomodel_gram.cxx` (B3). This doc and the wcfm changes: wcp main d207c1d3 (+ this follow-up).
 - `docs/08_tables/`: `timers.md`, `cpu_profiles.md`, `rss_ladder.md`, `heap_dumps.md` (profiles), `gates.md` (every gate's
   verdict and timing lines verbatim).
 - Scratch (not committed): `/home/xqian/tmp/wcfm-prof/` (profiles, heap dumps, `jeprof`), `/home/xqian/tmp/wcfm-img08/`
