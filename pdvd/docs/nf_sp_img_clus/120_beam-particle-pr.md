@@ -9,6 +9,18 @@ bare runner reproduces arm B on all six events (sec 8). **Bee set uploaded (owne
 <https://www.phy.bnl.gov/twister/bee/set/68caddae-7c7a-45b6-9312-54ddfdd5fe6d/event/list/>** (sec 6). Toolkit
 `57f99628`, wcp `59e42b14` (+ this record).
 
+**Round 2 (2026-09-25, sec 9) — owner's report: the particle flow misses pieces the fitted trajectories cover.**
+Three causes found and fixed, all inside the beam stage or behind a default-off knob: (1) the stage read only the
+79-key STM+Michel knob subset while the neutrino stage runs with ~250 production keys (now the neutrino node's
+compiled data, one config two consumers); (2) the entry-rooted "long muon" pseudo-shower flood-filled the whole
+event into one `mu-` node (now released to ordinary track segments, `entry_long_muon_absorb=false`); (3) every EM
+shower's charge energy was 0 on PDVD — the 2-D charge cells are tested in the raw drift frame against t0-corrected
+clouds, ~50 cm apart — so the Bee tree's energy floor hid them (`kine_charge_t0_frame`, a new
+`KineChargeOptions` knob, default off everywhere but this stage). Bee nodes on 157312 / 245576 / 317673: 8 / 13 / 3
+→ 22 / 14 / 14. Knob-off gates: `-nu` production and `-nu-legacy` byte-identical (sec 9.5); `-stm/-nu/-nu-legacy`
+compiled configs unchanged; wcdoctest-clus 716888/716888. Shared tree re-installed 15:03. Round-2 Bee zip built
+(`/home/xqian/tmp/d120_bee/d120-beam6-r2.zip`, tag `_d120r4`), **not uploaded** (owner's call).
+
 Owner request: for PDVD the beam is a charged particle *entering* the detector, so (1) the main vertex is the beam
 particle's ENTRY point, like the STM+Michel chain's entry; (2) the rest of the PR is the neutrino chain
 (proto-segments, EM shower clustering, particle id, particle flow), not the STM+Michel chain; (3) no cosmic
@@ -30,6 +42,13 @@ grep 'CheckBeamParticle:' work/039305_157312_d120beam10/wct_pr_039305_157312.log
 python3 kaon/make_d120_bee_zip.py d120beam10 /home/xqian/tmp/d120_bee/d120-beam6.zip     # Bee set, 6 events
 # knob off (hash gate) and the compiled-config proof: sec 4
 # unit tests: ./build/clus/wcdoctest-clus -tc='*beam_particle*,*CheckBeamParticle*'
+# round 2 (sec 9): same command, tag d120r4, shared install of 15:03; WCT_BEE_PF_PRINT=1 prints the tree assembly
+WCT_BEE_PF_PRINT=1 PDVD_BEAM_LIGHT_SUFFIX=_d119beam PDVD_PR_TLA="-S dl_weights=''" ./run_pr_evt.sh -beam -s d120r4 39305 157312
+python3 kaon/make_d120_bee_zip.py d120r4 /home/xqian/tmp/d120_bee/d120-beam6-r2.zip
+# the neutrino chain on the same bundle, for comparison (PDVD -nu-legacy gates candidates on the STM tag by default)
+PDVD_PR_TLA="-S dl_weights='' -S beam_trigger_us=2793.584 -S beam_tc_type=22 -S nu_per_bundle_stm_only=false" \
+  ./run_pr_evt.sh -nu-legacy -s d120nulegacy2 39305 157312
+# knob-off gate of the shared NeutrinoEnergyReco change: /home/xqian/tmp/d120_r4cmp.sh (sec 9.5)
 ```
 
 The runs above used the private arm-B install `/home/xqian/tmp/d120inst/B` (`PATH`/`LD_LIBRARY_PATH` pinned, as
@@ -299,6 +318,16 @@ no-floor control `d120-beam6-nofloor.zip`. Offline check on 157312: the `vertice
 6. The doc-118 light dirs without the `_d119beam` suffix have no trigger metadata; a production run needs
    `run_light_evt.sh` with `PDVD_BEAM_LABEL=1` (the default since doc 119), after which `-beam` needs no suffix.
 7. Timing: the stage takes 0.8–1.8 s per event on these top-only pctrees (steiner runs on the beam bundle only).
+8. (round 2) The beam track is rendered as its chain of track segments (sec 9.3), not as one node; on 157312 the
+   11 cm entry segment 30011 is typed `e-` once the charge energies are real (sec 9.4; `mu-` with them at 0). The
+   beam particle's identity is known from the beamline — a PID lock on the entry chain is the natural next knob.
+9. (round 2) `kine_charge_t0_frame` is on in this stage only. TaggerCheckNeutrino on PDVD (`-nu-legacy`) has the
+   same zero-charge defect (sec 9.4, measured on its own run) and does not read the key; wiring it there is a
+   3-line default-off addition if a PDVD neutrino-chain reference is ever wanted.
+10. (round 2) The neutrino chain's main-vertex-specific passes (`shower_clustering_connecting_to_main_vertex`,
+    the pi0 finders' vertex preference) act at the ENTRY; the interaction vertex 77 cm in is an ordinary graph
+    vertex to them. A two-vertex design (beam track to the interaction, the neutrino chain from there) was
+    considered and not built.
 
 ## 8. Files, commits, install
 
@@ -320,3 +349,115 @@ no-floor control `d120-beam6-nofloor.zip`. Offline check on 157312: the `vertice
   `eadbb007…`, 317673 `4df742db…`, 13 members each) and every `CheckBeamParticle:` verdict line is identical on
   all six. The doctest binary in the shared build links against `local/lib`, so build it AFTER an install
   (doc 119's trap).
+
+## 9. Round 2 — why the particle flow missed what the trajectories covered
+
+Owner's report on the sec 6 Bee set: the fitted trajectories cover the image, the particle flow shows the entry
+muon and little else. Measured on 157312 (tag `_d120beam10`, the sec 5 output): the `track_fit` layer carries 20
+clusters of the bundle (30, 36, 155–172, 204), `mc.json` holds 8 nodes — `mu- 563 MeV` from the entry, two
+`neutron → proton` pieces (76, 41 MeV) and an 8.5 MeV proton. The same bundle through the neutrino chain
+(`-nu-legacy`, `nu_per_bundle_stm_only=false`, tag `_d120nulegacy2`, its own vertex at (98.8, 110.8, 58.7) cm)
+gives 12 nodes: `mu- 207`, `e- 77`, `e- 24`, `proton 166`, `proton 87` and the same companions. Three causes,
+found in that order.
+
+### 9.1 The knob set (config)
+
+The compiled `-beam` config gave `CheckBeamParticle` 48 keys; `TaggerCheckNeutrino` in the same job gets 246. The
+stage had forked CheckSTM_Michel's knob reader (the 79-key PR-partition subset: kinks, two-end break, isochronous
+endpoints, steiner penalty) and `pr.jsonnet` forwarded only that subset, so shower clustering, the cross-cluster
+bridges and continuations (`shower_nv_bridge_track`, `straight_cont_cross_cluster`, `conn3_stitch_max`,
+`kine_count_near_cross_cluster`, `kine_count_conn4_near`), the pi0 finders, the pass-4 ownership fixes and the
+kine accounting all ran at their uBooNE-legacy C++ defaults.
+
+Fix: `CheckBeamParticle` now carries TaggerCheckNeutrino's members, `configure()` reads and the
+`pattern_algos.m_* = m_*` copy block VERBATIM — 344 keys generated from the TCN source by
+`pdvd/kaon/gen_beam_knobs.py` (fork by duplication) — minus the families this stage never runs: DL/dual chain,
+candidate selection (`nu_*`), cosmic taggers/BDT features, MCS, the main-vertex kink/junction snaps (the entry
+is a geometric fact), the SBND cathode bridge and the probes. Same names, units and C++ defaults
+(`TaggerCheckNeutrino.h`), and the doctest pins a sample of each family plus the absence of the dropped ones.
+`pr.jsonnet` hands the stage the NEUTRINO NODE's compiled `data` filtered by that same drop list (one config, two
+consumers: 198 keys on the PDVD job), `beam_pr_knobs` merging last. The chain also gained the neutrino chain's
+post-vertex passes it had skipped: `main_vertex_graph_audit`, `stitch_disconnected_main_cluster`, the
+`swap_orphan_dup_audit` sweep, `fit_blob_coverage_defer` and the `long_muon_range_empty_chain_fallback`
+recompute (each inert unless its key is on). Effect alone (tag `_d120r2`): cluster 170 (52 cm, 6 segments) became
+its own shower and the tree gained nothing visible — 8 nodes still — because of 9.3 and 9.4.
+
+### 9.2 What the tree assembly saw (`WCT_BEE_PF_PRINT=1`)
+
+Every companion shower WAS added to the tree (12 `ADD shower-leaf` lines on 157312) and then pruned by the Bee
+producer's energy floors (`em_ke_min 0.2 MeV`, `np_ke_min 3 MeV`): every electron-typed piece had `ke=0`, and the
+main cluster's own daughters were not separate showers at all — the entry `mu-` node had `nsegments=21`.
+
+### 9.3 The entry-rooted "long muon" (algorithm, beam stage only)
+
+`examine_direction` searches for a long muon FROM THE MAIN VERTEX (`NeutrinoVertexFinder.cxx:1896-1955`): every
+segment leaving the vertex with MIP dQ/dx is walked with `find_cont_muon_segment` through each junction it can
+continue across, and a chain > 45 cm with a > 35 cm member becomes `segments_in_long_muon`.
+`shower_clustering_with_nv_in_main_cluster` then seeds ONE pseudo-shower on the first chain segment and
+`Shower::complete_structure_with_start_segment` flood-fills it — with no stopping rule for a type-13 shower
+(`PRShower.cxx:838`, the absorb guard exempts long muons on purpose). For a neutrino the chain is the exiting muon
+and the flood-fill reassembles a broken track; rooted at the ENTRY it is the whole event: 157312's chain ran from
+the entry through the interaction vertex 77 cm in (two protons, two EM showers, the outgoing muon) to the far end,
+one node, `mu- 532 MeV, 11 segments` (r2).
+
+Fix (`entry_long_muon_absorb`, C++ default false = release): after `examine_direction` the stage clears
+`segments_in_long_muon` / `vertices_in_long_muon` (the PID-13 stamps and the cleared shower flags the search left on
+the beam segments stay). The seeder's BFS then descends through the beam segments as tracks, the daughters at the
+interaction vertex seed their own showers or stay tracks, and `fill_bee_pf_tree`'s track BFS gives beam segment(s)
+→ daughters. Logged per event: `released the entry-rooted long-muon chain (N segment(s), …)` — 2 segments on
+157312, 3 on 317673, none on 245576 (its main cluster is a 2-segment `pi+ → proton`). Effect (tag `_d120r3`):
+157312 8 → 17 nodes (`mu- 51 → e- 24, mu- 181 → proton 161, mu- 5.65 → e- 25, pi+ 106, proton 89, …`), 317673
+3 → 8 (`mu- 444 → e- 17, mu- 78 → e- 2, mu- 469 → e- 18`: the muon broken at its deltas). `true` restores the
+neutrino-chain behaviour for comparison.
+
+### 9.4 Zero charge energy on PDVD (shared code, default-off knob)
+
+Every shower's `kine_charge` was 0.0 — in the beam stage AND in TaggerCheckNeutrino's own PDVD run (sec 9 head:
+its `e- 77` / `e- 24` are range-valued). `kine_charge_from_maps` (`NeutrinoEnergyReco.cxx`) takes each 2-D charge
+cell's geometric point from `Grouping::convert_time_wire_2Dpoint` — the raw t0 = 0 drift frame — and asks the
+shower's `associate_points`/`fit` cloud (the cluster's t0-CORRECTED frame) for its nearest point within 0.6 cm.
+Trace on 157312 (`PDVD_LOG_LEVEL=trace PDVD_LOG_LOGGERS=clus.NeutrinoPattern:trace`): `hits total=5226
+within_cut=0`, every distance 37–60 cm, e.g. cell (ts 3820, apa 6 face 0) at drift 58.7 cm against cloud points
+at x ≈ 111.5 cm. A beam neutrino has t0 ≈ 0 so uBooNE/SBND never see it; a PDVD beam particle's flash t0 is
+~2.8 ms after the readout origin. doc pdhd/16 found the identical defect for the Michel charge and
+CheckSTM_Michel fixed it locally (`michel_q2d`, `CheckSTM_Michel.cxx:1882-1946`): per segment and (apa, face),
+median of `backward(point, t0).x − point.x` over its fit points, subtracted from the cell's drift.
+
+Fix: `KineChargeOptions::t0_frame` (`NeutrinoPatternBase.h`; config key `kine_charge_t0_frame`, C++ default
+false). `NeutrinoEnergyReco.cxx` gains `kine_t0_shift()` (that rule over an object's segments, int-pair-keyed,
+median of sorted vectors) and every consumer — `cal_kine_charge` (shower and segment overloads),
+`calculate_shower_kinematics`, the pr/99 dedup scan's per-context clouds and its rebuild-only path — passes the
+shift when the knob is on and a null pointer otherwise, so the off path is the legacy call. Cells of an (apa,
+face) the object has no fit point in are skipped, as in the Michel rule. `CheckBeamParticle` reads its own key
+with default TRUE (PDVD-only, new stage); TaggerCheckNeutrino does not read it (open item 9). Effect (tag
+`_d120r4`): 157312 17 → 22 nodes, the 51 cm cluster-170 piece `e- 142 MeV`, `30008 e- 181 MeV`, Enu 443 → 492;
+245576 10 → 14 (`e- 566 MeV` for the 140 cm shower that was `0.00 MeV`, Enu 820 → 1404); 317673 8 → 14, Enu 1165
+→ 1181. Two proton pieces changed `kine_best` from range to charge-consistent values; and the entry segment on
+157312 is now typed `e-` (open item 8).
+
+### 9.5 Gates
+
+- Compiled configs (`/home/xqian/tmp/d120_cfgdiff2.sh`, `/home/xqian/tmp/d120cfg2/`): `-stm`, `-nu`, `-nu-legacy`
+  byte-identical to the pre-doc-120 reference (274364 / 279325 / 285167 B); `-beam` node 48 → 198 keys.
+- Knob-off, shared `NeutrinoEnergyReco.cxx` change (`/home/xqian/tmp/d120_r4cmp.sh`): PDVD production `-nu`
+  (CheckSTM_Michel) 157312 / 317673, tags `_d120b` (pre-change) vs `_d120nu4` (15:05 install): `mabc-pr.zip`
+  member hashes `41d05530…` / `3f1701e1…` identical, `calib-pr` json identical, `tracking-pr.root` 280/280
+  branches identical; `-nu-legacy` (TaggerCheckNeutrino, the one consumer that calls the changed functions
+  with the knob off) `_d120nulegacy2` vs `_d120nulegacy4`: zips `c80a916d…` / `2590878d…` identical, calib
+  identical, 1315/1315 branches identical. uBooNE/SBND: same functions, same null-pointer path (structural).
+- `wcdoctest-clus` 716888/716888 after the final build (defaults doctest extended: 20 kept keys pinned, 9
+  dropped families asserted absent, the two new stage keys).
+- Freshness: `local/lib/libWireCellClus.so` 15:03:46 vs `CheckBeamParticle.cxx` / `NeutrinoEnergyReco.cxx`
+  15:02; all six events rerun on the shared install (`_d120r4`), rc 0; 191916 / 2001 / 36591 unchanged (entry
+  cut / no bundle).
+
+### 9.6 Per event, round 2 (tag `_d120r4`)
+
+| event | main | tree (top level → children) | Enu MeV | nodes r1 → r4 |
+|---|---|---|---|---|
+| 157312 | 30 | `e- 36 (30011) → mu- 181 → {mu- 5.65, proton 161}`; `gamma 181 → e- 181 → {gamma 142 → e- 142 (cluster 170), neutron 41 → proton 41, proton 89}`; `neutron 76 → proton 76`; `proton 8.5`; 2 sub-MeV e- | 492 | 8 → 22 |
+| 245576 | 12 | `pi+ 48 → proton 619 → gamma 15 → e- 15 → …`; `gamma 566 → e- 566 (140 cm)`; `neutron 171 → mu- 171` | 1404 | 13 → 14 |
+| 317673 | 33 | `mu- 444 → {e- 17, mu- 78 → {e- 2.3, mu- 469 → e- 18}}`; `gamma 14 → e- 14`; `gamma 1.5 → e- 1.5` | 1181 | 3 → 14 |
+
+Bee zip `/home/xqian/tmp/d120_bee/d120-beam6-r2.zip` (same six events, same order as sec 6) — built, not
+uploaded.
