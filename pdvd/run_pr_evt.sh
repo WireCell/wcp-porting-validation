@@ -57,6 +57,23 @@
 #            the every-bundle stage.  To reproduce the stm1/stm2/stm3 arms pass
 #            BOTH: PDVD_PR_TLA="-S nu_per_bundle_stm_only=false -S protect_stm_only_bundles=false"
 #   -stm     cosmic taggers only (stops after steiner_refresh) + pr_display
+#   -beam    doc pdvd/120: the BEAM-PARTICLE PR -- the neutrino PR chain on the
+#            beam-flash-matched bundle only, particle flow rooted at the beam
+#            ENTRY point, no cosmic taggers, no DL vertex:
+#            switch_scope, flag_mains, unmerge_assoc, steiner, fiducialutils,
+#            check_beam_particle, tracking_visitor, tagger_output, pr_display.
+#            The per-event beam window comes from the LIGHT archive's
+#            trigger_us/tc_type metadata (run_light_evt.sh with
+#            PDVD_BEAM_LABEL=1; the archive named by the .tlas opflash_input=
+#            line, or that path with PDVD_BEAM_LIGHT_SUFFIX inserted after
+#            _light<EVT>, e.g. PDVD_BEAM_LIGHT_SUFFIX=_d119beam for the doc-118
+#            kaon set).  An event without a beam trigger is skipped.
+#            PDVD_BEAM_TRIGGER_US / PDVD_BEAM_TC_TYPE override the metadata.
+#            Outputs: mabc-pr.zip (track_fit/shower_track/vertices/mc rooted at
+#            the entry), tracking-pr.root (T_rec_charge/T_proj_data/T_cluster +
+#            T_kine, T_tagger at its defaults except match_isFC, and
+#            T_beam_particle: the stage's selection record), calib-pr-evt.json.
+#            Verdict lines: grep 'CheckBeamParticle:' in the log.
 #   -empty   pipeline_names=[] : the M2 round-trip identity gate
 #   -pipe    explicit comma-separated pipeline list
 #   -stm-fit append stm_magnify (tracking-stm.root); save_stm_fit is ON by default
@@ -109,6 +126,7 @@ while [ $# -gt 0 ]; do
         -nounmerge-nu) MODE=numerged; shift ;;  # pre-flip merged NEUTRINO chain
         -nu) MODE=nu; shift ;;
         -nu-legacy) MODE=nulegacy; shift ;;   # doc pdvd/48: the pre-replacement neutrino PR tail
+        -beam) MODE=beam; shift ;;   # doc pdvd/120: beam-particle PR on the beam bundle
         -empty) MODE=empty; shift ;;
         -pipe) PIPE_EXPLICIT="$2"; shift 2 ;;
         -s) SEL_TAG="$2"; shift 2 ;;
@@ -152,9 +170,15 @@ PIPE_STM_LEAN="switch_scope,flag_mains,fiducialutils,tagger_check_tgm,steiner,ta
 # Held out of the default until the doc pdvd/39 sec 12 A/B is adjudicated.
 # -unmerge is now the default; the name is kept so old commands keep working.
 PIPE_STM_UNMERGE="$PIPE_STM"
+# doc pdvd/120: the beam-particle chain.  No cosmic taggers (a crossing beam
+# particle IS a through-going track to them), no protect_bundle/steiner_refresh
+# (STM-bundle stages), no DL vertex (the entry is the vertex).  tagger_output
+# carries T_kine (the particle list); its T_tagger holds only match_isFC.
+PIPE_BEAM="switch_scope,flag_mains,unmerge_assoc,steiner,fiducialutils,check_beam_particle,tracking_visitor,tagger_output,pr_display"
 case "$MODE" in
     nu) PIPE="$PIPE_NU" ;;
     nulegacy) PIPE="$PIPE_NU_LEGACY" ;;
+    beam) PIPE="$PIPE_BEAM" ;;
     stm) PIPE="$PIPE_STM" ;;
     numerged) PIPE="$PIPE_NU_MERGED" ;;
     merged) PIPE="$PIPE_STM_MERGED" ;;
@@ -223,6 +247,52 @@ process_event() {
     local TAG_SUFFIX=""
     local LOG="$WORKDIR/wct_pr_${RUN_PADDED}_${EVT}.log"
     local CFG_JSON="$WORKDIR/.wct-pr${SEL_TAG:+_$SEL_TAG}.json"
+    # doc pdvd/120 (-beam): the per-event beam window comes from the light
+    # archive's trigger_us/tc_type (doc 119 metadata, run_light_evt.sh with
+    # PDVD_BEAM_LABEL=1).  The window arithmetic lives in wct-pr-perevt.jsonnet
+    # (RAW flash axis, NO side offset -- not the Bee op_t window); the runner
+    # only forwards the two numbers.  No beam trigger => the event is skipped:
+    # a beam-particle stage must never run on an arbitrary window.
+    local BEAM_TLA=()
+    if [ "$MODE" = beam ]; then
+        local BEAM_TRIG=${PDVD_BEAM_TRIGGER_US:-} BEAM_TCT=${PDVD_BEAM_TC_TYPE:-} BEAM_TAR
+        BEAM_TAR=$(awk -F= '$1=="opflash_input"{print $2}' "$TLAS")
+        if [ -n "${PDVD_BEAM_LIGHT_SUFFIX:-}" ]; then
+            BEAM_TAR=$(echo "$BEAM_TAR" | sed -E "s#(_light${EVENT_NO})/#\1${PDVD_BEAM_LIGHT_SUFFIX}/#")
+        fi
+        if [ -z "$BEAM_TRIG" ]; then
+            if [ ! -f "$BEAM_TAR" ]; then
+                echo "[skip] run=$RUN evt=$EVT: -beam needs the light archive $BEAM_TAR (from the .tlas opflash_input= line${PDVD_BEAM_LIGHT_SUFFIX:+ + PDVD_BEAM_LIGHT_SUFFIX=$PDVD_BEAM_LIGHT_SUFFIX}); not found" >&2
+                return 2
+            fi
+            local BEAM_LINE
+            BEAM_LINE=$(python3 - "$BEAM_TAR" <<'PY' || echo "none none"
+import sys, json, tarfile
+trig, tct = "none", "none"
+with tarfile.open(sys.argv[1]) as tf:
+    for m in tf.getmembers():
+        if m.name.endswith("_metadata.json"):
+            md = json.loads(tf.extractfile(m).read())
+            if "trigger_us" in md and "tc_type" in md:
+                trig, tct = float(md["trigger_us"]), int(md["tc_type"])
+            break
+print(trig, tct)
+PY
+)
+            BEAM_TRIG=$(echo "$BEAM_LINE" | awk '{print $1}')
+            BEAM_TCT=$(echo "$BEAM_LINE" | awk '{print $2}')
+        fi
+        if [ -z "$BEAM_TRIG" ] || [ "$BEAM_TRIG" = none ]; then
+            echo "[skip] run=$RUN evt=$EVT: no beam trigger in $BEAM_TAR (re-run run_light_evt.sh with PDVD_BEAM_LABEL=1, or point PDVD_BEAM_LIGHT_SUFFIX at a labelled light dir, or set PDVD_BEAM_TRIGGER_US/PDVD_BEAM_TC_TYPE)" >&2
+            return 2
+        fi
+        case ",14,15,20,21,22," in
+            *,${BEAM_TCT},*) : ;;
+            *) echo "[skip] run=$RUN evt=$EVT: tc_type $BEAM_TCT is not a CTB beam trigger type (14/15/20/21/22)" >&2; return 2 ;;
+        esac
+        BEAM_TLA=(-S "beam_trigger_us=${BEAM_TRIG}" -S "beam_tc_type=${BEAM_TCT}")
+        echo "Beam window: trigger ${BEAM_TRIG} us (tc_type ${BEAM_TCT}) on the raw flash axis -> cluster_t0 in [$(python3 -c "print(${BEAM_TRIG}-1.5)"), $(python3 -c "print(${BEAM_TRIG}-0.3)")) us"
+    fi
     rm -f "$LOG"   # spdlog appends; one run = one log
     echo "PR: run=$RUN evt=$EVT art_event=$EVENT_NO work=$WORKDIR pipeline=[$PIPE]"
     echo "    tlas: v_bot=$DS_BOT v_top=$DS_TOP trig_bot=$T_BOT trig_top=$T_TOP nticks=$NT"
@@ -240,6 +310,7 @@ process_event() {
         -S "readout_window_ticks=${NT:-10000}" \
         -S "stepped_center_fallback=${SCF:-false}" \
         -S "pipeline_names=${PIPE_JSON}" \
+        "${BEAM_TLA[@]}" \
         ${PDVD_PR_TLA:-} \
         -o "$CFG_JSON" wct-pr-perevt.jsonnet)
     if [ ! -s "$CFG_JSON" ]; then
