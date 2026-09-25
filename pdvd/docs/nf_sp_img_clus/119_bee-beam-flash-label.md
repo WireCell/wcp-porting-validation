@@ -355,16 +355,25 @@ The owner said: commit and push, make the label the PDVD default, and use no min
 
 - **Commits:** toolkit `773c8d15` (util, clus, cfg/protodunevd); wire-cell-bee3 `4d47e3c` (pushed to `main`). The
   runner flip and this doc are in the wcp commit that carries this line.
-- **Install: pending at the time of that commit.** A peer's SBND stage-B campaign
-  (`work-r3off-d123lgop` → `…lgoppr`) was launching jobs every few seconds, and a relink of the shared `build/` under a
-  job start kills it ("file too short").
-  - `/home/xqian/tmp/d119_install.sh` waits for 120 s with no `wire-cell` job and no driver.
-  - It then builds and installs only `WireCellUtil,WireCellAux,WireCellClus` (not Img: the tree holds a peer's
-    uncommitted `img/src/BlobDepoFill.cxx`), and logs the checks above to `/home/xqian/tmp/d119_install.log`.
-  - A follow-up commit records the result here.
-- **Until the install lands, the flipped runners already stamp the light metadata.** The clustering jsonnet emits
-  `bee_beam_window_us`, which the old `libWireCellClus` ignores, so there is no `op_beam` yet and nothing else
-  changes.
+- **Toolkit pushed:** `773c8d15` on `apply-pointcloud`. The push also carried a peer session's already-committed
+  `8822b2a1` (SBND `xtpc_sc1_overpred_max`, default OFF), as the owner chose.
+- **Installed 2026-09-25 08:22-08:24.** `/home/xqian/tmp/d119_install.sh` waited for the shared tree to be idle
+  (120 s with no `wire-cell` job or driver; a peer SBND stage-B campaign ran until then). It then built and installed
+  only `WireCellUtil,WireCellAux,WireCellClus`, with build rc=0 and install rc=0 (log
+  `/home/xqian/tmp/d119_install.log`). Img was not rebuilt: the tree holds a peer's uncommitted `BlobDepoFill.cxx`,
+  and `libWireCellImg.so` is still the 09-24 build.
+
+  | library | md5 (12) | `bee_beam_window_us` / `set_beam` |
+  |---|---|---|
+  | `local/lib/libWireCellUtil.so` = `build/util/…` | `b5ce94050774` | `Flashes::set_beam` 1 |
+  | `local/lib/libWireCellClus.so` = `build/clus/…` | `300683646def` | key 1 |
+  | `local/lib/libWireCellAux.so` | `4d10de1118bf` | (rebuilt: includes `Bee.h`) |
+
+- **End-to-end production smoke test.** The runners were run bare: installed libs, no knob, no pin, 039349 idx 5 /
+  art 19509, fresh `_d119prod` light + `d119prod` clus. The output is identical on **28/28 archives** to arm B2's
+  label-on output `d119beam` for the same event, `op_beam` included (`kaon/d119_onoff_check.py 039349 d119prod
+  d119beam 5`). The log reads "Beam label: trigger 2772.144 us on the flash axis, tc_type 15".
+- **Still open:** the bee3 deploy on the BNL Bee server (owner), and a browser check of `/` on a labelled set.
 
 ## Status flags
 
