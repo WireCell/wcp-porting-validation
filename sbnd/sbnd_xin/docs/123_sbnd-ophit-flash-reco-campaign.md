@@ -953,8 +953,32 @@ candidate re-assignments with a vertex jump (717/29/47, 719/81/47) — the fit-v
 
 Reading against the beam-off cost (§14.1: νμ fakes 0.9 % → 1.3 % per off-beam gate): on the inclusive
 MC the extra cosmic-only fakes appear as +0 "no true vertex" backgrounds (44 → 44) — the MC has the
-cosmic overlay, so this is measured, not assumed — and the purity does not move. The nueCC sample
-(2001 exclusive νe events) is added below when its arms land.
+cosmic overlay, so this is measured, not assumed — and the purity does not move.
+
+**The exclusive νe sample** (`mc-nuecc`, 2001 events, 1511 true νeCC in the FV; `123_r3_pr_summary_r3nue.json`,
+`sel/r3nue_{base,hits}_d107_selection.txt`):
+
+| νeCC selection (true νeCC in FV: 1511) | base (reco1 flashes) | **hits** |
+|---|---|---|
+| candidate vertex within 5 cm of the true vertex | 1077 (71.3 %) | **1097 (72.6 %)** |
+| … and νe score > 7 = **efficiency** | 630 (**41.7 %**) | **631 (41.8 %)** |
+| selected candidates / **purity** | 649 / **97.1 %** | 651 / **96.9 %** |
+| events with a candidate | 1869 | 1894 (+25; 7 only base, 32 only hits) |
+| νe > 7 flips (signal among them) | 90 only base (76) | 93 only hits (76) |
+| candidate vertex moves > 5 cm | | 135 (6.7 %) |
+| νμCC in this sample (90 true): efficiency | 47/90 = 52.2 % | 53/90 = 58.9 % |
+
+The νe selection is flat in efficiency and purity (+1 / −0.2 points, inside the 68 % intervals) while the
+vertex-matched candidate rate rises 1.3 points and 25 more events get a candidate — the same "invisible
+neutrino recovered" mechanism as on cv. The νe flips are many (90 / 93) but symmetric and 76 signal on each
+side: a shower's candidate is more sensitive than a track's to which flash the fit settles on (135 vertex
+moves), and the hit flashes move it both ways in equal measure. Nothing here argues against the flip; the
+inclusive sample is where the gain is, and the νe sample shows the cost is nil.
+
+Bookkeeping: the hits arm's Q/L was stopped and restarted 8-wide when the machine freed up
+(`mc_hits.sh` resume guard); two sub-roots (f061, f062) whose Q/L had been killed mid-way kept their
+`ql_evt` dirs without pctrees and were skipped by the first guard (it counted dirs) — caught by the PR
+count (1988 ≠ 2001), redone, and the guard now counts pctrees. The numbers above are the complete 2001.
 
 ## 15. Round 4 — the rescue under hit flashes (2026-09-24)
 
