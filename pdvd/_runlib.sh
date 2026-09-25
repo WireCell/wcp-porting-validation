@@ -6,7 +6,7 @@
 # List runs found under input_data/.  Called when the invoking script
 # receives no positional arguments.
 list_runs() {
-    local base="$PDVD_DIR/input_data"
+    local base="${PDVD_INPUT_DATA:-$PDVD_DIR/input_data}"
     [ -d "$base" ] || { echo "no input_data/ under $PDVD_DIR" >&2; return 1; }
     echo "Available runs under $base:"
     local found=0 d name evts
@@ -38,7 +38,7 @@ discover_events() {
     {
         local rname rdir
         for rname in "run${run}" "run${run_padded}" "run${run_stripped}"; do
-            rdir="$PDVD_DIR/input_data/$rname"
+            rdir="${PDVD_INPUT_DATA:-$PDVD_DIR/input_data}/$rname"
             [ -d "$rdir" ] || continue
             ls -d "$rdir"/evt_* 2>/dev/null | sed 's|.*/evt_||'
         done

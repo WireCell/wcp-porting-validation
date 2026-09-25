@@ -1,0 +1,27 @@
+A. cert cluster: selected flash vs beam flash
+    2001: selected flash dt   +259 us  KS 0.05 pred/meas 1.54  depth  53.9 cm | at beam flash: KS 0.36 chi2/ndf   1.4 pred  34063 vs meas  64251  depth  92.3 cm
+   36591: selected flash dt   +457 us  KS 0.06 pred/meas 1.15  depth  36.7 cm | at beam flash: KS 0.35 chi2/ndf 108.1 pred   2801 vs meas  14807  depth 104.3 cm
+   69596: selected flash dt   +321 us  KS 0.02 pred/meas 1.04  depth  45.8 cm | at beam flash: KS 0.40 chi2/ndf   1.7 pred  15317 vs meas   1241  depth  93.3 cm
+  157312: selected flash dt   -348 us  KS 0.04 pred/meas 0.95  depth 147.3 cm | at beam flash: KS 0.30 chi2/ndf  62.5 pred   3782 vs meas  41416  depth  95.8 cm
+  191916: selected flash dt   +491 us  KS 0.08 pred/meas 1.03  depth  28.1 cm | at beam flash: KS 0.35 chi2/ndf   7.0 pred  17687 vs meas  83592  depth 100.7 cm
+  245576: selected flash dt   -148 us  KS 0.10 pred/meas 0.94  depth 139.3 cm | at beam flash: KS 0.26 chi2/ndf  22.2 pred   8505 vs meas  30492  depth 117.3 cm
+  317673: selected flash dt   -234 us  KS 0.09 pred/meas 0.46  depth 122.4 cm | at beam flash: KS 0.50 chi2/ndf  48.0 pred   1854 vs meas  36331  depth  87.8 cm
+  326459: selected flash dt   -121 us  KS 0.07 pred/meas 1.20  depth 127.1 cm | at beam flash: KS 0.19 chi2/ndf   3.4 pred    522 vs meas    477  depth 109.2 cm
+  351293: selected flash dt   +399 us  KS 0.03 pred/meas 0.80  depth  30.5 cm | at beam flash: KS 0.24 chi2/ndf   1.8 pred  12877 vs meas   3686  depth  89.6 cm
+  408552: selected flash dt   +542 us  KS 0.05 pred/meas 0.27  depth  18.2 cm | at beam flash: no beam flash / not a candidate  depth  98.4 cm
+B. cert-slab axis: mean (y,z) = (-0.840,+0.542), 32.9 deg from -y; per-event deviation (deg) [1.4, 9.7, 5.2, 5.6, 0.1, 4.0, 4.2, 1.7, 2.5, 6.5]
+   perpendicular offsets (cm): [(2001, -1), (36591, -120), (69596, 10), (157312, -105), (191916, 11), (245576, -53), (317673, 371), (326459, -162), (351293, 110), (408552, 128)]
+C. clusters Q/L matches to the beam flash
+    2001: none
+   36591: none
+   69596: 4000169 (n=15, tiny)
+  157312: 4000090 (n=1891, 13 deg, offset +111 cm, depth [219,298], KS 0.06, pred/meas 0.52); 4000172 (n=13, tiny)
+  191916: 4000106 (n=409, 85 deg, offset +138 cm, depth [283,336], KS 0.85, pred/meas 0.12)
+  245576: 4000151 (n=1176, 30 deg, offset +135 cm, depth [221,287], KS 0.01, pred/meas 0.79); 4000115 (n=1141, 34 deg, offset +102 cm, depth [108,236], KS 0.06, pred/meas 0.29); 4000082 (n=542, 14 deg, offset +125 cm, depth [245,337], KS 0.82, pred/meas 0.62)
+  317673: 4000101 (n=3527, 10 deg, offset +106 cm, depth [208,331], KS 0.04, pred/meas 1.51)
+  326459: none
+  351293: none
+  408552: no beam flash
+D. horizontal (x-span < 0.25 y-z length) long (>= 1 m) top clusters within 10 deg of the axis, per event
+  039305 kaon (10 evts): long 13.4/evt, horizontal 3.5/evt, horizontal+beam-parallel 2.3/evt
+  039349 q35flip (84 evts): long 11.3/evt, horizontal 1.6/evt, horizontal+beam-parallel 1.1/evt

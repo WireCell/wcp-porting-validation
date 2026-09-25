@@ -1,0 +1,19 @@
+# Decode-only orig-frame dump for PDVD (doc pdvd/118).  Same module and params
+# as xning's wcls_frames_pdvd.fcl (stage 2 of process-vd.sh) but the WCT job is
+# cfgmin/wcls-orig-frames-pdvd.jsonnet (no NF/SP) and there is no outputer.
+#include "standard_reco_pdvd_offline.fcl"
+
+process_name: pdvdorig
+
+source: {
+  module_type: RootInput
+  maxEvents: -1
+}
+
+physics.produce: [ wclsdatavd ]
+physics.trigger_paths: [ produce ]
+physics.end_paths: [ ]
+
+physics.producers.wclsdatavd.wcls_main.configs: ["wcls-orig-frames-pdvd.jsonnet"]
+physics.producers.wclsdatavd.wcls_main.plugins: ["WireCellGen", "WireCellSigProc", "WireCellSio", "WireCellPgraph", "WireCellLarsoft"]
+physics.producers.wclsdatavd.wcls_main.outputers: []

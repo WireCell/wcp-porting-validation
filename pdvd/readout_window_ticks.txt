@@ -3,6 +3,8 @@
 # only).  An SP frame in the input dir takes precedence (a disagreement is warned); PDVD_READOUT_NTICKS overrides both.
 # Source: doc pdvd/99 sec 4.4, d99/frame_nticks_120evt.txt (frame_gauss shape[1] on all 120 events of stm/events.txt:
 # 039252 18/18 and 039253 18/18 at 10000, 039349 84/84 at 6400).  Owner 2026-09-13: production uses the real window.
+# 39305 (top-only kaon candidates, doc pdvd/118): orig frames 6400 ticks on all 10 events x 4 top anodes.
 39252 10000
 39253 10000
 39349 6400
+39305 6400

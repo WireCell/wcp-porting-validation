@@ -1,0 +1,19 @@
+# jjo's pdvd_pds_raw_trigoff.fcl (/home/jjo/Work/protodune-pds-light/pdvd/fcl/)
+# adapted to RootInput for doc pdvd/118: the kaon art files already carry
+# pdvddaphne:daq, tpcrawdecoder:daq (RDTimeStamps) and triggerrawdecoder:daq,
+# so no decoder runs and no art output is written -- only the
+# PDVDTriggerLightAna TFileService tree (triglight/triglight).
+#include "standard_reco_protodunevd_keepup.fcl"
+
+process_name: pdvdtriglight
+
+source: { module_type: RootInput  maxEvents: -1 }
+
+physics.produce: [ ]
+physics.trigger_paths: [ ]
+physics.analyzers.triglight: { module_type: "PDVDTriggerLightAna" }
+physics.ana:        [ triglight ]
+physics.end_paths:  [ ana ]
+outputs: { }
+
+services.TFileService: { fileName: "%ifb_triglight.root" }

@@ -1,0 +1,6 @@
+039305 kaon (top-only, this doc): 10 events
+  crossers (span 300-400 cm): n=13  edge=341.8 +- 8.3 cm  (L=336.9)  => v_true/v_prod = 0.986 +- 0.024
+  Q/L: dumped top clusters 447, with a selected flash 442 (99 %), selected bundles 449; selected KS median 0.086, chi2/ndf median 2.5, pred/meas median 0.55 (p16-p84 0.05-1.21)
+039349 q35flip (top volume): 84 events
+  crossers (span 300-400 cm): n=161  edge=336.0 +- 1.8 cm  (L=336.9)  => v_true/v_prod = 1.003 +- 0.005
+  Q/L: dumped top clusters 3557, with a selected flash 2745 (77 %), selected bundles 2777; selected KS median 0.079, chi2/ndf median 1.6, pred/meas median 0.61 (p16-p84 0.15-1.27)

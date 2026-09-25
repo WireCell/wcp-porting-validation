@@ -1,0 +1,2 @@
+039305 kaon (10 events x 4 top anodes):  U: rms 12.96+-0.76 ADC, ped 8149, dead/anode 0.0  V: rms 12.65+-0.80 ADC, ped 8150, dead/anode 0.0  W: rms 12.68+-0.74 ADC, ped 8148, dead/anode 0.0
+039349 evt_0-9 (10 events x 4 top anodes):  U: rms 12.71+-0.73 ADC, ped 8149, dead/anode 0.0  V: rms 12.41+-0.71 ADC, ped 8150, dead/anode 0.0  W: rms 12.88+-1.00 ADC, ped 8148, dead/anode 0.0

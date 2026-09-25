@@ -130,7 +130,7 @@ RUN_STRIPPED=$(echo "$RUN" | sed 's/^0*//')
 RUN_PADDED=$(printf '%06d' "$RUN_STRIPPED")
 
 find_evtdir() {
-    local base="$PDVD_DIR/input_data"
+    local base="${PDVD_INPUT_DATA:-$PDVD_DIR/input_data}"
     for rname in "run${RUN}" "run${RUN_PADDED}" "run${RUN_STRIPPED}"; do
         local rdir="$base/$rname"
         [ -d "$rdir" ] || continue
