@@ -1,0 +1,59 @@
+{
+ "run": 1,
+ "event": 129,
+ "seed": 1129,
+ "kind": "nu",
+ "step_mm": null,
+ "flavor": "nue",
+ "source": {
+  "file": "work/e1/depos-nue.tar.bz2",
+  "set_index": 8,
+  "art_event": 9,
+  "rotation": null,
+  "theta_natural_deg": 21.9623
+ },
+ "tracks": [
+  {
+   "tail": [
+    -165.681,
+    -57.91,
+    73.521
+   ],
+   "head": [
+    -145.453,
+    -47.006,
+    122.483
+   ],
+   "charge": null,
+   "angle_deg": null,
+   "length_cm": 54.86,
+   "length_full_cm": 54.86,
+   "pdg": 11,
+   "track_id": 1,
+   "kept_frac": 1.0
+  }
+ ],
+ "anodes": [
+  0
+ ],
+ "ndepos": 18644,
+ "ndepos_extracted": 18668,
+ "q_sum": -43008680.0,
+ "t_range_us": [
+  0.0,
+  4.025
+ ],
+ "pdg_counts": {
+  "-13": 6,
+  "-11": 5725,
+  "11": 11653,
+  "211": 413,
+  "2212": 802,
+  "1000160340": 1,
+  "1000170400": 1,
+  "1000180380": 1,
+  "1000180390": 1,
+  "1000180400": 41
+ },
+ "depo_file": "work/000001_129/e1-depos-in.tar.bz2"
+}

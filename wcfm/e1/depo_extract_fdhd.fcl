@@ -1,0 +1,65 @@
+# wcfm E1 (doc 07): depo extraction from the WC_FM_Sim pilot G4 files (FD-HD 1x2x6).
+#
+# Reads sim::SimEnergyDeposit (IonAndScint) from g4_<flavor>.root and writes a
+# Wire-Cell depo file through the two-node graph wcls-extract-depos-fdhd.jsonnet.
+# Stock cvmfs dunesw (v10_20_08d00), no custom larwirecell needed.
+# Services: the refactored 1x2x6 tables, i.e. the same dune10kt_v6_refactored_1x2x6
+# geometry the pilot g4/sp jobs used.  No art output stream: the depo file is the product.
+# The output name is passed as the WCT external variable `outname` (params) by
+# the wrapper fcl that run_extract.sh writes per flavour.
+#
+# Forked by duplication from DNN_ROI_SP/simulation/dunevd_singlep/depo_extract_dunevd.fcl.
+
+#include "services_dunefd_horizdrift_1x2x6.fcl"
+
+process_name: E1DepoExtract
+
+services:
+{
+  TFileService:          { fileName: "depo_extract_fdhd_hist.root" }
+  TimeTracker:           {}
+  MemoryTracker:         {}
+  RandomNumberGenerator: {}
+
+  @table::dunefd_1x2x6_simulation_services
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1
+}
+
+physics:
+{
+  producers:
+  {
+    rns: { module_type: "RandomNumberSaver" }
+
+    wirecell:
+    {
+      module_type: WireCellToolkit
+      wcls_main:
+      {
+        tool_type: WCLS
+        apps: [ "Pgrapher" ]
+        logsinks: [ "stdout" ]
+        loglevels: [ "debug" ]
+
+        plugins: [ "WireCellPgraph", "WireCellGen", "WireCellSio", "WireCellLarsoft" ]
+
+        configs: [ "wcls-extract-depos-fdhd.jsonnet" ]
+
+        inputers: [ "wclsSimDepoSetSource:" ]
+        outputers: []
+
+        params: { outname: "e1-depos.tar.bz2" }
+        structs: {}
+      }
+    }
+  }
+
+  extract:       [ rns, wirecell ]
+  trigger_paths: [ extract ]
+  end_paths:     []
+}

@@ -1,0 +1,72 @@
+{
+ "run": 1,
+ "event": 205,
+ "seed": 1205,
+ "kind": "nurot",
+ "step_mm": null,
+ "flavor": "numu",
+ "source": {
+  "file": "work/e1/depos-numu.tar.bz2",
+  "set_index": 4,
+  "art_event": 5,
+  "rotation": {
+   "axis": "xhat x d_mu",
+   "angle_deg": -13.683594264589514,
+   "about_cm": [
+    -159.66513671875,
+    -469.678759765625,
+    166.17176513671876
+   ]
+  },
+  "theta_natural_deg": 13.6836
+ },
+ "tracks": [
+  {
+   "tail": [
+    -159.665,
+    -469.679,
+    166.172
+   ],
+   "head": [
+    -159.665,
+    -505.323,
+    1026.565
+   ],
+   "charge": null,
+   "angle_deg": 0.0,
+   "length_cm": 861.43,
+   "length_full_cm": 861.43,
+   "pdg": 13,
+   "track_id": 2,
+   "kept_frac": 1.0
+  }
+ ],
+ "anodes": [
+  0,
+  2,
+  4,
+  6,
+  8
+ ],
+ "ndepos": 30270,
+ "ndepos_extracted": 30284,
+ "q_sum": -65555160.0,
+ "t_range_us": [
+  0.0,
+  0.169
+ ],
+ "pdg_counts": {
+  "-11": 283,
+  "11": 7548,
+  "13": 21695,
+  "2212": 654,
+  "1000020040": 2,
+  "1000140300": 1,
+  "1000160330": 1,
+  "1000160360": 1,
+  "1000180390": 6,
+  "1000180400": 78,
+  "1000190400": 1
+ },
+ "depo_file": "work/000001_205/e1-depos-in.tar.bz2"
+}
