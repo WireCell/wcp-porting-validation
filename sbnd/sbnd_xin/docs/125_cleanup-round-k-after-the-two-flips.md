@@ -1,6 +1,6 @@
 # 125 — cleanup round K (2026-09-25): retire the doc 123/124 ladders and the ToT campaign after two production flips
 
-**Status (2026-09-25 14:10): round K is COMPLETE — `/home/xqian` went 120 G → 637 G free.**
+**Status (2026-09-25 14:00): round K is COMPLETE — `/home/xqian` went 120 G → 635 G free.**
 - **Pass 1 (11:40), the directory release:** 3562 dirs, 369.97 GiB, rc=0 in all three trees,
   120 G → 488 G free, 0 broken symlinks against a recorded pre-count of 0. The permission
   classifier then refused a read-only spot check, so the session stopped and handed the rest over
@@ -8,8 +8,9 @@
 - **Pass 2 (12:10–14:10, sec 9):** the owner asked "can we reduce them further?" and then chose
   "You run it now", so this session ran the sec 6 block itself. The owner also added three
   levers: archive the cold pins, compress the kept-arm logs, and re-baseline the sentinels so
-  `pr150s0` can go. Pass 2 took free space from 481 G to **637 G** (peers had written 7 G since
-  pass 1); `sbnd_xin` went 257 → 147 G and `~/tmp` 118 → 71 G. Every deletion in pass 2 went through a gated
+  `pr150s0` can go. Pass 2 took free space from 481 G to **635 G** (peers had written 7 G since
+  pass 1); `sbnd_xin` went 257 → 147 G and `~/tmp` 118 → 73 G. One pin, `d115/libpin_d115`, turned out to be PDHD
+  production's and was restored the same day (sec 9.2). Every deletion in pass 2 went through a gated
   release the owner ruled on: the sec 1 rulings, plus the `pr150s0` ruling in sec 9.3. The pins
   and the logs were not deleted but archived or compressed; every file is sha256-verified, and
   each has a restore script.
@@ -273,6 +274,12 @@ That takes `/home/xqian` from 488 G to **roughly 600 G free**.
    - the bee/mabc zips and `.wct-*.json`;
    - `restore_compress`'s sbnd family filter.
 5. `pdvd/work/*_d117sp/gpu_mem_*.csv` is still being written today by a leftover monitor. It is inside a held arm.
+6. **Gates that skip the `.zst` names.** `scripts/d119/lever_gate.py` and `d118/hash_gate.py` skip
+   `stdout.log`, `wct_pr_evt*.log`, `.wct-cfg-evt*.json` with `$`-anchored regexes, so a `.zst` copy
+   would show up on one side only. They compare the closed `r3*` d119/d116 arms, which are gone. Widen
+   the regexes to `(\.zst)?$` before reusing them on a compressed arm.
+7. `scripts/d113_eval{,_pr}.sh` compare against `pr150s0` (closed doc 113). Its cached metrics in
+   `docs/pr/150_figs/metrics/pr150s0-*.tsv` remain; the arm does not.
 
 ## 9. Pass 2 (2026-09-25 12:10–14:10): the sec 6 block, and three more levers
 
@@ -318,13 +325,15 @@ python3 dedup_pins_20260925.py; CONFIRM=yes python3 dedup_pins_20260925.py      
 | `wt-d123` | clean, and its HEAD e396d5b8 is the main tree's HEAD; `git worktree remove`, rc=0 |
 | file level | F1–F9 **PASS** at plan and at confirm (F2 now passes, since the sweep released the d124 nudge links). **104918 files, 90.89 GiB + 56408 links**; 22187 emptied per-event dirs rmdir'ed; broken symlinks 0 → 0 in all three trees; 488 → 588 G |
 | orphan logs | **0**: every driver log's event dir is still alive |
-| cold pins (9.2) | **53 pins, 33.04 GiB freed** into one 6.57 GiB archive; 941467 manifest rows, re-checked on a full extract; test restore 572/572 |
+| cold pins (9.2) | **53 pins, 33.04 GiB freed** into one 6.57 GiB archive (52 stay archived: `d115/libpin_d115` was restored, see 9.2); 941467 manifest rows, re-checked on a full extract; test restore 572/572 |
 | log compression (9.4) | **41983 files, 10.49 → 1.22 GiB**; each .zst decompressed to its frozen sha256 before the original went; broken symlinks 0 → 0 |
 | after-gates | `prod_cfg_gate` **PASS 28**; sentinels on `pr150s0` **21/0/2/7/0** (== before); the four permanent pins md5-intact (`pins_before_20260925.md5`) |
 | sentinel re-baseline (9.3) | witness `work-sent150-*` 21/0/2/7/0, verdict-for-verdict == `pr150s0`; production **13 PASS / 0 FAIL / 10 OPEN / 7 INERT / 0 SKIP** |
 | `pr150s0` release (stamp `20260925b`) | tier = exactly the 4 `pr150s0` arms, **9.78 GiB**; every interlock PASS; record gate 4/4 (`archive/records/cleanup-20260925b`); INTERLOCK A unchanged; rc=0; broken 0/0/0 |
 | pin dedup | 13 roots (the live ones held), 1130 files linked, **3.28 GiB**; pins still md5-intact after |
-| end state | **637 G free**; `sbnd_xin` 147 G; `~/tmp` 71 G |
+| correction | `d115/libpin_d115` (PDHD production's pin) restored from the archive and made PERMANENT (9.2); `work-nuecc48-d123flip` logs uncompressed (9.4) |
+| final-state gates (after everything) | production sentinels `sentinels_prod.py` **13/0/10/7/0**; witness `work-sent150-*` **21/0/2/7/0**; `prod_cfg_gate` **PASS 28**; broken symlinks **0/0/0** (`*_final_20260925.log`) |
+| end state | **635 G free** (637 before the 2.4 GiB pin restore); `sbnd_xin` 147 G; `~/tmp` 73 G |
 
 ### 9.2 Cold pins: archived, not deleted
 
@@ -336,7 +345,25 @@ reading the arm does not. `archive_pins_20260925.py` puts every pin the census K
 - every live prefix (`d117 d118 d119 wcfm d125flip claude-`);
 - anything mapped by a process, with a process cwd inside it, or written in the last 2 h.
 
-That leaves 53 pins: 285435 files, 656032 symlinks, 272620 inodes. Before any unlink, the script:
+That leaves 53 pins: 285435 files, 656032 symlinks, 272620 inodes.
+
+**Correction, same day: one of the 53 was not cold.** `d115/libpin_d115` is the pin that PDHD
+production `d116hflip` ran on, as did the PDVD release source `d116vflip`: clus md5 `2efa7fa09325`,
+`pdvd/docs/nf_sp_img_clus/figs/116_flip_gate.txt`. Doc pdvd/116's Repro runs its whole ladder,
+including `d116hr2`, on the same pin. The census cannot show this, because its "survivors" list
+subtracts production arms by design, so a production arm's own pin looks cold. The pin was restored
+with `restore_pins_20260925.sh d115/libpin_d115` (`restore_pins_d115_20260925.log`), and is now
+PERMANENT in the census and sweep, HOT in `archive_pins_20260925.py`, and PROTECTED (pdhd). The
+archive still holds a copy. **Rule for round L: before archiving a pin, check the recorded pin of
+every production arm in all three trees, not the census survivor list.**
+
+The other 52 were checked the same way. PDHD `d102hcs`/`d109hstm` ran on `d102/libpin_d102`, and
+SBND and PDVD production run on the four hot pins. The two ToT flip-evidence arms `q31ctl`/`q34tk1`
+ran on the archived `p100/libpin_p100b` and `p34/libpin_q34`. They are evidence, not production:
+rerunning them needs a restore first. The only scripts that name an archived pin are historical campaign drivers
+under `sbnd_xin/scripts/` (`pr150_arm.sh`, `d102m_stage*.sh`, `d115/stage*.sh`, `d116/stageB_cell.sh`,
+`d118/stageB_flip.sh`, …). None of the production runners names one. **Restore the pin before rerunning any of those drivers**: if
+`LD_LIBRARY_PATH` points at a missing directory, the loader silently falls back to `local/lib` (M1). Before any unlink, the script:
 1. froze every file's sha256 into `archive/records/cleanup-20260925/pins-cold/cold-pins.manifest.tsv`;
 2. ran `zstd -t` on the archive;
 3. extracted the archive in full and compared all 941467 rows.
@@ -411,6 +438,11 @@ witness alone the suite reads 21/0/2/7/0, verdict-for-verdict identical to pr150
 so their logs appeared at confirm. The run refused (`compress_logs_20260925.refused.log`); the
 witness logs were added to the sentinel hold and the plan re-run.
 
+**`work-nuecc48-d123flip` was restored afterwards** (`uncompress_d123flip_20260925.log`: 12 files, 0
+mismatches) and is now held. The live pdvd/119 gates link into its `g0/`. Their 36 links are all
+to data files (frames, icluster, opflash, rse), so none of them read a compressed file, but a live
+peer's link target should not change under it at all.
+
 **Readers that must decompress first**, with `zstdcat` or `./uncompress_logs_20260925.sh ['work-*-<arm>']`,
 which checks each restored file against the frozen sha256:
 - `scripts/d123/{r3_evidence,r3_ql_compare,r6_rescue_ruling}.py`;
@@ -432,10 +464,10 @@ The rule is inert for pass 1's freeze, because no such file existed then.
   - `d123lgop` is 26.6 G, `d123lgoppr` 18.0 G, the record layer `archive/` 14.8 G,
     `pr150csp3bw` 9.5 G (blind vertex scan B arm), `d115pr` 5.7 G (owner keep) and
     `input_files_reco1` 4.5 G.
-- **`~/tmp` 71 G:**
+- **`~/tmp` 73 G:**
   - about 30 G is held for the live peers: `d119inst` 10.6, `wcfm-gnn` 9.7, `d119wt` 7.0,
     `d117` 2.5;
-  - the pin archive is 6.6 G, and the hot pins 3.5 G after dedup;
+  - the pin archive is 6.6 G, and the hot pins 3.5 G after dedup, plus the restored `d115/libpin_d115` (2.4 G);
   - `d115/arm_*` and `d116/arm_*`, 1–1.2 G each, are the run products of surviving pdvd/pdhd scan-source arms.
 - **Round L options, not taken:**
   - regenerate `d123base`'s `g*/icluster` on demand from its frames (≈ 40 G, but lgop's links and a

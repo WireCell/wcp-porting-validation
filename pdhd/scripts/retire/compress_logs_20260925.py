@@ -41,7 +41,8 @@ CONFIRM = os.environ.get("CONFIRM", "no") == "yes"
 NOW    = time.time()
 NAME   = re.compile(r"^(stdout\.log|wct_pr_evt\d+\.log|ql\.stdout|wct_ql\.log|img\.stdout|wct_img\.log|\.wct-cfg-evt\d+\.json)$")
 LOGNAME = re.compile(r"\.log$")
-LIVE   = ("work-nuecc48-d119", "work-mcp10-m66d119")
+LIVE   = ("work-nuecc48-d119", "work-mcp10-m66d119",
+          "work-nuecc48-d123flip")   # the live pdvd/119 gates link into its g0/ (restored after the run, doc 125 sec 9.4)
 SENT   = re.compile(r"^work-.*-(pr150s0|d123lgoppr|d123lgflippr)$|^work-sent(97|150)-")
 TREES  = [f"{R}/sbnd/sbnd_xin", f"{R}/pdvd/work", f"{R}/pdhd/work"]
 

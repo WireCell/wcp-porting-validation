@@ -61,6 +61,7 @@ PERMANENT = {
     # ROUND K: d102m-libsnap LEAVES the permanent set (d102m is released this round; judged value-first).
     f"{T}/d123-libpin-r6":   "ROUND K: THE SBND PRODUCTION PIN -- the only binary that reproduces d123lgop/lgoppr (local/lib Clus/Util/Aux moved 2026-09-25); sbnd PROTECTED",
     f"{T}/p35/libpin_prod":  "ROUND K: THE PDVD PRODUCTION PIN -- q35flip ran on it (doc qlmatch/35 line 497); pdvd PROTECTED",
+    f"{T}/d115/libpin_d115": "ROUND K pass 2: THE PDHD PRODUCTION PIN -- d116hflip (and the PDVD release source d116vflip) ran on it, clus md5 2efa7fa09325 (pdvd/docs/nf_sp_img_clus/figs/116_flip_gate.txt); archived in error by pass 2 and restored",
     f"{T}/pdhdstm_libpin":   "pdhd PROTECTED line 37 (stm-tagger-chain line 901, backs the stm0/stmw scan)",
 }
 # ROUND I: this is the SECOND copy of the held-prefix list -- sweep_tmp has its own at its

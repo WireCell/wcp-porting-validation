@@ -48,7 +48,7 @@ TF="$D/tmp_tier_${STAMP}${CS}.txt"
 CONFIRM=${CONFIRM:-no}
 export RETIRE_OUT=${RETIRE_OUT:-$R/sbnd/sbnd_xin/archive/records/cleanup-${STAMP}/tmp}
 THIS=1f8ae14b-6c84-4993-a21c-bf0790729598
-PERM="$T/d102/libpin_d102 $T/pdhdstm_libpin $T/d123-libpin-r6 $T/p35/libpin_prod"   # ROUND K: the two production pins in, d102m-libsnap out
+PERM="$T/d102/libpin_d102 $T/pdhdstm_libpin $T/d123-libpin-r6 $T/p35/libpin_prod $T/d115/libpin_d115"   # ROUND K: the two production pins in, d102m-libsnap out; pass 2: + d115/libpin_d115 (PDHD production)
 
 [ -s "$TF" ] || { echo "REFUSING: $TF missing or empty -- run tmp_census_${STAMP}.py first"; exit 2; }
 

@@ -39,7 +39,11 @@ ADIR   = f"{T}/pin-archive-{STAMP}"
 ARCH   = f"{ADIR}/cold-pins-{STAMP}.tar.zst"
 CONFIRM = os.environ.get("CONFIRM", "no") == "yes"
 NOW    = time.time()
-HOT    = {"d102/libpin_d102", "pdhdstm_libpin", "d123-libpin-r6", "p35/libpin_prod", "d123-libpin"}
+HOT    = {"d102/libpin_d102", "pdhdstm_libpin", "d123-libpin-r6", "p35/libpin_prod", "d123-libpin",
+          # ADDED AFTER THE RUN: PDHD production d116hflip ran on it (figs/116_flip_gate.txt).  The census
+          # "survivors" subtract production arms by design, so the cold test could not see this; the pin
+          # was archived, then restored with restore_pins_20260925.sh (doc 125 sec 9.2).
+          "d115/libpin_d115"}
 LIVE   = ("d117", "d118", "d119", "wcfm", "d125flip", "claude-")
 
 cj = f"{HERE}/tmp_census_{STAMP}.json"

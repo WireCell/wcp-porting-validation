@@ -185,3 +185,4 @@ d101hnew	the OFF side of the doc 108 flip: the graded A0 (doc 108 sec 1.1), == h
 # 029107_*_stmwc 029107_*_phdumpwc 029107_*_d46skip 029107_*_d05mON 029107_*_d05mOFF	single-purpose probe arms, each cited by the doc that made it	docs/01, 05, 06; pdvd/docs/46, 47
 
 # --- ROUND K 2026-09-25: the live pdvd/119 knob-off gates on PDHD (d119gA/gB/sgA/sgB) are held by pdvd PROTECTED's d119gA d119gB d119s* line and plan_20260925.py pdhd open_prefix; production unchanged. ---
+/home/xqian/tmp/d115/libpin_d115	THE PDHD PRODUCTION PIN: d116hflip and PDVD's release source d116vflip ran on it, libWireCellClus md5 2efa7fa09325 (pdvd/docs/nf_sp_img_clus/figs/116_flip_gate.txt); doc pdvd/116's Repro (line 40, P=.../libpin_d115) runs its ladder incl. d116hr2 on it too.  Round K pass 2 archived it in error (the census survivor list subtracts production arms) and restored it the same day	doc sbnd_xin/125 sec 9.2
