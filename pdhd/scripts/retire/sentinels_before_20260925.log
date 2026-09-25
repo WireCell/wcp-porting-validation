@@ -1,0 +1,106 @@
+OPEN 137238   pr/93 r4 + pr/127  sccc demote+bridge: the cross-cluster muon body joins PF
+        arm=work-nuecc48-pr150s0
+        [XX] pf_node_lt mu- 150 MeV (seen: 212, 63, 60)
+        [ok] log_contains 'sccc demote'
+        OPEN: doc 144 sec 15 -- the exclusion pool empties (n_excluded 9 -> 1) and the EM shower absorbs it; item 5, a PID round
+PASS 37112    pr/125 K3          samevtx track-frag absorb: gamma + proton stem = ONE shower
+        arm=work-ncpi0-pr150s0
+        [ok] max |pdg|=11 shower 726.7 want >= 700 MeV
+        [ok] pf_node_lt proton 400 MeV (seen: 3)
+PASS 69314    pr/125 K5          satellite absorb: the vertex-connected crumbs fold in
+        arm=work-mcp2k-pr150s0
+        [ok] showers=19 want [14, 20]
+PASS 94392    pr/125 guard       pass3_cone track guard: the 305 MeV fake electron is gone
+        arm=work-mcp2k-pr150s0
+        [ok] pf_node_lt e- 250 MeV (seen: 45)
+INERT 52693   pr/125 guard       pass3_cone track guard: 183 -> 153 MeV e- + released muon
+        shower_pass3_cone_guard_len on/off byte-identical at this epoch
+PASS 77328    pr/125 guard       pass3_cone track guard: 180 MeV EM shower -> re-rooted proton
+        arm=work-mcp2k-pr150s0
+        [ok] pf_node_lt e- 130 MeV (seen: 37)
+PASS 171572   pr/123 r2          pf_orphan_guard_freed: the guard-freed muon returns as a PF root
+        arm=work-mcp2k-pr150s0
+        [ok] log_contains 'pf-orphan-guard-freed'
+        [ok] pf_node_ge mu- 250 MeV (seen: 301)
+PASS 393505   pr/123 r2          pf_orphan_guard_freed: same, second firing event
+        arm=work-mcp2k-pr150s0
+        [ok] log_contains 'pf-orphan-guard-freed'
+PASS 348471   pr/93 r4 + pr/121  detach_track_stem: no 719 MeV proton-typed aggregate
+        arm=work-mcp1k-pr150s0
+        [ok] pf_node_lt proton 600 MeV (seen: 310, 12)
+        [ok] max |pdg|=11 shower 408.9 want >= 300 MeV
+PASS 315167   pr/93 r4           orphan confident track: the 150.7cm proton is counted + shown
+        arm=work-mcp1k-pr150s0
+        [ok] pf_node_ge proton 500 MeV (seen: 613, 50)
+PASS 55740    pr/128 class A     near cross-cluster track: the 123.1cm muon joins PF + kine
+        arm=work-mcp2k-pr150s0
+        [ok] pf_node_ge mu- 250 MeV (seen: 322, 110)
+PASS 72786    pr/128 class A     CONTROL: the continuation terms keep the cosmics OUT
+        arm=work-mcp2k-pr150s0
+        [ok] log_absent 'pr128 pf-orphan-near-cross-cluster'
+        [ok] log_count_ge 'pr130 pass4_prox_guard: decline seg=' want >= 4 (seen: 4)
+PASS 393505   pr/129             cosmic cluster 15 no longer counted into Enu
+        arm=work-mcp2k-pr150s0
+        [ok] Enu=574.8 want [540, 600]
+        [ok] pf_contains 'mu-  267' (15 PF nodes)
+INERT 171572  pr/129             real daughter KEPT by the pointing test
+        kine_guard_freed_impact on/off byte-identical in BOTH frames -- never discriminated
+INERT 94392   pr/129             guard-freed/continuation hand-off costs nothing
+        kine_guard_freed_impact on/off byte-identical in BOTH frames -- never discriminated
+INERT 47212   pr/120             stem_backfill_back_guard: the backward stem stays OUT of the shower
+        stem_backfill_back_guard on/off byte-identical at this epoch
+PASS 497311   doc 84 r1          long-muon range fallback: the 332.8 cm unbroken muon gets a range KE
+        arm=work-mcp2k-pr150s0
+        [ok] max |pdg|=13 shower 766.3 want >= 700 MeV
+        [ok] log_contains 'long_muon_range_empty_chain_fallback: recomputed kinematics'
+PASS 66366    doc 84 r1          OUTCOME ONLY -- the 300.6 cm chain / 692.2 MeV result
+        arm=work-mcp2k-pr150s0
+        [ok] pf_node_ge mu- 650 MeV (seen: 689)
+        [ok] log_contains 'nseg_chain='
+PASS 313847   doc 84 r2          long_muon_members_geometry: out-of-chain muon members join the range
+        arm=work-mcp1k-pr150s0
+        [ok] pf_node_ge mu- 575 MeV (seen: 604, 48)
+INERT 281595  doc 84 r2          members_geometry: the 221 cm continuation beats the 13.9 cm stub
+        long_muon_members_geometry on/off byte-identical at this epoch
+PASS 53793    doc 84 r2          long_muon_cathode_bridge: two half-showers become one muon
+        arm=work-mcp2k-pr150s0
+        [ok] pf_node_ge mu- 700 MeV (seen: 913)
+        [ok] log_contains 'long_muon_cathode_bridge:'
+PASS 177536   doc 84 r2.1        cathode bridge + BFS main-vertex guard + start re-seat
+        arm=work-mcp2k-pr150s0
+        [ok] pf_node_ge mu- 800 MeV (seen: 917)
+        [ok] pf_node_ge proton 100 MeV (seen: 191)
+        NOTE: this KNOWN_OPEN entry now PASSES -- the defect it tracks may be fixed; re-read doc pr/144 sec 16 before removing it.
+PASS 77978    doc 84 r2.1        same, the owner's scan event (proton prong must survive)
+        arm=work-mcp2k-pr150s0
+        [ok] pf_node_ge mu- 365 MeV (seen: 388)
+        [ok] pf_node_ge proton 100 MeV (seen: 114)
+PASS 172794   doc 84 r4          long_muon_cathode_bridge_lever 5 -> 15 cm
+        arm=work-mcp1k-pr150s0
+        [ok] log_contains 'long_muon_cathode_bridge: absorb bare chain into sid=1'
+        [ok] pf_node_ge mu- 600 MeV (seen: 689)
+OPEN 347890   doc 84 r4          long_muon_cathode_bridge_track_partner (far half mis-PID'd 211)
+        arm=work-mcp2k-pr150s0
+        [XX] log_contains 'long_muon_cathode_bridge: merge shower sid=5'
+        [ok] pf_node_ge mu- 460 MeV (seen: 470)
+        OPEN: doc 144 sec 14.1 -- the far half is still reconstructed but its PID flips 211 -> 11, and doc 84 r4's partner filter refuses EM partners by design; item 5
+PASS 67026    doc 84 r4          long_muon_cathode_bridge_short_gap 8 cm (gap-angle waived, gap>0)
+        arm=work-mcp2k-pr150s0
+        [ok] log_contains 'long_muon_cathode_bridge: absorb bare chain into sid=0'
+        [ok] pf_node_ge mu- 650 MeV (seen: 714)
+PASS 292643   pr/130 B           back-guard dvtx escape: the declined stem is absorbed
+        arm=work-mcp1k-pr150s0
+        [ok] pf_absent 'pi0' (15 PF nodes)
+        [ok] pf_node_lt e- 200 MeV (seen: 77, 61, 38, 8)
+        [ok] log_contains 'pr130 stem_backfill_back_dvtx: suppress decline seg=18008'
+PASS 179369   pr/130 B           back-guard dvtx escape: the spurious pi0 is gone
+        arm=work-mcp2k-pr150s0
+        [ok] pf_absent 'pi0  112' (47 PF nodes)
+        [ok] log_contains 'pr130 stem_backfill_back_dvtx: suppress decline seg=17002'
+INERT 100222  pr/130 prox        shower_pass4_prox_guard_len: the 110cm muon leaves the EM shower
+        shower_pass4_prox_guard_len on/off byte-identical at this epoch
+INERT 175896  pr/130 backfill    shower_pass3_backfill_guard_len: the declined proton is not re-adopted
+        shower_pass3_backfill_guard_len on/off byte-identical at this epoch
+
+21 PASS, 0 FAIL, 2 OPEN, 7 INERT, 0 SKIP
+rc=0

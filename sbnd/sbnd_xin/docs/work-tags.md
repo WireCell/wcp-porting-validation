@@ -3223,3 +3223,10 @@ Owner: "Flip the light gate on for production". `ref/prod-2026-09-25b` (28 artif
 - `work-r3cv-d123lgflip/f000` -- one MC file `--mc` vs `work-r3cv-d123lgop/f000`: 18/18.
 - `work-{nuecc48,ncpi0}-d123lgflip{,pr}` + `products/d123/{nuecc48,ncpi0}_lgflip` -- the flipped runner on the two samples never run with the gate (effect: nueCC-48 nue>7 37 -> 38, NCpi0 unchanged).
 - KEEP as the flip's record (small).
+
+## doc sbnd_xin/125 -- cleanup round K (2026-09-25): after the two SBND flips and the PDVD ToT flip
+Directory release EXECUTED (3562 dirs, 369.97 GiB, 120 -> 488 G free); machinery `pdhd/scripts/retire/*_20260925.*`, record layer `archive/records/cleanup-20260925/`.
+- RELEASED (sbnd): `work-*-d123{hits,hitspr,basepr,lg,lgpr,nr,nrpr,hitsnr,hitsnrpr,nosplit,nosplitpr,hitsnu,hitsnupr,r6off}`, `work-*-{d102m,prod0923,prod0923pr,d115,d116tfull,d116s0rep,d118flip,d118fliprep,d109prod,pr150tcsp3bw,pr150g16new,d113g16off}`, every r3* `d119*` arm.  Distilled tables: `products/d123/` (now committed).  Colleague Bee sets: `bee/d123-numu3000/`.
+- KEPT (sbnd): `work-*-d123base` (substrate), `d123lgop{,pr}` + `d123lgflip{,off,pr}` (production), `d123flip{,off,pr}` (sec 17 record + pdvd/119 link target), `pr150s0` (sentinel reference), `d115pr` (owner), `pr150csp3bw` (scan source), `work-nuecc48-d119*` + `work-mcp10-m66d119*` (live pdvd/119).
+- File level PLANNED (doc 125 sec 4-6, owner runs): `evt*/icluster-*.npz` in d123base + d123lgop, and d123base `ql_evt*/` (90.89 GiB); `~/tmp` sweep first (it releases `~/tmp/d124/nudge`).
+

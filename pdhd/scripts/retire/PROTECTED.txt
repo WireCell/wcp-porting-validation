@@ -86,8 +86,8 @@ d101hnew	the OFF side of the doc 108 flip: the graded A0 (doc 108 sec 1.1), == h
 /home/xqian/tmp/d102/libpin_d102	THE PIN d108hflip ran on (clus md5 091e142b9481, "unchanged before and after", doc 108 sec 3); also d103vflip's (PDVD).	doc pdvd/108 sec 0 and 3
 
 # --- added 2026-09-16 (doc sbnd_xin/111 sec 16, round F): what the release of d111h*/d113h* left on purpose ---
-d113hbase d113hnone	the doc-113 session's open follow-up (its message 2026-09-16): a hand scan of the 21 PDHD Michels lost in `none`, reading both arms.	doc pdvd/113; peer message
-d111hst	named in the Repro blocks of docs pdvd/112 and 113; d112_case_anatomy.py / d112_terminal_planes.py take --arm d111hst (doc 112's dump logs live in ~/tmp/d111/arm_d111hst).  Identical to production d108hflip (figs/111s_gate_dump_pdhd.txt).	docs pdvd/112-113 Repro
+# RETIRED 2026-09-25 (round K, doc sbnd_xin/125; owner released the doc 111-113 peer holds by name 2026-09-25): d113hbase d113hnone	the doc-113 session's open follow-up (its message 2026-09-16): a hand scan of the 21 PDHD Michels lost in `none`, reading both arms.	doc pdvd/113; peer message
+# RETIRED 2026-09-25 (round K, doc sbnd_xin/125; owner released the doc 111-113 peer holds by name 2026-09-25): d111hst	named in the Repro blocks of docs pdvd/112 and 113; d112_case_anatomy.py / d112_terminal_planes.py take --arm d111hst (doc 112's dump logs live in ~/tmp/d111/arm_d111hst).  Identical to production d108hflip (figs/111s_gate_dump_pdhd.txt).	docs pdvd/112-113 Repro
 
 # ================= RETIRED =================
 
@@ -183,3 +183,5 @@ d111hst	named in the Repro blocks of docs pdvd/112 and 113; d112_case_anatomy.py
 # 029107_*_d11* 028084_*_d11*	doc pdhd/11's separation arms (d11prod, d11seponA, d11sepoffA)	docs/11_stm-fit-vs-image.md
 # 029107_*_d02* 028084_*_d02*	doc pdhd/02's transverse-smearing arms (d02ref/d02sig/d02sigb/d02fix) behind the PDHD sigma_T flip	docs/02_effective-transverse-smearing-pdhd.md
 # 029107_*_stmwc 029107_*_phdumpwc 029107_*_d46skip 029107_*_d05mON 029107_*_d05mOFF	single-purpose probe arms, each cited by the doc that made it	docs/01, 05, 06; pdvd/docs/46, 47
+
+# --- ROUND K 2026-09-25: the live pdvd/119 knob-off gates on PDHD (d119gA/gB/sgA/sgB) are held by pdvd PROTECTED's d119gA d119gB d119s* line and plan_20260925.py pdhd open_prefix; production unchanged. ---

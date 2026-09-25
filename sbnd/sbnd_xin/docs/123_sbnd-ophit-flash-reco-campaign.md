@@ -1175,6 +1175,9 @@ measurably slower than the reco1 one), stage B ≈ 3 min at `PR_JOBS=8`. Logs an
    `opflash_apa*.tar.gz` (every hit with its flash id, 60× the reco1 ones) are the first to drop.
    `work-nuecc48-d123flip{,off,pr}` and `work-r3cv-d123flip` are the flip gate's record. The `nosplit`
    arms (§12) are closed.
+   **→ Done in cleanup round K (doc 125, 2026-09-25):** the ladder, `d123hits{,pr}` and `d123basepr` are
+   released; `d123base` (substrate), `d123lgop{,pr}`, `d123lgflip*` and `d123flip*` are kept; the split
+   icluster copies and base's `ql_evt*/` are the file-level lever of doc 125 sec 4.
 
 ## 18. Round 6 — the two follow-ups of §17.4: the `QLXTPC coincident` cull (59003) and the rescue on MC (2026-09-25)
 

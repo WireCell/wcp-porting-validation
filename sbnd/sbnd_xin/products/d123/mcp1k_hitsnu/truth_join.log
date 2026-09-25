@@ -1,0 +1,4 @@
+arm /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-d123hitsnupr: 1000 tracking-pr.root; truth events 0
+events 1000  candidate rows 475  truth interactions 0  errors 0
+roster: role<=1 activities 1752, companions dropped by the filter 2959
+-> products/d123/mcp1k_hitsnu/{candidates.tsv,summary.txt}

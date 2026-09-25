@@ -1,0 +1,4 @@
+arm /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-ncpi0-d123hitspr: 19 tracking-pr.root; truth events 0
+events 19  candidate rows 20  truth interactions 0  errors 0
+roster: role<=1 activities 141, companions dropped by the filter 647
+-> products/d123/ncpi0_hits/{candidates.tsv,summary.txt}

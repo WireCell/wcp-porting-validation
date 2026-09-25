@@ -1,0 +1,4 @@
+arm /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-nuecc48-d123basepr: 48 tracking-pr.root; truth events 0
+events 48  candidate rows 48  truth interactions 0  errors 0
+roster: role<=1 activities 255, companions dropped by the filter 1742
+-> products/d123/nuecc48_base/{candidates.tsv,summary.txt}

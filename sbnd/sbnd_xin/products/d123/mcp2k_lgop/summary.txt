@@ -1,0 +1,21 @@
+arm /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-d123lgoppr
+truth (none)
+files 2000
+
+activities                                       3253
+activities_all_roles                             9179
+candidate_rows                                   906
+cluster_id vs selected: in_act_not_selected      12
+cluster_id vs selected: not_in_act               38
+cluster_id vs selected: same                     856
+companions                                       5926
+events                                           2000
+events_with_truth=0                              2000
+has_T_tagger=0                                   1107
+has_T_tagger=1                                   893
+prov dl_weights = uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth 2000
+prov nue_xgboost_xml = uboone/weights/XGB_nue_seed2_0923.xml 2000
+prov numu_xgboost_xml = uboone/weights/numu_scalars_scores_0923.xml 2000
+prov op_config_sha256 = 972231b088a80b66555159d4c9458a1bcc5771f6b013d3e967e0ba8d969da3cd 2000
+prov toolkit_git = 1e6b290559ff032c6675f027bb4d4b1178b7a8f0 2000
+prov wct_version = apply-pointcloud-0.35.0-1367-g772c753d 2000

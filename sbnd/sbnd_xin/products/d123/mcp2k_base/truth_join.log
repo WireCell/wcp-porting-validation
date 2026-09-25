@@ -1,0 +1,4 @@
+arm /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-d123basepr: 2000 tracking-pr.root; truth events 0
+events 2000  candidate rows 901  truth interactions 0  errors 0
+roster: role<=1 activities 3669, companions dropped by the filter 5862
+-> products/d123/mcp2k_base/{candidates.tsv,summary.txt}

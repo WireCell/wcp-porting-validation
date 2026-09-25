@@ -1,0 +1,5 @@
+arm /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-r3cv-d123basepr: 2017 tracking-pr.root; truth events 2017
+events 2017  candidate rows 965  truth interactions 3647  errors 0
+roster: role<=1 activities 3309, companions dropped by the filter 7212
+candidate events not in the truth table: 0
+-> products/d123/r3cv_base/{candidates.tsv,truth.tsv,summary.txt}

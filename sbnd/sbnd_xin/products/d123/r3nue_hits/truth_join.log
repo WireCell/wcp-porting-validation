@@ -1,0 +1,5 @@
+arm /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-r3nue-d123hitspr: 2001 tracking-pr.root; truth events 2001
+events 2001  candidate rows 1965  truth interactions 3786  errors 0
+roster: role<=1 activities 9867, companions dropped by the filter 49669
+candidate events not in the truth table: 0
+-> products/d123/r3nue_hits/{candidates.tsv,truth.tsv,summary.txt}

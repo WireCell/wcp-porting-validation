@@ -1,0 +1,157 @@
+# live_tokens: reference 07ae168fa66b, 277 untracked + 5 modified path(s) under DOCROOTS
+
+==============================================================================
+== sbnd   (/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin)
+==============================================================================
+  PASS  INTERLOCK 1: substrate present (all present)
+  PASS  INTERLOCK 2: no kept symlink resolves into a releasing dir (0 would dangle)
+  PASS  INTERLOCK 3: no live writer (0 of 115 sampled dirs moved, 0 tree-scoped wire-cell procs)
+  PASS  INTERLOCK 4: pre-existing broken symlinks recorded: 0 (the post-state number only means something against this)
+  PASS  INTERLOCK 5: PROTECTED.txt clear of the release (clear)
+  PASS  INTERLOCK 7: no record/label dir in the release (clear)
+  PASS  INTERLOCK 8: no target is itself a symlink (clear)
+  PASS  INTERLOCK 9: manifests name 446 arms, 14 exist, 0 in the release (none)
+  PASS  INTERLOCK 11: every substrate/production/scan name resolves (all resolve)
+  PASS  INTERLOCK 13: hand-scan sources kept: none for this tree
+  PASS  INTERLOCK 14: 2 uncited families in the release; each maps to a committed doc by round number (0 do not: none)
+  PASS  INTERLOCK 15: nothing released is named by an uncommitted record (clear)
+  PASS  INTERLOCK 16: live-by-uncommitted-record: 0 tokens from 0 file(s); 0 resolve in this tree (none)
+  PASS  INTERLOCK 17: exact-name releases resolve and are wholly released (none)
+  set-relative: FREED 311.63 GiB (every link inside the release); 0.00 GiB shared with a kept link frees nothing
+
+  universe 203 dirs | KEEP 88 = 234.18 GiB | RELEASE 115 = 312.00 GiB | out-of-scope (untouched) 41
+  --- RELEASE ---   arm                       dirs      GiB  cited
+                    d123hits                     7    76.87     40
+                    d123lg                       3    37.60      5
+                    d123hitspr                   7    29.32     18
+                    d123basepr                   7    29.26     19
+                    d116tfull                    3    18.98   8077
+                    d123nr                       1    18.70      2
+                    d115                         3    15.96    500
+                    d123lgpr                     3    12.66      4
+                    d102m                        4    10.69    195
+                    d123hitsnr                   3    10.13      1
+                    d123nosplit                  3    10.13      2
+                    d123hitsnu                   1     9.44      1
+                    d116s0rep                    3     8.00     15
+                    d123nrpr                     1     6.30      1
+                    d123hitsnrpr                 3     3.74      3
+                    d123nosplitpr                3     3.74      2
+                    d123hitsnupr                 1     3.34      1
+                    pr150tcsp3bw                 4     1.47    159
+                    prod0923                     2     1.05     44
+                    d123r6off                    1     0.50      4
+                    prod0923pr                   2     0.39      3
+                    d119ctl                      3     0.25      1
+                    d119ctl2                     3     0.25      1
+                    d119tcm                      3     0.25      4
+                    d118flip                     3     0.25     21
+                    d119ctl2contended            3     0.25      2
+                    d119jem                      3     0.24      0
+                    d119flip                     3     0.24      6
+                    d119r3                       3     0.24     32
+                    d119pad                      3     0.24      1
+                    d119r5tcm                    3     0.24      0
+                    d119r3b                      3     0.24      1
+                    d119jdef                     3     0.24      2
+                    d119flip-torn                1     0.09      4
+                    pr150g16new                  2     0.08     11
+                    d113g16off                   2     0.08      3
+                    d119tailg                    1     0.07      8
+                    d119tglb                     1     0.07      2
+                    d119tjem                     1     0.07      2
+                    d119trel                     1     0.07      2
+                    d119ttcm                     1     0.07      4
+                    d119tail                     1     0.07     12
+                    d118fliprep                  1     0.06      6
+                    d109prod                     2     0.03     22
+  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_sbnd_20260925.txt  (115 lines, 312.00 GiB)
+
+==============================================================================
+== pdvd   (/home/xqian/toolkit-dev/wcp-porting-img/pdvd/work)
+==============================================================================
+  PASS  INTERLOCK 1: substrate present (all present)
+  PASS  INTERLOCK 2: no kept symlink resolves into a releasing dir (0 would dangle)
+  PASS  INTERLOCK 3: no live writer (0 of 121 sampled dirs moved, 0 tree-scoped wire-cell procs)
+  PASS  INTERLOCK 4: pre-existing broken symlinks recorded: 0 (the post-state number only means something against this)
+  PASS  INTERLOCK 5: PROTECTED.txt clear of the release (clear)
+  PASS  INTERLOCK 7: no record/label dir in the release (clear)
+  PASS  INTERLOCK 8: no target is itself a symlink (clear)
+  PASS  INTERLOCK 9: manifests name 0 arms, 0 exist, 0 in the release (none)
+  PASS  INTERLOCK 11: every substrate/production/scan name resolves (all resolve)
+  PASS  INTERLOCK 13: hand-scan sources kept: ['d08pv30off', 'd08pv30on', 'd101vkf', 'd102vcsall', 'd102vocs', 'd103v0', 'd103v1', 'd115vbwp05', 'd115voff', 'd115vp3bwp05', 'd116vr2', 'd53v', 'd67v', 'd68a3', 'd68d4', 'p100bx', 'p100bxp', 'p100c', 'p85vprod', 'p85vwh', 'p88v5fr', 'p88vprod', 'p90vprod', 'p96vprod', 'p98vonq', 'p99rwon', 'p99wflip']
+  PASS  INTERLOCK 14: 0 uncited families in the release; each maps to a committed doc by round number (0 do not: none)
+  PASS  INTERLOCK 15: nothing released is named by an uncommitted record (clear)
+  PASS  INTERLOCK 16: live-by-uncommitted-record: 0 tokens from 0 file(s); 0 resolve in this tree (none)
+  PASS  INTERLOCK 17: exact-name releases resolve and are wholly released (['d119vnu', 'd119vr3'])
+  set-relative: FREED 53.18 GiB (every link inside the release); 0.00 GiB shared with a kept link frees nothing
+
+  universe 8314 dirs | KEEP 5191 = 115.08 GiB | RELEASE 3123 = 53.20 GiB | out-of-scope (untouched) 1743
+  --- RELEASE ---   arm                       dirs      GiB  cited
+                    q29flip                    120     4.45     62
+                    q29stm                     120     4.45     42
+                    q34ck3                     120     2.02    389
+                    q34ck2                     120     2.02    315
+                    q34ck1                     120     2.02    287
+                    q33bctlp                   120     2.02      2
+                    q32ctlp                    120     2.02      3
+                    q33ctlp                    120     2.02      2
+                    q34ctlp                    120     2.02      4
+                    q33cu                      120     2.02   1031
+                    q33cs                      120     2.02    929
+                    q33cm                      120     2.02   1481
+                    q31tot                     120     2.02     28
+                    q34tk3                     120     2.01    365
+                    q31tot2                    120     2.01     28
+                    q34tk2                     120     2.01    304
+                    q33tm                      120     2.01   1470
+                    q33ts                      120     2.01   1141
+                    q33tu                      120     2.01   1250
+                    q32ti                      120     2.01   1378
+                    q32tis                     120     2.01     11
+                    d113vbase                  120     1.25     47
+                    d111vst                    120     1.25     47
+                    d119vnu                    120     1.19    129
+                    d119vr3                    120     1.19    125
+                    d113vnone                  120     1.10     25
+                    q35cfg                       3     0.00      9
+  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdvd_20260925.txt  (3123 lines, 53.20 GiB)
+
+==============================================================================
+== pdhd   (/home/xqian/toolkit-dev/wcp-porting-img/pdhd/work)
+==============================================================================
+  PASS  INTERLOCK 1: substrate present (all present)
+  PASS  INTERLOCK 2: no kept symlink resolves into a releasing dir (0 would dangle)
+  PASS  INTERLOCK 3: no live writer (0 of 162 sampled dirs moved, 0 tree-scoped wire-cell procs)
+  PASS  INTERLOCK 4: pre-existing broken symlinks recorded: 0 (the post-state number only means something against this)
+  PASS  INTERLOCK 5: PROTECTED.txt clear of the release (clear)
+  PASS  INTERLOCK 7: no record/label dir in the release (clear)
+  PASS  INTERLOCK 8: no target is itself a symlink (clear)
+  PASS  INTERLOCK 9: manifests name 1 arms, 0 exist, 0 in the release (none)
+  PASS  INTERLOCK 11: every substrate/production/scan name resolves (all resolve)
+  PASS  INTERLOCK 13: hand-scan sources kept: ['d05mON', 'd08cap10', 'd08goff', 'd101hkf', 'd102hcs', 'd102hocs', 'd115hoff', 'd115hp3bwp05', 'd116hr2', 'd53h', 'h18b', 'h18s', 'h23conf', 'h25base', 'h25k', 'h25kr', 'h25r', 'h25va', 'h25vb', 'p82bhoff', 'p82hoff', 'stm0']
+  PASS  INTERLOCK 14: 2 uncited families in the release; each maps to a committed doc by round number (0 do not: none)
+  PASS  INTERLOCK 15: nothing released is named by an uncommitted record (clear)
+  PASS  INTERLOCK 16: live-by-uncommitted-record: 0 tokens from 0 file(s); 0 resolve in this tree (none)
+  PASS  INTERLOCK 17: exact-name releases resolve and are wholly released (['d119hnu', 'd119hr3', 'd119nu'])
+  set-relative: FREED 4.79 GiB (every link inside the release); 0.00 GiB shared with a kept link frees nothing
+
+  universe 1945 dirs | KEEP 1621 = 31.50 GiB | RELEASE 324 = 4.80 GiB | out-of-scope (untouched) 170
+  --- RELEASE ---   arm                       dirs      GiB  cited
+                    d113hbase                   61     0.96     44
+                    d111hst                     61     0.96     51
+                    d119hr3                     61     0.88     66
+                    d119hnu                     61     0.88     70
+                    d113hnone                   61     0.82     25
+                    d34qb                        4     0.09      1
+                    d34qn                        4     0.09      1
+                    d119nu                       3     0.07      1
+                    d34b                         4     0.04      0
+                    d34n                         4     0.04      0
+  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdhd_20260925.txt  (324 lines, 4.80 GiB)
+
+==============================================================================
+GRAND TOTAL release 369.99 GiB
+interlock failures: NONE
+
+This script retired nothing.  Review the tier files, then run the retire driver (CONFIRM=yes).

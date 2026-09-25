@@ -1,0 +1,20 @@
+arm /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-nuecc48-d123hitsnrpr
+truth (none)
+files 48
+
+activities                                       303
+activities_all_roles                             1979
+candidate_rows                                   48
+cluster_id vs selected: in_act_not_selected      1
+cluster_id vs selected: not_in_act               3
+cluster_id vs selected: same                     44
+companions                                       1676
+events                                           48
+events_with_truth=0                              48
+has_T_tagger=1                                   48
+prov dl_weights = uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth 48
+prov nue_xgboost_xml = uboone/weights/XGB_nue_seed2_0923.xml 48
+prov numu_xgboost_xml = uboone/weights/numu_scalars_scores_0923.xml 48
+prov op_config_sha256 = 972231b088a80b66555159d4c9458a1bcc5771f6b013d3e967e0ba8d969da3cd 48
+prov toolkit_git = c2b578fe268470b0c5084397d10e666e29979d06 48
+prov wct_version = apply-pointcloud-0.35.0-1367-g772c753d 48

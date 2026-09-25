@@ -1,0 +1,4 @@
+arm /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-r3off-d123basepr: 1000 tracking-pr.root; truth events 0
+events 1000  candidate rows 86  truth interactions 0  errors 0
+roster: role<=1 activities 353, companions dropped by the filter 376
+-> products/d123/r3off_base/{candidates.tsv,summary.txt}

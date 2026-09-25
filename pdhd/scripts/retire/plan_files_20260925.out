@@ -1,0 +1,23 @@
+sbnd-icluster-split: 56408 files, 67.65 GiB; 24068 co-released links
+sbnd-base-qlevt: 48510 files, 23.24 GiB; 32340 co-released links
+TOTAL 104918 files, 90.89 GiB; 56408 links
+
+  PASS  F1: targets are regular files with one name (0 not), links are symlinks (0 not)
+  PASS  F3: every target/link under an allowed arm, none under an input/record tree (0 off-list; e.g. [])
+  PASS  F8: nothing under a g<N>/ group dir (0; e.g. [])
+  PASS  F9: every co-released link resolves into the target set (0 do not; e.g. [])
+  FAIL  F2: no other symlink resolves onto a target (648; e.g. ['/home/xqian/tmp/d124/nudge/ql_mcp2k_t0/ql_evt393538/icluster-apa0-masked.npz'])
+  PASS  F4: no process holds a target open (0)
+  PASS  F5: every sub-root keeps its g*/ imaging (resolving) and lgop keeps its Q/L pctree (0 would not; e.g. []); 541 sub-roots
+  PASS  F6: regeneration inputs resolve and are non-empty (all present)
+  PASS  F7: every out-of-allow-list split copy is a declared exclusion (0 undeclared; e.g. [])
+        declared out of sbnd-icluster-split: /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-
+            the evt<N>/ split copies of every OTHER kept arm: the sec 17/19 flip records (d123flip*, d123lgflip*) keep theirs so they stay member-comparable to their gates, and no older arm is in scope this round.  The g<N>/ group copies are excluded by F8, not here.
+        declared out of sbnd-icluster-split: /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/input_files_reco1
+            production input tree -- never a target
+  list: files_sbnd-icluster-split_20260925.txt  (56408 lines)
+  list: files_sbnd-icluster-split.links_20260925.txt  (24068 lines)
+  list: files_sbnd-base-qlevt_20260925.txt  (48510 lines)
+  list: files_sbnd-base-qlevt.links_20260925.txt  (32340 lines)
+
+GATES FAILED: ['F2']

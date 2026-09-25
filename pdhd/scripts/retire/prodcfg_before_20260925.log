@@ -1,0 +1,6 @@
+reference : /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/ref/prod-2026-09-25b
+cfg tree  : /nfs/data/1/xqian/toolkit-dev/toolkit/cfg
+compiling : /home/xqian/tmp/prodcfg-rdmwywzf
+checked   : 28 artifacts
+PASS -- the compiled operating point matches prod-2026-09-25b
+rc=0
