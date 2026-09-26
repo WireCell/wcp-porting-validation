@@ -1,0 +1,31 @@
+# Hit-flash variant of wcls-img-clus-matching-xin.fcl (MC, simtpc2d): the SBND
+# standalone PRODUCTION light of 2026-09-25 (doc sbnd_xin/123 sec 17 + 19) inside
+# the LArSoft 1-step chain -- flashes rebuilt from the reco1 PMT OpHits
+# (wclsOpHitSource:tpc<N> -> SBNDOpFlashFinder:tpc<N>) and the QLMatching
+# scenario-1 light gate, instead of SBND's recob::OpFlash (wclsOpFlashSource).
+# Everything else (graph, PR operating point, product tags) is inherited.
+# The reco1-flash job stays available as wcls-img-clus-matching-xin.fcl.
+#
+# Data: wcls-img-clus-matching-xin-data-hits.fcl.
+
+#include "wcls-img-clus-matching-xin.fcl"
+
+physics.producers.sig2img.wcls_main.configs: ["wcls-img-clus-matching-xin-hits.jsonnet"]
+# SBNDOpFlashFinder lives in WireCellFlash.
+physics.producers.sig2img.wcls_main.plugins: ["WireCellGen", "WireCellImg", "WireCellClus", "WireCellPgraph", "WireCellSio", "WireCellRoot", "WireCellLarsoft", "WireCellAux", "WireCellMatch", "WireCellAIML", "WireCellFlash"]
+# The OpHit sources replace the OpFlash sources as art-event visitors; each MUST be
+# listed here or its visit(art::Event&) never fires.
+physics.producers.sig2img.wcls_main.inputers: [
+    "wclsCookedFrameSource:sigs"
+    , "wclsOpHitSource:tpc0"
+    , "wclsOpHitSource:tpc1"
+    , "wclsTensorSetLabeler:labeler_truth"
+    , "wclsTensorSetLabeler:labeler_tagger"
+    , "wclsTensorSetMetadataAttacher:rse_apa0"
+    , "wclsTensorSetMetadataAttacher:rse_apa1"
+    , "wclsTensorSetMetadataAttacher:rse_all_apa"
+]
+# The recob::OpHit product ("ophitpmt", process Reco1 in both data and MC reco1);
+# the per-TPC channel lists come from sbnd-pmt-channels.json in the jsonnet.
+physics.producers.sig2img.wcls_main.params.ophit0_input_label: "ophitpmt"
+physics.producers.sig2img.wcls_main.params.ophit1_input_label: "ophitpmt"

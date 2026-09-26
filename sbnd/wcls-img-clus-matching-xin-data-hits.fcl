@@ -1,0 +1,24 @@
+# Real-data variant of wcls-img-clus-matching-xin-hits.fcl: the hit-flash
+# (SBND standalone production, 2026-09-25) light in the 1-step chain, on data.
+# = wcls-img-clus-matching-xin-data.fcl (reality, sptpc2d tags, FrameShift via the
+# "frameshift" product, read by wclsOpHitSource exactly as wclsOpFlashSource does)
+# + the hit-flash overrides of wcls-img-clus-matching-xin-hits.fcl.
+#
+#   lar -n 1 --nskip k -c wcls-img-clus-matching-xin-data-hits.fcl -s <reco1_frameshift.root> --no-output
+
+#include "wcls-img-clus-matching-xin-data.fcl"
+
+physics.producers.sig2img.wcls_main.configs: ["wcls-img-clus-matching-xin-hits.jsonnet"]
+physics.producers.sig2img.wcls_main.plugins: ["WireCellGen", "WireCellImg", "WireCellClus", "WireCellPgraph", "WireCellSio", "WireCellRoot", "WireCellLarsoft", "WireCellAux", "WireCellMatch", "WireCellAIML", "WireCellFlash"]
+physics.producers.sig2img.wcls_main.inputers: [
+    "wclsCookedFrameSource:sigs"
+    , "wclsOpHitSource:tpc0"
+    , "wclsOpHitSource:tpc1"
+    , "wclsTensorSetLabeler:labeler_truth"
+    , "wclsTensorSetLabeler:labeler_tagger"
+    , "wclsTensorSetMetadataAttacher:rse_apa0"
+    , "wclsTensorSetMetadataAttacher:rse_apa1"
+    , "wclsTensorSetMetadataAttacher:rse_all_apa"
+]
+physics.producers.sig2img.wcls_main.params.ophit0_input_label: "ophitpmt"
+physics.producers.sig2img.wcls_main.params.ophit1_input_label: "ophitpmt"
